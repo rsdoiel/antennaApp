@@ -1,3 +1,19 @@
+package antennaApp
+
+import (
+	"strings"
+)
+
+const (
+    // Version number of release
+    Version = "0.0.0"
+
+    // ReleaseDate, the date version.go was generated
+    ReleaseDate = "2025-08-23"
+
+    // ReleaseHash, the Git hash when version.go was generated
+    ReleaseHash = "871e7c9e"
+    LicenseText = `
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
@@ -659,3 +675,23 @@ specific requirements.
 if any, to sign a "copyright disclaimer" for the program, if necessary.
 For more information on this, and how to apply and follow the GNU AGPL, see
 <https://www.gnu.org/licenses/>.
+
+`
+)
+
+// FmtHelp lets you process a text block with simple curly brace markup.
+func FmtHelp(src string, appName string, version string, releaseDate string, releaseHash string) string {
+	m := map[string]string {
+		"{app_name}": appName,
+		"{version}": version,
+		"{release_date}": releaseDate,
+		"{release_hash}": releaseHash,
+	}
+	for k, v := range m {
+		if strings.Contains(src, k) {
+			src = strings.ReplaceAll(src, k, v)
+		}
+	}
+	return src
+}
+

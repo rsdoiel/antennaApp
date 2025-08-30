@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="name">NAME</h1>
+<p>antenna</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna <a href="#options">OPTIONS</a> ACTION [PARAMETERS]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p><strong>antenna</strong> is a tool of the Skimmer Project for working
+with feeds and rendering link blogs. It is focus on bring <a
+href="https://textcasting.org">Textcasting</a> to the command line and
+static website deployments. <strong>antenna</strong> transforms the
+functionality of the individual Skimmer project command line utilities
+into a single command that performs the various actions needed to read
+and write feeds. This includes generating a static link blog that can be
+used as a basis for distributed social web activity based on the RSS 2.0
+feed format.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>–help, help</dt>
+<dd>
+display help
+</dd>
+<dt>–license, license</dt>
+<dd>
+display license
+</dd>
+<dt>–version, version</dt>
+<dd>
+display version
+</dd>
+</dl>
+<h1 id="action">ACTION</h1>
+<p>Actions form the primary way you use Antenna and manage a link blog
+through its life cycle. Below is a list of supported ACTION and their
+purpose. ACTION can be split between two general purposes . The
+following commands are related to curating your Antenna’s collections of
+feeds and feed items.</p>
+<dl>
+<dt>init</dt>
+<dd>
+Initialize an Antenna instances by create an “antenna.yaml” (YAML)
+configuration file. It holds the list of feed lists managed by your
+Antenna instance. It also include configuration for where to write the
+resulting link blog and for how to process it.
+</dd>
+<dt>add COLLECTION</dt>
+<dd>
+Add a feed collection to your Antenna instance. If a collection doesn’t
+have a YAML configuration it will be created. The collection’s YAML
+configuration is used to format the the collection’s HTML page in the
+“generate” action.
+</dd>
+<dt>add COLLECTION FEED_URL</dt>
+<dd>
+Add a feed to a collection managed by Antenna.
+</dd>
+<dt>add COLLECTION FEED_URL GUID [FILEPATH]</dt>
+<dd>
+Add a CommonMark document with front matter to the feed in the
+collection managed by Antenna. By default it reads from standard input
+if FILEPATH isn’t provided.
+</dd>
+<dt>edit COLLECTION</dt>
+<dd>
+Edit a feed collection to your Antenna instance.
+</dd>
+<dt>edit COLLECTION FEED_URL</dt>
+<dd>
+Edit a feed to a collection managed by Antenna.
+</dd>
+<dt>edit COLLECTION FEED_URL GUID</dt>
+<dd>
+Edit a single item in a feed in a the collection managed by Antenna. The
+<strong>antenna</strong> will use the default terminal based editor on
+your system to edit the item associated with the GUID and FEED_URL in
+the collection.
+</dd>
+<dt>remove COLLECTION</dt>
+<dd>
+Remove the collection from your Antenna instance
+</dd>
+<dt>remove COLLECTION FEED_URL</dt>
+<dd>
+Remove FEED URL from the collection managed by your Antenna instance.
+</dd>
+<dt>remove COLLECTION FEED_URL GUID</dt>
+<dd>
+Remove an item associated with the GUID and FEED URL from the collection
+managed by your Antenna instance.
+</dd>
+<dt>list</dt>
+<dd>
+List the collections managed in your Antenna instance
+</dd>
+<dt>list COLLECTION</dt>
+<dd>
+List the feeds in the collection managed by your Antenna instance
+</dd>
+<dt>list COLLECTION FEED_URL</dt>
+<dd>
+List the collection’s feed url details
+</dd>
+<dt>manage COLLECTION</dt>
+<dd>
+This provides a localhost web service for managing collections, feeds
+and items via a WEB UI in your browser.
+</dd>
+</dl>
+<p>The following commands are related to producing a link blog static
+website.</p>
+<dl>
+<dt>harvest || harvest COLLECTION || harvests COLLECTION FEED_URL</dt>
+<dd>
+The harvest action retrieves all collections’ feeds and stores them an
+the appropriate SQLite3 “.skim” database file. If you specify a
+collection then the retrieval process is restricted to the feeds defined
+in that collection. If you specify collection and feed url, then only
+those items are retieved.
+</dd>
+<dt>generate || generate COLLECTION</dt>
+<dd>
+This process the collections rendering HTML pages for each collection.
+If the collection name is provided then only that HTML page will be
+generated.
+</dd>
+<dt>preview</dt>
+<dd>
+Let’s your preview the rendered Antenna as a localhost website
+</dd>
+</dl>
+<h1 id="configuration">CONFIGURATION</h1>
+<p><strong>antenna</strong> uses a YAML configuration file. Below the
+the primary attributes you can set in the YAML file.</p>
+<dl>
+<dt>port</dt>
+<dd>
+(optional, default: 8000) The localhost port for the “view” action
+</dd>
+<dt>htdocs</dt>
+<dd>
+(optional, default: htdocs) The directory that rendered CommonMark,
+assets and HTML writen to. This is the directory that will be served out
+using the “view” action.
+</dd>
+<dt>page</dt>
+<dd>
+(optional) This holds the default configuration to use rendering the
+Antenna collections.
+</dd>
+<dt>static</dt>
+<dd>
+(optional) This is the directory that contains CommonMark documents that
+will be converted into HTML when generating your static website. Files
+ending in “.md” will become “.html” files written to the htdocs
+directory.
+</dd>
+<dt>feeds</dt>
+<dd>
+(optional) This ia list of collections that will be rendered as their
+own feed upon website generation.
+</dd>
+<dt>collections</dt>
+<dd>
+(required) This holds a list of collections managed by your Antenna
+instance
+</dd>
+</dl>
+<p>The collections attribute holds a collection objects. Each collection
+object has the following attributes.</p>
+<dl>
+<dt>name</dt>
+<dd>
+(required) name of the collection
+</dd>
+<dt>url_file</dt>
+<dd>
+(required)
+</dd>
+<dt>page</dt>
+<dd>
+(optional) The filepath to the YAML configuration used to render the
+colllection.
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+</section>
+</body>
+</html>
