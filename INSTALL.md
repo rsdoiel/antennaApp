@@ -6,6 +6,7 @@ It is built on my experience build my [Antenna](https://github.com/rsdoiel/anten
 project called [Skimmer](https://github.com/rsdoiel/skimmer). It uses the Skimmer project to create a turn key
 Antenna style website and curation tool that can run on common computers running Raspberry Pi OS, macOS and Windows.
 
+<!-- 
 Quick install with curl or irm
 ------------------------------
 
@@ -29,6 +30,8 @@ You may get security warnings if you are using macOS or Windows. See the notes f
 
 - [INSTALL_NOTES_macOS.md](INSTALL_NOTES_macOS.md)
 - [INSTALL_NOTES_Windows.md](INSTALL_NOTES_Windows.md)
+
+-->
 
 Installing from source
 ----------------------
