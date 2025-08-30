@@ -40,7 +40,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.0
+version: 0.0.1
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -52,13 +52,13 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-08-23
+date_released: 2025-08-29
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.0
+## antennaApp 0.0.1
 
 prototype of a simple tool to create and curate an Antenna like website.
 
