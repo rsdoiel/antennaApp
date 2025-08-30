@@ -168,3 +168,5 @@ antenna preview
 You can press Ctrl-C in the terminal window to end the preview.
 
 ## How do I customize the pages?
+
+FIXME: I need to document the YAML and how it works for defining aggregation pages.
