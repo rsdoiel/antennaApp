@@ -1,18 +1,18 @@
-%antenna.exe(1) user manual | version 0.0.0 871e7c9e
+%antenna(1) user manual | version 0.0.1 caae976
 % R. S. Doiel
-% 2025-08-23
+% 2025-08-29
 
 # NAME
 
-antenna.exe
+antenna
 
 # SYNOPSIS
 
-antenna.exe [OPTIONS] ACTION [PARAMETERS]
+antenna [OPTIONS] ACTION [PARAMETERS]
 
 # DESCRIPTION
 
-**antenna.exe** is a tool for working with RSS feeds and rendering a link blog.
+**antenna** is a tool for working with RSS feeds and rendering a link blog.
 It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and
 <https://news.scripting.com>.
 
@@ -38,14 +38,14 @@ Features:
 The ability to harvest feed items means we can read what others post on the web. The Markdown content
 can be added to a feed allows us to comment on the items read (thus being social).
 
-Through YAML configuration files you can customize the HTML rendered by **antenna.exe** on a per
+Through YAML configuration files you can customize the HTML rendered by **antenna** on a per
 collection basis. That means it is possible to recreate a "news paper" like experience. 
 
-A statis website using **antenna.exe** can grow through either enhancing the HTML markup defined
+A statis website using **antenna** can grow through either enhancing the HTML markup defined
 in the YAML configuration or through manipulation of the collection contents in the SQLite3 database.
 This provides opporutinies to integrate with other static website tools like
 [PageFind](https://pagefind.app "A browser side search engine"). You can even use
-**antenna.exe** to augment your existing static website blog.
+**antenna** to augment your existing static website blog.
 
 # OPTIONS
 
@@ -112,7 +112,7 @@ your favorite web browser.
 
 # CONFIGURATION
 
-**antenna.exe** uses a YAML configuration file. Below the the primary attributes you can
+**antenna** uses a YAML configuration file. Below the the primary attributes you can
 set in the YAML file.
 
 port
@@ -144,7 +144,7 @@ as HTML.
 
 # EXAMPLES
 
-Here's an example of using **antenna.exe** to create a single collection static site.
+Here's an example of using **antenna** to create a single collection static site.
 
 Step 1. Create a markdown document called "example.md" with the following text.
 
@@ -167,11 +167,11 @@ Once have defined a collection we can create an Antenna instance.
 Steps are init, add our collection, harvest, generate then preview.
 
 ~~~shell
-antenna.exe init
-antenna.exe add example.md
-antenna.exe harvest
-antenna.exe generate
-antenna.exe preview
+antenna init
+antenna add example.md
+antenna harvest
+antenna generate
+antenna preview
 ~~~
 
 The "preview" action runs a localhost web server so you can read the
@@ -182,14 +182,14 @@ the harvested content.
 To update your static site you'd just do the following
 
 ~~~shell
-antenna.exe harvest
-antenna.exe generate
-antenna.exe preview
+antenna harvest
+antenna generate
+antenna preview
 open http://localhost:8000
 ~~~
 
 When you run the "generate" action HTML files and RSS feeds will
-be written to the directory designated in the **antenna.exe** YAML
+be written to the directory designated in the **antenna** YAML
 configuration file (defaults to "htdocs"). The "preview" action 
 serves that out over localhost (default port 8000) so you can
 read your static site with your favorite web browser.
