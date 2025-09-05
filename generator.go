@@ -219,20 +219,20 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
 			&channel, &status, &updated, &label); err != nil {
-			fmt.Fprintf(gen.eout, "%s\n", err)
+			fmt.Fprintf(gen.eout, "error (%s): s\n", stmt, err)
 			continue
 		}
         if authorsSrc != "" {
             authors = []*gofeed.Person{}
             if err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
-                fmt.Fprintf(gen.eout, "%s\n", err)
+                fmt.Fprintf(gen.eout, "error (authors: %s): %s\n", authorsSrc, err)
                 authors = nil
             }            
         }
 		if enclosuresSrc != "" {
 			enclosures = []*Enclosure{}
 			if err := json.Unmarshal([]byte(enclosuresSrc), &enclosures); err != nil {
-				fmt.Fprintf(gen.eout, "%s: %s\n", err, enclosuresSrc)
+				fmt.Fprintf(gen.eout, "error (enclosures: %s): %s\n", err, enclosuresSrc)
 				enclosures = nil
 			}
 		}
@@ -414,14 +414,14 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
         if authorsSrc != "" {
             authors = []*gofeed.Person{}
             if  err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
-                fmt.Fprintf(gen.eout, "%s\n", err)
+                fmt.Fprintf(gen.eout, "error (%s): %s\n", authorsSrc, err)
                 authors = nil
             }
         }
         if enclosuresSrc != "" {
             enclosures = []*Enclosure{}
             if err := json.Unmarshal([]byte(enclosuresSrc), &enclosures); err != nil {
-                fmt.Fprintf(gen.eout, "%s\n", err)
+                fmt.Fprintf(gen.eout, "error (%s): %s\n", enclosuresSrc, err)
                 enclosures = nil
             }
         }

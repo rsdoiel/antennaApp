@@ -18,8 +18,6 @@ import (
 // Post will add a CommonMark document as a feed item and if the postPath and link
 // are provided it will convert the CommonMark document to HTML and save it in the postPath.
 func (app *AntennaApp) Post(cfgName string, args []string) error {
-	fmt.Fprintf(os.Stderr, "DEBUG cfgName: %q, args: %+v\n", cfgName, args)
-
 	if len(args) != 2 {
 		return fmt.Errorf("expected a collection name and filepath in the collection")
 	}
@@ -28,7 +26,6 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		return err
 	}
 	cName, fName := strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
-	fmt.Fprintf(os.Stderr, "DEBUG cName: %q, fName: %q\n", cName, fName)
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
 		return err
@@ -53,7 +50,6 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG innerHTML\n%s\n\n", innerHTML)
 	title := doc.GetAttributeString("title", "")
 	authors := doc.GetAttributeString("author", "")
 	description := doc.GetAttributeString("description", "")
@@ -84,15 +80,12 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		}
 		// Write out an HTML page to the postPath
 		htmlName := filepath.Join(cfg.Htdocs, postPath)
-		fmt.Fprintf(os.Stderr, "DEBUG htmlName: %q\n", htmlName)
 		dName := filepath.Dir(htmlName)
-		fmt.Fprintf(os.Stderr, "DEBUG dName: %q\n", dName)
 		if _, err := os.Stat(dName); err != nil {
 			if err := os.MkdirAll(dName, 0775); err != nil {
 				return err
 			}
 		}
-		fmt.Fprintf(os.Stderr, "DEBUG htmlName: %q\n", htmlName)
 		gen, err := NewGenerator(app.appName)
 		if err != nil {
 			return err

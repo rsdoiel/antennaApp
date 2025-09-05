@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
+	//"os"
 	"regexp"
 	"strings"
 
@@ -126,9 +126,7 @@ func (doc *CommonMark) GetLinks() ([]Link, error) {
 // GetAttributeString returns a string attribute from 
 // the front matter the document
 func (doc *CommonMark) GetAttributeString(key string, defaultValue string) string {
-	fmt.Fprintf(os.Stderr, "DEBUG GetAttributeString(%q, %q) -> ? %+v\n", key, defaultValue, doc.FrontMatter)
 	if val, ok := doc.FrontMatter[key].(string); ok {
-		fmt.Fprintf(os.Stderr, "DEBUG GetAttributeString(%q, %q) -> %q\n", key, defaultValue, val)
 		return val
 	}
 	return defaultValue
