@@ -2,7 +2,7 @@
 
 # antennaApp
 
-**{app_name}** is a tool for working with RSS feeds and rendering a link blog.
+**antenna** is a tool for working with RSS feeds and rendering a link blog.
 It is inspired by Dave Winer's [Textcasting](https://textcasting.org) concept.
 
 The approach I am taking is to make it easy to curate feeds and generated a static
@@ -25,19 +25,19 @@ Features:
 The ability to harvest feed items means we can read what others post on the web. The Markdown content
 can be added to a feed allows us to comment on the items read (thus being social).
 
-Through YAML configuration files you can customize the HTML rendered by **{app_name}** on a per
+Through YAML configuration files you can customize the HTML rendered by **antenna** on a per
 collection basis. That means it is possible to recreate a "news paper" like experience. 
 
-A statis website using **{app_name}** can grow through either enhancing the HTML markup defined
+A statis website using **antenna** can grow through either enhancing the HTML markup defined
 in the YAML configuration or through manipulation of the collection contents in the SQLite3 database.
 This provides opporutinies to integrate with other static website tools like
 [PageFind](https://pagefind.app "A browser side search engine") and
 [FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents").
-You can even use **{app_name}** to augment your existing blog.
+You can even use **antenna** to augment your existing blog.
 
 ## Release Notes
 
-- version: 0.0.0
+- version: 0.0.1
 - status: concept
 
 
