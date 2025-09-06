@@ -33,10 +33,10 @@ header: |
 nav: |
   <nav><!-- your custom nav innert HTML goes here --></nav>
 
-top_content: |
+topContent: |
   <!-- your custom HTML content before the section element goes here -->
 
-bottom_content: |
+bottomContent: |
   <!-- your custom HTML content after the section element goes here -->
 
 footer: |

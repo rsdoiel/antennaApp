@@ -139,7 +139,7 @@ port
 : (optional, default: 8000) The localhost port for the "view" action
 
 htdocs
-: (optional, default: htdocs) The directory that rendered CommonMark, assets and HTML writen to. This is the directory
+: (optional, default: ".") The directory that rendered CommonMark, assets and HTML writen to. This is the directory
 that will be served out using the "view" action.
 
 generator
@@ -210,9 +210,9 @@ open http://localhost:8000
 
 When you run the "generate" action HTML files and RSS feeds will
 be written to the directory designated in the **{app_name}** YAML
-configuration file (defaults to "htdocs"). The "preview" action 
-serves that out over localhost (default port 8000) so you can
-read your static site with your favorite web browser.
+configuration file (defaults to to the current working directory, "").
+The "preview" action  serves that out over localhost (default port 8000)
+so you can read your static site with your favorite web browser.
 
 `
 )

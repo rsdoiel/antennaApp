@@ -26,7 +26,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 		if cfg.Htdocs != "" {
 			if _, err := os.Stat(cfg.Htdocs); err != nil {
 				return fmt.Errorf("problem with htdocs: %q in %s: %s", cfg.Htdocs, fName, err)
-			}
+			}			
 		}
 		if cfg.Collections == nil {
 			return fmt.Errorf("no collections defined in %s, try adding one", fName)
@@ -34,7 +34,8 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	}
 	// If antenna.yaml does not exist, create it
 	cfg.Port = 8000
-	cfg.Htdocs = "htdocs"
+	// By default the working directory is assumed to be the staging directory.
+	cfg.Htdocs = ""
 	src, err := yaml.Marshal(cfg)
 	if err != nil {
 		// This shouldn't happen ever, if it does it is a programming error
@@ -46,11 +47,5 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	}
 	defer fp.Close()
 	fmt.Fprintf(fp, "%s", src)
-	// Not create the default htdocs directory
-	if _, err := os.Stat(cfg.Htdocs); err != nil {
-		if err := os.Mkdir(cfg.Htdocs, 0775); err != nil {
-			return err
-		}
-	}
 	return nil
 }
