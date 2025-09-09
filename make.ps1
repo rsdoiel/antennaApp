@@ -163,16 +163,22 @@ if ($action -eq "release") {
     copy -Recurse man dist\
 
     # Build Windows on x86_64
-    if (-not (Test-Path -Path dist\bin)) {
-        New-Item -ItemType Directory -Path "$releasePath\bin"
-    }
+    New-Item -ItemType Directory -Path "$releasePath\bin"
     Build-It -OutPath dist\bin\antenna.exe `
       -SourcePath cmd\antenna\antenna.go `
       -TargetOS windows `
       -TargetArch amd64
     cd dist
     # Get all items (files and directories) in the current directory
-    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $filesToZip = @(
+        "bin\",
+        "man\",
+        "*.md",
+        "codemeta.json",
+        "INSTALL.md",
+        "LICENSE",
+        "README.md"
+    )
     $targetZip = "$projectName-v$versionNo-Windows-x86_64.zip"
     if (Test-Path -Path $targetZip) {
         Remove-Item -Path "$targetZip" -Force
@@ -189,7 +195,15 @@ if ($action -eq "release") {
       -TargetOS windows `
       -TargetArch arm64
     cd dist
-    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $filesToZip = @(
+        "bin\",
+        "man\",
+        "*.md",
+        "codemeta.json",
+        "INSTALL.md",
+        "LICENSE",
+        "README.md"
+    )
     $targetZip = "$projectName-v$versionNo-Windows-arm64.zip"
     if (Test-Path -Path $targetZip) {
         Remove-Item -Path "$targetZip" -Force
@@ -205,7 +219,15 @@ if ($action -eq "release") {
       -TargetOS darwin `
       -TargetArch amd64
     cd dist
-    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $filesToZip = @(
+        "bin\",
+        "man\",
+        "*.md",
+        "codemeta.json",
+        "INSTALL.md",
+        "LICENSE",
+        "README.md"
+    )
     $targetZip = "$projectName-v$versionNo-macOS-x86_64.zip"
     if (Test-Path -Path $targetZip) {
         Remove-Item -Path "$targetZip" -Force
@@ -221,7 +243,15 @@ if ($action -eq "release") {
       -TargetOS darwin `
       -TargetArch arm64
     cd dist
-    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $filesToZip = @(
+        "bin\",
+        "man\",
+        "*.md",
+        "codemeta.json",
+        "INSTALL.md",
+        "LICENSE",
+        "README.md"
+    )
     $targetZip = "$projectName-v$versionNo-macOS-arm64.zip"
     if (Test-Path -Path $targetZip) {
         Remove-Item -Path "$targetZip" -Force
@@ -237,7 +267,15 @@ if ($action -eq "release") {
       -TargetOS linux `
       -TargetArch amd64
     cd dist
-    $filesToZip = Get-ChildItem -Recurse .\* | Where-Object { $_.Extension -ne ".zip" }
+    $filesToZip = @(
+        "bin\",
+        "man\",
+        "*.md",
+        "codemeta.json",
+        "INSTALL.md",
+        "LICENSE",
+        "README.md"
+    )
     $targetZip = "$projectName-v$versionNo-Linux-x86_64.zip"
     if (Test-Path -Path $targetZip) {
         Remove-Item -Path "$targetZip" -Force
@@ -253,7 +291,15 @@ if ($action -eq "release") {
       -TargetOS linux `
       -TargetArch arm64
     cd dist
-    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $filesToZip = @(
+        "bin\",
+        "man\",
+        "*.md",
+        "codemeta.json",
+        "INSTALL.md",
+        "LICENSE",
+        "README.md"
+    )
     $targetZip = "$projectName-v$versionNo-Linux-arm64.zip"
     if (Test-Path -Path $targetZip) {
         Remove-Item -Path "$targetZip" -Force
@@ -261,4 +307,5 @@ if ($action -eq "release") {
     Compress-Archive -Path $filesToZip -DestinationPath  $targetZip -CompressionLevel Optimal
     cd ..
     Remove-Item -Path "dist\bin" -Recurse -Force
+    Write-Host "Check the zip files, then do release.ps1 if all is OK"
 }
