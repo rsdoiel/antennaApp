@@ -193,7 +193,7 @@ func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person
 				peopleList = append(peopleList, person)
 			}
 		case []interface{}:
-			for _, v := range val.([]interface{}) {
+			for i, v := range val.([]interface{}) {
 				person := &gofeed.Person{}
 				switch v.(type) {
 				case string:
@@ -203,10 +203,12 @@ func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person
 						peopleList = append(peopleList, person)
 					}
 				case map[string]interface{}:
-					person = mapToPerson(val.(map[string]interface{}))
+					person = mapToPerson(v.(map[string]interface{}))
 					if person != nil {
 						peopleList = append(peopleList, person)
 					}
+				default:
+					return nil, fmt.Errorf("failed to parse %q (%d) -> %T %+v", key, i, v, v)
 				}
 			}
 		case map[string]interface{}:
