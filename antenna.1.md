@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.2 c2a0954
+%antenna(1) user manual | version 0.0.2 c558c75
 % R. S. Doiel
 % 2025-09-08
 
