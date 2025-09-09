@@ -51,7 +51,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		return err
 	}
 	title := doc.GetAttributeString("title", "")
-	authors, err := doc.GetPersons("author")
+	authors, err := doc.GetPersons("author", false)
 	if err != nil {
 		return err
 	}

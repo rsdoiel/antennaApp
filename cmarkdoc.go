@@ -181,16 +181,16 @@ func mapToPerson(val map[string]interface{}) *gofeed.Person {
 
 // GetPersons returns a list of `*gofeed.Person{}`  
 // from the front matter in the document document
-func (doc *CommonMark) GetPersons(key string) ([]*gofeed.Person, error) {
+func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person, error) {
+	peopleList := []*gofeed.Person{}
 	if val, ok := doc.FrontMatter[key].(interface{}); ok {
-		postList := []*gofeed.Person{}
 		switch val.(type) {
 		case string:
 			person := &gofeed.Person{}
 			person.Name = emailAddressGetName(val.(string))
 			person.Email = emailAddressTrimName(val.(string))
 			if person.Name != "" || person.Email != "" {
-				postList = append(postList, person)
+				peopleList = append(peopleList, person)
 			}
 		case []interface{}:
 			for _, v := range val.([]interface{}) {
@@ -200,26 +200,34 @@ func (doc *CommonMark) GetPersons(key string) ([]*gofeed.Person, error) {
 					person.Name = emailAddressGetName(v.(string))
 					person.Email = emailAddressTrimName(v.(string))
 					if person.Name != "" || person.Email != "" {
-						postList = append(postList, person)
+						peopleList = append(peopleList, person)
 					}
 				case map[string]interface{}:
 					person = mapToPerson(val.(map[string]interface{}))
 					if person != nil {
-						postList = append(postList, person)
+						peopleList = append(peopleList, person)
 					}
 				}
 			}
 		case map[string]interface{}:
 			person := mapToPerson(val.(map[string]interface{}))
 			if person != nil {
-				postList = append(postList, person)
+				peopleList = append(peopleList, person)
 			}
 		default:
 			return nil, fmt.Errorf("unable to parse %q", key)
 		}
-		return postList, nil
 	}
-	return nil, fmt.Errorf("no persons found for %q", key)
+	// If we have a populated peopleList return it.
+	if len(peopleList) > 0 {
+		return peopleList, nil
+	}
+	// Do we required a populated peopleList?
+	if isRequired {
+		return nil, fmt.Errorf("no persons found for %q", key)
+	}
+	// An empty peopleList is OK, field is optional
+	return nil, nil
 }
 
 // GetAttributeBool returns a boolean attribute from 
