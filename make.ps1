@@ -154,7 +154,6 @@ if ($action -eq "release") {
     Write-Host "Created directory: $releasePath"
 
     # Copy in the documentation files
-    Make-Man
     copy README.md dist\
     copy INSTALL.md dist\
     copy codemeta.json dist\
