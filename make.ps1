@@ -2,6 +2,24 @@ param (
     [string]$action = "build"
 )
 
+$jsonContent = Get-Content -Raw -Path "codemeta.json" | ConvertFrom-Json
+$projectName = $jsonContent.name
+$versionNo = $jsonContent.version
+
+function Make-Man {
+    $markdownFiles = Get-ChildItem -File *.1.md 
+    foreach ($file in $markdownFiles) {
+        $manName = [System.IO.Path]::GetFileNameWithoutExtension($file.Name)
+        
+        if (-not (Test-Path -Path man\man1)) {
+            New-Item -ItemType Directory -Path man\man1 | Out-Null
+        }
+
+        Write-Host "Rending $file as man\man1\$manName"
+        pandoc -f Markdown -t man -o man\man1\$manName -s $file
+    }
+}
+
 function Build-It {
     param (
         [string]$OutPath,
@@ -53,7 +71,6 @@ function Build-It {
         }
     }
 
-
     # Validate supported OS and architecture
     $supportedOS = @("windows", "darwin", "linux")
     $supportedArch = @("amd64", "arm64")
@@ -78,6 +95,12 @@ function Build-It {
         throw "Build failed for $TargetOS/$TargetArch."
     }
 }
+
+# Make the man pages
+if ($action -eq "man") {
+    Make-Man
+}
+
 # Default build action
 if ($action -eq "build") {
     Write-Host "Building antenna..."
@@ -122,16 +145,120 @@ if ($action -eq "install") {
 }
 
 if ($action -eq "release") {
-    $releasePath = "dist\bin"
-    if (-not (Test-Path -Path $releasePath)) {
-        New-Item -ItemType Directory -Path $releasePath | Out-Null
-        Write-Host "Created directory: $releasePath"
-    } else {
-        Write-Host "Directory already exists: $releasePath"
+    $releasePath = "dist"
+    if (Test-Path -Path $releasePath) {
+        Write-Host "Removing stale $releasePath"
+        Remove-Item -Path "$releasePath" -Recurse -Force
     }
+    New-Item -ItemType Directory -Path $releasePath | Out-Null
+    Write-Host "Created directory: $releasePath"
+
+    # Copy in the documentation files
+    Make-Man
+    copy README.md dist\
+    copy INSTALL.md dist\
+    copy codemeta.json dist\
+    copy LICENSE dist\
+    copy *.?.md dist\
+    copy -Recurse man dist\
+
     # Build Windows on x86_64
+    if (-not (Test-Path -Path dist\bin)) {
+        New-Item -ItemType Directory -Path "$releasePath\bin"
+    }
     Build-It -OutPath dist\bin\antenna.exe `
       -SourcePath cmd\antenna\antenna.go `
       -TargetOS windows `
       -TargetArch amd64
+    cd dist
+    # Get all items (files and directories) in the current directory
+    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $targetZip = "$projectName-v$versionNo-Windows-x86_64.zip"
+    if (Test-Path -Path $targetZip) {
+        Remove-Item -Path "$targetZip" -Force
+    }
+    # Zip everything, preserving paths
+    Compress-Archive -Path $filesToZip -DestinationPath  $targetZip -CompressionLevel Optimal
+    cd ..
+    Remove-Item -Path "dist\bin" -Recurse -Force
+
+    # Build Windows on arm64
+    New-Item -ItemType Directory -Path "$releasePath\bin"
+    Build-It -OutPath dist\bin\antenna.exe `
+      -SourcePath cmd\antenna\antenna.go `
+      -TargetOS windows `
+      -TargetArch arm64
+    cd dist
+    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $targetZip = "$projectName-v$versionNo-Windows-arm64.zip"
+    if (Test-Path -Path $targetZip) {
+        Remove-Item -Path "$targetZip" -Force
+    }
+    Compress-Archive -Path $filesToZip -DestinationPath  $targetZip -CompressionLevel Optimal
+    cd ..
+    Remove-Item -Path "dist\bin" -Recurse -Force
+
+    # Build macOS on x86_64
+    New-Item -ItemType Directory -Path "$releasePath\bin"
+    Build-It -OutPath dist\bin\antenna `
+      -SourcePath cmd\antenna\antenna.go `
+      -TargetOS darwin `
+      -TargetArch amd64
+    cd dist
+    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $targetZip = "$projectName-v$versionNo-macOS-x86_64.zip"
+    if (Test-Path -Path $targetZip) {
+        Remove-Item -Path "$targetZip" -Force
+    }
+    Compress-Archive -Path $filesToZip -DestinationPath  $targetZip -CompressionLevel Optimal
+    cd ..
+    Remove-Item -Path "dist\bin" -Recurse -Force
+
+    # Build macOS on arm64
+    New-Item -ItemType Directory -Path "$releasePath\bin"
+    Build-It -OutPath dist\bin\antenna `
+      -SourcePath cmd\antenna\antenna.go `
+      -TargetOS darwin `
+      -TargetArch arm64
+    cd dist
+    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $targetZip = "$projectName-v$versionNo-macOS-arm64.zip"
+    if (Test-Path -Path $targetZip) {
+        Remove-Item -Path "$targetZip" -Force
+    }
+    Compress-Archive -Path $filesToZip -DestinationPath  $targetZip -CompressionLevel Optimal
+    cd ..
+    Remove-Item -Path "dist\bin" -Recurse -Force
+
+    # Build Linux on x86_64
+    New-Item -ItemType Directory -Path "$releasePath\bin"
+    Build-It -OutPath dist\bin\antenna `
+      -SourcePath cmd\antenna\antenna.go `
+      -TargetOS linux `
+      -TargetArch amd64
+    cd dist
+    $filesToZip = Get-ChildItem -Recurse .\* | Where-Object { $_.Extension -ne ".zip" }
+    $targetZip = "$projectName-v$versionNo-Linux-x86_64.zip"
+    if (Test-Path -Path $targetZip) {
+        Remove-Item -Path "$targetZip" -Force
+    }
+    Compress-Archive -Path $filesToZip -DestinationPath  $targetZip -CompressionLevel Optimal
+    cd ..
+    Remove-Item -Path "dist\bin" -Recurse -Force
+
+    # Build Linux on arm64
+    New-Item -ItemType Directory -Path "$releasePath\bin"
+    Build-It -OutPath dist\bin\antenna `
+      -SourcePath cmd\antenna\antenna.go `
+      -TargetOS linux `
+      -TargetArch arm64
+    cd dist
+    $filesToZip = Get-ChildItem -Recurse | Where-Object { $_.Extension -ne ".zip" }
+    $targetZip = "$projectName-v$versionNo-Linux-arm64.zip"
+    if (Test-Path -Path $targetZip) {
+        Remove-Item -Path "$targetZip" -Force
+    }
+    Compress-Archive -Path $filesToZip -DestinationPath  $targetZip -CompressionLevel Optimal
+    cd ..
+    Remove-Item -Path "dist\bin" -Recurse -Force
 }
