@@ -3,52 +3,56 @@
 # antennaApp
 
 **antenna** is a tool for working with RSS feeds and rendering a link blog.
-It is inspired by Dave Winer's [Textcasting](https://textcasting.org) concept.
+It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and [FeedLand](https://github.com/scripting/feedLand/).
 
-The approach I am taking is to make it easy to curate feeds and generated a static
-website using a simple command line tool. I believe that the link blog where you
-both consume and generate RSS can be a basis for a truely distributed social web
-with out the complexity of many of the current (2015 - 2025) proposed solutions.
+My approach is focused on curating feeds for static website generation. Currently 
+**antenna** is a command line tool. It runs in a "terminal" under Rapsberry Pi OS,
+macOS and Windows. From the terminal you can create, curate and stage in bound and collections
+of RSS feeds using simlpe Markdown files. You can even post new Markdown documents to a
+feed collection. 
+
+I believe that the link blog where you both consume and generate RSS can be a basis for a truely 
+distributed social web with out the complexity of many of the current (2015 - 2025)
+proposed solutions.
 
 Features:
 
-- support for multiple collections of feeds
+- support for multiple collections of feeds with
+- Outbound feeds aggregated by feed collection
 - a collection is defined by a Markdown document containing a list of links to feeds
-- collections can be harvested, meaning content retrieved from the feeds listed in the Markdown document
-- harvested content is stored in a SQLite3 database
-- harvested content in a collection can be aggregated and rendered as an HTML page for reading
+  - This means configuration of the feeds you follow are written using a simple Markdown file
+- collections can be harvested (in bound feeds)
+  - harvested content is stored in a SQLite3 database
+- Collections are aggregated and rendered as an HTML page
+- Collections are aggregated and rendered as RSS 2.0 XML
 - Markdown documents can be imported into a collection as a feed item
-- RSS 2.0 XML can be generated from a collection
-- A preview feature to view the render content in your web browser via a localhost URL
-- You can manage your collections via a localhost URL too.
+  - example a Markdown blog post or micro blog feed only post
+- You staged website can be previewed on localhost using your web browser
 
 The ability to harvest feed items means we can read what others post on the web. The Markdown content
-can be added to a feed allows us to comment on the items read (thus being social).
+can be added to a collection allows us to comment on the items read (thus being social).
 
 Through YAML configuration files you can customize the HTML rendered by **antenna** on a per
-collection basis. That means it is possible to recreate a "news paper" like experience. 
+collection basis. That means it is possible to recreate a "news reader" like experience. 
 
-A statis website using **antenna** can grow through either enhancing the HTML markup defined
-in the YAML configuration or through manipulation of the collection contents in the SQLite3 database.
-This provides opporutinies to integrate with other static website tools like
-[PageFind](https://pagefind.app "A browser side search engine") and
-[FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents").
-You can even use **antenna** to augment your existing blog.
+A static website using **antenna** can grow and be enhanced.  
+
+- enhancing the HTML markup rendered by update the YAML configuration for a collection
+- add CSS and JavaScript to run browser side to enhance usability
+- integrate [PageFind](https://pagefind.app) to provide static site search
+- integrate [FlatLake](https://flatlake.app) to provide a JSON API
+
+While **antenna** was designed to be a link blog or news site generator it can also
+function as blog.
 
 ## Release Notes
 
-- version: 0.0.1
-- status: concept
-
-
-prototype of a simple tool to create and curate an Antenna like website.
+**antenna** is a prototype. It is intended to be used to generate the [Antenna website](https://rsdoiel.github.io/antenna).
 
 
 ### Authors
 
 - Doiel, R. S. Doiel
-
-
 
 ## Software Requirements
 
@@ -61,11 +65,7 @@ prototype of a simple tool to create and curate an Antenna like website.
 - Pandoc >= 3.1
 - Bash or Powershell
 
-
-
 ## Related resources
-
-
 
 - [Getting Help, Reporting bugs](https://github.com/rsdoiel/AntennaApp/issues)
 - [LICENSE](https://www.gnu.org/licenses/agpl-3.0.en.html)

@@ -21,52 +21,63 @@
 <h1 id="antennaapp">antennaApp</h1>
 <p><strong>antenna</strong> is a tool for working with RSS feeds and
 rendering a link blog. It is inspired by Dave Winer’s <a
-href="https://textcasting.org">Textcasting</a> concept.</p>
-<p>The approach I am taking is to make it easy to curate feeds and
-generated a static website using a simple command line tool. I believe
-that the link blog where you both consume and generate RSS can be a
-basis for a truely distributed social web with out the complexity of
-many of the current (2015 - 2025) proposed solutions.</p>
+href="https://textcasting.org">Textcasting</a> and <a
+href="https://github.com/scripting/feedLand/">FeedLand</a>.</p>
+<p>My approach is focused on curating feeds for static website
+generation. Currently <strong>antenna</strong> is a command line tool.
+It runs in a “terminal” under Rapsberry Pi OS, macOS and Windows. From
+the terminal you can create, curate and stage in bound and collections
+of RSS feeds using simlpe Markdown files. You can even post new Markdown
+documents to a feed collection.</p>
+<p>I believe that the link blog where you both consume and generate RSS
+can be a basis for a truely distributed social web with out the
+complexity of many of the current (2015 - 2025) proposed solutions.</p>
 <p>Features:</p>
 <ul>
-<li>support for multiple collections of feeds</li>
+<li>support for multiple collections of feeds with</li>
+<li>Outbound feeds aggregated by feed collection</li>
 <li>a collection is defined by a Markdown document containing a list of
-links to feeds</li>
-<li>collections can be harvested, meaning content retrieved from the
-feeds listed in the Markdown document</li>
+links to feeds
+<ul>
+<li>This means configuration of the feeds you follow are written using a
+simple Markdown file</li>
+</ul></li>
+<li>collections can be harvested (in bound feeds)
+<ul>
 <li>harvested content is stored in a SQLite3 database</li>
-<li>harvested content in a collection can be aggregated and rendered as
-an HTML page for reading</li>
-<li>Markdown documents can be imported into a collection as a feed
-item</li>
-<li>RSS 2.0 XML can be generated from a collection</li>
-<li>A preview feature to view the render content in your web browser via
-a localhost URL</li>
-<li>You can manage your collections via a localhost URL too.</li>
+</ul></li>
+<li>Collections are aggregated and rendered as an HTML page</li>
+<li>Collections are aggregated and rendered as RSS 2.0 XML</li>
+<li>Markdown documents can be imported into a collection as a feed item
+<ul>
+<li>example a Markdown blog post or micro blog feed only post</li>
+</ul></li>
+<li>You staged website can be previewed on localhost using your web
+browser</li>
 </ul>
 <p>The ability to harvest feed items means we can read what others post
-on the web. The Markdown content can be added to a feed allows us to
-comment on the items read (thus being social).</p>
+on the web. The Markdown content can be added to a collection allows us
+to comment on the items read (thus being social).</p>
 <p>Through YAML configuration files you can customize the HTML rendered
 by <strong>antenna</strong> on a per collection basis. That means it is
-possible to recreate a “news paper” like experience.</p>
-<p>A statis website using <strong>antenna</strong> can grow through
-either enhancing the HTML markup defined in the YAML configuration or
-through manipulation of the collection contents in the SQLite3 database.
-This provides opporutinies to integrate with other static website tools
-like <a href="https://pagefind.app"
-title="A browser side search engine">PageFind</a> and <a
-href="https://flatlake.app"
-title="A static JSON API driven by front matter in Markdown documents">FlatLake</a>.
-You can even use <strong>antenna</strong> to augment your existing
-blog.</p>
-<h2 id="release-notes">Release Notes</h2>
+possible to recreate a “news reader” like experience.</p>
+<p>A static website using <strong>antenna</strong> can grow and be
+enhanced.</p>
 <ul>
-<li>version: 0.0.1</li>
-<li>status: concept</li>
+<li>enhancing the HTML markup rendered by update the YAML configuration
+for a collection</li>
+<li>add CSS and JavaScript to run browser side to enhance usability</li>
+<li>integrate <a href="https://pagefind.app">PageFind</a> to provide
+static site search</li>
+<li>integrate <a href="https://flatlake.app">FlatLake</a> to provide a
+JSON API</li>
 </ul>
-<p>prototype of a simple tool to create and curate an Antenna like
-website.</p>
+<p>While <strong>antenna</strong> was designed to be a link blog or news
+site generator it can also function as blog.</p>
+<h2 id="release-notes">Release Notes</h2>
+<p><strong>antenna</strong> is a prototype. It is intended to be used to
+generate the <a href="https://rsdoiel.github.io/antenna">Antenna
+website</a>.</p>
 <h3 id="authors">Authors</h3>
 <ul>
 <li>Doiel, R. S. Doiel</li>
