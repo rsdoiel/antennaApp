@@ -51,11 +51,17 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		return err
 	}
 	title := doc.GetAttributeString("title", "")
-	authors := doc.GetAttributeString("author", "")
+	authors, err := doc.GetPersons("author")
+	if err != nil {
+		return err
+	}
 	description := doc.GetAttributeString("description", "")
 	link := doc.GetAttributeString("link", "")
 	postPath := doc.GetAttributeString("postPath", "")
 	pubDate := doc.GetAttributeString("pubDate", "")
+	if pubDate == "" {
+		pubDate = doc.GetAttributeString("datePublished", "")
+	}
 	draft := doc.GetAttributeBool("draft", false)
 	channel := doc.GetAttributeString("channel", collection.Link)
 	guid := doc.GetAttributeString("guid", link)
@@ -108,7 +114,14 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	dcExt := &ext.DublinCoreExtension{}
 	updated := time.Now().Format(time.RFC3339)
 	label := collection.Title
-	return updateItem(db, link, title, description, authors,
+	authorsSrc := []byte{}
+	if authors != nil {
+		authorsSrc, err = json.Marshal(authors)
+		if err != nil {
+			return fmt.Errorf("failed to marshal author, %s", err)
+		}
+	}
+	return updateItem(db, link, title, description, fmt.Sprintf("%s", authorsSrc),
 		enclosures, guid, pubDate, dcExt, channel, status, updated, label)
 }
 

@@ -1,8 +1,10 @@
 ---
 title: Test Post
 link: http://localhost:8000/posts/post.html
+author: 
+  name: Rabbit in the backyard
 postPath: posts/post.html
-pubDate: "2025-08-27"
+datePublished: "2025-09-08"
 status: published
 ---
 

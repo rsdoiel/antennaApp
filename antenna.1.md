@@ -1,4 +1,4 @@
-%antenna.exe(1) user manual | version 0.0.1 d8f667b
+%antenna.exe(1) user manual | version 0.0.1 57d294b
 % R. S. Doiel
 % 2025-08-29
 

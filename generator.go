@@ -41,6 +41,9 @@ type Generator struct {
 	// Description, included as metadata in head element
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 
+	// Link points to the RSS feed associated with the page.
+	Link string `json:"link,omitempty" yaml:"link,omitempty"`
+
 	// CSS is the path to a CSS file
 	CSS string `json:"css,omitempty" yaml:"css,omitempty"`
 
@@ -123,6 +126,11 @@ func (gen *Generator) writeHeadElement(out io.Writer) {
 	if gen.Title != "" {
 		fmt.Fprintf(out, "  <title>%s</title>\n", gen.Title)
 	}
+	// Write out RSS 2.0 link
+	if gen.Link != "" {
+		fmt.Fprintf(out, "  <link  rel=\"alternate\" type=\"application/rss+xml\" href=%q title=%q/>\n", gen.Link, gen.Title)
+	}
+	// FIXME: Write out RSS link if needed.
 	fmt.Fprintln(out, "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
 	if gen.CSS != "" {
 		fmt.Fprintf(out, "  <link rel=\"stylesheet\" href=\"%s\" />\n", gen.CSS)
@@ -310,9 +318,9 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 	}
 	if authors != nil {
         for _, author := range authors  {
-            if author.Email != "" && author.Name != "" {
-        		fmt.Fprintf(out, "      <author>%s (%s)</author>\n", author.Email, author.Name)
-            }
+			if author.Email != "" && author.Name != "" {
+				fmt.Fprintf(out, "      <author>%s (%s)</author>\n", author.Email, author.Name)
+			}
         }
 	}
 	if enclosures != nil {
@@ -412,6 +420,7 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
             return err
 		}
         if authorsSrc != "" {
+			// Do we have a JSON object?
             authors = []*gofeed.Person{}
             if  err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
                 fmt.Fprintf(gen.eout, "error (%s): %s\n", authorsSrc, err)

@@ -11,7 +11,8 @@ import (
 
 	// 3rd party packages
 	"gopkg.in/yaml.v3"
-	"github.com/yuin/goldmark"
+	"github.com/mmcdole/gofeed"
+ 	"github.com/yuin/goldmark"
     "github.com/yuin/goldmark/extension"
     "github.com/yuin/goldmark/parser"
     "github.com/yuin/goldmark/renderer/html"
@@ -130,6 +131,59 @@ func (doc *CommonMark) GetAttributeString(key string, defaultValue string) strin
 		return val
 	}
 	return defaultValue
+}
+
+func mapToPerson(val map[string]interface{}) *gofeed.Person {
+	person := &gofeed.Person{}
+	if v, ok := val["name"].(string); ok {
+		person.Name = v
+	}
+	if v, ok := val["email"].(string); ok {
+		person.Email = v
+	}
+	if person.Name != "" || person.Email != "" {
+		return person
+	}
+	return nil
+}
+
+// GetPersons returns a list of `*gofeed.Person{}`  
+// from the front matter in the document document
+func (doc *CommonMark) GetPersons(key string) ([]*gofeed.Person, error) {
+	if val, ok := doc.FrontMatter[key].(interface{}); ok {
+		postList := []*gofeed.Person{}
+		switch val.(type) {
+		case string:
+			// FIXME: Need to handle a RSS style author string of `something@something (name)`
+			person := &gofeed.Person{}
+			person.Name = fmt.Sprintf("%s", val.(string))
+			postList = append(postList, person)
+		case []interface{}:
+			for _, v := range val.([]interface{}) {
+				person := &gofeed.Person{}
+				switch v.(type) {
+				case string:
+					// FIXME: Need to handle a RSS style author string of `something@something (name)``
+					person.Name = fmt.Sprintf("%s", v.(string))
+					postList = append(postList, person)
+				case map[string]interface{}:
+					person = mapToPerson(val.(map[string]interface{}))
+					if person != nil {
+						postList = append(postList, person)
+					}
+				}
+			}
+		case map[string]interface{}:
+			person := mapToPerson(val.(map[string]interface{}))
+			if person != nil {
+				postList = append(postList, person)
+			}
+		default:
+			return nil, fmt.Errorf("unable to parse %q", key)
+		}
+		return postList, nil
+	}
+	return nil, fmt.Errorf("no persons found for %q", key)
 }
 
 // GetAttributeBool returns a boolean attribute from 

@@ -97,6 +97,9 @@ func (app *AntennaApp) Add(cfgName string, args []string) error {
 	if collection.DbName == "" {
 		collection.DbName = strings.TrimSuffix(cName, xName) + ".db"
 	}
+	if collection.Link == "" {
+		collection.Link = strings.TrimSuffix(cName, xName) + ".xml"
+	}
 	// Make sure we have a reasonable Generator YAML filename
 	if collection.Generator == "" {
 		collection.Generator = strings.TrimSuffix(cName, xName) + ".yaml"
