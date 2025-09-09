@@ -133,13 +133,45 @@ func (doc *CommonMark) GetAttributeString(key string, defaultValue string) strin
 	return defaultValue
 }
 
+// emailAddressGetName transform an email addres like "jane.doe@example.edi (Jane Doe)" to
+// "Jane Doe".
+func emailAddressGetName(s string) string {
+	s  = strings.TrimSpace(s)
+	if strings.HasSuffix(s, ")") {
+		parts := strings.SplitN(s, "(", 2)
+		if len(parts) == 2 && strings.Contains(parts[1], "@") == false {
+			return parts[1]
+		}
+		return ""
+	}
+	if ! strings.Contains(s, "@") {
+		return s
+	}
+	return ""
+}
+
+func emailAddressTrimName(s string) string {
+	s  = strings.TrimSpace(s)
+	if strings.HasSuffix(s, ")") {
+		parts := strings.SplitN(s, "(", 2)
+		if len(parts) > 0 && strings.Contains(parts[0], "@") {
+			return parts[0]
+		}
+		return ""
+	}
+	if strings.Contains(s, "@") {
+		return s
+	}
+	return ""
+}
+
 func mapToPerson(val map[string]interface{}) *gofeed.Person {
 	person := &gofeed.Person{}
 	if v, ok := val["name"].(string); ok {
-		person.Name = v
+		person.Name = emailAddressGetName(v)
 	}
 	if v, ok := val["email"].(string); ok {
-		person.Email = v
+		person.Email = emailAddressTrimName(v)
 	}
 	if person.Name != "" || person.Email != "" {
 		return person
@@ -154,18 +186,22 @@ func (doc *CommonMark) GetPersons(key string) ([]*gofeed.Person, error) {
 		postList := []*gofeed.Person{}
 		switch val.(type) {
 		case string:
-			// FIXME: Need to handle a RSS style author string of `something@something (name)`
 			person := &gofeed.Person{}
-			person.Name = fmt.Sprintf("%s", val.(string))
-			postList = append(postList, person)
+			person.Name = emailAddressGetName(val.(string))
+			person.Email = emailAddressTrimName(val.(string))
+			if person.Name != "" || person.Email != "" {
+				postList = append(postList, person)
+			}
 		case []interface{}:
 			for _, v := range val.([]interface{}) {
 				person := &gofeed.Person{}
 				switch v.(type) {
 				case string:
-					// FIXME: Need to handle a RSS style author string of `something@something (name)``
-					person.Name = fmt.Sprintf("%s", v.(string))
-					postList = append(postList, person)
+					person.Name = emailAddressGetName(v.(string))
+					person.Email = emailAddressTrimName(v.(string))
+					if person.Name != "" || person.Email != "" {
+						postList = append(postList, person)
+					}
 				case map[string]interface{}:
 					person = mapToPerson(val.(map[string]interface{}))
 					if person != nil {
