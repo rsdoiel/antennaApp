@@ -1,5 +1,5 @@
 /*
-AntennaApp is a package for creating and curating link blogs
+antennaApp is a package for creating and curating blog, link blogs and social websites
 Copyright (C) 2025 R. S. Doiel
 
 This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package antennaApp
 
@@ -21,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	// 3rd Party Package
 	"gopkg.in/yaml.v3"
@@ -28,7 +28,7 @@ import (
 
 // AntennaApp configuration structure
 type AppConfig struct {
-	// Port holds the port number the web service will run on
+	// Port holds the port number the preview web service will run on
 	Port int `json:"port,omitempty" yaml:"port,omitempty"`
 
 	// Htdocs holds the path to directory that will recieve the generated content
@@ -58,6 +58,7 @@ type Collection struct {
 	// Title of the collection
 	Title string `json:"title,omitempty" yaml:"title,omitempty"`
 
+	// Links holds the Link element used in the published RSS 2.0 output.
 	Link string `json:"link,omitempty" yaml:"link,omitempty"`
 
 	// Description holds the description of the collection
@@ -148,6 +149,7 @@ func (cfg *AppConfig) GetCollection(cName string) (*Collection, error) {
 }
 
 func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface{}, cfg *AppConfig) error {
+	rssFile := strings.TrimSuffix(collection.File, ".md") + "xml"
 	collection.Title = ""
 	if title, ok := frontMatter["title"].(string); ok {
 		collection.Title = title
@@ -155,7 +157,7 @@ func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface
 	if link, ok := frontMatter["link"].(string); ok {
 		collection.Link = link
 	} else if collection.Link == "" {
-		collection.Link = fmt.Sprintf(`http://localhost:%d`, cfg.Port)
+		collection.Link = fmt.Sprintf(`http://localhost:%d/%s`, cfg.Port, rssFile)
 	}
 	collection.Description = ""
 	if description, ok := frontMatter["description"].(string); ok {

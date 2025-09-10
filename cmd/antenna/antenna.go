@@ -1,5 +1,5 @@
 /*
-AntennaApp is a package for creating and curating link blogs
+antennaApp is a package for creating and curating blog, link blogs and social websites
 Copyright (C) 2025 R. S. Doiel
 
 This program is free software: you can redistribute it and/or modify

@@ -1,5 +1,5 @@
 /*
-AntennaApp is a package for creating and curating link blogs
+antennaApp is a package for creating and curating blog, link blogs and social websites
 Copyright (C) 2025 R. S. Doiel
 
 This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package antennaApp
 
