@@ -72,6 +72,9 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		return err
 	}
 	description := doc.GetAttributeString("description", "")
+	if description == "" {
+		description = doc.GetAttributeString("abstract", "")
+	}
 	link := doc.GetAttributeString("link", "")
 	postPath := doc.GetAttributeString("postPath", "")
 	pubDate := doc.GetAttributeString("pubDate", "")
@@ -81,7 +84,6 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	draft := doc.GetAttributeBool("draft", false)
 	channel := doc.GetAttributeString("channel", collection.Link)
 	guid := doc.GetAttributeString("guid", link)
-	// FIXME: Need to handle getting enclosures and publishing them to posts tree
 	status := "review"
 	if draft || pubDate == ""{
 		return fmt.Errorf("%s is set to draft or is missing pubDate", fName)
@@ -100,8 +102,11 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		if link == "" {
 			return fmt.Errorf("missing link to used with postPath %q", postPath)
 		}
-		// Write out an HTML page to the postPath
+		// Write out an HTML page to the postPath, if Markdown doc, normalize .html
 		htmlName := filepath.Join(cfg.Htdocs, postPath)
+		if strings.HasSuffix(htmlName, ".md") {
+			htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
+		}
 		dName := filepath.Dir(htmlName)
 		if _, err := os.Stat(dName); err != nil {
 			if err := os.MkdirAll(dName, 0775); err != nil {
@@ -123,6 +128,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 			return err
 		} 
 	}
+	// FIXME: Need to handle getting enclosures and publishing them to posts tree
 	// NOTE: Insert/update item in collection
 	// FIXME: need to populate the enclosures
 	enclosures := []*Enclosure{}

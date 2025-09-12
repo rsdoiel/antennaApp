@@ -40,7 +40,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.2
+version: 0.0.3
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -52,15 +52,15 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-09-08
+date_released: 2025-09-11
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.2
+## antennaApp 0.0.3
 
-prototype of a simple tool to create and curate an Antenna like website.
+Added additional field support for front matter. Mappging datePublished to pubDate, abstract to description and postPath should point to the Markdown document.
 
 ### Authors
 
@@ -117,7 +117,7 @@ You can even use **{app_name}** to augment your existing blog.
 
 ### Software Requirements
 
-- Go >= 1.25.0
+- Go >= 1.25.1
 - CMTools >= 0.0.40
 
 

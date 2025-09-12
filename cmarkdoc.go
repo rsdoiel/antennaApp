@@ -259,7 +259,10 @@ func (doc *CommonMark) GetAttributeBool(key string, defaultValue bool) bool{
 
 func (doc *CommonMark) ToHTML() (string, error) {
 	md := goldmark.New(
-          goldmark.WithExtensions(extension.GFM),
+		  goldmark.WithExtensions(
+			extension.GFM,
+			extension.Footnote,
+		),
           goldmark.WithParserOptions(
               parser.WithAutoHeadingID(),
           ),
