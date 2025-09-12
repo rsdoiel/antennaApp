@@ -4,8 +4,10 @@
 *.bak
 *.yaml
 *.db
+TODO.html
 bin/
 man/
 dist/
 htdocs/
 myblog/
+posts/

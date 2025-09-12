@@ -86,7 +86,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	guid := doc.GetAttributeString("guid", link)
 	status := "review"
 	if draft || pubDate == ""{
-		return fmt.Errorf("%s is set to draft or is missing pubDate", fName)
+		return fmt.Errorf("%s is set to draft or is missing pubDate %q", fName, pubDate)
 	} else {
 		status = "published" 
 	}
@@ -100,7 +100,15 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	}
 	if postPath != "" {
 		if link == "" {
-			return fmt.Errorf("missing link to used with postPath %q", postPath)
+			if cfg.BaseURL != "" {
+				if strings.HasSuffix(postPath, ".md") {
+					link = cfg.BaseURL + "/" + strings.TrimSuffix(postPath, ".md") + ".html"
+				}  else {
+					link = cfg.BaseURL + "/" + postPath
+				}
+			} else {
+				return fmt.Errorf("missing baseUrl in antenna YAML, could not form link using postPath %q", postPath)
+			}
 		}
 		// Write out an HTML page to the postPath, if Markdown doc, normalize .html
 		htmlName := filepath.Join(cfg.Htdocs, postPath)
@@ -124,7 +132,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		if err := gen.LoadConfig(collection.Generator); err != nil {
 			return err
 		}
-		if err := gen.WriteHtmlPage(htmlName, link, pubDate, innerHTML); err != nil {
+		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML); err != nil {
 			return err
 		} 
 	}
@@ -144,7 +152,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		}
 	}
 	return updateItem(db, link, title, description, fmt.Sprintf("%s", authorsSrc),
-		enclosures, guid, pubDate, dcExt, channel, status, updated, label)
+		enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath)
 }
 
 func (app *AntennaApp) Unpost(cfgName string, args []string) error {
@@ -172,7 +180,7 @@ func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 // updateItem will perform an "upsert" to insert or update the row
 func updateItem(db *sql.DB, link string, title string, description string, authors string,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt *ext.DublinCoreExtension,
-	channel, status string, updated string, label string) error {
+	channel, status string, updated string, label string, postPath string) error {
 	enclosuresSrc, err := json.Marshal(enclosures)
 	if err != nil {
 		return nil
@@ -183,7 +191,7 @@ func updateItem(db *sql.DB, link string, title string, description string, autho
 	}
 	_, err = db.Exec(SQLUpdateItem, link, title, description, authors,
 		enclosuresSrc, guid, pubDate, dcExtSrc,
-		channel, status, updated, label)
+		channel, status, updated, label, postPath)
 	if err != nil {
 		return err
 	}

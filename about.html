@@ -19,23 +19,25 @@
 </nav>
 <section>
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.3">antennaApp 0.0.3</h2>
-<p>Added additional field support for front matter. Mappging
-datePublished to pubDate, abstract to description and postPath should
-point to the Markdown document.</p>
+<h2 id="antennaapp-0.0.4">antennaApp 0.0.4</h2>
+<p>Improved the generate action but having it update HTML of posted
+item. Added enclosure of Markdown content from posts to RSS rendering.
+Added alternate link in head for Markdown verion of posts.</p>
 <h3 id="authors">Authors</h3>
 <ul>
 <li>R. S. Doiel Doiel, <a href="https://orcid.org/0000-0003-0900-6903"
 class="uri">https://orcid.org/0000-0003-0900-6903</a></li>
 </ul>
-<p><strong>{app_name}</strong> is a tool for working with RSS feeds and
+<p><strong>antenna</strong> is a tool for working with RSS feeds and
 rendering a link blog. It is inspired by Dave Winer's <a
-href="https://textcasting.org">Textcasting</a> concept.</p>
+href="https://textcasting.org">Textcasting</a> and <a
+href="https://feedland.org">FeedLand</a> and my own experimental
+website, <a href="https://rsdoiel.github.io/antenna">antenna</a>.</p>
 <p>The approach I am taking is to make it easy to curate feeds and
 generated a static website using a simple command line tool. I believe
-that the link blog where you both consume and generate RSS can be a
-basis for a truely distributed social web with out the complexity of
-many of the current (2015 - 2025) proposed solutions.</p>
+that the link blog which you can consume and generate RSS can be a basis
+for a truely distributed social web without the complexity of many of
+the current (2015 - 2025) proposed solutions.</p>
 <p>Features:</p>
 <ul>
 <li>support for multiple collections of feeds</li>
@@ -48,7 +50,7 @@ feeds listed in the Markdown document</li>
 an HTML page for reading</li>
 <li>Markdown documents can be imported into a collection as a feed
 item</li>
-<li>RSS 2.0 XML can be generated from a collection</li>
+<li>RSS 2.0 XML and HTML are generated per collection</li>
 <li>A preview feature to view the render content in your web browser via
 a localhost URL</li>
 <li>You can manage your collections via a localhost URL too.</li>
@@ -57,9 +59,9 @@ a localhost URL</li>
 on the web. The Markdown content can be added to a feed allows us to
 comment on the items read (thus being social).</p>
 <p>Through YAML configuration files you can customize the HTML rendered
-by <strong>{app_name}</strong> on a per collection basis. That means it
-is possible to recreate a "news paper" like experience.</p>
-<p>A statis website using <strong>{app_name}</strong> can grow through
+by <strong>antenna</strong> on a per collection basis. That means it is
+possible to recreate a "news paper" like experience.</p>
+<p>A statis website using <strong>antenna</strong> can grow through
 either enhancing the HTML markup defined in the YAML configuration or
 through manipulation of the collection contents in the SQLite3 database.
 This provides opporutinies to integrate with other static website tools

@@ -21,6 +21,8 @@ import (
     "encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -46,9 +48,9 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 
 	// Setup the Title
 	if title == "" {
-		title = fmt.Sprintf("<h1>@%s</h1>\n\n(date: %s, from: <a href=%q>%s</a>)", label, pressTime, link, label)
+		title = fmt.Sprintf("<h1>@%s</h1>\n\n(date: %s)", label, pressTime)
 	} else {
-		title = fmt.Sprintf("<h1>%s</h1>\n\n(date: %s, from: <a href=%q>%s</a>)", title, pressTime, link, link)
+		title = fmt.Sprintf("<h1>%s</h1>\n\n(date: %s)", title, pressTime)
 	}
 
 	fmt.Fprintf(out, `
@@ -64,12 +66,13 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	return nil
 }
 
-func (gen *Generator) writeHeadElement(out io.Writer) {
+// writeHeadElement, writes the head element of the HTML page.
+func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 	fmt.Fprintln(out, "<head>")
 	defer fmt.Fprintln(out, "</head>")
 	// Write out charset
 	fmt.Fprintln(out, "  <meta charset=\"UTF-8\" />")
-	// Write title
+	// Write title (NOTE: title must come after the charset since it may have encoded characters)
 	if gen.Title != "" {
 		fmt.Fprintf(out, "  <title>%s</title>\n", gen.Title)
 	}
@@ -77,7 +80,12 @@ func (gen *Generator) writeHeadElement(out io.Writer) {
 	if gen.Link != "" {
 		fmt.Fprintf(out, "  <link  rel=\"alternate\" type=\"application/rss+xml\" href=%q title=%q/>\n", gen.Link, gen.Title)
 	}
-	// FIXME: Write out RSS link if needed.
+	// Write out RSS alt link for Markdown if postPath is not empty string
+	if postPath != "" && strings.HasSuffix(postPath, ".md") {
+		// NOTE: Posts are written next to the HTML page so the link to the Markdown can be relative
+		postLink :=  filepath.Base(postPath)
+		fmt.Fprintf(out, "  <link  rel=\"alternate\" type=\"text/markdown\" href=%q title=%q/>\n", postLink, gen.Title)
+	}
 	fmt.Fprintln(out, "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
 	if gen.CSS != "" {
 		fmt.Fprintf(out, "  <link rel=\"stylesheet\" href=\"%s\" />\n", gen.CSS)
@@ -111,7 +119,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 <html lang="en-US">`)
 	defer fmt.Fprintln(out, "</html>")
 	// Setup the metadata in the head element
-	gen.writeHeadElement(out)
+	gen.writeHeadElement(out, "")
 	// Setup body element
 	fmt.Fprintln(out, "<body>")
 	defer fmt.Fprintln(out, "</body>")
@@ -170,10 +178,11 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			status        string
 			updated       string
             label         string
+			postPath      string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
-			&channel, &status, &updated, &label); err != nil {
+			&channel, &status, &updated, &label, &postPath); err != nil {
 			fmt.Fprintf(gen.eout, "error (%s): s\n", stmt, err)
 			continue
 		}
@@ -191,7 +200,6 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 				enclosures = nil
 			}
 		}
-
 		if err := gen.WriteItem(out, link, title, description, authors,
 			enclosures, guid, pubDate, dcExt,
 			channel, status, updated, label); err != nil {
@@ -214,3 +222,79 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	return nil
 }
 
+// WriteHtmlPage renders a post as an HTML Page using HTML connent and wrapping it based on the 
+// generator configuration.
+func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubDate string, innerHTML string) error {
+	// clear existing page
+	if _, err := os.Stat(htmlName); err == nil {
+		if err := os.Remove(htmlName); err != nil {
+			return nil
+		}
+	}
+	// Create the HTML file
+	out, err := os.Create(htmlName)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Create the outer elements of a page.
+	fmt.Fprintln(out, `<!doctype html>
+<html lang="en-US">`)
+	defer fmt.Fprintln(out, "</html>")
+	// Setup the metadata in the head element
+	gen.writeHeadElement(out, postPath)
+	// Setup body element
+	fmt.Fprintln(out, "<body>")
+	defer fmt.Fprintln(out, "</body>")
+	// Setup header element
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	if gen.Header != "" {
+		fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
+	} else if gen.Title != "" {
+		fmt.Fprintf(out, `  <header>
+    <h1>%s</h1>
+
+    (date: %s)
+
+  </header>
+`, gen.Title, timestamp)
+	} else {
+		fmt.Fprintf(out, `  <header>
+    (date: %s)
+  </header>
+`, timestamp)
+	}
+	// Setup nav element
+	if gen.Nav != "" {
+		fmt.Fprintf(out, `  <nav>
+    %s
+  </nav>
+`, indentText(strings.TrimSpace(gen.Nav), 4))
+	}
+	if gen.TopContent != "" {
+		fmt.Fprintf(out, `
+    %s
+`, indentText(strings.TrimSpace(gen.TopContent), 4))
+	}
+
+	// Now render our innerHTML
+	fmt.Fprintf(out, `
+  <section>
+    <article data-published=%q data-link=%q>
+      %s
+    </article>
+  </section>
+`, pubDate, link, indentText(innerHTML, 6))
+
+	// Wrap up the page
+	if gen.Footer != "" {
+		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
+	}
+	if gen.BottomContent != "" {
+		fmt.Fprintf(out, `
+    %s
+`, indentText(strings.TrimSpace(gen.BottomContent), 4))
+	}
+	return nil
+}

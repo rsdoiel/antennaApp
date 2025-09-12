@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS channels (
 
 CREATE TABLE IF NOT EXISTS items (
 	link PRIMARY KEY,
+	postPath TEXT DEFAULT '',
 	title TEXT,
 	description TEXT,
 	authors JSON,
@@ -59,7 +60,7 @@ CREATE TABLE IF NOT EXISTS items (
 
 	// Update the channels in the skimmer file
 	SQLUpdateChannel = `REPLACE INTO channels (
-link, title, description, feed_link, links,
+link, title, description, feed_link, links
 updated, published, 
 authors, language, copyright, generator,
 categories, feed_type, feed_version
@@ -74,14 +75,15 @@ categories, feed_type, feed_version
 	SQLUpdateItem = `INSERT INTO items (
 	link, title, description, authors,
 	enclosures, guid, pubDate, dcExt,
-	channel, status, updated, label
+	channel, status, updated, label, postPath
 ) VALUES (
-	?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12
+	?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13
 ) ON CONFLICT (link) DO
   UPDATE SET 
   	title = ?2, description = ?3, authors = ?4,
 	enclosures = ?5, guid = ?6, pubDate = ?7, dcExt = ?8,
-	channel = ?9, status = ?10, updated = ?11, label = ?12;`
+	channel = ?9, status = ?10, updated = ?11, label = ?12,
+	postPath = ?13;`
 
 	// SQLItemCount returns a list of items in the items table
 	SQLItemCount = `SELECT COUNT(*) FROM items;`
@@ -90,7 +92,7 @@ categories, feed_type, feed_version
 	SQLDisplayItems = `SELECT 
   link, title, description, authors,
   enclosures, guid, pubDate, dcExt,
-  channel, status, updated, label
+  channel, status, updated, label, postPath
 FROM items
 WHERE (description != '' OR title != '') AND status = 'published'
 ORDER BY pubDate DESC, updated DESC;`

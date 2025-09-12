@@ -21,6 +21,7 @@ import (
     "encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -89,7 +90,7 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 			}
         }
 	}
-	if enclosures != nil {
+	if enclosures != nil && len(enclosures) > 0 {
 		for _, enclosure := range enclosures {
 			fmt.Fprintf(out, `      <enclosure url=%q length=%q type=%q />
 `, strings.TrimSpace(enclosure.Url), enclosure.Length, strings.TrimSpace(enclosure.Type))
@@ -113,11 +114,15 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 	rssLink := strings.TrimSuffix(collection.File, ".md") + ".xml"
 	feedLink := fmt.Sprintf("%s/%s", gen.BaseURL, rssLink)
 	if collection.Link != "" {
-		feedLink = collection.Link
-	}
+		if strings.Contains(collection.Link, "://") {
+			feedLink = collection.Link
+		} else {
+			feedLink = fmt.Sprintf("%s/%s", gen.BaseURL, collection.Link)
+		}
+ 	}
 	fmt.Fprintf(out, `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-<atom:link href=%q rel="self" type="application/rss+xml" />
+  <atom:link href=%q rel="self" type="application/rss+xml" />
   <channel>
 `, feedLink)
 	defer fmt.Fprintln(out, `
@@ -134,10 +139,7 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
     </description>
 `, indentText(strings.TrimSpace(collection.Description), 6))
 	}
-	if collection.Link != "" {
-		fmt.Fprintf(out, `    <link>%s</link>
-`, strings.TrimSpace(collection.Link))
-	} else {
+	if feedLink != "" {
 		fmt.Fprintf(out, `    <link>%s</link>
 `, feedLink)
 	}
@@ -191,10 +193,11 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 			status        string
 			updated       string
             label         string
+			postPath      string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
               &enclosuresSrc, &guid, &pubDate, &dcExt,
-              &channel, &status, &updated, &label); err != nil {
+              &channel, &status, &updated, &label, &postPath); err != nil {
             return err
 		}
         if authorsSrc != "" {
@@ -205,13 +208,39 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
                 authors = nil
             }
         }
+		enclosures = []*Enclosure{}
         if enclosuresSrc != "" {
-            enclosures = []*Enclosure{}
             if err := json.Unmarshal([]byte(enclosuresSrc), &enclosures); err != nil {
                 fmt.Fprintf(gen.eout, "error (%s): %s\n", enclosuresSrc, err)
                 enclosures = nil
             }
         }
+		if postPath != "" {
+			if fi, err := os.Stat(postPath); err == nil {
+				enclosure := &Enclosure{
+					Url: gen.BaseURL + "/" + postPath,
+					Length: fmt.Sprintf("%d", fi.Size()),
+					Type: "text/markdown",
+				}
+				addEnclosure := true
+				if len(enclosures) > 0 {
+					// Make sure we're not add a duplicate
+					for _, item := range enclosures {
+						if item.Url == enclosure.Url {
+							addEnclosure = false;
+							// Let's update the existing enclosure
+							item.Url = enclosure.Url
+							item.Length = enclosure.Length
+							item.Type = enclosure.Type
+							break
+						}	
+					} 
+				}
+				if addEnclosure {
+					enclosures = append(enclosures, enclosure)
+				}
+			}
+		}
 		if err := gen.WriteItemRSS(out, link, title, description, authors,
 			enclosures, guid, pubDate, dcExt,
 			channel, status, updated, label); err != nil {

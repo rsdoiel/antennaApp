@@ -23,7 +23,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	// 3rd Party Packages
 	"gopkg.in/yaml.v3"
@@ -176,6 +175,7 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
             fmt.Fprintf(eout, "warning could not retrieve %q, skipping\n", cName)
             continue
         }
+		// Generate the aggregated page
 		if err := col.Generate(out, eout, app.appName, cfg); err != nil {
 			fmt.Fprintf(eout, "warning %s: %s\n", col.File, err)
 		}
@@ -280,84 +280,6 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
     // Write out RSS page
 	if err := gen.WriteRSS(out, db, appName, collection); err != nil {
 		return err
-	}
-	return nil
-}
-
-
-// WriteHtmlPage renders an HTML Page using HTML connent and wrapping it based on the 
-// generator configuration.
-func (gen *Generator) WriteHtmlPage(htmlName string, link string, pubDate string, innerHTML string) error {
-	// clear existing page
-	if _, err := os.Stat(htmlName); err == nil {
-		if err := os.Remove(htmlName); err != nil {
-			return nil
-		}
-	}
-	// Create the HTML file
-	out, err := os.Create(htmlName)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Create the outer elements of a page.
-	fmt.Fprintln(out, `<!doctype html>
-<html lang="en-US">`)
-	defer fmt.Fprintln(out, "</html>")
-	// Setup the metadata in the head element
-	gen.writeHeadElement(out)
-	// Setup body element
-	fmt.Fprintln(out, "<body>")
-	defer fmt.Fprintln(out, "</body>")
-	// Setup header element
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
-	if gen.Header != "" {
-		fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
-	} else if gen.Title != "" {
-		fmt.Fprintf(out, `  <header>
-    <h1>%s</h1>
-
-    (date: %s)
-
-  </header>
-`, gen.Title, timestamp)
-	} else {
-		fmt.Fprintf(out, `  <header>
-    (date: %s)
-  </header>
-`, timestamp)
-	}
-	// Setup nav element
-	if gen.Nav != "" {
-		fmt.Fprintf(out, `  <nav>
-    %s
-  </nav>
-`, indentText(strings.TrimSpace(gen.Nav), 4))
-	}
-	if gen.TopContent != "" {
-		fmt.Fprintf(out, `
-    %s
-`, indentText(strings.TrimSpace(gen.TopContent), 4))
-	}
-
-	// Now render our innerHTML
-	fmt.Fprintf(out, `
-  <section>
-    <article data-published=%q data-link=%q>
-      %s
-    </article>
-  </section>
-`, pubDate, link, indentText(innerHTML, 6))
-
-	// Wrap up the page
-	if gen.Footer != "" {
-		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
-	}
-	if gen.BottomContent != "" {
-		fmt.Fprintf(out, `
-    %s
-`, indentText(strings.TrimSpace(gen.BottomContent), 4))
 	}
 	return nil
 }

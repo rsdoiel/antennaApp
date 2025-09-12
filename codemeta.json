@@ -12,9 +12,9 @@
     }
   ],
   "dateCreated": "2025-08-22",
-  "dateModified": "2025-09-11",
-  "datePublished": "2025-09-11",
-  "description": "**{app_name}** is a tool for working with RSS feeds and rendering a link blog.\nIt is inspired by Dave Winer's [Textcasting](https://textcasting.org) concept.\n\nThe approach I am taking is to make it easy to curate feeds and generated a static\nwebsite using a simple command line tool. I believe that the link blog where you\nboth consume and generate RSS can be a basis for a truely distributed social web\nwith out the complexity of many of the current (2015 - 2025) proposed solutions.\n\nFeatures:\n\n- support for multiple collections of feeds\n- a collection is defined by a Markdown document containing a list of links to feeds\n- collections can be harvested, meaning content retrieved from the feeds listed in the Markdown document\n- harvested content is stored in a SQLite3 database\n- harvested content in a collection can be aggregated and rendered as an HTML page for reading\n- Markdown documents can be imported into a collection as a feed item\n- RSS 2.0 XML can be generated from a collection\n- A preview feature to view the render content in your web browser via a localhost URL\n- You can manage your collections via a localhost URL too.\n\nThe ability to harvest feed items means we can read what others post on the web. The Markdown content\ncan be added to a feed allows us to comment on the items read (thus being social).\n\nThrough YAML configuration files you can customize the HTML rendered by **{app_name}** on a per\ncollection basis. That means it is possible to recreate a \"news paper\" like experience. \n\nA statis website using **{app_name}** can grow through either enhancing the HTML markup defined\nin the YAML configuration or through manipulation of the collection contents in the SQLite3 database.\nThis provides opporutinies to integrate with other static website tools like\n[PageFind](https://pagefind.app \"A browser side search engine\") and\n[FlatLake](https://flatlake.app \"A static JSON API driven by front matter in Markdown documents\").\nYou can even use **{app_name}** to augment your existing blog.",
+  "dateModified": "2025-09-12",
+  "datePublished": "2025-09-12",
+  "description": "**antenna** is a tool for working with RSS feeds and rendering a link blog.\nIt is inspired by Dave Winer's [Textcasting](https://textcasting.org) and\n[FeedLand](https://feedland.org) and my own experimental website,\n[antenna](https://rsdoiel.github.io/antenna).\n\nThe approach I am taking is to make it easy to curate feeds and generated a static\nwebsite using a simple command line tool. I believe that the link blog which you\ncan consume and generate RSS can be a basis for a truely distributed social web\nwithout the complexity of many of the current (2015 - 2025) proposed solutions.\n\nFeatures:\n\n- support for multiple collections of feeds\n- a collection is defined by a Markdown document containing a list of links to feeds\n- collections can be harvested, meaning content retrieved from the feeds listed in the Markdown document\n- harvested content is stored in a SQLite3 database\n- harvested content in a collection can be aggregated and rendered as an HTML page for reading\n- Markdown documents can be imported into a collection as a feed item\n- RSS 2.0 XML and HTML are generated per collection\n- A preview feature to view the render content in your web browser via a localhost URL\n- You can manage your collections via a localhost URL too.\n\nThe ability to harvest feed items means we can read what others post on the web. The Markdown content\ncan be added to a feed allows us to comment on the items read (thus being social).\n\nThrough YAML configuration files you can customize the HTML rendered by **antenna** on a per\ncollection basis. That means it is possible to recreate a \"news paper\" like experience. \n\nA statis website using **antenna** can grow through either enhancing the HTML markup defined\nin the YAML configuration or through manipulation of the collection contents in the SQLite3 database.\nThis provides opporutinies to integrate with other static website tools like\n[PageFind](https://pagefind.app \"A browser side search engine\") and\n[FlatLake](https://flatlake.app \"A static JSON API driven by front matter in Markdown documents\").\nYou can even use **{app_name}** to augment your existing blog.",
   "keywords": [
     "RSS",
     "Feeds",
@@ -35,10 +35,10 @@
     "Pandoc >= 3.1",
     "Bash or Powershell"
   ],
-  "version": "0.0.3",
-  "developmentStatus": "concept",
+  "version": "0.0.4",
+  "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "Added additional field support for front matter. Mappging datePublished to pubDate, abstract to description and postPath should point to the Markdown document.",
+  "releaseNotes": "Improved the generate action but having it update HTML of posted item.\nAdded enclosure of Markdown content from posts to RSS rendering. Added alternate link\nin head for Markdown verion of posts.",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }
