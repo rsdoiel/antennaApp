@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.4 ead7007
+%antenna(1) user manual | version 0.0.4 b2dc1a6
 % R. S. Doiel
 % 2025-09-12
 

@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS items (
 
 	// Update the channels in the skimmer file
 	SQLUpdateChannel = `REPLACE INTO channels (
-link, title, description, feed_link, links
+link, title, description, feed_link, links,
 updated, published, 
 authors, language, copyright, generator,
 categories, feed_type, feed_version

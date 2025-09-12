@@ -267,11 +267,14 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 			return fmt.Errorf("failed to marshal item.Authors, %s", err)
 		}
 	}
+	// NOTE: postPath doens't exist for harvested items, only for posted ones but SQL statement
+	// is used for both.
+	postPath := "" 
 	stmt := SQLUpdateItem
 	if _, err := db.Exec(stmt,
 		item.Link, item.Title, item.Description, string(authors),
 		string(enclosures), item.GUID, pubDate, string(dcExt),
-		channel, status, updated, feedLabel); err != nil {
+		channel, status, updated, feedLabel, postPath); err != nil {
 		return fmt.Errorf("%s\nstmt: %s", err, stmt)
 	}
 	return nil
