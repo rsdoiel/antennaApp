@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.4
+version: 0.0.5
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,17 +54,15 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-09-12
+date_released: 2025-09-13
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.4
+## antennaApp 0.0.5
 
-Improved the generate action but having it update HTML of posted item.
-Added enclosure of Markdown content from posts to RSS rendering. Added alternate link
-in head for Markdown verion of posts.
+Fixed bug in setting updated value with post command and parsing dates in post and html rendering.
 
 ### Authors
 

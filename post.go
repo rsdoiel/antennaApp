@@ -81,6 +81,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	if pubDate == "" {
 		pubDate = doc.GetAttributeString("datePublished", "")
 	}
+	dateModified := doc.GetAttributeString("dateModified",pubDate)
 	draft := doc.GetAttributeBool("draft", false)
 	channel := doc.GetAttributeString("channel", collection.Link)
 	guid := doc.GetAttributeString("guid", link)
@@ -143,6 +144,14 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	// FIXME: need to populate the Dublin Core extension
 	dcExt := &ext.DublinCoreExtension{}
 	updated := time.Now().Format(time.RFC3339)
+	if dateModified != "" {
+		d, err := time.Parse("2006-01-02", dateModified)
+		if err != nil {
+			return fmt.Errorf("failed to parse dateModified: %q, %s", dateModified, err)
+		}
+		updated = d.Format(time.RFC3339)
+	}
+
 	label := collection.Title
 	authorsSrc := []byte{}
 	if authors != nil {
