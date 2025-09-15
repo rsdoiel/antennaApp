@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.4 27b14dc
+%antenna(1) user manual | version 0.0.4 70969fc
 % R. S. Doiel
 % 2025-09-12
 
@@ -18,14 +18,14 @@ It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and
 
 The approach I am taking is to make it easy to curate feeds and generated a static
 website using a simple command line tool. I believe that the link blog where you
-both consume and generate RSS can be a basis for a truely distributed social web
+both consume and generate RSS can be a basis for a truly distributed social web
 with out the complexity of many of the current (2015 - 2025) proposed solutions.
 
 Features:
 
 - support for multiple collections of feeds
 - a collection is defined by a Markdown document containing a list of links to feeds
-  - fromt matter in the Makrdown document is used to enhance content and RSS feed
+  - front matter in the Markdown document is used to enhance content and RSS feed
 - collections can be harvested, meaning content retrieved from the feeds listed in the Markdown document
 - harvested content is stored in a SQLite3 database
 - harvested content in a collection can be aggregated and rendered as an HTML page for reading
@@ -41,9 +41,9 @@ can be added to a feed allows us to comment on the items read (thus being social
 Through YAML configuration files you can customize the HTML rendered by **antenna** on a per
 collection basis. That means it is possible to recreate a "news paper" like experience. 
 
-A statis website using **antenna** can grow through either enhancing the HTML markup defined
+A static website using **antenna** can grow through either enhancing the HTML markup defined
 in the YAML configuration or through manipulation of the collection contents in the SQLite3 database.
-This provides opporutinies to integrate with other static website tools like
+This provides opportunities to integrate with other static website tools like
 [PageFind](https://pagefind.app "A browser side search engine"). You can even use
 **antenna** to augment your existing static website blog.
 
@@ -59,7 +59,7 @@ This provides opporutinies to integrate with other static website tools like
 : display version
 
 -config FILENAME
-: Use specified YAML file for configution
+: Use specified YAML file for configuration
 
 # ACTION
 
@@ -75,7 +75,7 @@ add COLLECTION_FILE [NAME DESCRIPTION]
 : Add the feed collection name by COLLECTION_FILE to your Antenna configuration.
 A COLLECTION_FILE is a Markdown document containing one or more links in a list. You 
 can include a short name that will be displayed when the HTML was generated. You may
-also supply a DESCRIPTION associated with the colleciton. These can also be set in
+also supply a DESCRIPTION associated with the collection. These can also be set in
 the Front Matter of the Markdown document.
 
 del COLLECTION_FILE
@@ -116,11 +116,15 @@ your favorite web browser.
 set in the YAML file.
 
 port
-: (optional, default: 8000) The localhost port for the "view" action
+: (optional, default: 8000) The localhost port for the "preview" action
+
+host
+: (optional, default: localhost) This is the hostname that will be combined with
+the port number and listened for when using the "preview" action
 
 htdocs
-: (optional, default: ".") The directory that rendered CommonMark, assets and HTML writen to. This is the directory
-that will be served out using the "view" action.
+: (optional, default: ".") The directory where rendered Markdown, assets and HTML are written. This is the directory
+that will be used in the "preview" action.
 
 generator
 : (optional) This holds the default YAML configuration filename to use when
@@ -139,7 +143,7 @@ file
 : (required), the path to the Markdown file defining the collection
 
 generator
-: (optional) The YAML configuration filename to used to render the colllection
+: (optional) The YAML configuration filename to used to render the collection
 as HTML.
 
 # EXAMPLES

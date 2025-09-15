@@ -31,15 +31,15 @@ class="uri">https://news.scripting.com</a>.</p>
 <p>The approach I am taking is to make it easy to curate feeds and
 generated a static website using a simple command line tool. I believe
 that the link blog where you both consume and generate RSS can be a
-basis for a truely distributed social web with out the complexity of
-many of the current (2015 - 2025) proposed solutions.</p>
+basis for a truly distributed social web with out the complexity of many
+of the current (2015 - 2025) proposed solutions.</p>
 <p>Features:</p>
 <ul>
 <li>support for multiple collections of feeds</li>
 <li>a collection is defined by a Markdown document containing a list of
 links to feeds
 <ul>
-<li>fromt matter in the Makrdown document is used to enhance content and
+<li>front matter in the Markdown document is used to enhance content and
 RSS feed</li>
 </ul></li>
 <li>collections can be harvested, meaning content retrieved from the
@@ -63,10 +63,10 @@ comment on the items read (thus being social).</p>
 <p>Through YAML configuration files you can customize the HTML rendered
 by <strong>antenna</strong> on a per collection basis. That means it is
 possible to recreate a “news paper” like experience.</p>
-<p>A statis website using <strong>antenna</strong> can grow through
+<p>A static website using <strong>antenna</strong> can grow through
 either enhancing the HTML markup defined in the YAML configuration or
 through manipulation of the collection contents in the SQLite3 database.
-This provides opporutinies to integrate with other static website tools
+This provides opportunities to integrate with other static website tools
 like <a href="https://pagefind.app"
 title="A browser side search engine">PageFind</a>. You can even use
 <strong>antenna</strong> to augment your existing static website
@@ -87,7 +87,7 @@ display version
 </dd>
 <dt>-config FILENAME</dt>
 <dd>
-Use specified YAML file for configution
+Use specified YAML file for configuration
 </dd>
 </dl>
 <h1 id="action">ACTION</h1>
@@ -109,7 +109,7 @@ Add the feed collection name by COLLECTION_FILE to your Antenna
 configuration. A COLLECTION_FILE is a Markdown document containing one
 or more links in a list. You can include a short name that will be
 displayed when the HTML was generated. You may also supply a DESCRIPTION
-associated with the colleciton. These can also be set in the Front
+associated with the collection. These can also be set in the Front
 Matter of the Markdown document.
 </dd>
 <dt>del COLLECTION_FILE</dt>
@@ -163,13 +163,19 @@ the primary attributes you can set in the YAML file.</p>
 <dl>
 <dt>port</dt>
 <dd>
-(optional, default: 8000) The localhost port for the “view” action
+(optional, default: 8000) The localhost port for the “preview” action
+</dd>
+<dt>host</dt>
+<dd>
+(optional, default: localhost) This is the hostname that will be
+combined with the port number and listened for when using the “preview”
+action
 </dd>
 <dt>htdocs</dt>
 <dd>
-(optional, default: “.”) The directory that rendered CommonMark, assets
-and HTML writen to. This is the directory that will be served out using
-the “view” action.
+(optional, default: “.”) The directory where rendered Markdown, assets
+and HTML are written. This is the directory that will be used in the
+“preview” action.
 </dd>
 <dt>generator</dt>
 <dd>
@@ -197,7 +203,7 @@ collection
 <dt>generator</dt>
 <dd>
 (optional) The YAML configuration filename to used to render the
-colllection as HTML.
+collection as HTML.
 </dd>
 </dl>
 <h1 id="examples">EXAMPLES</h1>

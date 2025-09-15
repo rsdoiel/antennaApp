@@ -1,15 +1,45 @@
-Installation for development of **antennaApp**
-===========================================
+Installation of **antennaApp**
+==============================
 
-**antennaApp** antennaApp provides a simple application that supports [Textcasting](https://textcasting.org) and Link Blogging.
-It is built on my experience build my [Antenna](https://github.com/rsdoiel/antenna) personal news aggregator site and my experimental feed reader
-project called [Skimmer](https://github.com/rsdoiel/skimmer). It uses the Skimmer project to create a turn key
-Antenna style website and curation tool that can run on common computers running Raspberry Pi OS, macOS and Windows.
+**antennaApp** **antenna** is a tool for working with RSS feeds and rendering a link blog.
+It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and
+[FeedLand](https://feedland.org) and my own experimental website,
+[antenna](https://rsdoiel.github.io/antenna).
+
+The approach I am taking is to make it easy to curate feeds and generated a static
+website using a simple command line tool. I believe that the link blog which you
+can consume and generate RSS can be a basis for a truly distributed social web
+without the complexity of many of the current (2015 - 2025) proposed solutions.
+
+Features:
+
+- support for multiple collections of feeds
+- a collection is defined by a Markdown document containing a list of links to feeds
+- collections can be harvested, meaning content retrieved from the feeds listed in the Markdown document
+- harvested content is stored in a SQLite3 database
+- harvested content in a collection can be aggregated and rendered as an HTML page for reading
+- Markdown documents can be imported into a collection as a feed item
+- RSS 2.0 XML and HTML are generated per collection
+- A preview feature to view the render content in your web browser via a localhost URL
+- You can manage your collections via a localhost URL too.
+
+The ability to harvest feed items means we can read what others post on the web. The Markdown content
+can be added to a feed allows us to comment on the items read (thus being social).
+
+Through YAML configuration files you can customize the HTML rendered by **antenna** on a per
+collection basis. That means it is possible to recreate a "news paper" like experience. 
+
+A static website using **antenna** can grow through either enhancing the HTML markup defined
+in the YAML configuration or through manipulation of the collection contents in the SQLite3 database.
+This provides opportunities to integrate with other static website tools like
+[PageFind](https://pagefind.app "A browser side search engine") and
+[FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents").
+You can even use **{app_name}** to augment your existing blog.
 
 Quick install with curl or irm
 ------------------------------
 
-There is an experimental installer.sh script that can be run with the following command to install latest table release. This may work for macOS, Linux and if you’re using Windows with the Unix subsystem. This would be run from your shell (e.g. Terminal on macOS).
+There is an experimental installer.sh script that can be run with the following command to install latest stable release. This works for macOS, Linux and if you’re using Windows with the Unix subsystem. This would be run from your shell (e.g. Terminal on macOS).
 
 ~~~shell
 curl https://rsdoiel.github.io/antennaApp/installer.sh | sh
@@ -30,13 +60,12 @@ You may get security warnings if you are using macOS or Windows. See the notes f
 - [INSTALL_NOTES_macOS.md](INSTALL_NOTES_macOS.md)
 - [INSTALL_NOTES_Windows.md](INSTALL_NOTES_Windows.md)
 
-
 Installing from source
 ----------------------
 
 ### Required software
 
-- Go &gt;&#x3D; 1.25.0
+- Go &gt;&#x3D; 1.25.1
 - CMTools &gt;&#x3D; 0.0.40
 
 ### Steps

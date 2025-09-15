@@ -6,12 +6,12 @@
 It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and [FeedLand](https://github.com/scripting/feedLand/).
 
 My approach is focused on curating feeds for static website generation. Currently 
-**antenna** is a command line tool. It runs in a "terminal" under Rapsberry Pi OS,
+**antenna** is a command line tool. It runs in a "terminal" under Raspberry Pi OS,
 macOS and Windows. From the terminal you can create, curate and stage in bound and collections
-of RSS feeds using simlpe Markdown files. You can even post new Markdown documents to a
+of RSS feeds using simple Markdown files. You can even post new Markdown documents to a
 feed collection. 
 
-I believe that the link blog where you both consume and generate RSS can be a basis for a truely 
+I believe that the link blog where you both consume and generate RSS can be a basis for a truly 
 distributed social web with out the complexity of many of the current (2015 - 2025)
 proposed solutions.
 

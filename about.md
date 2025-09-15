@@ -7,7 +7,7 @@ It is inspired by Dave Winer&#x27;s [Textcasting](https://textcasting.org) and
 
 The approach I am taking is to make it easy to curate feeds and generated a static
 website using a simple command line tool. I believe that the link blog which you
-can consume and generate RSS can be a basis for a truely distributed social web
+can consume and generate RSS can be a basis for a truly distributed social web
 without the complexity of many of the current (2015 - 2025) proposed solutions.
 
 Features:
@@ -28,9 +28,9 @@ can be added to a feed allows us to comment on the items read (thus being social
 Through YAML configuration files you can customize the HTML rendered by **antenna** on a per
 collection basis. That means it is possible to recreate a &quot;news paper&quot; like experience. 
 
-A statis website using **antenna** can grow through either enhancing the HTML markup defined
+A static website using **antenna** can grow through either enhancing the HTML markup defined
 in the YAML configuration or through manipulation of the collection contents in the SQLite3 database.
-This provides opporutinies to integrate with other static website tools like
+This provides opportunities to integrate with other static website tools like
 [PageFind](https://pagefind.app &quot;A browser side search engine&quot;) and
 [FlatLake](https://flatlake.app &quot;A static JSON API driven by front matter in Markdown documents&quot;).
 You can even use **{app_name}** to augment your existing blog."
@@ -64,7 +64,7 @@ About this software
 
 Improved the generate action but having it update HTML of posted item.
 Added enclosure of Markdown content from posts to RSS rendering. Added alternate link
-in head for Markdown verion of posts.
+in head for Markdown version of posts.
 
 ### Authors
 
@@ -82,7 +82,7 @@ It is inspired by Dave Winer&#x27;s [Textcasting](https://textcasting.org) and
 
 The approach I am taking is to make it easy to curate feeds and generated a static
 website using a simple command line tool. I believe that the link blog which you
-can consume and generate RSS can be a basis for a truely distributed social web
+can consume and generate RSS can be a basis for a truly distributed social web
 without the complexity of many of the current (2015 - 2025) proposed solutions.
 
 Features:
@@ -103,9 +103,9 @@ can be added to a feed allows us to comment on the items read (thus being social
 Through YAML configuration files you can customize the HTML rendered by **antenna** on a per
 collection basis. That means it is possible to recreate a &quot;news paper&quot; like experience. 
 
-A statis website using **antenna** can grow through either enhancing the HTML markup defined
+A static website using **antenna** can grow through either enhancing the HTML markup defined
 in the YAML configuration or through manipulation of the collection contents in the SQLite3 database.
-This provides opporutinies to integrate with other static website tools like
+This provides opportunities to integrate with other static website tools like
 [PageFind](https://pagefind.app &quot;A browser side search engine&quot;) and
 [FlatLake](https://flatlake.app &quot;A static JSON API driven by front matter in Markdown documents&quot;).
 You can even use **{app_name}** to augment your existing blog.
