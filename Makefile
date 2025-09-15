@@ -91,7 +91,7 @@ installer.ps1: .FORCE
 test: $(PACKAGE)
 	go test
 
-website: clean-website .FORCE
+website: .FORCE
 	make -f website.mak
 
 status:
