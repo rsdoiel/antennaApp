@@ -43,7 +43,9 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		if len(updated) > 10 {
 			updated = updated[0:10]
 		}
-		pressTime += ", updated: " + updated
+		if pressTime != updated {
+			pressTime += ", updated: " + updated
+		}
 	}
 
 	// Setup the Title

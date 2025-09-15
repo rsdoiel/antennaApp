@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.4 70969fc
+%antenna(1) user manual | version 0.0.6 efe8eb8
 % R. S. Doiel
-% 2025-09-12
+% 2025-09-14
 
 # NAME
 
@@ -116,6 +116,7 @@ your favorite web browser.
 set in the YAML file.
 
 port
+<<<<<<< HEAD
 : (optional, default: 8000) The localhost port for the "preview" action
 
 host
@@ -129,9 +130,20 @@ that will be used in the "preview" action.
 generator
 : (optional) This holds the default YAML configuration filename to use when
 rendering the Antenna collections as HTML pages.
+=======
+: (optional, default: 8000) The on host to listen on when running the "preview" action
+
+host
+: (optional, default is localhost) The hostname to use with port when running the "preview" action.
+
+htdocs
+: (optional, default: ".") The directory that will hold  the HTML and RSS files rendered
+by the "generate" action or viewed with "preview" action in your web browser.
+>>>>>>> 8e6670ac3180bc8e92d608c7f563fae102b996c1
 
 collections
-: (required) This holds a list of collections managed by your Antenna instance
+: (required) This holds a list of collections managed by **antenna**. For **antenna**
+to be useful you need to define at least one collection.
 
 The collections attribute holds a collection objects. Each collection object has
 the following attributes.

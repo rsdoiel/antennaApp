@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 {"version":"1.4.0","languages":{"en-US":{"hash":"en-US_56a6c5f5285aa","wasm":"en-US","page_count":15}},"include_characters":["_","‿","⁀","⁔","︳","︴","﹍","﹎","﹏","＿"]}
+=======
+{"version":"1.4.0","languages":{"en-US":{"hash":"en-US_d60e74d0f24bd","wasm":"en-US","page_count":15}},"include_characters":["_","‿","⁀","⁔","︳","︴","﹍","﹎","﹏","＿"]}
+>>>>>>> 8e6670ac3180bc8e92d608c7f563fae102b996c1

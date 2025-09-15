@@ -100,7 +100,7 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 		fmt.Fprintf(out, "      <guid>cid://%s</guid>\n", strings.TrimSpace(toXMLString(guid)))
 	}
 	if pubDate != "" {
-		d, err := time.Parse(pubDate, "2006-01-02")
+		d, err := time.Parse("2006-01-02", pubDate)
 		if err == nil {
 			fmt.Fprintf(out, "      <pubDate>%s</pubDate>\n", d.Format(time.RFC822Z))
 		}

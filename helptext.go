@@ -135,22 +135,18 @@ your favorite web browser.
 set in the YAML file.
 
 port
-: (optional, default: 8000) The localhost port for the "preview" action
+: (optional, default: 8000) The on host to listen on when running the "preview" action
 
 host
-: (optional, default: localhost) This is the hostname that will be combined with
-the port number and listened for when using the "preview" action
+: (optional, default is localhost) The hostname to use with port when running the "preview" action.
 
 htdocs
-: (optional, default: ".") The directory where rendered Markdown, assets and HTML are written. This is the directory
-that will be used in the "preview" action.
-
-generator
-: (optional) This holds the default YAML configuration filename to use when
-rendering the Antenna collections as HTML pages.
+: (optional, default: ".") The directory that will hold  the HTML and RSS files rendered
+by the "generate" action or viewed with "preview" action in your web browser.
 
 collections
-: (required) This holds a list of collections managed by your Antenna instance
+: (required) This holds a list of collections managed by **{app_name}**. For **{app_name}**
+to be useful you need to define at least one collection.
 
 The collections attribute holds a collection objects. Each collection object has
 the following attributes.
