@@ -138,7 +138,7 @@ port
 : (optional, default: 8000) The on host to listen on when running the "preview" action
 
 host
-: (optional, default is localhost) The hostname to use with port when running the "preview" action.
+: (optional, default is localhost) The host name to use with port when running the "preview" action.
 
 htdocs
 : (optional, default: ".") The directory that will hold  the HTML and RSS files rendered

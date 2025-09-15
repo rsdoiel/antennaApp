@@ -10,8 +10,7 @@ It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and
 
 The approach I am taking is to make it easy to curate feeds and generated a static
 website using a simple command line tool. I believe that the link blog which you
-can consume and generate RSS can be a basis for a truly distributed social web
-without the complexity of many of the current (2015 - 2025) proposed solutions.
+can consume and generate RSS can be a basis for a truly distributed social web\without the complexity of many of the current (2015 - 2025) proposed solutions.
 
 Features:
 

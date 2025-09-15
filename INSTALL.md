@@ -1,5 +1,5 @@
-Installation of **antennaApp**
-==============================
+Installation for development of **antennaApp**
+===========================================
 
 **antennaApp** **antenna** is a tool for working with RSS feeds and rendering a link blog.
 It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and
@@ -7,9 +7,9 @@ It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and
 [antenna](https://rsdoiel.github.io/antenna).
 
 The approach I am taking is to make it easy to curate feeds and generated a static
-website using a simple command line tool. I believe that the link blog which you
-can consume and generate RSS can be a basis for a truly distributed social web
-without the complexity of many of the current (2015 - 2025) proposed solutions.
+website using a simple command line tool. I believe that a link blog which can
+consume and generate RSS can be a basis for a truly distributed social web.
+It avoids the complexity of solutions like ATProto and ActivityPub.
 
 Features:
 
@@ -39,7 +39,7 @@ You can even use **{app_name}** to augment your existing blog.
 Quick install with curl or irm
 ------------------------------
 
-There is an experimental installer.sh script that can be run with the following command to install latest stable release. This works for macOS, Linux and if you’re using Windows with the Unix subsystem. This would be run from your shell (e.g. Terminal on macOS).
+There is an experimental installer.sh script that can be run with the following command to install latest table release. This may work for macOS, Linux and if you’re using Windows with the Unix subsystem. This would be run from your shell (e.g. Terminal on macOS).
 
 ~~~shell
 curl https://rsdoiel.github.io/antennaApp/installer.sh | sh
