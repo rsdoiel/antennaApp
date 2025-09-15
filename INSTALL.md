@@ -1,7 +1,7 @@
-Installation for development of **antennaApp**
-===========================================
+Installation of **antennaApp**
+==============================
 
-**antennaApp** **antenna** is a tool for working with RSS feeds and rendering a link blog.
+**antenna** is a tool for working with RSS feeds and rendering a link blog.
 It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and
 [FeedLand](https://feedland.org) and my own experimental website,
 [antenna](https://rsdoiel.github.io/antenna).
