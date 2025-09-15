@@ -26,36 +26,29 @@
 <p><strong>antenna</strong> is a tool for working with RSS feeds and
 rendering a link blog. It is inspired by Dave Winer’s <a
 href="https://textcasting.org">Textcasting</a> and <a
-href="https://news.scripting.com"
-class="uri">https://news.scripting.com</a>.</p>
+href="https://feedland.org">FeedLand</a> and my own experimental
+website, <a href="https://rsdoiel.github.io/antenna">antenna</a>.</p>
 <p>The approach I am taking is to make it easy to curate feeds and
 generated a static website using a simple command line tool. I believe
-that the link blog where you both consume and generate RSS can be a
-basis for a truly distributed social web with out the complexity of many
-of the current (2015 - 2025) proposed solutions.</p>
+that a link blog which can consume and generate RSS can be a basis for a
+truly distributed social web. It avoids the complexity of solutions like
+ATProto and ActivityPub.</p>
 <p>Features:</p>
 <ul>
 <li>support for multiple collections of feeds</li>
 <li>a collection is defined by a Markdown document containing a list of
-links to feeds
-<ul>
-<li>front matter in the Markdown document is used to enhance content and
-RSS feed</li>
-</ul></li>
+links to feeds</li>
 <li>collections can be harvested, meaning content retrieved from the
 feeds listed in the Markdown document</li>
 <li>harvested content is stored in a SQLite3 database</li>
 <li>harvested content in a collection can be aggregated and rendered as
 an HTML page for reading</li>
-<li>generate HTML pages along side RSS 2.0 XML for collections</li>
-<li>Markdown documents can be imported into a collection as a “post” or
-removed with “unpost”</li>
-<li>HTML, CSS and JavaScript can be customized per collection using a
-YAML configuration file</li>
-<li>Custom SQL filters can be written for each collection stored in the
-YAML configuration</li>
+<li>Markdown documents can be imported into a collection as a feed
+item</li>
+<li>RSS 2.0 XML and HTML are generated per collection</li>
 <li>A preview feature to view the render content in your web browser via
 a localhost URL</li>
+<li>You can manage your collections via a localhost URL too.</li>
 </ul>
 <p>The ability to harvest feed items means we can read what others post
 on the web. The Markdown content can be added to a feed allows us to
@@ -68,8 +61,10 @@ either enhancing the HTML markup defined in the YAML configuration or
 through manipulation of the collection contents in the SQLite3 database.
 This provides opportunities to integrate with other static website tools
 like <a href="https://pagefind.app"
-title="A browser side search engine">PageFind</a>. You can even use
-<strong>antenna</strong> to augment your existing static website
+title="A browser side search engine">PageFind</a> and <a
+href="https://flatlake.app"
+title="A static JSON API driven by front matter in Markdown documents">FlatLake</a>.
+You can even use <strong>antenna</strong> to augment your existing
 blog.</p>
 <h1 id="options">OPTIONS</h1>
 <dl>
