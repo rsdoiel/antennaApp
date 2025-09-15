@@ -31,6 +31,10 @@ type AppConfig struct {
 	// Port holds the port number the preview web service will run on
 	Port int `json:"port,omitempty" yaml:"port,omitempty"`
 
+	// Host holds the IP address or machine name the preview service
+	// will listen on. By default is is "localhost"
+	Host string `json:"host,omitempty" yaml:"host,omitempty"`
+
 	// Htdocs holds the path to directory that will recieve the generated content
 	// It is also the directory used in the "preview" the static website.
 	Htdocs string `json:"htdocs,omitempty" yaml:"htdocs,omitempty"`

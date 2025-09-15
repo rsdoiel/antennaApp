@@ -97,10 +97,6 @@ func StaticRouter(next http.Handler) http.Handler {
 	})
 }
 
-//
-// NOTE: moved from redirects.go into wsfn.go
-//
-
 // RedirectService holds our redirect targets in an ordered list
 // and a map to our applied routes.
 type RedirectService struct {
@@ -599,10 +595,6 @@ func NewWebService(htdocs string, scheme string, host string, port string) *WebS
 	return w
 }
 
-//
-// NOTE: merged from json.go into wsfn.go
-//
-
 // jsonResponse enforces a common JSON response write handling.
 // It takes a response writer and request plus a struct that can
 // be converted to JSON.
@@ -724,7 +716,7 @@ func (fs SafeFileSystem) Open(p string) (http.File, error) {
 //
 // Example usage:
 //
-// ws := wsfn.LoadYAML("web-service.yaml")
+// ws := antennaApp.LoadYAML("antenna.yaml")
 // fs, err := ws.SafeFileSystem()
 // if err != nil {
 //     log.Fatalf("%s\n", err)
@@ -768,10 +760,6 @@ func MakeSafeFileSystem(docRoot string) (SafeFileSystem, error) {
 	}
 	return SafeFileSystem{http.Dir(docRoot)}, nil
 }
-
-//
-// NOTE: merged from server.go into wsfn.go
-//
 
 // WebService describes all the configuration and
 // capabilities of running a wsfn based web service.
@@ -1014,8 +1002,10 @@ func (app *AntennaApp) Preview(cfgName string) error {
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-
-	w := NewWebService(cfg.Htdocs, "http", "localhost", fmt.Sprintf("%d", cfg.Port))
+	if cfg.Host == "" {
+		cfg.Host = "localhost"
+	}
+	w := NewWebService(cfg.Htdocs, "http", cfg.Host, fmt.Sprintf("%d", cfg.Port))
 
 	log.Printf("Document root %s", w.DocRoot)
 	if w.Http != nil {

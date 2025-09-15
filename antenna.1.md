@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.5 980eb45
+%antenna(1) user manual | version 0.0.6 efe8eb8
 % R. S. Doiel
-% 2025-09-13
+% 2025-09-14
 
 # NAME
 
@@ -116,18 +116,18 @@ your favorite web browser.
 set in the YAML file.
 
 port
-: (optional, default: 8000) The localhost port for the "view" action
+: (optional, default: 8000) The on host to listen on when running the "preview" action
+
+host
+: (optional, default is localhost) The hostname to use with port when running the "preview" action.
 
 htdocs
-: (optional, default: ".") The directory that rendered CommonMark, assets and HTML writen to. This is the directory
-that will be served out using the "view" action.
-
-generator
-: (optional) This holds the default YAML configuration filename to use when
-rendering the Antenna collections as HTML pages.
+: (optional, default: ".") The directory that will hold  the HTML and RSS files rendered
+by the "generate" action or viewed with "preview" action in your web browser.
 
 collections
-: (required) This holds a list of collections managed by your Antenna instance
+: (required) This holds a list of collections managed by **antenna**. For **antenna**
+to be useful you need to define at least one collection.
 
 The collections attribute holds a collection objects. Each collection object has
 the following attributes.
