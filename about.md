@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.6
+version: 0.0.7
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,15 +54,15 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-09-14
+date_released: 2025-09-18
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.6
+## antennaApp 0.0.7
 
-Added support for antenna preview to listen for a host IP address or name.
+Added a page action.
 
 ### Authors
 

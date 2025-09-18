@@ -4,14 +4,15 @@
 ## Bugs
 
 - [ ] The RSS I'm producing isn't always valid for aggregated items
-- [ ] The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
+- [Xl The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
 
 ## Up Next
 
-- [ ] Double check the ordering of my head element children, make sure the meta element for character encoding comes before title
+- [X] Double check the ordering of my head element children, make sure the meta element for character encoding comes before title
 
 ## Thinking about
 
+- [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
 - [ ] Documenting simple to complex integrations, it would be helpful to how how you can integrate Pandoc, PageFind and FlatLake to produce a rich websites using content managed by antennaApp
 - [ ] Should antenna init also generate some sample CSS and JavaScript modules for easy integrations with Pandoc, PageFind or FlatLake?
 - [ ] To make Antenna app more interesting  I need to include some sample themes other people would use. 

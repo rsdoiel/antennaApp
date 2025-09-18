@@ -47,6 +47,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Post(cfgName, args)
 	case "unpost":
 		return app.Unpost(cfgName, args)
+	case "page":
+		return app.Page(cfgName, args)
 	case "harvest":
 		return app.Harvest(out, eout, cfgName, args)
 	case "generate":
