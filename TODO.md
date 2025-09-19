@@ -12,7 +12,10 @@
 
 ## Thinking about
 
-- [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
+- [ ] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
+  - seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
+  - the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
+  - The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page
 - [ ] Documenting simple to complex integrations, it would be helpful to how how you can integrate Pandoc, PageFind and FlatLake to produce a rich websites using content managed by antennaApp
 - [ ] Should antenna init also generate some sample CSS and JavaScript modules for easy integrations with Pandoc, PageFind or FlatLake?
 - [ ] To make Antenna app more interesting  I need to include some sample themes other people would use. 

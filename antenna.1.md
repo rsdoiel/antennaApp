@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.7 4aa439b
+%antenna(1) user manual | version 0.0.7 dcb5dd7
 % R. S. Doiel
 % 2025-09-18
 
@@ -94,6 +94,11 @@ public URL to where the post can be viewed.
 
 unpost COLLECTION_FILE URL
 : Remove an item from a collection using the URL associated with the item.
+
+page COLLECTION_FILE FILEPATH
+: This will create a standalone HTML page using the collection YAML for rendering and
+the FILEPATH containing the Markdown file for content. It does not result an
+an RSS file and is not included in a collection's items table.
 
 The following commands are related to producing a link blog static website.
 
