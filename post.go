@@ -61,6 +61,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	if err := doc.Parse(src); err != nil {
 		return err
 	}
+	sourceMarkdown := doc.Text
 	// Convert our document text to HTML
 	innerHTML, err := doc.ToHTML()
 	if err != nil {
@@ -161,7 +162,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		}
 	}
 	return updateItem(db, link, title, description, fmt.Sprintf("%s", authorsSrc),
-		enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath)
+		enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath, sourceMarkdown)
 }
 
 func (app *AntennaApp) Unpost(cfgName string, args []string) error {
@@ -189,7 +190,7 @@ func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 // updateItem will perform an "upsert" to insert or update the row
 func updateItem(db *sql.DB, link string, title string, description string, authors string,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt *ext.DublinCoreExtension,
-	channel, status string, updated string, label string, postPath string) error {
+	channel, status string, updated string, label string, postPath string, markdownSource string) error {
 	enclosuresSrc, err := json.Marshal(enclosures)
 	if err != nil {
 		return nil
@@ -200,7 +201,7 @@ func updateItem(db *sql.DB, link string, title string, description string, autho
 	}
 	_, err = db.Exec(SQLUpdateItem, link, title, description, authors,
 		enclosuresSrc, guid, pubDate, dcExtSrc,
-		channel, status, updated, label, postPath)
+		channel, status, updated, label, postPath, markdownSource)
 	if err != nil {
 		return err
 	}

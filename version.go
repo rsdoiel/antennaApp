@@ -9,10 +9,10 @@ const (
     Version = "0.0.7"
 
     // ReleaseDate, the date version.go was generated
-    ReleaseDate = "2025-09-18"
+    ReleaseDate = "2025-09-21"
 
     // ReleaseHash, the Git hash when version.go was generated
-    ReleaseHash = "dcb5dd7"
+    ReleaseHash = "6780bab"
     LicenseText = `
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007

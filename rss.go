@@ -53,7 +53,7 @@ func toXMLString(input string) string {
 }
 
 func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
-	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
+	enclosures []*Enclosure, guid string, pubDate string, dcExt string, sourceMarkdown string,
 	channel string, status string, updated string, label string) error {
 	// Setup expressing update time.
 	pressTime := pubDate
@@ -82,6 +82,9 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
         <![CDATA[%s]]>
       </description>
 `, indentText(strings.TrimSpace(description), 8))
+	}
+	if sourceMarkdown != "" {
+		fmt.Fprintf(out, "      <source:markdown>%s</source:markdown>\n", strings.TrimSpace(toXMLString(link)))
 	}
 	if authors != nil {
         for _, author := range authors  {
@@ -194,10 +197,11 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 			updated       string
             label         string
 			postPath      string
+			sourceMarkdown string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
               &enclosuresSrc, &guid, &pubDate, &dcExt,
-              &channel, &status, &updated, &label, &postPath); err != nil {
+              &channel, &status, &updated, &label, &postPath, &sourceMarkdown); err != nil {
             return err
 		}
         if authorsSrc != "" {
@@ -243,7 +247,7 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 		}
 		if err := gen.WriteItemRSS(out, link, title, description, authors,
 			enclosures, guid, pubDate, dcExt,
-			channel, status, updated, label); err != nil {
+			channel, status, updated, label, sourceMarkdown); err != nil {
 			return err
 		}
 	}

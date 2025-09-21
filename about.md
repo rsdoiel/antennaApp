@@ -54,7 +54,7 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-09-18
+date_released: 2025-09-21
 ---
 
 About this software
@@ -62,7 +62,7 @@ About this software
 
 ## antennaApp 0.0.7
 
-Added a page action.
+Improved support for source namespace in RSS output. Added a page action.
 
 ### Authors
 

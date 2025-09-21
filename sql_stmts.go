@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS items (
 	pubDate DATETIME,
 	dcExt JSON,
 	channel TEXT,
+	sourceMarkdown TEXT,
 	status TEXT DEFAULT '',
 	label TEXT DEFAULT '',
 	updated DATETIME
@@ -75,15 +76,15 @@ categories, feed_type, feed_version
 	SQLUpdateItem = `INSERT INTO items (
 	link, title, description, authors,
 	enclosures, guid, pubDate, dcExt,
-	channel, status, updated, label, postPath
+	channel, status, updated, label, postPath, sourceMarkdown
 ) VALUES (
-	?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13
+	?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
 ) ON CONFLICT (link) DO
   UPDATE SET 
   	title = ?2, description = ?3, authors = ?4,
 	enclosures = ?5, guid = ?6, pubDate = ?7, dcExt = ?8,
 	channel = ?9, status = ?10, updated = ?11, label = ?12,
-	postPath = ?13;`
+	postPath = ?13, sourceMarkdown = $14;`
 
 	// SQLItemCount returns a list of items in the items table
 	SQLItemCount = `SELECT COUNT(*) FROM items;`
@@ -92,7 +93,7 @@ categories, feed_type, feed_version
 	SQLDisplayItems = `SELECT 
   link, title, description, authors,
   enclosures, guid, pubDate, dcExt,
-  channel, status, updated, label, postPath
+  channel, status, updated, label, postPath, sourceMarkdown
 FROM items
 WHERE (description != '' OR title != '') AND status = 'published'
 ORDER BY pubDate DESC, updated DESC;`
