@@ -20,6 +20,9 @@ var (
 	// SQLCreateTables provides the statements that are use to create our tables
 	// It has two percent s, first is feed list name, second is datetime scheme
 	// was generated.
+	//
+	// See <https://source.scripting.com> when I am ready to support more the
+	// source namespace.
 	SQLCreateTables = `-- This is the scheme used for %s's SQLite 3 database
 -- %s
 CREATE TABLE IF NOT EXISTS channels (
@@ -50,6 +53,7 @@ CREATE TABLE IF NOT EXISTS items (
 	pubDate DATETIME,
 	dcExt JSON,
 	channel TEXT,
+	sourceAccount JSON,
 	sourceMarkdown TEXT,
 	status TEXT DEFAULT '',
 	label TEXT DEFAULT '',
