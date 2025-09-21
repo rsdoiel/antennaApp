@@ -39,3 +39,14 @@ ALTER TABLE items ADD COLUMN sourceMarkdown TEXT;
 ~~~
 
 The ugprade process should support adding the postPath and sourceMarkdown columns in the iterms table.
+
+## Namespace in RSS 
+
+Sicne I am using RSS 2.0 as the guide to how I'm implementing the items schema I need to think more
+about how I want to integrate namespace more generally. I'm beinging to think the source namespace should be
+a map[string]interface{} like the dcExt. This would let me grow the support without changing the SQL schema as
+I add fields.
+
+In this approach only the core fields would be columns and each complex relations would remain as they are as
+either an object or list. 
+
