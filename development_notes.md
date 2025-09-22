@@ -7,6 +7,7 @@
 - Uses "source" namespace in RSS, see <https://source.scripting.com>
   - also see <https://scripting.com/?tab=links/rss.xml>
   - and <http://scripting.com/2022/07/19/152235.html?title=devNotesForMarkdownInFeeds>
+  - and <http://xmlviewer.scripting.com/?url=https://wordland.social/scripting/237777565/rss.xml>
 - GitHub issue
   - <https://github.com/scripting/sourceNamespaceComments/issues/3>
   - I need to ask the question to understand how I approach it.
