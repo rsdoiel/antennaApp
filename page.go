@@ -27,14 +27,17 @@ import (
 // to an RSS feed or to the collection's db. It is designed to relieve the requirement of using Pandoc
 // for a handful of page.
 func (app *AntennaApp) Page(cfgName string, args []string) error {
-	if len(args) != 2 {
-		return fmt.Errorf("expected a collection name and filepath in the collection")
+	if len(args) < 2 {
+		return fmt.Errorf("expected a collection name and filepath for Markdown content")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	cName, fName := strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+	cName, fName, oName := strings.TrimSpace(args[0]), strings.TrimSpace(args[1]), ""
+	if len(args) == 3 {
+	  oName = strings.TrimSpace(args[2])
+	}
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
 		return err
@@ -52,30 +55,29 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if err != nil {
 		return err
 	}
-	postPath := doc.GetAttributeString("postPath", "")
-
-	if postPath != "" {
-		htmlName := filepath.Join(cfg.Htdocs, postPath)
-		if strings.HasSuffix(htmlName, ".md") {
-			htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
-		}
-		dName := filepath.Dir(htmlName)
-		if _, err := os.Stat(dName); err != nil {
-			if err := os.MkdirAll(dName, 0775); err != nil {
-				return err
-			}
-		}
-		gen, err := NewGenerator(app.appName, cfg.BaseURL)
-		if err != nil {
-				return err
-		}
-		if err := gen.LoadConfig(collection.Generator); err != nil {
-			return err
-		}
-		if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
-			return err
-		} 
+	postPath := doc.GetAttributeString("postPath", fName)
+	htmlName := filepath.Join(cfg.Htdocs, postPath)
+	if oName != "" {
+		htmlName = filepath.Join(cfg.Htdocs, oName)
+	} else if strings.HasSuffix(htmlName, ".md") {
+		htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
 	}
+	dName := filepath.Dir(htmlName)
+	if _, err := os.Stat(dName); err != nil {
+		if err := os.MkdirAll(dName, 0775); err != nil {
+			return err
+		}
+	}
+	gen, err := NewGenerator(app.appName, cfg.BaseURL)
+	if err != nil {
+			return err
+	}
+	if err := gen.LoadConfig(collection.Generator); err != nil {
+		return err
+	}
+	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
+		return err
+	} 
 	return nil
 }
 

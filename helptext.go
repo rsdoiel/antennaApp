@@ -114,10 +114,14 @@ public URL to where the post can be viewed.
 unpost COLLECTION_FILE URL
 : Remove an item from a collection using the URL associated with the item.
 
-page YAML_CONFIG FILEPATH
-: This will create a standalone HTML page using the collection YAML for rendering and
-the FILEPATH containing the Markdown file for content. It does not result an
-an RSS file and is not included in a collection's items table.
+page COLLECTION_FILE FILEPATH [OUTPUT_NAME]
+: This will create a standalone HTML page using the collection's YAML for rendering. It
+readings in the Markdown document from FILEPATH and writes it an HTML file using the
+the same basename. If OUPUT_NAME is set it uses that name. Pages don't get included
+in feeds. The RSS file and is not generated and the data isn't included in the
+collection's items table. The tie to the collection is only how the HTML is structured.
+This is useful for pages that are not changing but are used in a website, e.g. about pages,
+home pages, search pages.
 
 The following commands are related to producing a link blog static website.
 

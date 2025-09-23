@@ -18,7 +18,7 @@ package antennaApp
 
 import (
 	"database/sql"
-    "encoding/json"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -85,7 +85,7 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 	// Write out RSS alt link for Markdown if postPath is not empty string
 	if postPath != "" && strings.HasSuffix(postPath, ".md") {
 		// NOTE: Posts are written next to the HTML page so the link to the Markdown can be relative
-		postLink :=  filepath.Base(postPath)
+		postLink := filepath.Base(postPath)
 		fmt.Fprintf(out, "  <link  rel=\"alternate\" type=\"text/markdown\" href=%q title=%q/>\n", postLink, gen.Title)
 	}
 	fmt.Fprintln(out, "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
@@ -126,22 +126,8 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	fmt.Fprintln(out, "<body>")
 	defer fmt.Fprintln(out, "</body>")
 	// Setup header element
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	if gen.Header != "" {
 		fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
-	} else if gen.Title != "" {
-		fmt.Fprintf(out, `  <header>
-    <h1>%s</h1>
-
-    (date: %s)
-
-  </header>
-`, gen.Title, timestamp)
-	} else {
-		fmt.Fprintf(out, `  <header>
-    (date: %s)
-  </header>
-`, timestamp)
 	}
 	// Setup nav element
 	if gen.Nav != "" {
@@ -170,7 +156,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			title         string
 			description   string
 			authorsSrc    string
-            authors       []*gofeed.Person
+			authors       []*gofeed.Person
 			enclosuresSrc string
 			enclosures    []*Enclosure
 			guid          string
@@ -179,7 +165,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			channel       string
 			status        string
 			updated       string
-            label         string
+			label         string
 			postPath      string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
@@ -188,13 +174,13 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			fmt.Fprintf(gen.eout, "error (%s): s\n", stmt, err)
 			continue
 		}
-        if authorsSrc != "" {
-            authors = []*gofeed.Person{}
-            if err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
-                fmt.Fprintf(gen.eout, "error (authors: %s): %s\n", authorsSrc, err)
-                authors = nil
-            }            
-        }
+		if authorsSrc != "" {
+			authors = []*gofeed.Person{}
+			if err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
+				fmt.Fprintf(gen.eout, "error (authors: %s): %s\n", authorsSrc, err)
+				authors = nil
+			}
+		}
 		if enclosuresSrc != "" {
 			enclosures = []*Enclosure{}
 			if err := json.Unmarshal([]byte(enclosuresSrc), &enclosures); err != nil {
@@ -224,7 +210,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	return nil
 }
 
-// WriteHtmlPage renders a post as an HTML Page using HTML connent and wrapping it based on the 
+// WriteHtmlPage renders a post as an HTML Page using HTML connent and wrapping it based on the
 // generator configuration.
 func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubDate string, innerHTML string) error {
 	// clear existing page
@@ -250,23 +236,9 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	fmt.Fprintln(out, "<body>")
 	defer fmt.Fprintln(out, "</body>")
 	// Setup header element
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	if gen.Header != "" {
 		fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
-	} else if gen.Title != "" {
-		fmt.Fprintf(out, `  <header>
-    <h1>%s</h1>
-
-    (date: %s)
-
-  </header>
-`, gen.Title, timestamp)
-	} else {
-		fmt.Fprintf(out, `  <header>
-    (date: %s)
-  </header>
-`, timestamp)
-	}
+	} 
 	// Setup nav element
 	if gen.Nav != "" {
 		fmt.Fprintf(out, `  <nav>

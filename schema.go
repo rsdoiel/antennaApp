@@ -45,6 +45,10 @@ type AppConfig struct {
 	// BaseURL for the Antenna instance
 	BaseURL string `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
 
+	// Pages holds a list of YAML file used to publish single pages outside
+	// of collections.
+	Pages string `json:"pages,omitempty" yaml:"pages,omitempty"`
+	
 	// Collections holds a list of collections to curate
 	Collections []*Collection `json:"collections,omitempty" yaml:"collections,omitempty"`
 }
