@@ -167,10 +167,11 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			updated       string
 			label         string
 			postPath      string
+			sourceMarkdown string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
-			&channel, &status, &updated, &label, &postPath); err != nil {
+			&channel, &status, &updated, &label, &postPath, &sourceMarkdown); err != nil {
 			fmt.Fprintf(gen.eout, "error (%s): s\n", stmt, err)
 			continue
 		}

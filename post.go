@@ -190,7 +190,7 @@ func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 // updateItem will perform an "upsert" to insert or update the row
 func updateItem(db *sql.DB, link string, title string, description string, authors string,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt *ext.DublinCoreExtension,
-	channel, status string, updated string, label string, postPath string, markdownSource string) error {
+	channel, status string, updated string, label string, postPath string, sourceMarkdown string) error {
 	enclosuresSrc, err := json.Marshal(enclosures)
 	if err != nil {
 		return nil
@@ -201,7 +201,7 @@ func updateItem(db *sql.DB, link string, title string, description string, autho
 	}
 	_, err = db.Exec(SQLUpdateItem, link, title, description, authors,
 		enclosuresSrc, guid, pubDate, dcExtSrc,
-		channel, status, updated, label, postPath, markdownSource)
+		channel, status, updated, label, postPath, sourceMarkdown)
 	if err != nil {
 		return err
 	}

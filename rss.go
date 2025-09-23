@@ -18,7 +18,7 @@ package antennaApp
 
 import (
 	"database/sql"
-    "encoding/json"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -32,29 +32,29 @@ import (
 // Enclosure holds the data for RSS enclusure support
 type Enclosure struct {
 	Url    string `json:"url,omitempty" yaml:"url,omitempty"`
-	Length string    `json:"length,omitempty" yaml:"length,omitempty"`
+	Length string `json:"length,omitempty" yaml:"length,omitempty"`
 	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
 }
 
 func toXMLString(input string) string {
 	const (
-		XML_AMP = "&#38;"
+		XML_AMP  = "&#38;"
 		XML_APOS = "&#39;"
-		XML_GT = "&#62;"
-		XML_LT = "&#60;"
+		XML_GT   = "&#62;"
+		XML_LT   = "&#60;"
 		XML_QUOT = "&#34;"
 	)
-	input = strings.ReplaceAll(input, "&", XML_AMP) // Encode ampersand first to avoid double encoding
-	input = strings.ReplaceAll(input, "<", XML_LT)  // Less than sign
-	input = strings.ReplaceAll(input, ">", XML_GT)  // Greater than sign
+	input = strings.ReplaceAll(input, "&", XML_AMP)   // Encode ampersand first to avoid double encoding
+	input = strings.ReplaceAll(input, "<", XML_LT)    // Less than sign
+	input = strings.ReplaceAll(input, ">", XML_GT)    // Greater than sign
 	input = strings.ReplaceAll(input, "\"", XML_QUOT) // Double quote
 	input = strings.ReplaceAll(input, "'", XML_APOS)  // Apostrophe
 	return input
 }
 
 func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
-	enclosures []*Enclosure, guid string, pubDate string, dcExt string, sourceMarkdown string,
-	channel string, status string, updated string, label string) error {
+	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
+	channel string, status string, updated string, label string, sourceMarkdown string,) error {
 	// Setup expressing update time.
 	pressTime := pubDate
 	if len(pressTime) > 10 {
@@ -84,14 +84,14 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 `, indentText(strings.TrimSpace(description), 8))
 	}
 	if sourceMarkdown != "" {
-		fmt.Fprintf(out, "      <source:markdown>%s</source:markdown>\n", strings.TrimSpace(toXMLString(link)))
+		fmt.Fprintf(out, "      <source:markdown>%s</source:markdown>\n", strings.TrimSpace(toXMLString(sourceMarkdown)))
 	}
 	if authors != nil {
-        for _, author := range authors  {
+		for _, author := range authors {
 			if author.Email != "" && author.Name != "" {
 				fmt.Fprintf(out, "      <author>%s (%s)</author>\n", author.Email, author.Name)
 			}
-        }
+		}
 	}
 	if enclosures != nil && len(enclosures) > 0 {
 		for _, enclosure := range enclosures {
@@ -122,7 +122,7 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 		} else {
 			feedLink = fmt.Sprintf("%s/%s", gen.BaseURL, collection.Link)
 		}
- 	}
+	}
 	fmt.Fprintf(out, `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <atom:link href=%q rel="self" type="application/rss+xml" />
@@ -171,7 +171,6 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
     <docs>https://cyber.harvard.edu/rss/rss.html</docs>
 `, appName, Version)
 
-
 	// Setup  items
 	stmt := SQLDisplayItems
 	rows, err := db.Query(stmt)
@@ -182,63 +181,63 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 	// Setup and write out the body
 	for rows.Next() {
 		var (
-			link          string
-			title         string
-			description   string
-            authorsSrc    string
-			authors       []*gofeed.Person
-			enclosuresSrc string
-			enclosures    []*Enclosure
-			guid          string
-			pubDate       string
-			dcExt         string
-			channel       string
-			status        string
-			updated       string
-            label         string
-			postPath      string
+			link           string
+			title          string
+			description    string
+			authorsSrc     string
+			authors        []*gofeed.Person
+			enclosuresSrc  string
+			enclosures     []*Enclosure
+			guid           string
+			pubDate        string
+			dcExt          string
+			channel        string
+			status         string
+			updated        string
+			label          string
+			postPath       string
 			sourceMarkdown string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
-              &enclosuresSrc, &guid, &pubDate, &dcExt,
-              &channel, &status, &updated, &label, &postPath, &sourceMarkdown); err != nil {
-            return err
+			&enclosuresSrc, &guid, &pubDate, &dcExt,
+			&channel, &status, &updated, &label, &postPath, &sourceMarkdown); err != nil {
+			return err
 		}
-        if authorsSrc != "" {
+		if authorsSrc != "" {
 			// Do we have a JSON object?
-            authors = []*gofeed.Person{}
-            if  err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
-                fmt.Fprintf(gen.eout, "error (%s): %s\n", authorsSrc, err)
-                authors = nil
-            }
-        }
+			authors = []*gofeed.Person{}
+			if err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
+				fmt.Fprintf(gen.eout, "error (%s): %s\n", authorsSrc, err)
+				authors = nil
+			}
+		}
 		enclosures = []*Enclosure{}
-        if enclosuresSrc != "" {
-            if err := json.Unmarshal([]byte(enclosuresSrc), &enclosures); err != nil {
-                fmt.Fprintf(gen.eout, "error (%s): %s\n", enclosuresSrc, err)
-                enclosures = nil
-            }
-        }
+		if enclosuresSrc != "" {
+			if err := json.Unmarshal([]byte(enclosuresSrc), &enclosures); err != nil {
+				fmt.Fprintf(gen.eout, "error (%s): %s\n", enclosuresSrc, err)
+				enclosures = nil
+			}
+		}
 		if postPath != "" {
 			if fi, err := os.Stat(postPath); err == nil {
 				enclosure := &Enclosure{
-					Url: gen.BaseURL + "/" + postPath,
+					Url:    gen.BaseURL + "/" + postPath,
 					Length: fmt.Sprintf("%d", fi.Size()),
-					Type: "text/markdown",
+					Type:   "text/markdown",
 				}
 				addEnclosure := true
 				if len(enclosures) > 0 {
 					// Make sure we're not add a duplicate
 					for _, item := range enclosures {
 						if item.Url == enclosure.Url {
-							addEnclosure = false;
+							addEnclosure = false
 							// Let's update the existing enclosure
 							item.Url = enclosure.Url
 							item.Length = enclosure.Length
 							item.Type = enclosure.Type
 							break
-						}	
-					} 
+						}
+					}
 				}
 				if addEnclosure {
 					enclosures = append(enclosures, enclosure)
