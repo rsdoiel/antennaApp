@@ -267,6 +267,23 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 			return fmt.Errorf("failed to marshal item.Authors, %s", err)
 		}
 	}
+	// FIXME: Need to find a feed that uses the source:markdown name space to verify this is how gofeed
+	// handled it!
+	sourceMarkdown := ""
+	// NOTE: Need to look for source:markdown and get it populated.
+	if item.Extensions != nil {
+		if source, ok := item.Extensions["source"]; ok && len(source) > 0 {
+			if data, ok := source["markdown"]; ok {
+				fmt.Printf("\nDEBUG source[%q] -> %T -> %+v\n", "markdown", data, data)
+				for i, val := range data {
+					fmt.Printf("\nDEBUG source[%q][%d] -> %T -> %+v\n", "markdown", i, val, val)
+					if val.Name == "markdown" {
+						sourceMarkdown = val.Value
+					}
+				}
+			}
+		}
+	}
 	// NOTE: postPath doens't exist for harvested items, only for posted ones but SQL statement
 	// is used for both.
 	postPath := "" 
@@ -274,7 +291,7 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 	if _, err := db.Exec(stmt,
 		item.Link, item.Title, item.Description, string(authors),
 		string(enclosures), item.GUID, pubDate, string(dcExt),
-		channel, status, updated, feedLabel, postPath); err != nil {
+		channel, status, updated, feedLabel, postPath, sourceMarkdown); err != nil {
 		return fmt.Errorf("%s\nstmt: %s", err, stmt)
 	}
 	return nil
