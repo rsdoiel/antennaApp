@@ -35,10 +35,10 @@
     "Pandoc >= 3.1",
     "Bash or Powershell"
   ],
-  "version": "0.0.7",
+  "version": "0.0.8",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "Improved support for source:markdown in RSS output for posts. Added a page action.",
+  "releaseNotes": "Fix bug in generating scheme for sourceMarkdown, defaults to empty string.",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }

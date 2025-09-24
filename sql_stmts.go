@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS items (
 	pubDate DATETIME,
 	dcExt JSON,
 	channel TEXT,
-	sourceMarkdown TEXT,
+	sourceMarkdown TEXT DEFUALT '',
 	status TEXT DEFAULT '',
 	label TEXT DEFAULT '',
 	updated DATETIME
@@ -79,7 +79,7 @@ categories, feed_type, feed_version
 	SQLUpdateItem = `INSERT INTO items (
 	link, title, description, authors,
 	enclosures, guid, pubDate, dcExt,
-	channel, status, updated, label, postPath, sourceMarkdown
+	channel, status, updated, label, postPath, ifnull(sourceMarkdown, '')
 ) VALUES (
 	?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
 ) ON CONFLICT (link) DO
