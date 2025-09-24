@@ -172,7 +172,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
 			&channel, &status, &updated, &label, &postPath, &sourceMarkdown); err != nil {
-			fmt.Fprintf(gen.eout, "error (%s): s\n", stmt, err)
+			fmt.Fprintf(gen.eout, "error (%s): %s\n", stmt, err)
 			continue
 		}
 		if authorsSrc != "" {

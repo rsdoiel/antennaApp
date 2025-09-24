@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.8 c527f7d
+%antenna(1) user manual | version 0.0.8 3924143
 % R. S. Doiel
 % 2025-09-23
 

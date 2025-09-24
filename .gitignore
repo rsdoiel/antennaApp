@@ -11,3 +11,4 @@ dist/
 htdocs/
 myblog/
 posts/
+demo/*.html

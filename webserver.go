@@ -319,7 +319,7 @@ type Secrets struct {
 	// If not you just gave away your system a cracker.
 	Salt []byte `json:"salt,omitempty" yaml:"salt,omitempty"`
 	// Key holds the salted hash ...
-	Key []byte `json:"key, omitempty" yaml:"key,omitempty"`
+	Key []byte `json:"key,omitempty" yaml:"key,omitempty"`
 }
 
 // LoadAccess loads a YAML or JSON access file.
