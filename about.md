@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.7
+version: 0.0.8
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -60,9 +60,9 @@ date_released: 2025-09-23
 About this software
 ===================
 
-## antennaApp 0.0.7
+## antennaApp 0.0.8
 
-Improved support for source:markdown in RSS output for posts. Added a page action.
+Fix bug in generating scheme for sourceMarkdown, defaults to empty string.
 
 ### Authors
 

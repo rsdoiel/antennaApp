@@ -79,7 +79,7 @@ categories, feed_type, feed_version
 	SQLUpdateItem = `INSERT INTO items (
 	link, title, description, authors,
 	enclosures, guid, pubDate, dcExt,
-	channel, status, updated, label, postPath, ifnull(sourceMarkdown, '')
+	channel, status, updated, label, postPath, sourceMarkdown
 ) VALUES (
 	?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14
 ) ON CONFLICT (link) DO
@@ -97,7 +97,7 @@ categories, feed_type, feed_version
   link, title, description, authors,
   enclosures, guid, pubDate, dcExt,
   channel, status, updated, label,
-  postPath, sourceMarkdown
+  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
 FROM items
 WHERE (description != '' OR title != '') AND status = 'published'
 ORDER BY pubDate DESC, updated DESC;`
