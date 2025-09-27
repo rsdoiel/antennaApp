@@ -204,9 +204,7 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 		return err
 	}
 	if collection.Generator == "" {
-		bName := filepath.Base(collection.File)
-		xName := filepath.Ext(bName)
-		collection.Generator = filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".yaml")
+		collection.Generator = cfg.Generator
 	}
 	if _, err := os.Stat(collection.Generator); err == nil {
 		src, err := os.ReadFile(collection.Generator)
