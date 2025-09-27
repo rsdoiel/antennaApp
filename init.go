@@ -44,14 +44,24 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 				return fmt.Errorf("problem with htdocs: %q in %s: %s", cfg.Htdocs, fName, err)
 			}			
 		}
+		if cfg.Generator == "" {
+			cfg.Generator = "page.yaml"
+		}
+		if err := InitPageGenerator(cfgName); err != nil {
+			return err
+		}
 		if cfg.Collections == nil {
 			return fmt.Errorf("no collections defined in %s, try adding one", fName)
+		} else {
+			// FIXME: check one on each collection, update database scheme if needed
 		}
+		return nil
 	}
 	// If antenna.yaml does not exist, create it
 	cfg.Port = 8000
 	// By default the working directory is assumed to be the staging directory.
 	cfg.Htdocs = ""
+	cfg.Generator = "page.yaml"
 	src, err := yaml.Marshal(cfg)
 	if err != nil {
 		// This shouldn't happen ever, if it does it is a programming error
@@ -63,5 +73,6 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	}
 	defer fp.Close()
 	fmt.Fprintf(fp, "%s", src)
-	return nil
+	return InitPageGenerator(cfg.Generator)
 }
+

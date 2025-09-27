@@ -23,6 +23,53 @@ import (
 	"strings"
 )
 
+var (
+	DefaultGeneratorYaml = `###
+## Example YAML used to custom a collection's Generator YAML.
+##
+## Use this CSS file for the CSS link in the head element. To
+## pull an other CSS, use a CSS @import statement. (uncomment line
+## and update location)
+#css: css/site.css
+## You list of ES6 modules goes here, (uncomment lines, update locations)
+#modules:
+#  - modules/date_filter.js
+##
+## The next set of elements let you include HTML in the page
+## area decribed.
+##
+header: |
+  <header><!-- your custom header inner HTML goes here --></header>
+
+nav: |
+  <nav><!-- your custom nav innert HTML goes here --></nav>
+
+topContent: |
+  <!-- your custom HTML content before the section element goes here -->
+
+bottomContent: |
+  <!-- your custom HTML content after the section element goes here -->
+
+footer: |
+  <footer><!-- your custom footer innert HTML goes here --></footer>
+`
+)
+
+// InitPageGenerator initializes a YAML configuration for the default page layout.
+// It takes a filename and returns an error
+func InitPageGenerator(pageName string) error {
+	if _, err := os.Stat(pageName); err == nil {
+		//FIXME: read in pageName and Make sure it has a valid structure
+		return nil
+	} else {
+		// NOTE: Create a default page page Generator
+		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0775); err != nil{
+			fmt.Errorf("failed to create %q, %s", pageName, err)
+		}
+	}
+	return nil
+}
+
 // Page will add a CommonMark document as an HTML page based on postPath. It **will not** get added
 // to an RSS feed or to the collection's db. It is designed to relieve the requirement of using Pandoc
 // for a handful of page.

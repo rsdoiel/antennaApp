@@ -114,14 +114,13 @@ public URL to where the post can be viewed.
 unpost COLLECTION_FILE URL
 : Remove an item from a collection using the URL associated with the item.
 
-page COLLECTION_FILE FILEPATH [OUTPUT_NAME]
-: This will create a standalone HTML page using the collection's YAML for rendering. It
-readings in the Markdown document from FILEPATH and writes it an HTML file using the
-the same basename. If OUPUT_NAME is set it uses that name. Pages don't get included
-in feeds. The RSS file and is not generated and the data isn't included in the
-collection's items table. The tie to the collection is only how the HTML is structured.
-This is useful for pages that are not changing but are used in a website, e.g. about pages,
-home pages, search pages.
+page FILEPATH [OUTPUT_NAME]
+: This will create a standalone HTML page using the default page generator defined
+inthe antenna.yaml file. It readings in the Markdown document from FILEPATH and
+writes it an HTML file using the the same basename. If OUTPUT_NAME is set it uses
+that name for the HTML file generated. The page action only renders and HTML file.
+If does not get included in a collection or result in as a listing in an RSS file.
+The page action is useful for pages likey an about page, home page, and search page.
 
 The following commands are related to producing a link blog static website.
 
@@ -152,6 +151,10 @@ host
 htdocs
 : (optional, default: ".") The directory that will hold  the HTML and RSS files rendered
 by the "generate" action or viewed with "preview" action in your web browser.
+
+generator
+; (optional, default: "page.yaml")  This names the YAML used to describe an HTML page
+structure. It is created on initialization. You can use a custom one per collection.
 
 collections
 : (required) This holds a list of collections managed by **{app_name}**. For **{app_name}**

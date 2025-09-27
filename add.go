@@ -28,37 +28,6 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-var (
-	DefaultGeneratorYaml = `###
-## Example YAML used to custom a collection's Generator YAML.
-##
-## Use this CSS file for the CSS link in the head element. To
-## pull an other CSS, use a CSS @import statement. (uncomment line
-## and update location)
-#css: css/site.css
-## You list of ES6 modules goes here, (uncomment lines, update locations)
-#modules:
-#  - modules/date_filter.js
-##
-## The next set of elements let you include HTML in the page
-## area decribed.
-##
-header: |
-  <header><!-- your custom header inner HTML goes here --></header>
-
-nav: |
-  <nav><!-- your custom nav innert HTML goes here --></nav>
-
-topContent: |
-  <!-- your custom HTML content before the section element goes here -->
-
-bottomContent: |
-  <!-- your custom HTML content after the section element goes here -->
-
-footer: |
-  <footer><!-- your custom footer innert HTML goes here --></footer>
-`
-)
 
 func (app *AntennaApp) Add(cfgName string, args []string) error {
 	if len(args) == 0 {
@@ -118,7 +87,7 @@ func (app *AntennaApp) Add(cfgName string, args []string) error {
 	}
 	// Make sure we have a reasonable Generator YAML filename
 	if collection.Generator == "" {
-		collection.Generator = strings.TrimSuffix(cName, xName) + ".yaml"
+		collection.Generator = cfg.Generator
 	}
 	// Do I need to "add" the collection or replace the collection?
 	appendCollection := true
@@ -139,7 +108,7 @@ func (app *AntennaApp) Add(cfgName string, args []string) error {
 	}
 	// Create generator YAML if not exists
 	if _, err := os.Stat(collection.Generator); os.IsNotExist(err) {
-		if err := os.WriteFile(collection.Generator, []byte(DefaultGeneratorYaml), 0664); err != nil {
+		if err := InitPageGenerator(collection.Generator); err != nil {
 			return err
 		}
 	}
