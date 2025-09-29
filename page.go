@@ -74,20 +74,16 @@ func InitPageGenerator(pageName string) error {
 // to an RSS feed or to the collection's db. It is designed to relieve the requirement of using Pandoc
 // for a handful of page.
 func (app *AntennaApp) Page(cfgName string, args []string) error {
-	if len(args) < 2 {
+	if len(args) < 1 {
 		return fmt.Errorf("expected a collection name and filepath for Markdown content")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	cName, fName, oName := strings.TrimSpace(args[0]), strings.TrimSpace(args[1]), ""
-	if len(args) == 3 {
-	  oName = strings.TrimSpace(args[2])
-	}
-	collection, err := cfg.GetCollection(cName)
-	if err != nil {
-		return err
+	fName, oName := strings.TrimSpace(args[0]), ""
+	if len(args) == 2 {
+	  oName = strings.TrimSpace(args[1])
 	}
 	src, err := os.ReadFile(fName)
 	if err != nil {
@@ -119,7 +115,7 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if err != nil {
 			return err
 	}
-	if err := gen.LoadConfig(collection.Generator); err != nil {
+	if err := gen.LoadConfig(cfg.Generator); err != nil {
 		return err
 	}
 	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
