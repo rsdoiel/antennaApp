@@ -19,9 +19,21 @@
 </nav>
 <section>
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.7">antennaApp 0.0.7</h2>
-<p>Improved support for source:markdown in RSS output for posts. Added a
-page action.</p>
+<h2 id="antennaapp-0.0.8">antennaApp 0.0.8</h2>
+<ul>
+<li>Fix bug in generating scheme for sourceMarkdown, defaults to empty
+string.</li>
+<li>Removed duplicative elements when wrapping header, footer, nav and
+section.</li>
+<li>Fixed issue with the after section being written below the footer
+element</li>
+<li>The init action now creates two files antenna.yaml and page.yaml,
+page.yaml is the default html structure</li>
+<li>Each collection can override page.yaml be including it’s own YAML
+page generator description</li>
+<li>The “page” action has been added for rendering non-feed oriented
+HTML pages from Markdown</li>
+</ul>
 <h3 id="authors">Authors</h3>
 <ul>
 <li>R. S. Doiel Doiel, <a href="https://orcid.org/0000-0003-0900-6903"

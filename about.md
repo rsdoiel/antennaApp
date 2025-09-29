@@ -54,7 +54,7 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-09-23
+date_released: 2025-09-29
 ---
 
 About this software
@@ -62,7 +62,12 @@ About this software
 
 ## antennaApp 0.0.8
 
-Fix bug in generating scheme for sourceMarkdown, defaults to empty string.
+- Fix bug in generating scheme for sourceMarkdown, defaults to empty string.
+- Removed duplicative elements when wrapping header, footer, nav and section.
+- Fixed issue with the after section being written below the footer element
+- The init action now creates two files antenna.yaml and page.yaml, page.yaml is the default html structure
+- Each collection can override page.yaml be including it's own YAML page generator description
+- The "page" action has been added for rendering non-feed oriented HTML pages from Markdown
 
 ### Authors
 

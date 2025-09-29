@@ -12,8 +12,8 @@
     }
   ],
   "dateCreated": "2025-08-22",
-  "dateModified": "2025-09-23",
-  "datePublished": "2025-09-23",
+  "dateModified": "2025-09-29",
+  "datePublished": "2025-09-29",
   "description": "**antenna** is a tool for working with RSS feeds and rendering a link blog.\nIt is inspired by Dave Winer's [Textcasting](https://textcasting.org) and\n[FeedLand](https://feedland.org) and my own experimental website,\n[antenna](https://rsdoiel.github.io/antenna).\n\nThe approach I am taking is to make it easy to curate feeds and generated a static\nwebsite using a simple command line tool. I believe that a link blog which can\nconsume and generate RSS can be a basis for a truly distributed social web.\nIt avoids the complexity of solutions like ATProto and ActivityPub.\n\nFeatures:\n\n- support for multiple collections of feeds\n- a collection is defined by a Markdown document containing a list of links to feeds\n- collections can be harvested, meaning content retrieved from the feeds listed in the Markdown document\n- harvested content is stored in a SQLite3 database\n- harvested content in a collection can be aggregated and rendered as an HTML page for reading\n- Markdown documents can be imported into a collection as a feed item\n- RSS 2.0 XML and HTML are generated per collection\n- A preview feature to view the render content in your web browser via a localhost URL\n- You can manage your collections via a localhost URL too.\n\nThe ability to harvest feed items means we can read what others post on the web. The Markdown content\ncan be added to a feed allows us to comment on the items read (thus being social).\n\nThrough YAML configuration files you can customize the HTML rendered by **antenna** on a per\ncollection basis. That means it is possible to recreate a \"news paper\" like experience. \n\nA static website using **antenna** can grow through either enhancing the HTML markup defined\nin the YAML configuration or through manipulation of the collection contents in the SQLite3 database.\nThis provides opportunities to integrate with other static website tools like\n[PageFind](https://pagefind.app \"A browser side search engine\") and\n[FlatLake](https://flatlake.app \"A static JSON API driven by front matter in Markdown documents\").\nYou can even use **{app_name}** to augment your existing blog.",
   "keywords": [
     "RSS",
@@ -38,7 +38,7 @@
   "version": "0.0.8",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "Fix bug in generating scheme for sourceMarkdown, defaults to empty string.",
+  "releaseNotes": "- Fix bug in generating scheme for sourceMarkdown, defaults to empty string.\n- Removed duplicative elements when wrapping header, footer, nav and section.\n- Fixed issue with the after section being written below the footer element\n- The init action now creates two files antenna.yaml and page.yaml, page.yaml is the default html structure\n- Each collection can override page.yaml be including it's own YAML page generator description\n- The \"page\" action has been added for rendering non-feed oriented HTML pages from Markdown",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }

@@ -39,19 +39,19 @@ var (
 ## area decribed.
 ##
 header: |
-  <header><!-- your custom header inner HTML goes here --></header>
+  <!-- your custom header element's inner HTML goes here -->
 
 nav: |
-  <nav><!-- your custom nav innert HTML goes here --></nav>
+  <!-- your custom nav element's inner HTML goes here -->
 
 topContent: |
-  <!-- your custom HTML content before the section element goes here -->
+  <!-- your custom HTML content before the section's element goes here -->
 
 bottomContent: |
-  <!-- your custom HTML content after the section element goes here -->
+  <!-- your custom HTML content after the section's element goes here -->
 
 footer: |
-  <footer><!-- your custom footer innert HTML goes here --></footer>
+  <!-- your custom footer element's inner HTML goes here -->
 `
 )
 

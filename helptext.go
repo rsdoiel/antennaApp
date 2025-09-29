@@ -100,6 +100,14 @@ the Front Matter of the Markdown document.
 del COLLECTION_FILE
 : Remove a collection from the Antenna configuration.
 
+page FILEPATH [OUTPUT_NAME]
+: This will create a standalone HTML page using the default page generator defined
+in the {app_name}.yaml file. It readings in the Markdown document from FILEPATH and
+writes it an HTML file using the the same basename. If OUTPUT_NAME is set it uses
+that name for the HTML file generated. (NOTE: he page action only renders and HTML file.
+If does not get included in a collection or result in as a listing in an RSS file.)
+The page action is useful for pages likey an about page, home page, and search page.
+
 post COLLECTION_FILE FILEPATH
 : Add a Markdown document to a feed collection. The front matter is used to 
 specify things like the link to the post, guid, description, etc. If these are not
@@ -114,13 +122,6 @@ public URL to where the post can be viewed.
 unpost COLLECTION_FILE URL
 : Remove an item from a collection using the URL associated with the item.
 
-page FILEPATH [OUTPUT_NAME]
-: This will create a standalone HTML page using the default page generator defined
-inthe antenna.yaml file. It readings in the Markdown document from FILEPATH and
-writes it an HTML file using the the same basename. If OUTPUT_NAME is set it uses
-that name for the HTML file generated. The page action only renders and HTML file.
-If does not get included in a collection or result in as a listing in an RSS file.
-The page action is useful for pages likey an about page, home page, and search page.
 
 The following commands are related to producing a link blog static website.
 

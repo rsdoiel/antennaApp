@@ -139,7 +139,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	if gen.TopContent != "" {
 		fmt.Fprintf(out, `
     %s
-`, indentText(strings.TrimSpace(gen.TopContent), 4))
+`, indentText(strings.TrimSpace(gen.TopContent), 2))
 	}
 	// Setup section
 	fmt.Fprintln(out, "  <section>")
@@ -199,13 +199,13 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 		return err
 	}
 	fmt.Fprintln(out, "  </section>")
-	if gen.Footer != "" {
-		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
-	}
 	if gen.BottomContent != "" {
 		fmt.Fprintf(out, `
     %s
-`, indentText(strings.TrimSpace(gen.BottomContent), 4))
+`, indentText(strings.TrimSpace(gen.BottomContent), 2))
+	}
+	if gen.Footer != "" {
+		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
 	}
 	// close the body
 	return nil
@@ -262,14 +262,14 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
   </section>
 `, pubDate, link, indentText(innerHTML, 6))
 
-	// Wrap up the page
-	if gen.Footer != "" {
-		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
-	}
 	if gen.BottomContent != "" {
 		fmt.Fprintf(out, `
     %s
 `, indentText(strings.TrimSpace(gen.BottomContent), 4))
+	}
+	// Wrap up the page
+	if gen.Footer != "" {
+		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
 	}
 	return nil
 }
