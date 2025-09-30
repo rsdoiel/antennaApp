@@ -30,6 +30,7 @@ import (
 
 	// 3rd Party pacakges
 	"github.com/mmcdole/gofeed"
+	html2md "github.com/JohannesKaufmann/html-to-markdown"
 )
 
 func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, args []string) error {
@@ -237,6 +238,7 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 		pubDate string
 		updated   string
 	)
+
 	if item.UpdatedParsed != nil {
 		updated = item.UpdatedParsed.Format("2006-01-02 15:04:05")
 	}
@@ -278,10 +280,21 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 				for _, val := range data {
 					//fmt.Printf("\nDEBUG source[%q][%d] -> %T -> %+v\n", "markdown", i, val, val)
 					if val.Name == "markdown" {
+						//fmt.Printf("\nDEBUG setting sourceMarkdown to\n%s\n\n", val)
 						sourceMarkdown = val.Value
 					}
 				}
 			}
+		}
+	}
+	// Check to see if we have sourceMarkdown set or if I want to try converting the description field.
+	converter := html2md.NewConverter("", true, nil)
+	if item.Description != "" && sourceMarkdown == "" {
+		src, err := converter.ConvertString(item.Description)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "WARNING: %s failed to convert description %q, %s, skipping\n", feedLabel, item.Description, err)
+		} else {
+			sourceMarkdown = src
 		}
 	}
 	// NOTE: postPath doens't exist for harvested items, only for posted ones but SQL statement

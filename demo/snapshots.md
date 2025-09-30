@@ -10,7 +10,7 @@
 - [Ashwin's Chronicles](https://ashwinschronicles.github.io/feeds/all.atom.xml)
 - [Berkley Artificial Intellegence Research Blog](https://bair.berkeley.edu/blog/feed.xml)
 - [Biosrhythm blog](https://biosrhythm.com/?feed=rss2)
-- [Hidden variables blog](https://blog.domenic.me/feed.xml)
+- [Hidden variables blog](https://domenic.me/feed.xml)
 - [Gtk Developer blog](https://blog.gtk.org/feed/)
 - [Hubersn Software Blog](https://blog.hubersn-software.com/feed/)
 - [LLVM Blog](https://blog.llvm.org/index.xml)
@@ -71,7 +71,7 @@
 - [Blog Lazplanet](https://lazplanet.blogspot.com/feeds/posts/default?alt=rss)
 - [ldbeth Lisp/Music Programmer blog](https://ldbeth.sdf.org/rss.xml)
 - [Lean Rada's blog](https://leanrada.com/rss.xml)
-- [Letters of Note](https://lettersofnote.com/feed/)
+- [Letters of Note](https://news.lettersofnote.com/feed)
 - [Lispy Arnuld blog](https://lispyarnuld.wordpress.com/feed/)
 - [Literate Machine](https://literatemachine.com/feed/)
 - [Little Big Details blog](https://littlebigdetails.com/rss)
@@ -204,7 +204,7 @@
 - [VoxPopuLII blog (legal informatics and open access)](https://blog.law.cornell.edu/voxpop/feed/)
 - [Modern SQL blog](https://modern-sql.com/feed)
 
-- [Buttondown Blog](https://buttondown.com/blog)
+- [Buttondown Blog](https://buttondown.com/rss/blog.xml)
 
 - [Russ Cox's views on programs and programming](https://research.swtch.com/feed.atom)
 

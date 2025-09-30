@@ -12,10 +12,10 @@ website using a simple command line tool. I believe that a link blog which can
 consume and generate RSS can be a basis for a truly distributed social web.
 It avoids the complexity of solutions like ATProto and ActivityPub.
 
-Features:
+Antenna's Features:
 
 - support for multiple collections of feeds
-- a collection is defined by a Markdown document containing a list of links to feeds
+- a feed collection is defined by a Markdown document containing a list of links to feeds
 - collections can be harvested, meaning content retrieved from the feeds listed in the Markdown document
 - harvested content is stored in a SQLite3 database
 - harvested content in a collection can be aggregated and rendered as an HTML page for reading

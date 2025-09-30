@@ -12,3 +12,6 @@ htdocs/
 myblog/
 posts/
 demo/*.html
+demo/*.xml
+demo/*.db
+demo/*.bash

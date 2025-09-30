@@ -32,7 +32,7 @@ import (
 
 // Write HTML for an item
 func (gen *Generator) WriteItem(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
-	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
+	sourceMarkdown string, enclosures []*Enclosure, guid string, pubDate string, dcExt string,
 	channel string, status string, updated string, label string) error {
 	// Setup expressing update time.
 	pressTime := pubDate
@@ -54,6 +54,16 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	} else {
 		title = fmt.Sprintf("<h1>%s</h1>\n\n(date: %s)", title, pressTime)
 	}
+	content := description
+	if sourceMarkdown != "" {
+	 	doc := &CommonMark{
+			Text: sourceMarkdown,
+		}
+		if src, err  := doc.ToHTML(); err == nil {
+			content = src
+		}
+
+	}
 
 	fmt.Fprintf(out, `
     <article data-published=%q data-link=%q>
@@ -64,7 +74,7 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
         <a href=%q>%s</a>
       </address>
     </article>
-`, pubDate, link, title, description, link, link)
+`, pubDate, link, title, content, link, link)
 	return nil
 }
 
@@ -190,7 +200,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			}
 		}
 		if err := gen.WriteItem(out, link, title, description, authors,
-			enclosures, guid, pubDate, dcExt,
+			sourceMarkdown, enclosures, guid, pubDate, dcExt,
 			channel, status, updated, label); err != nil {
 			return err
 		}

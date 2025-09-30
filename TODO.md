@@ -4,20 +4,27 @@
 ## Bugs
 
 - [ ] The RSS I'm producing isn't always valid for aggregated items
-- [Xl The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
+  - [ ] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
+- [X] The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
 
 ## Up Next
 
+- [ ] The Markdown document defining the feed should get rendered as a standard OPML file along side the HTML and RSS aggregated feed. This could then be linked shared with other people or systems
 - [X] Double check the ordering of my head element children, make sure the meta element for character encoding comes before title
 
 ## Thinking about
 
-- [ ] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
-  - seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
-  - the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
-  - The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page
-- [ ] Documenting simple to complex integrations, it would be helpful to how how you can integrate Pandoc, PageFind and FlatLake to produce a rich websites using content managed by antennaApp
-- [ ] Should antenna init also generate some sample CSS and JavaScript modules for easy integrations with Pandoc, PageFind or FlatLake?
+- [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
+  - [X] seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
+  - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
+  - [ ] The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page, I need a clean approach that will work for both
+- [ ] Documenting simple to complex integrations
+  - [ ] A simple website of "pages"
+  - [ ] A blog example using a collection to host posts
+  - [ ] A link blog with embedded responses (do I need a different action than post?)
+  - [ ] An example should show how to integrated with with Pandoc, PageFind and FlatLake
+- [ ] Should antenna init also generate some sample CSS and JavaScript modules?
+  - [ ] Should it setup for integrations with Pandoc, PageFind or FlatLake?
 - [ ] To make Antenna app more interesting  I need to include some sample themes other people would use. 
   - I could look over the websites for feeds followed in the Antenna website and see if I could recreate similar styles
   - I could look at the WP theme gallery for ideas and see what could be implemented
@@ -38,6 +45,7 @@
   - [github.com/eduncan911/podcast](https://github.com/eduncan911/podcast)
 - [ ] Evaluate how to "post" to specific platforms, e.g. BlueSky and Mastodon since they do not handle inbound RSS yet
   - See [github.com/bitesinbyte/ferret](https://github.com/bitesinbyte/ferret) as an example
+- [ ] Do I need a publish action that would present the website using the published base URL?
 
 ## Someday, Maybe
 

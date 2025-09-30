@@ -28,7 +28,7 @@
 # pacificialndtimes.com: getting errors, too many requests, 2023-10-16
 - [Pacific Island Times](https://www.pacificislandtimes.com/blog-feed.xml)
 # Northern Marianas Papers
-- [Marianas Variety](https://www.mvariety.com/search/?nsa=eeditionl=50&t=article&f=atom)
+- [Marianas Variety](https://www.mvariety.com/search/?nsa=eeditionl=50&t=article&f=rss)
 # saipantrimbine.com: getting errors, to many requests, 2023-10-16
 ##https://www.saipantribune.com/search/?f=rss&t=article&l=50&s=start_time&sd=desc&k[]=#topstory "~Saipan Tribune" # dropped 2023-12-05, not reliable
 

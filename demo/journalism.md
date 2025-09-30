@@ -16,7 +16,7 @@
 - [The Canyon News (COC Student Newspaper)](https://canyonsnews.com/feed/)
 - [The Daily Trojan (USC Student Newspaper)](https://dailytrojan.com/feed/)
 - [The Daily Bruin (UCLA Student Newspaper)](https://wp.dailybruin.com/feed/)
-- [The Round Up (Pierce College Student Newspaper)](https://theroundupnews.com/feed/)
+- [The Round Up (Pierce College Student Newspaper)](http://www.piercemediaarts.com/search/?f=rss&t=article&c=the_roundup&l=50&s=start_time&sd=desc), this was old feed, they changed publications systems, <https://theroundupnews.com/feed/>, probably left WP for another CMS, 2025-09-30 RSD
 - [The Occidental News (Occidental College Student Newspaper)](https://theoccidentalnews.com/feed)
 ##http://civiewnews.com/feed/ "~CI View (CSCI Student Newspaper)"
 # Pasadena City College Courier has some specific header/user agent strings it is expecting, 2023-10-31 RSD

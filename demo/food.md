@@ -5,9 +5,9 @@
 - [Bon Appetet](https://www.bonappetit.com/feed/rss)
 - [Isebel Eats](https://www.isabeleats.com/feed/)
 - [Chili Pepper Madness](https://www.chilipeppermadness.com/feed/)
-- [Spiceography](https://www.spiceography.com/feed/)
+- [Spiceography](https://spiceography.com/feed/)
 - [Pepper Scale](https://pepperscale.com/feed/)
-- [Fiery Flavors](https://www.fieryflavors.com/feed/)
+-  Fiery Flavors <https://www.fieryflavors.com/feed/>, nolonger on web 2025-09-30 RSD
 - [Closet Cooking](https://www.closetcooking.com/feed/)
 - [Taste of Home](https://www.tasteofhome.com/feed/)
 
