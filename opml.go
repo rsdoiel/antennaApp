@@ -19,6 +19,7 @@ package antennaApp
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"strings"
@@ -65,7 +66,6 @@ func (gen *Generator) WriteOPML(out io.Writer, db *sql.DB, appName string, colle
 				&language, &copyright, &generator, &categoriesSrc, &feedType, &feedVersion); err != nil {
 				return err
 			}
-			fmt.Printf("DEBUG link: %q, feedLink: %q, links (%T) -> %+v\n", link, feedLink, linksSrc, linksSrc)
 			if link != "" && title != "" {
 				entry := &opml.Outline{}
 				entry.Text = title
@@ -95,10 +95,13 @@ func (gen *Generator) WriteOPML(out io.Writer, db *sql.DB, appName string, colle
 			}
 		}
 		// Render the OPML content with the io.Writer
-		src, err := opml.Marshal(o)
+		src, err := xml.MarshalIndent(o, "", "    ")
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(out, "%s\n", out)
+		if len(src) > 0 {
+			fmt.Fprintln(out, `<?xml version="1.0"?>`)
+		}
+		fmt.Fprintf(out, "%s\n", src)
 		return nil
 }

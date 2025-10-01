@@ -241,6 +241,7 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	xName := filepath.Ext(bName)
 	htmlName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".html")
 	rssName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".xml")
+	opmlName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".opml")
 
 	// clear existing page
 	if _, err := os.Stat(htmlName); err == nil {
@@ -267,21 +268,36 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		}
 	}
 
-
     // Create the RSS file
 	out, err = os.Create(rssName)
 	if err != nil {
 		return err
 	}
-    defer out.Close()
 
     // Write out RSS page
 	if err := gen.WriteRSS(out, db, appName, collection); err != nil {
 		return err
 	}
+	out.Close()
+
+
+    // clear existing page
+	if _, err := os.Stat(opmlName); err == nil {
+		if err := os.Remove(opmlName); err != nil {
+			return nil
+		}
+	}
+
+    // Create the OPML file
+	out, err = os.Create(opmlName)
+	if err != nil {
+		return err
+	}
+	
 	// Write out OPML page
 	if err := gen.WriteOPML(out, db, appName, collection); err != nil {
 		return err
 	}
+	defer out.Close()
 	return nil
 }
