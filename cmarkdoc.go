@@ -26,12 +26,12 @@ import (
 	"strings"
 
 	// 3rd party packages
-	"gopkg.in/yaml.v3"
 	"github.com/mmcdole/gofeed"
- 	"github.com/yuin/goldmark"
-    "github.com/yuin/goldmark/extension"
-    "github.com/yuin/goldmark/parser"
-    "github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer/html"
+	"gopkg.in/yaml.v3"
 )
 
 // CommonMark holds the structure of front matter and the CommonMark
@@ -140,7 +140,7 @@ func (doc *CommonMark) GetLinks() ([]Link, error) {
 	return ParseMarkdownLinks(doc.Text)
 }
 
-// GetAttributeString returns a string attribute from 
+// GetAttributeString returns a string attribute from
 // the front matter the document
 func (doc *CommonMark) GetAttributeString(key string, defaultValue string) string {
 	if val, ok := doc.FrontMatter[key].(string); ok {
@@ -152,7 +152,7 @@ func (doc *CommonMark) GetAttributeString(key string, defaultValue string) strin
 // emailAddressGetName transform an email addres like "jane.doe@example.edi (Jane Doe)" to
 // "Jane Doe".
 func emailAddressGetName(s string) string {
-	s  = strings.TrimSpace(s)
+	s = strings.TrimSpace(s)
 	if strings.HasSuffix(s, ")") {
 		parts := strings.SplitN(s, "(", 2)
 		if len(parts) == 2 && strings.Contains(parts[1], "@") == false {
@@ -160,14 +160,14 @@ func emailAddressGetName(s string) string {
 		}
 		return ""
 	}
-	if ! strings.Contains(s, "@") {
+	if !strings.Contains(s, "@") {
 		return s
 	}
 	return ""
 }
 
 func emailAddressTrimName(s string) string {
-	s  = strings.TrimSpace(s)
+	s = strings.TrimSpace(s)
 	if strings.HasSuffix(s, ")") {
 		parts := strings.SplitN(s, "(", 2)
 		if len(parts) > 0 && strings.Contains(parts[0], "@") {
@@ -195,7 +195,7 @@ func mapToPerson(val map[string]interface{}) *gofeed.Person {
 	return nil
 }
 
-// GetPersons returns a list of `*gofeed.Person{}`  
+// GetPersons returns a list of `*gofeed.Person{}`
 // from the front matter in the document document
 func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person, error) {
 	peopleList := []*gofeed.Person{}
@@ -248,9 +248,9 @@ func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person
 	return nil, nil
 }
 
-// GetAttributeBool returns a boolean attribute from 
+// GetAttributeBool returns a boolean attribute from
 // the front matter the document
-func (doc *CommonMark) GetAttributeBool(key string, defaultValue bool) bool{
+func (doc *CommonMark) GetAttributeBool(key string, defaultValue bool) bool {
 	if val, ok := doc.FrontMatter[key].(bool); ok {
 		return val
 	}
@@ -259,18 +259,24 @@ func (doc *CommonMark) GetAttributeBool(key string, defaultValue bool) bool{
 
 func (doc *CommonMark) ToHTML() (string, error) {
 	md := goldmark.New(
-		  goldmark.WithExtensions(
+		goldmark.WithExtensions(
 			extension.GFM,
 			extension.Footnote,
+		//	extension.NewTypographer(
+		//		extension.WithTypographicSubstitutions(extension.TypographicSubstitutions{
+		//			extension.LeftSingleQuote:  []byte("&sbquo;"),
+		//			extension.RightSingleQuote: nil, // nil disables a substitution
+		//		}),
+		//	),
 		),
-          goldmark.WithParserOptions(
-              parser.WithAutoHeadingID(),
-          ),
-          goldmark.WithRendererOptions(
-              html.WithHardWraps(),
-              html.WithXHTML(),
-          ),
-      )
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
+		),
+		goldmark.WithRendererOptions(
+			html.WithHardWraps(),
+			html.WithXHTML(),
+		),
+	)
 	var buf bytes.Buffer
 	if err := md.Convert([]byte(doc.Text), &buf); err != nil {
 		return "", err
