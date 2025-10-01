@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.8 a6f069c
+%antenna(1) user manual | version 0.0.9 da66792
 % R. S. Doiel
-% 2025-09-29
+% 2025-09-30
 
 # NAME
 

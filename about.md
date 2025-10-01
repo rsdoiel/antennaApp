@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.8
+version: 0.0.9
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,20 +54,15 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-09-29
+date_released: 2025-09-30
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.8
+## antennaApp 0.0.9
 
-- Fix bug in generating scheme for sourceMarkdown, defaults to empty string.
-- Removed duplicative elements when wrapping header, footer, nav and section.
-- Fixed issue with the after section being written below the footer element
-- The init action now creates two files antenna.yaml and page.yaml, page.yaml is the default html structure
-- Each collection can override page.yaml be including it's own YAML page generator description
-- The "page" action has been added for rendering non-feed oriented HTML pages from Markdown
+- Descriptions are now converted from HTML to Markdown when the feed is harvested, this has improved output rendering by removing broken or extraneous HTML elements
 
 ### Authors
 
