@@ -59,10 +59,10 @@ CREATE TABLE IF NOT EXISTS items (
 	updated DATETIME
 );
 `
-	// SQLResetChannels clear the channels talbe
+	// SQLResetChannels clear the channels table
 	SQLResetChannels = `DELETE FROM channels;`
 
-	// Update the channels in the skimmer file
+	// Update the channels table
 	SQLUpdateChannel = `REPLACE INTO channels (
 link, title, description, feed_link, links,
 updated, published, 
@@ -74,6 +74,15 @@ categories, feed_type, feed_version
 ?, ?, ?, ?,
 ?, ?, ?
 );`
+	// Display the channels in the table
+	SQLDisplayChannels = `SELECT 
+link, title, description, feed_link, links,
+updated, published, 
+authors, language, copyright, generator,
+categories, feed_type, feed_version
+FROM channels
+ORDER by title, link
+;`
 
 	// Update a feed item in the items table
 	SQLUpdateItem = `INSERT INTO items (

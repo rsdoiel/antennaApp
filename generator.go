@@ -279,5 +279,9 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	if err := gen.WriteRSS(out, db, appName, collection); err != nil {
 		return err
 	}
+	// Write out OPML page
+	if err := gen.WriteOPML(out, db, appName, collection); err != nil {
+		return err
+	}
 	return nil
 }

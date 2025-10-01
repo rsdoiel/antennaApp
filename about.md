@@ -63,6 +63,7 @@ About this software
 ## antennaApp 0.0.9
 
 - Descriptions are now converted from HTML to Markdown when the feed is harvested, this has improved output rendering by removing broken or extraneous HTML elements
+- Added source name space to RSS generation
 
 ### Authors
 

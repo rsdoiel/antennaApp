@@ -38,7 +38,7 @@
   "version": "0.0.9",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- Descriptions are now converted from HTML to Markdown when the feed is harvested, this has improved output rendering by removing broken or extraneous HTML elements",
+  "releaseNotes": "- Descriptions are now converted from HTML to Markdown when the feed is harvested, this has improved output rendering by removing broken or extraneous HTML elements\n- Added source name space to RSS generation",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }
