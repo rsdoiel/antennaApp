@@ -54,7 +54,7 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-09-30
+date_released: 2025-10-01
 ---
 
 About this software
@@ -64,6 +64,7 @@ About this software
 
 - Descriptions are now converted from HTML to Markdown when the feed is harvested, this has improved output rendering by removing broken or extraneous HTML elements
 - Added source name space to RSS generation
+- OPML files are now generated along side the RSS files for collections
 
 ### Authors
 
