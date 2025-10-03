@@ -101,7 +101,9 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 		return err
 	}
 	// Convert our document text to HTML
-	innerHTML, err := doc.ToHTML()
+	// NOTE: Pages are allowed to have "unsafe" embedded HTML because they are
+	// not reading from a feed, they are being read from your file system.
+	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return err
 	}

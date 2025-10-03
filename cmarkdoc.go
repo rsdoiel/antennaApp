@@ -26,11 +26,16 @@ import (
 	"strings"
 
 	// 3rd party packages
+	mathjax "github.com/litao91/goldmark-mathjax"
+	"github.com/stefanfritsch/goldmark-fences"
 	"github.com/mmcdole/gofeed"
+	"github.com/mangoumbrella/goldmark-figure"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark-emoji"
+    //"github.com/yuin/goldmark-emoji/definition"
 	"gopkg.in/yaml.v3"
 )
 
@@ -261,20 +266,46 @@ func (doc *CommonMark) ToHTML() (string, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(
 			extension.GFM,
+			extension.DefinitionList,
 			extension.Footnote,
-		//	extension.NewTypographer(
-		//		extension.WithTypographicSubstitutions(extension.TypographicSubstitutions{
-		//			extension.LeftSingleQuote:  []byte("&sbquo;"),
-		//			extension.RightSingleQuote: nil, // nil disables a substitution
-		//		}),
-		//	),
+			emoji.Emoji,
+			figure.Figure,
+			figure.Figure.WithImageLink(),
+			figure.Figure.WithSkipNoCaption(),
+			&fences.Extender{},
+			mathjax.MathJax,
+			extension.CJK,
+		),
+		goldmark.WithParserOptions(
+			parser.WithAutoHeadingID(),
+		),
+	)
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(doc.Text), &buf); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func (doc *CommonMark) ToUnsafeHTML() (string, error) {
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.GFM,
+			extension.DefinitionList,
+			extension.Footnote,
+			emoji.Emoji,
+			figure.Figure,
+			figure.Figure.WithImageLink(),
+			figure.Figure.WithSkipNoCaption(),
+			&fences.Extender{},
+			mathjax.MathJax,
+			extension.CJK,
 		),
 		goldmark.WithParserOptions(
 			parser.WithAutoHeadingID(),
 		),
 		goldmark.WithRendererOptions(
-			html.WithHardWraps(),
-			html.WithXHTML(),
+			html.WithUnsafe(),
 		),
 	)
 	var buf bytes.Buffer

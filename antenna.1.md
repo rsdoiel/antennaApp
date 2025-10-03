@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.10 7c7a2db
+%antenna(1) user manual | version 0.0.10 acdb0d6
 % R. S. Doiel
 % 2025-10-02
 
@@ -88,6 +88,8 @@ writes it an HTML file using the the same basename. If OUTPUT_NAME is set it use
 that name for the HTML file generated. (NOTE: he page action only renders and HTML file.
 If does not get included in a collection or result in as a listing in an RSS file.)
 The page action is useful for pages likey an about page, home page, and search page.
+NOTE: __The Markdown processed via page action will allow "unsafe" HTML to pass through.
+Only use page if you trust the Markdown document!!!__
 
 post COLLECTION_FILE FILEPATH
 : Add a Markdown document to a feed collection. The front matter is used to 

@@ -38,7 +38,7 @@
   "version": "0.0.10",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- refactor generator YAML to reflect the head inner HTML elements better",
+  "releaseNotes": "- refactor generator YAML to reflect the head inner HTML elements better\n- Added additional extension support to rendering Markdown (foot notes, definition lists, mathjax, CJK)\n- page action will allow unsafe HTML to pass through the Markdown rendering",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }
