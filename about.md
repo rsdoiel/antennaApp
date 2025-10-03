@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.9
+version: 0.0.10
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,17 +54,15 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-10-01
+date_released: 2025-10-02
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.9
+## antennaApp 0.0.10
 
-- Descriptions are now converted from HTML to Markdown when the feed is harvested, this has improved output rendering by removing broken or extraneous HTML elements
-- Added source name space to RSS generation
-- OPML files are now generated along side the RSS files for collections
+- refactor generator YAML to reflect the head inner HTML elements better
 
 ### Authors
 

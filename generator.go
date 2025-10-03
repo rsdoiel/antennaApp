@@ -136,14 +136,6 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	if obj.Description != "" {
 		gen.Description = obj.Description
 	}
-	/*
-		if obj.CSS != "" {
-			gen.CSS = obj.CSS
-		}
-		if obj.Modules != nil && len(obj.Modules) > 0 {
-			gen.Modules = obj.Modules[:]
-		}
-	*/
 	if obj.Meta != nil && len(obj.Meta) > 0 {
 		gen.Meta = obj.Meta[:]
 	}

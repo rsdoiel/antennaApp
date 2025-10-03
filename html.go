@@ -83,7 +83,7 @@ func elementFromMap(element string, m map[string]string) string {
 	parts := []string{}
 	parts = append(parts, fmt.Sprintf("<%s", element))
 	for k, v := range m {
-		parts = append(parts, fmt.Sprintf("%q=%q", k, v))
+		parts = append(parts, fmt.Sprintf("%s=%q", k, v))
 	}
 	parts = append(parts, "/>")
 	return strings.Join(parts, " ")
@@ -125,10 +125,10 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 		// NOTE: Posts are written next to the HTML page so the link to the Markdown can be relative
 		postLink := filepath.Base(postPath)
 		m = map[string]string{
+			"title": gen.Title,
 			"rel":   "altenate",
 			"type":  "text/markdown",
 			"href":  postLink,
-			"title": gen.Title,
 		}
 		fmt.Fprintf(out, "  %s\n", elementFromMap("link", m))
 	}
