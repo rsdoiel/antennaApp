@@ -29,8 +29,8 @@ import (
 	"time"
 
 	// 3rd Party pacakges
-	"github.com/mmcdole/gofeed"
 	html2md "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/mmcdole/gofeed"
 )
 
 func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, args []string) error {
@@ -115,7 +115,7 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
 	return nil
 }
 
-func redirectHandler (req *http.Request, via []*http.Request) error {
+func redirectHandler(req *http.Request, via []*http.Request) error {
 	if len(via) >= 5 {
 		urlList := []string{}
 		for _, redirect := range via {
@@ -124,7 +124,7 @@ func redirectHandler (req *http.Request, via []*http.Request) error {
 		return fmt.Errorf("stopped after 5 redirectos: %s", strings.Join(urlList, ", "))
 	}
 	fmt.Fprintf(os.Stderr, "redirecting to %s because %s\n", req.URL.String(), http.ErrUseLastResponse)
- 	return http.ErrUseLastResponse
+	return http.ErrUseLastResponse
 }
 
 // webget retrieves a feed and parses it.
@@ -133,7 +133,7 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 	// NOTE: I'm assuming only http, https at this point, later this will
 	// need to be split up so I can handle Gopher, Gemini and sftp.
 	client := &http.Client{
-	 	CheckRedirect: redirectHandler,
+		CheckRedirect: redirectHandler,
 	}
 	req, err := http.NewRequest("GET", href, nil)
 	if err != nil {
@@ -158,7 +158,7 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 	if err != err {
 		return nil, err
 	}
-	src = bytes.ReplaceAll(src , []byte(``), []byte(``))
+	src = bytes.ReplaceAll(src, []byte(``), []byte(``))
 	buf := bytes.NewBuffer(src)
 
 	fp := gofeed.NewParser()
@@ -236,7 +236,7 @@ func saveChannel(db *sql.DB, link string, feedLabel string, channel *gofeed.Feed
 func saveItem(db *sql.DB, feedLabel string, channel string, status string, item *gofeed.Item) error {
 	var (
 		pubDate string
-		updated   string
+		updated string
 	)
 
 	if item.UpdatedParsed != nil {
@@ -246,10 +246,10 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 		pubDate = item.PublishedParsed.Format("2006-01-02 15:04:05")
 	}
 	var (
-		authors []byte
-		dcExt []byte
+		authors    []byte
+		dcExt      []byte
 		enclosures []byte
-		err error
+		err        error
 	)
 	if item.DublinCoreExt != nil {
 		dcExt, err = json.Marshal(item.DublinCoreExt)
@@ -299,7 +299,7 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 	}
 	// NOTE: postPath doens't exist for harvested items, only for posted ones but SQL statement
 	// is used for both.
-	postPath := "" 
+	postPath := ""
 	stmt := SQLUpdateItem
 	if _, err := db.Exec(stmt,
 		item.Link, item.Title, item.Description, string(authors),

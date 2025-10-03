@@ -36,9 +36,9 @@ import (
 	"strings"
 
 	// 3rd Party packages
-	"gopkg.in/yaml.v3"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/pbkdf2"
+	"gopkg.in/yaml.v3"
 )
 
 // IsDotPath checks to see if a path is requested with a dot file (e.g. docs/.git/* or docs/.htaccess)
@@ -164,7 +164,6 @@ func LoadRedirects(fName string) (map[string]string, error) {
 	}
 	return rmap, nil
 }
-
 
 // MakeRedirectService takes a m[string]string of redirects
 // and loads it into our service's private routes attribute.
@@ -450,7 +449,7 @@ func (a *Access) RemoveAccess(username string) bool {
 // Login accepts username, password and ok boolean.
 // Returns true if they match auth's settings false otherwise.
 //
-// How to choosing an appropriate hash method see
+// # How to choosing an appropriate hash method see
 //
 // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 //
@@ -710,7 +709,7 @@ func (fs SafeFileSystem) Open(p string) (http.File, error) {
 	return SafeFile{fp}, err
 }
 
-///
+// /
 // SafeFileSystem returns a new safe file system using
 // the *WebService.DocRoot as the directory source.
 //
@@ -718,12 +717,13 @@ func (fs SafeFileSystem) Open(p string) (http.File, error) {
 //
 // ws := antennaApp.LoadYAML("antenna.yaml")
 // fs, err := ws.SafeFileSystem()
-// if err != nil {
-//     log.Fatalf("%s\n", err)
-// }
+//
+//	if err != nil {
+//	    log.Fatalf("%s\n", err)
+//	}
+//
 // http.Handle("/", http.FileServer(ws.SafeFileSystem()))
 // log.Fatal(http.ListenAndService(ws.Http.Hostname(), nil))
-//
 func (w *WebService) SafeFileSystem() (SafeFileSystem, error) {
 	if w.DocRoot == "" {
 		w.DocRoot = "."
@@ -736,19 +736,19 @@ func (w *WebService) SafeFileSystem() (SafeFileSystem, error) {
 	return SafeFileSystem{http.Dir(w.DocRoot)}, nil
 }
 
-//
 // MakeSafeFileSystem without a *WebService takes a doc root
 // and returns a SafeFileSystem struct.
 //
 // Example usage:
 //
 // fs, err := MakeSafeFileSystem("/var/www/htdocs")
-// if err != nil {
-//     log.Fatalf("%s\n", err)
-// }
+//
+//	if err != nil {
+//	    log.Fatalf("%s\n", err)
+//	}
+//
 // http.Handle("/", http.FileServer(fs))
 // log.Fatal(http.ListenAndService(":8000", nil))
-//
 func MakeSafeFileSystem(docRoot string) (SafeFileSystem, error) {
 	if docRoot == "" {
 		return SafeFileSystem{}, fmt.Errorf("document root not set")
@@ -1042,4 +1042,3 @@ func (app *AntennaApp) Preview(cfgName string) error {
 		return http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), RequestLogger(AccessHandler(mux, w.Access)))
 	}
 }
-

@@ -24,19 +24,26 @@ import (
 )
 
 var (
-	DefaultGeneratorYaml = `###
-## Example YAML used to custom a collection's Generator YAML.
+	DefaultGeneratorYaml = `##
+# Example YAML HTML page generator.
 ##
-## Use this CSS file for the CSS link in the head element. To
-## pull an other CSS, use a CSS @import statement. (uncomment line
-## and update location)
-#css: css/site.css
-## You list of ES6 modules goes here, (uncomment lines, update locations)
-#modules:
-#  - modules/date_filter.js
+meta:
+  - http-equiv: "Content-Type"
+    content: "text/html; charset=utf-8"
+  - name: language
+    content: "en-US"
+  - name: viewport
+    content: "width=device-width, initial-scale=1.0"
+#link:
+#  - rel: stylesheet
+#    type: text/css
+#    href: /css/site.css
+#script:
+#  - rel: module
+#    src: /modules/date_filter.js
+
 ##
-## The next set of elements let you include HTML in the page
-## area decribed.
+#  Visible HTML page elements
 ##
 header: |
   <!-- your custom header element's inner HTML goes here -->
@@ -63,7 +70,7 @@ func InitPageGenerator(pageName string) error {
 		return nil
 	} else {
 		// NOTE: Create a default page page Generator
-		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0775); err != nil{
+		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0775); err != nil {
 			fmt.Errorf("failed to create %q, %s", pageName, err)
 		}
 	}
@@ -83,7 +90,7 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	}
 	fName, oName := strings.TrimSpace(args[0]), ""
 	if len(args) == 2 {
-	  oName = strings.TrimSpace(args[1])
+		oName = strings.TrimSpace(args[1])
 	}
 	src, err := os.ReadFile(fName)
 	if err != nil {
@@ -113,14 +120,13 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	}
 	gen, err := NewGenerator(app.appName, cfg.BaseURL)
 	if err != nil {
-			return err
+		return err
 	}
 	if err := gen.LoadConfig(cfg.Generator); err != nil {
 		return err
 	}
 	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
 		return err
-	} 
+	}
 	return nil
 }
-

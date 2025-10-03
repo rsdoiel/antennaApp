@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	 // 3rd Party
+	// 3rd Party
 	_ "github.com/glebarez/go-sqlite"
 	//"github.com/mmcdole/gofeed"
 	ext "github.com/mmcdole/gofeed/extensions"
@@ -82,15 +82,15 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	if pubDate == "" {
 		pubDate = doc.GetAttributeString("datePublished", "")
 	}
-	dateModified := doc.GetAttributeString("dateModified",pubDate)
+	dateModified := doc.GetAttributeString("dateModified", pubDate)
 	draft := doc.GetAttributeBool("draft", false)
 	channel := doc.GetAttributeString("channel", collection.Link)
 	guid := doc.GetAttributeString("guid", link)
 	status := "review"
-	if draft || pubDate == ""{
+	if draft || pubDate == "" {
 		return fmt.Errorf("%s is set to draft or is missing pubDate %q", fName, pubDate)
 	} else {
-		status = "published" 
+		status = "published"
 	}
 
 	// When no description is provided the description is set with the body text
@@ -105,7 +105,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 			if cfg.BaseURL != "" {
 				if strings.HasSuffix(postPath, ".md") {
 					link = cfg.BaseURL + "/" + strings.TrimSuffix(postPath, ".md") + ".html"
-				}  else {
+				} else {
 					link = cfg.BaseURL + "/" + postPath
 				}
 			} else {
@@ -136,7 +136,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		}
 		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML); err != nil {
 			return err
-		} 
+		}
 	}
 	// FIXME: Need to handle getting enclosures and publishing them to posts tree
 	// NOTE: Insert/update item in collection

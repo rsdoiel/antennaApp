@@ -54,7 +54,7 @@ func toXMLString(input string) string {
 
 func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
-	channel string, status string, updated string, label string, sourceMarkdown string,) error {
+	channel string, status string, updated string, label string, sourceMarkdown string) error {
 	// Setup expressing update time.
 	pressTime := pubDate
 	if len(pressTime) > 10 {

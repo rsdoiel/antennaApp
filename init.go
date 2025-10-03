@@ -42,7 +42,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 		if cfg.Htdocs != "" {
 			if _, err := os.Stat(cfg.Htdocs); err != nil {
 				return fmt.Errorf("problem with htdocs: %q in %s: %s", cfg.Htdocs, fName, err)
-			}			
+			}
 		}
 		if cfg.Generator == "" {
 			cfg.Generator = "page.yaml"
@@ -75,4 +75,3 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	fmt.Fprintf(fp, "%s", src)
 	return InitPageGenerator(cfg.Generator)
 }
-

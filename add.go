@@ -28,7 +28,6 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-
 func (app *AntennaApp) Add(cfgName string, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("missing collection name")
@@ -158,7 +157,7 @@ func (app *AntennaApp) Del(cfgName string, args []string) error {
 	for _, cName := range args {
 		i := cfg.CollectionIndex(cName)
 		if i > -1 {
-			cfg.Collections = append(cfg.Collections[:i], cfg.Collections[i+1:]...)	
+			cfg.Collections = append(cfg.Collections[:i], cfg.Collections[i+1:]...)
 		}
 	}
 	// Save all the updates

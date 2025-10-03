@@ -56,10 +56,10 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	}
 	content := description
 	if sourceMarkdown != "" {
-	 	doc := &CommonMark{
+		doc := &CommonMark{
 			Text: sourceMarkdown,
 		}
-		if src, err  := doc.ToHTML(); err == nil {
+		if src, err := doc.ToHTML(); err == nil {
 			content = src
 		}
 
@@ -78,43 +78,70 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	return nil
 }
 
+// elementFromMap, generate an HTML element from a map[string]string
+func elementFromMap(element string, m map[string]string) string {
+	parts := []string{}
+	parts = append(parts, fmt.Sprintf("<%s", element))
+	for k, v := range m {
+		parts = append(parts, fmt.Sprintf("%q=%q", k, v))
+	}
+	parts = append(parts, "/>")
+	return strings.Join(parts, " ")
+}
+
 // writeHeadElement, writes the head element of the HTML page.
 func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 	fmt.Fprintln(out, "<head>")
 	defer fmt.Fprintln(out, "</head>")
+	var m map[string]string
 	// Write out charset
-	fmt.Fprintln(out, "  <meta charset=\"UTF-8\" />")
+	m = map[string]string{
+		"charset": "utf-8",
+	}
+	fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
+	// Format the date
+	formattedDate := time.Now().Format(time.RFC3339)
+	m = map[string]string{
+		"name":    "generator",
+		"content": fmt.Sprintf("%s/%s", gen.AppName, gen.Version),
+	}
+	fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
+	m = map[string]string{
+		"name":    "date",
+		"content": formattedDate,
+	}
+	fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
+	if gen.Meta != nil && len(gen.Meta) > 0 {
+		for _, m := range gen.Meta {
+			fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
+		}
+	}
 	// Write title (NOTE: title must come after the charset since it may have encoded characters)
 	if gen.Title != "" {
 		fmt.Fprintf(out, "  <title>%s</title>\n", gen.Title)
-	}
-	// Write out RSS 2.0 link
-	if gen.Link != "" {
-		fmt.Fprintf(out, "  <link  rel=\"alternate\" type=\"application/rss+xml\" href=%q title=%q/>\n", gen.Link, gen.Title)
 	}
 	// Write out RSS alt link for Markdown if postPath is not empty string
 	if postPath != "" && strings.HasSuffix(postPath, ".md") {
 		// NOTE: Posts are written next to the HTML page so the link to the Markdown can be relative
 		postLink := filepath.Base(postPath)
-		fmt.Fprintf(out, "  <link  rel=\"alternate\" type=\"text/markdown\" href=%q title=%q/>\n", postLink, gen.Title)
+		m = map[string]string{
+			"rel":   "altenate",
+			"type":  "text/markdown",
+			"href":  postLink,
+			"title": gen.Title,
+		}
+		fmt.Fprintf(out, "  %s\n", elementFromMap("link", m))
 	}
-	fmt.Fprintln(out, "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
-	if gen.CSS != "" {
-		fmt.Fprintf(out, "  <link rel=\"stylesheet\" href=\"%s\" />\n", gen.CSS)
-	}
-	if gen.Modules != nil {
-		for _, module := range gen.Modules {
-			fmt.Fprintf(out, "  <script type=\"module\" src=\"%s\"></script>\n", module)
+	if gen.Link != nil && len(gen.Link) > 0 {
+		for _, m := range gen.Link {
+			fmt.Fprintf(out, "  %s\n", elementFromMap("link", m))
 		}
 	}
-	// Get the current date
-	currentDate := time.Now()
-
-	// Format the date
-	formattedDate := currentDate.Format(time.RFC3339)
-	fmt.Fprintf(out, `  <meta name="generator" content="%s/%s">
-  <meta name="date" content="%s">
-`, gen.AppName, gen.Version, formattedDate)
+	if gen.Script != nil && len(gen.Script) > 0 {
+		for _, m := range gen.Script {
+			fmt.Fprintf(out, "  %s\n", elementFromMap("script", m))
+		}
+	}
 }
 
 // indentText splits  the string into lines, then prefixes the number of
@@ -162,21 +189,21 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	// Setup and write out the body
 	for rows.Next() {
 		var (
-			link          string
-			title         string
-			description   string
-			authorsSrc    string
-			authors       []*gofeed.Person
-			enclosuresSrc string
-			enclosures    []*Enclosure
-			guid          string
-			pubDate       string
-			dcExt         string
-			channel       string
-			status        string
-			updated       string
-			label         string
-			postPath      string
+			link           string
+			title          string
+			description    string
+			authorsSrc     string
+			authors        []*gofeed.Person
+			enclosuresSrc  string
+			enclosures     []*Enclosure
+			guid           string
+			pubDate        string
+			dcExt          string
+			channel        string
+			status         string
+			updated        string
+			label          string
+			postPath       string
 			sourceMarkdown string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
@@ -249,7 +276,7 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	// Setup header element
 	if gen.Header != "" {
 		fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
-	} 
+	}
 	// Setup nav element
 	if gen.Nav != "" {
 		fmt.Fprintf(out, `  <nav>

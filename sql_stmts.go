@@ -121,5 +121,3 @@ ORDER BY pubDate DESC, updated DESC;`
 	// SQLDeleteItemByLink removes an item in the items table with provided link
 	SQLDeleteItemByLink = `DELETE FROM items WHERE link = ?`
 )
-
-

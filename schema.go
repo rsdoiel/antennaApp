@@ -49,7 +49,7 @@ type AppConfig struct {
 	// This holds the default page generator description. Each collection can
 	// use a custom one or the default one.
 	Generator string `json:"generator,omitempty" yaml:"generator,omitempty"`
-	
+
 	// Collections holds a list of collections to curate
 	Collections []*Collection `json:"collections,omitempty" yaml:"collections,omitempty"`
 }

@@ -36,7 +36,7 @@ type Generator struct {
 	// BaseURL used to form the feed Link
 	BaseURL string `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
 
-	// Version holds the version of the genliction
+	// Version holds the version of the generator application
 	// used when generating the "generator" metadata
 	Version string `json:"version,omitempty" yaml:"version,omitempty"`
 
@@ -50,14 +50,18 @@ type Generator struct {
 	// Description, included as metadata in head element
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 
-	// Link points to the RSS feed associated with the page.
-	Link string `json:"link,omitempty" yaml:"link,omitempty"`
+	/*
+	 * HTML page elements
+	 */
 
-	// CSS is the path to a CSS file
-	CSS string `json:"css,omitempty" yaml:"css,omitempty"`
+	// Meta holds a list of of meta elements rendered into the head element of HTML pages
+	Meta []map[string]string `json:"meta,omitempty" yaml:"meta,omitempty"`
 
-	// Modules is a list for ES6 diles
-	Modules []string `json:"modules,omitempty" yaml:"modules,omitempty"`
+	// Link holds the list of links elements rendered into the head element of HTML pages
+	Link []map[string]string `json:"link,omitempty" yaml:"link,omitempty"`
+
+	// Script holds a list of script elements rendered into the head element of HTML pages
+	Script []map[string]string `json:"script,omitempty" yaml:"script,omitempty"`
 
 	// Header hold the HTML markdup of the Header element. If not included
 	// then it will be generated using the Title and timestamp
@@ -112,7 +116,7 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	if err != nil {
 		return err
 	}
-	obj := Generator{}
+	obj := new(Generator)
 	if err := yaml.Unmarshal(src, &obj); err != nil {
 		return err
 	}
@@ -132,11 +136,22 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	if obj.Description != "" {
 		gen.Description = obj.Description
 	}
-	if obj.CSS != "" {
-		gen.CSS = obj.CSS
+	/*
+		if obj.CSS != "" {
+			gen.CSS = obj.CSS
+		}
+		if obj.Modules != nil && len(obj.Modules) > 0 {
+			gen.Modules = obj.Modules[:]
+		}
+	*/
+	if obj.Meta != nil && len(obj.Meta) > 0 {
+		gen.Meta = obj.Meta[:]
 	}
-	if obj.Modules != nil && len(obj.Modules) > 0 {
-		gen.Modules = obj.Modules[:]
+	if obj.Link != nil && len(obj.Link) > 0 {
+		gen.Link = append(gen.Link, obj.Link...)
+	}
+	if obj.Script != nil && len(obj.Script) > 0 {
+		gen.Script = obj.Script[:]
 	}
 	if obj.Header != "" {
 		gen.Header = obj.Header
@@ -171,10 +186,10 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 		if err != nil {
 			return err
 		}
-        if col == nil {
-            fmt.Fprintf(eout, "warning could not retrieve %q, skipping\n", cName)
-            continue
-        }
+		if col == nil {
+			fmt.Fprintf(eout, "warning could not retrieve %q, skipping\n", cName)
+			continue
+		}
 		// Generate the aggregated page
 		if err := col.Generate(out, eout, app.appName, cfg); err != nil {
 			fmt.Fprintf(eout, "warning %s: %s\n", col.File, err)
@@ -188,12 +203,12 @@ func (collection *Collection) ApplyFilters(db *sql.DB) error {
 		return nil
 	}
 	for _, stmt := range collection.Filters {
-        if strings.TrimSpace(stmt) != "" {
-            _, err := db.Exec(stmt)
-            if err != nil {
-                return fmt.Errorf("%s\nstmt: %s", err, stmt)
-            }
-        }
+		if strings.TrimSpace(stmt) != "" {
+			_, err := db.Exec(stmt)
+			if err != nil {
+				return fmt.Errorf("%s\nstmt: %s", err, stmt)
+			}
+		}
 	}
 	return nil
 }
@@ -219,6 +234,14 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 			return err
 		}
 	}
+	if collection.Link != "" {
+		m := map[string]string {
+			"rel": "alternate",
+			"type": "application/rss+xml",
+			"href": collection.Link,
+		}
+		gen.Link = append(gen.Link, m)
+	}
 	return gen.Generate(eout, appName, cfg, collection)
 }
 
@@ -231,7 +254,7 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	}
 	defer db.Close()
 
-    // Run the collection filter to determine which items to publish
+	// Run the collection filter to determine which items to publish
 	if err := collection.ApplyFilters(db); err != nil {
 		return err
 	}
@@ -260,40 +283,39 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		return err
 	}
 	out.Close()
- 
-    // clear existing page
+
+	// clear existing page
 	if _, err := os.Stat(rssName); err == nil {
 		if err := os.Remove(rssName); err != nil {
 			return nil
 		}
 	}
 
-    // Create the RSS file
+	// Create the RSS file
 	out, err = os.Create(rssName)
 	if err != nil {
 		return err
 	}
 
-    // Write out RSS page
+	// Write out RSS page
 	if err := gen.WriteRSS(out, db, appName, collection); err != nil {
 		return err
 	}
 	out.Close()
 
-
-    // clear existing page
+	// clear existing page
 	if _, err := os.Stat(opmlName); err == nil {
 		if err := os.Remove(opmlName); err != nil {
 			return nil
 		}
 	}
 
-    // Create the OPML file
+	// Create the OPML file
 	out, err = os.Create(opmlName)
 	if err != nil {
 		return err
 	}
-	
+
 	// Write out OPML page
 	if err := gen.WriteOPML(out, db, appName, collection); err != nil {
 		return err
