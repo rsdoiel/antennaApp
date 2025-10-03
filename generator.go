@@ -231,8 +231,8 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 		}
 	}
 	if collection.Link != "" {
-		m := map[string]string {
-			"rel": "alternate",
+		m := map[string]string{
+			"rel":  "alternate",
 			"type": "application/rss+xml",
 			"href": collection.Link,
 		}

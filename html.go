@@ -284,24 +284,38 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
   </nav>
 `, indentText(strings.TrimSpace(gen.Nav), 4))
 	}
+
 	if gen.TopContent != "" {
 		fmt.Fprintf(out, `
     %s
 `, indentText(strings.TrimSpace(gen.TopContent), 4))
 	}
 
+	//fmt.Printf("DEBUG date-publised=%q data-link=%q\n", pubDate, link)
 	// Now render our innerHTML
-	fmt.Fprintf(out, `
+	if pubDate != "" && link != "" {
+		fmt.Fprintf(out, `
   <section>
+    <article data-published=%q data-link=%q>
       %s
+    </article>
   </section>
-`, indentText(innerHTML, 6))
+`, pubDate, link, indentText(innerHTML, 6))
+
+	} else {
+		fmt.Fprintf(out, `
+  <section>
+    %s
+  </section>
+`, indentText(innerHTML, 4))
+	}
 
 	if gen.BottomContent != "" {
 		fmt.Fprintf(out, `
     %s
 `, indentText(strings.TrimSpace(gen.BottomContent), 4))
 	}
+
 	// Wrap up the page
 	if gen.Footer != "" {
 		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))

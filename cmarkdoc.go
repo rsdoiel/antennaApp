@@ -27,13 +27,13 @@ import (
 
 	// 3rd party packages
 	mathjax "github.com/litao91/goldmark-mathjax"
-	"github.com/stefanfritsch/goldmark-fences"
-	"github.com/mmcdole/gofeed"
 	"github.com/mangoumbrella/goldmark-figure"
+	"github.com/mmcdole/gofeed"
+	"github.com/stefanfritsch/goldmark-fences"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark-emoji"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark-emoji"
 	"gopkg.in/yaml.v3"
 )
 
@@ -270,9 +270,9 @@ func (doc *CommonMark) ToHTML() (string, error) {
 			figure.Figure,
 			figure.Figure.WithImageLink(),
 			figure.Figure.WithSkipNoCaption(),
-			&fences.Extender{},
 			mathjax.MathJax,
 			extension.CJK,
+			&fences.Extender{},
 		),
 	)
 	var buf bytes.Buffer
@@ -292,9 +292,9 @@ func (doc *CommonMark) ToUnsafeHTML() (string, error) {
 			figure.Figure,
 			figure.Figure.WithImageLink(),
 			figure.Figure.WithSkipNoCaption(),
-			&fences.Extender{},
 			mathjax.MathJax,
 			extension.CJK,
+			&fences.Extender{},
 		),
 		goldmark.WithRendererOptions(
 			html.WithUnsafe(),
