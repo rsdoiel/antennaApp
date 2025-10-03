@@ -32,10 +32,8 @@ import (
 	"github.com/mangoumbrella/goldmark-figure"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark-emoji"
-    //"github.com/yuin/goldmark-emoji/definition"
 	"gopkg.in/yaml.v3"
 )
 

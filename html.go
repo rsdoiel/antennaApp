@@ -293,11 +293,9 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	// Now render our innerHTML
 	fmt.Fprintf(out, `
   <section>
-    <article data-published=%q data-link=%q>
       %s
-    </article>
   </section>
-`, pubDate, link, indentText(innerHTML, 6))
+`, indentText(innerHTML, 6))
 
 	if gen.BottomContent != "" {
 		fmt.Fprintf(out, `
