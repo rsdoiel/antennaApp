@@ -63,6 +63,8 @@ About this software
 ## antennaApp 0.0.10
 
 - refactor generator YAML to reflect the head inner HTML elements better
+- Added additional extension support to rendering Markdown (foot notes, definition lists, mathjax, CJK)
+- page action will allow unsafe HTML to pass through the Markdown rendering
 
 ### Authors
 

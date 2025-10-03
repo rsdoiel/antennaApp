@@ -50,6 +50,10 @@ type Generator struct {
 	// Description, included as metadata in head element
 	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 
+	// CMarkFilters are Lua filters applied to the CommonMark document when
+	// rendering HTML.
+	CMarkFilters []string `json:"cm_filters,omitempty" yaml:"cm_filters,omitempty"`
+
 	/*
 	 * HTML page elements
 	 */

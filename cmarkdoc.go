@@ -276,9 +276,6 @@ func (doc *CommonMark) ToHTML() (string, error) {
 			mathjax.MathJax,
 			extension.CJK,
 		),
-		goldmark.WithParserOptions(
-			parser.WithAutoHeadingID(),
-		),
 	)
 	var buf bytes.Buffer
 	if err := md.Convert([]byte(doc.Text), &buf); err != nil {
@@ -300,9 +297,6 @@ func (doc *CommonMark) ToUnsafeHTML() (string, error) {
 			&fences.Extender{},
 			mathjax.MathJax,
 			extension.CJK,
-		),
-		goldmark.WithParserOptions(
-			parser.WithAutoHeadingID(),
 		),
 		goldmark.WithRendererOptions(
 			html.WithUnsafe(),
