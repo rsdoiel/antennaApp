@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="antennaapp">antennaApp</h1>
+<p><strong>antenna</strong> is a tool for working with RSS feeds and
+rendering a link blog. It is inspired by Dave Winer’s <a
+href="https://textcasting.org">Textcasting</a> and <a
+href="https://feedland.org">FeedLand</a> and my own experimental
+website, <a href="https://rsdoiel.github.io/antenna">antenna</a>.</p>
+<p>The approach I am taking is to make it easy to curate feeds and
+generated a static website using a simple command line tool. I believe
+that a link blog which can consume and generate RSS can be a basis for a
+truly distributed social web. It avoids the complexity of solutions like
+ATProto and ActivityPub.</p>
+<p>Antenna’s Features:</p>
+<ul>
+<li>support for multiple collections of feeds</li>
+<li>a feed collection is defined by a Markdown document containing a
+list of links to feeds</li>
+<li>collections can be harvested, meaning content retrieved from the
+feeds listed in the Markdown document</li>
+<li>harvested content is stored in a SQLite3 database</li>
+<li>harvested content in a collection can be aggregated and rendered as
+an HTML page for reading</li>
+<li>Markdown documents can be imported into a collection as a feed
+item</li>
+<li>RSS 2.0 XML and HTML are generated per collection</li>
+<li>A preview feature to view the render content in your web browser via
+a localhost URL</li>
+<li>You can manage your collections via a localhost URL too.</li>
+</ul>
+<p>The ability to harvest feed items means we can read what others post
+on the web. The Markdown content can be added to a feed allows us to
+comment on the items read (thus being social).</p>
+<p>Through YAML configuration files you can customize the HTML rendered
+by <strong>antenna</strong> on a per collection basis. That means it is
+possible to recreate a “news paper” like experience.</p>
+<p>A static website using <strong>antenna</strong> can grow through
+either enhancing the HTML markup defined in the YAML configuration or
+through manipulation of the collection contents in the SQLite3 database.
+This provides opportunities to integrate with other static website tools
+like <a href="https://pagefind.app"
+title="A browser side search engine">PageFind</a> and <a
+href="https://flatlake.app"
+title="A static JSON API driven by front matter in Markdown documents">FlatLake</a>.
+You can even use <strong>{app_name}</strong> to augment your existing
+blog.</p>
+<h2 id="release-notes">Release Notes</h2>
+<ul>
+<li>version: 0.0.6</li>
+<li>status: wip</li>
+<li>released: 2025-09-14</li>
+</ul>
+<p>Added support for antenna preview to listen for a host IP address or
+name.</p>
+<h3 id="authors">Authors</h3>
+<ul>
+<li>Doiel, R. S. Doiel</li>
+</ul>
+<h2 id="software-requirements">Software Requirements</h2>
+<ul>
+<li>Go &gt;= 1.25.1</li>
+<li>CMTools &gt;= 0.0.40</li>
+</ul>
+<h3 id="software-suggestions">Software Suggestions</h3>
+<ul>
+<li>GNU Make &gt;= 3.4</li>
+<li>Pandoc &gt;= 3.1</li>
+<li>Bash or Powershell</li>
+</ul>
+<h2 id="related-resources">Related resources</h2>
+<ul>
+<li><a href="https://github.com/rsdoiel/antennaApp/issues">Getting Help,
+Reporting bugs</a></li>
+<li><a
+href="https://www.gnu.org/licenses/agpl-3.0.en.html">LICENSE</a></li>
+<li><a href="INSTALL.html">Installation</a></li>
+<li><a href="about.html">About</a></li>
+</ul>
+</section>
+</body>
+</html>
