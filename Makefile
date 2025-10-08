@@ -18,6 +18,8 @@ MAN_PAGES_1 = $(shell ls -1 *.1.md | sed -E 's/.1.md/.1/g')
 
 MAN_PAGES_3 = $(shell ls -1 *.3.md | sed -E 's/.3.md/.3/g')
 
+MAN_PAGES_5 = $(shell ls -1 *.5.md | sed -E 's/.5.md/.6/g')
+
 MAN_PAGES_7 = $(shell ls -1 *.7.md | sed -E 's/.7.md/.7/g')
 
 HTML_PAGES = $(shell find . -type f | grep -E '.html$')
@@ -52,7 +54,7 @@ version.go: .FORCE
 hash: .FORCE
 	git log --pretty=format:'%h' -n 1
 
-man: $(MAN_PAGES_1) # $(MAN_PAGES_3) $(MAN_PAGES_7)
+man: $(MAN_PAGES_1) # $(MAN_PAGES_3) $(MAN_PAGES_5) $(MAN_PAGES_7)
 
 $(MAN_PAGES_1): .FORCE
 	mkdir -p man/man1
@@ -62,6 +64,10 @@ $(MAN_PAGES_3): .FORCE
 	mkdir -p man/man3
 	pandoc $@.md --from markdown --to man -s >man/man3/$@
 
+$(MAN_PAGES_5): .FORCE
+	mkdir -p man/man5
+	pandoc $@.md --from markdown --to man -s >man/man5/$@
+
 $(MAN_PAGES_7): .FORCE
 	mkdir -p man/man7
 	pandoc $@.md --from markdown --to man -s >man/man7/$@
@@ -70,6 +76,7 @@ $(PROGRAMS): $(PACKAGE)
 	@mkdir -p bin
 	go build -o "bin/$@$(EXT)" cmd/$@/*.go
 	@./bin/$@ -help >$@.1.md
+	@./bin/$@ -help themes >themes.5.md
 
 $(MAN_PAGES): .FORCE
 	mkdir -p man/man1

@@ -27,14 +27,14 @@ import (
 	"github.com/rsdoiel/AntennaApp"
 )
 
-var (
-)
+var ()
 
 func main() {
 	appName := filepath.Base(os.Args[0])
 	cfgName := strings.TrimSuffix(appName, ".exe") + ".yaml"
- 	helpText, fmtHelp := antennaApp.HelpText, antennaApp.FmtHelp
-    version, releaseDate, releaseHash, licenseText  := antennaApp.Version, antennaApp.ReleaseDate, antennaApp.ReleaseHash, antennaApp.LicenseText
+	helpText, fmtHelp := antennaApp.HelpText, antennaApp.FmtHelp
+	themeHelpText := antennaApp.ThemeHelpText
+	version, releaseDate, releaseHash, licenseText := antennaApp.Version, antennaApp.ReleaseDate, antennaApp.ReleaseHash, antennaApp.LicenseText
 	showHelp, showLicense, showVersion := false, false, false
 	// Standard Options
 	flag.BoolVar(&showHelp, "help", false, "display help")
@@ -49,7 +49,11 @@ func main() {
 	eout := os.Stderr
 
 	if showHelp {
-		fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		if len(args) > 0 && strings.HasPrefix(args[0], "theme") {
+			fmt.Fprintf(out, "%s\n", fmtHelp(themeHelpText, appName, version, releaseDate, releaseHash))
+		} else {
+			fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		}
 		os.Exit(0)
 	}
 	if showVersion {
@@ -60,7 +64,7 @@ func main() {
 		fmt.Fprintf(out, "%s\n", licenseText)
 		os.Exit(0)
 	}
-	if (len(args) == 0) {
+	if len(args) == 0 {
 		fmt.Fprintf(eout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(0)
 	}

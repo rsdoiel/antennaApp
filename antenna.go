@@ -41,6 +41,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Init(cfgName, args)
 	case "add":
 		return app.Add(cfgName, args)
+	case "apply":
+		return app.ApplyTheme(cfgName, args)
 	case "del":
 		return app.Del(cfgName, args)
 	case "post":

@@ -92,11 +92,10 @@ purpose. ACTION can be split between two general purposes . The
 following commands are related to curating your Antenna’s collections of
 feeds and feed items.</p>
 <dl>
-<dt>init [FILENAME]</dt>
+<dt>init</dt>
 <dd>
 Initialize an Antenna instances by creating a YAML configuration file or
-validating one. If FILENAME is provided that name will be used otherwise
-it will be called “antenna.yaml”.
+validating one. The file generated is called “antenna.yaml”.
 </dd>
 <dt>add COLLECTION_FILE [NAME DESCRIPTION]</dt>
 <dd>
@@ -163,6 +162,12 @@ page will be generated.
 <dd>
 Let’s your preview the rendered your Antenna instance as a localhost
 website using your favorite web browser.
+</dd>
+<dt>apply THEME_PATH [FILEPATH]</dt>
+<dd>
+This will apply the content THEME_PATH and update the YAML generator
+file described by FILEPATH. If FILEPATH is not provided it will set the
+contents of the default generator file based on the theme’s ccontent.
 </dd>
 </dl>
 <h1 id="configuration">CONFIGURATION</h1>

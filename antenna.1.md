@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.10 94a1237
+%antenna(1) user manual | version 0.0.10 dc09aa4
 % R. S. Doiel
 % 2025-10-02
 
@@ -67,9 +67,9 @@ Actions form the primary way you use Antenna and manage a link blog through its 
 is a list of supported ACTION and their purpose. ACTION can be split between two general purposes
 . The following commands are related to curating your Antenna's collections of feeds and feed items.
 
-init [FILENAME]
-: Initialize an Antenna instances by creating a YAML configuration file or validating one. If
-FILENAME is provided that name will be used otherwise it will be called "antenna.yaml".
+init
+: Initialize an Antenna instances by creating a YAML configuration file or validating one. The file
+generated is called "antenna.yaml".
 
 add COLLECTION_FILE [NAME DESCRIPTION]
 : Add the feed collection name by COLLECTION_FILE to your Antenna configuration.
@@ -120,6 +120,11 @@ If the collection name is provided then only that HTML page will be generated.
 preview
 : Let's your preview the rendered your Antenna instance as a localhost website using
 your favorite web browser.
+
+apply THEME_PATH [FILEPATH]
+: This will apply the content THEME_PATH and update the YAML generator file described
+by FILEPATH. If FILEPATH is not provided it will set the contents of the default generator
+file based on the theme's ccontent.
 
 # CONFIGURATION
 
