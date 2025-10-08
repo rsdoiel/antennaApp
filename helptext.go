@@ -261,7 +261,6 @@ that can be applied to generate a generator YAML file.
 theme\header.md
 theme\nav.md
 theme\top_content.md
-theme\section.md
 theme\bottom_content.md
 theme\footer.md
 theme\head.yaml
@@ -285,11 +284,6 @@ top_content.md
 : (optional, used when present) This Markdown document contains a Markdown
 expressing the HTML that will appear after the nav element and before a section
 element if present.
-
-section.md
-: (optional, used when present) This Markdown document contains a Markdown
-expressing the innerHTML of a section element that recieves the page content from
-a feed item or items.
 
 bottom_content.md
 : (optional, used when present) This Markdown document contains a Markdown

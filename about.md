@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.10
+version: 0.0.11
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -60,11 +60,9 @@ date_released: 2025-10-02
 About this software
 ===================
 
-## antennaApp 0.0.10
+## antennaApp 0.0.11
 
-- refactor generator YAML to reflect the head inner HTML elements better
-- Added additional extension support to rendering Markdown (foot notes, definition lists, mathjax, CJK)
-- page action will allow unsafe HTML to pass through the Markdown rendering
+- adding theme support to make it easy to customize generator YAML files
 
 ### Authors
 

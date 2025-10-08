@@ -1,11 +1,9 @@
 ---
 title: Build a Blog with Antenna
 dateCreated: "2025-09-05"
-dateModified: "2025-09-05"
+dateModified: "2025-10-08"
 datePublished: "2025-09-05"
 author: R. S. Doiel
-pubDate: "2025-09-05"
-link: "https://rsdoiel.github.io/blog/2025/09/05/Build_a_Blog_with_Antenna.html"
 postPath: "blog/2025/09/05/Build_a_Blog_with_Antenna.html"
 ---
 
@@ -66,7 +64,7 @@ we use the post action to add Markdown documents, with front matter, as blog pos
 action also generates an HTML version of the post based on the settings in the front matter. Finally
 the RSS feed and HTML aggregation page are render by Antenna's generate action. That's pretty much it.
 
-Let's first create our collection. I am going to call it "index.md". The readon I call it this is it'l result in an HTML page called "index.html", a RSS file called "index.xml" and a configuration page page called "index.yaml".  Here's an example of a Markdown document defining the blog.
+Let's first create our collection. I am going to call it "index.md". The readon I call it this is it'l result in an HTML page called "index.html", a RSS file called "index.xml" and a configuration page page called "page.yaml".  Here's an example of a Markdown document defining the blog.
 
 ~~~markdown
 ---
@@ -78,7 +76,7 @@ title: My blog
 This is My blog where I use the Antenna app to curate a simple blog.
 The Markdown forms the definition of the "index.md" collection. The blog
 will be managed in the "index.db" SQLite3 database. It can be configured by
-modifying the "index.yaml" file generated when this collection is added to the
+modifying the "page.yaml" file generated when this collection is added to the
 Antenna configuraiton using the "add" action.
 ~~~
 
@@ -88,16 +86,16 @@ That's all that is needed, save this Markdown document as "index.md". Now let's 
 antenna add index.md
 ~~~
 
-If you list the directory you should see "index.db" and "index.yaml". You can modify the "index.yaml" to set the various HTML elements that will host either the list of blog posts or the individual blog post content.
+If you list the directory you should see "index.db" and "page.yaml". You can modify the "page.yaml" to set the various HTML elements that will host either the list of blog posts or the individual blog post content.
 
 ~~~shell
-ls -1 index.*
+ls -1 index.* page.*
 ~~~
 
 or for Windows.
 
 ~~~shell
-dir index.*
+dir index.* page.*
 ~~~
 
 ## Adding the first blog post
@@ -131,7 +129,6 @@ In that file create our welcome post. We need to include the following attribute
 ~~~markdown
 ---
 title: Welcome
-link: "http://localhost:8000/blog/2025/09/05/welcome.html"
 postPath: "blog/2025/09/05/welcome.html"
 pubDate: "2025-09-05"
 ---
@@ -181,23 +178,23 @@ NOTE: If this was your blog you'd change the value I used for the link element t
 
 ## Enhancing you blog 
 
-You will likely want some navigation and other text on your blog pages. This is accomplished by updating the "index.yaml" file. In this file you can set the path to your custom CSS, to any JavaScript script you might want to include. You can also set your site header, footer and nav elements. Finnaly you can even include HTML elements before and after the generated content. Here's an example of a customized "index.yaml" file.
+You will likely want some navigation and other text on your blog pages. This is accomplished by updating the "index.yaml" file. In this file you can set the path to your custom CSS, to any JavaScript script you might want to include. You can also set your site header, footer and nav elements. Finnaly you can even include HTML elements before and after the generated content. Here's an example of a customized "page.yaml" file.
 
 
 ~~~yaml
-css: css/site.css
+link:
+  - rel: stylesheet
+    href: css/site.css
 header: |
-  <header><h1>Welcome to My Blog</h1></header>
+  <h1>Welcome to My Blog</h1>
 
 nav: |
-  <nav>
-    <ul>
-      <li><a href="/">Home</a></li>
-    </ul>
-  </nav>
+  <ul>
+    <li><a href="/">Home</a></li>
+  </ul>
 
 footer: |
-  <footer><!-- your custom footer innert HTML goes here --></footer>
+  <!-- your custom footer innert HTML goes here -->
 ~~~
 
 Now re-post your welcome.md then generate followed by preview to see the changes.

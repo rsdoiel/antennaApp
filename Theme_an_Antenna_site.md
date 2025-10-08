@@ -1,7 +1,7 @@
 ---
 title: Build a Blog with Antenna App
 description: |
-  A short tutorial on how to build a blog and micro blog with
+  A short tutorial on how to build a blog or microblog with
   Antenna App
 
 author:
@@ -11,59 +11,40 @@ keywords:
   - blog
   - Antenna
 dateCreated: "2025-08-29"
-dateModified: "2025-09-29"
-datePublished: "2025-09-29"
+dateModified: "2025-10-08"
+datePublished: "2025-10-08"
 ---
 
 # Build a Blog with Antenna App
 
 ## What is Antenna App?
 
-**antenna** is a command line program you can use as a feed oriented content management system. Antenna App focus on the relationship between pages, posts and feeds.  Markdown is the common markup used to curate a list(s) of feeds you're following. It is used to provide the content of web pages and posts.  This simplifies the work in curating your website. 
+**antenna** is a command line program you can use as a feed oriented content management system. Antenna App focus on the relationship between pages, posts and feeds.  Markdown is the common markup used to curate a list(s) of feeds you're following and to write posts or pages. This simplifies the work in curating your website. 
 
-Metadata used to curate your posts and feeds is expressed as [Front Matter]() in your Markdown documents. Configuration of the Antenna App is done through a few YAML files, YAML being the way markup used in your Markdown's front matter. The Antenna app uses these to harvest feeds you are following, aggregate them and render HTML pages of the aggregations along with the RSS feeds holding the aggregated content. Similarly if you post your Markdown document into a collection it Antenna App will use your posts to create an aggregated posts page and RSS file that others can use to follow you.
+Metadata used to curate your posts and feeds is expressed as [Front Matter](https://en.wikipedia.org/wiki/Book_design#Front_matter) in your Markdown documents. YAML markup used in your Markdown's front matter. YAML is also used in a few configuration files. The Antenna app can harvest contents from feeds, generate HTML from Markdown for feed items, posts and pages. It also renders appropriate related content like RSS feeds and OPML files.
 
-By being feed oriented Antenna allows us to create a social web without relying on a central organization or platform. Focusing on RSS feeds allows us to have a peer to peer web and slower conversations than the walled gardens provide. Slow, being helpful, in encouraging more meaningful discourse than the doom scrolling to X, Meta, Google et el.
+Antenna application is suitable to microblogging, blogging, wiki and general websites.  It is easy to integrate with other tools such as Cloud Cannon's [PageFind](https://pagefind.app) and [FlatLake](https://flatlake.app). The goal of the Antenna application project is to show that you can maintain a website simply an easily with the richness you'd normally associate with social networking sites or commercial silos.
 
-## Why Markdown and Front Matter?
-
-Markdown is an easy markup to read, learn and type. Much easier than HTML used by your web browser. Because it was designed to be transformed in to HTML's core features it is easy to rendering the HTML needed by your web browser. Antenna application provides an easy way to turn a list of feeds expressed as Markdown into an aggregation of those feeds expressed both as HTML and RSS. You can think of this is inbound social content from the web.  RSS today is provided by many application as well as social network. RSS 2.0 unpins podcasting and textcasting.  BlueSky and Mastodon produce RSS output you can follow. Mature content systems like WordPress also produce RSS feeds you can consume. By focusing on RSS we take advantage of a wide ecosystem of content ranging from news websites to personal blogs and micro blogs. Even platforms like Substack, Medium and friends produce RSS. Many newsletter systems also produce RSS so you can often started out reading a newsletter in your email, then switch to their RSS feed when you decide you want to aggregated into your Antenna website.
-
-Front Matter provides metadata, data about the document. In the case of your Markdown document defining the feeds you follow the Front matter provides the metadata used in the resulting RSS feed. This include information like title of the aggregation, description of the aggregation. If you are posting to a collection then the front matter in the post will indicate where in the your website's directory structure you want to place the HTML file and use that location when generating the resulting RSS item. Additionally you can include optional item level data like a title and modification date or even enclosed content like the path to an audio or video file if you're curating a podcast with Antenna.
-
-Markdown and Front Matter make it easy to
- 
-- read, learn and type than HTML or database languages
-- generate HTML for posts, pages and aggregations 
-- generate RSS feeds for posts and aggregations
-- curate a website for your use and if desired to share on the public web
-
-<aside>While there are plenty of simple markup languages out there Markdown has become ubiquitous. John Grubber's Markdown has a nice balance of easy to read and easy to learn while also easy to type.  There are some extensions to Markdown that have also become nearly ubiquitous and those extensions have been aggregated into a markup called [Common Mark](). While Grubber has been be clear about what his Markdown is the community creating the comment often embraces the features of Common Mark while referring to their dialect of markup as Markdown. The Antenna App focuses on Common Mark which is effectively a superset of John Grubber's Markdown. But since most people have heard of Markdown and my not know or make the distinction about the extended features of Common Mark I will also be talking about Markdown. The Antenna app is a feed oriented content manage tool for Markdown documents as well as popular Common Mark features.</aside>
-
-## What are the limitations of Antenna App
-
-1. It's an experimental program, will have bugs
-2. It's an experimental program so will evolve over time
-3. It doesn't provide a text editor or file system management
-4. It's not a GUI tool
-
-## What are it's strengths
-
-1. It makes generating HTML and RSS files easy
-2. It is easy to curate a list of feeds as a Markdown document then read them aggregated as an HTML page or RSS feed 
-3. You write using your favorite editor pages
-4. The resulting website is suitable to view locally using Antenna's preview web server
-5. The resulting website can easily be published to the public web via platforms like GitHub pages, Dream host, S3 web buckets
-6. Antenna app is suitable for rendering Blogs, Wikis and other websites that use a structured path for content organization
-
-## Why Markdown
+## Why Markdown?
 
 
-Markdown is capable of expressing the core features of HTML documents but is easier to read, learn and type.  There are plenty of editors that you type Markdown. The Markdown document itself is a simple text file. That means it is likely to be readable decades from now unlike old Word documents. There are many tools that can convert Markdown to other formats (e.g. PDF, ePub, Word) such as [Pandoc](https://pandoc.org). That means the Markdown you use with Antenna isn't a dead end.
+Markdown is an easy markup to learn, read and type. You can search with your favorite web search engine and find lots of tutorials and example, example search for "Markdown turtorial" or just read [John Grubber Markdown Basics](https://daringfireball.net/projects/markdown/basics).  It is much easier to pickup than HTML. An additional feature of Markdown aside from it's simplicity is that it results is [safe HTML](https://cheatsheetseries.owasp.org/cheatsheets/XSS_Filter_Evasion_Cheat_Sheet.html) being rendered. This is particularly helpful when you are retrieving content from a remote website such as that provided by a feed. Converting the feed items to Markdown and converting that to HTML ensures only safe HTML results.
+
+Markdown is capable of expressing the core features of HTML documents but is easier to read, learn and type.  There are plenty of editors that you type Markdown. The Markdown document itself is a simple text file. That means it is likely to be readable decades from now unlike old MS Word documents. There are many tools that can convert Markdown to other formats (e.g. PDF, ePub, Word) such as [Pandoc](https://pandoc.org). That means the Markdown you use with Antenna isn't a dead end. You can even decide to use completely different tools to produce your website started with Antenna App.
 
 Markdown expresses all the core features of HTML that make the web a seminal hypertext experience. It supports emphasis, inline source text, links, lists, paragraphs. Since Antenna App also supports Common Mark (Markdown plus common extensions) it can even create tables with it or include images with captions and figures. Markdown does this without getting bogged down in the XML like semantics of HTML. It is a light weight markup intended to remain readable as well as easy to type.
 
-## What is front matter and metadata?
+## YAML Front Matter?
+
+Often we need metadata about the Markdown document. The Markdown community came up with the concept of using YAML as "front matter" to express the Markdown document's metadata. Front Matter often contains basic citation data (e.g. title, description, authorship, dates). Antenna uses a small amount of front matter metadata for knowing how to process your Markdown content.
+
+An example is the front matter field, "postPath". This is used by the Antenna App to know where to render the HTML version of your post along side the "datePublished". "postPath" can also be used to indicate where the HTML version of a Markdown page will be rendered.  
+
+In Markdown files that describe the feeds to be aggregated the Front Matter conforms to the channel level feed elements. In Markdown files for posts, the item level feed elements can be specified.
+
+In all cases the Markdown nd Front Matter can be used to determine which feed related files to render and what to be render for a given post or page.
+
+YAML is used because it is easier to read and type correctly than JSON. It is easy to pickup, just search for "YAML tutorial" or "learning YAML". You'll find lots of tutorials and even a view videos covering how to learn YAML.
 
 Front matter is term in the Markdown community that refers to metadata (information about the Markdown document) embedded at the start of the Markdown document. The Jekyll static site generator used by GitHub popularized the use of YAML front matter as a means of guiding rendering of the Markdown documents. Similarly systems like RStudio's rMarkdown used YAML front matter to control how RStudio processed the Markdown document. Antenna application follows in that tradition. It uses YAML front matter in the generation of the aggregated RSS feeds from a Markdown document defining a feed collection. It used YAML front matter to know how to process a post and to enhance the metadata provided at the item objects of RSS feeds. 
 
@@ -83,9 +64,164 @@ datePublished: "2025-09-29"
 
 YAML is a simple way to express structured data. The data can be information you would use in a citation or in a bibliographic record.
 
-## Getting started with Antenna app
+## Antenna App, project status
 
-The Antenna App is a Markdown friendly content system.  By to make a content system that is feed oriented you need more than the document content typed out in Markdown. A post as an example will need to have a publication date, it probably uses a structured path (e.g. "year/month/day") for organizing content. If you're creating a wiki organized around keywords then that path might be structured differently. In all cases the posts whether blog, wiki or hybrid still need some level of additional metadata to facilitate automatic linkage and feed generation.  In the Markdown community the concept of a documents' [Front Matter](https://en.wikipedia.org/wiki/Book_design#Front_matter) as a means of expressing that. How does that fit with Markdown?
+Antenna app is a working proof of concept.
+
+### Strengths
+
+1. It makes generating HTML, RSS and OPML files easy
+2. It is easy to curate a list of feeds as a Markdown document then read them aggregated as an HTML page or RSS feed 
+3. You curate content using your favorite text editor
+4. The resulting website is suitable to view locally using Antenna's preview web server
+5. The resulting website can easily be published to the public web via platforms like GitHub pages, Dream host, S3 web buckets
+6. Antenna app is suitable for rendering Blogs, Wikis and other websites that use a structured path for content organization
+
+### Limitations
+
+1. Antenna App is an experimental program so it will have bugs
+2. Antenna App is an experimental program so it will evolve and change
+3. Antenna App does not provide a text editor or file system management
+4. Antenna App is not a GUI application
+
+## Getting started with Antenna app, creating a blog
+
+You will need your favorite text editor.  You will need a terminal where you can run command line programs. You will need to download and install the [Antenna App](https://rsdoiel.github.io/antennaApp/INSTALL.html). Once you have those you are ready to begin.
+
+### Create a directory to hold your websites
+
+The **antenna** command line program is run using the terminal in the directory where you stage your website. Let's create a directory called "myblog" then change into it.
+
+~~~shell
+mkdir myblog
+cd myblog
+~~~
+
+### Initial your website directory
+
+Next used the **antenna** to initial the website for processing with **antenna**.
+
+~~~shell
+antenna init
+~~~
+
+### Create a "collection" for your blog posts.
+
+A collection is a Markdown document that has zero or more links to feeds.  The front matter holds metadata for the blog and any feeds aggregated by the blog are listed as a link of top level anchor elements.
+
+~~~markdown
+---
+title: My Blog
+description: This is a sample blog
+---
+
+# My Blog
+~~~
+
+Save this document as "blog.md"
+
+### Add your "blog.md" to our collections
+
+The **antenna** command uses the "add" action to add "blog.md" to "myblog" site.
+
+~~~shell
+antenna add blog.md
+~~~
+
+### Now create your first post
+
+The front matter needed for a post is requires two fields, "postPath" and "datePublished", to be set in the front matter.  After that is the contents of your post. Notice that posts don't require additional informaiton though you can improve the generated feed by including title, description, dateCreated, dateModified and author in your front matter. "helloworld.md" is a minimal post exist.  We will first create a directory to hold helloworld.md then create helloworld.md before using the "post" and "generate" actions to complete our simple blog site.
+
+~~~shell
+TODAY="$(date +%Y/%m/%d)
+mkdir -p "blog/$TODAY"
+edit "blog${TODAY}/hellworld.md"
+~~~
+
+In "helloworld.md" include the following text (assuming TODAY value is "2025-10-08").
+
+~~~markdown~~~
+---
+postPath: blog/2025-10-18/helloworld.md
+datePublished: 2025-10-18
+---
+
+Hello World!!!!
+~~~
+
+### Add your post to the blog collection
+
+You use the "post" action to add a post to a collection (e.g. "blog.md").
+
+~~~shell
+antenna post blog/2025-10-18/helloworld.md
+~~~
+
+### Generate your blog
+
+This time you use the "generate" action.
+
+~~~shell
+antenna generate blog.md
+~~~
+
+You should now see two HTML pages, an RSS and OPML files. The website should have the following structure.
+
+~~~
+blog.md
+blog.html
+blog/2025-10-18/helloworld.md
+blog/2025-10-18/helloworld.html
+~~~
+
+### Let's preview the blog site
+
+The "preview" action will run a localhost web server so we can show the website.
+
+~~~shell
+antenna preview
+~~~
+
+Point your browser at <http://localhost:8000> to see the resulting website.
+
+## Improving our blog
+
+The page generator, "page.yaml", isn't very fancy. You only see the content of the post element in the page(s). There is no navigation, no header or footer. If you look at the raw HTML documents generated there is very little metadata in the head HTML element.  You can fix that by creating a theme using Markdown documents and a little YAML. Once the theme is setup it can be applied using the antenna "apply" action.  Then the next time the "generate" action is run the HTML pages will be updated based on the theme.
+
+### Steps to build a theme
+
+A theme is defined by a directory contains up to five Markdown documents and a YAML file.  Blog pages can be thought of as having a body composed of five elements.
+
+header
+: This is the header HTML element used in a webpage of your site
+
+nav
+: This is hold the site navigation expressed as HTML
+
+top_content
+: This is any HTML content coming after the nav element but before the section element that holds your post or page HTML content.
+
+bottom_content
+: This is any HTML content coming after the section element holding your post or page HTML content.
+
+footer
+: holds the HTML of your blog's footer element.
+
+These parts corespond to the following MArkdown documents found in the theme's folder
+
+- [header.md](theme/header.md)
+- [nav.md](theme/nav.md)
+- [top_content.md](theme/top_content.md)
+- [bottom_content.md](theme/bottom_content.md)
+- [footer.md](theme/footer.md)
+
+Each of these documents are expressed in Markdown. In the  page generator file they will become HTML when you apply the theme. If you leave one or more of them out then those elements will not be applied to the generator page's YAML.
+
+Create a directory called "theme", then create each of those files in that "theme" directory. 
+
+--
+
+facilitate automatic linkage and feed generation.  In the Markdown community the concept of a documents'  as a means of expressing that. How does that fit with Markdown?
 
 
 Front Matter is at the very top of the Markdown document. It starts with three dash characters, "---" on a line by themselves and ends with a matching three dashes, "---" on a line by themselves. Anything between the pair of three dash lines is considered structured data expressed in YAML, JSON and sometimes TOML. YAML has come to be the most common form of front matter. What is YAML?
