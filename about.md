@@ -54,7 +54,7 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-10-02
+date_released: 2025-10-08
 ---
 
 About this software
