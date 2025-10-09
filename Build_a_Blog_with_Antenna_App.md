@@ -11,7 +11,7 @@ postPath: "blog/2025/09/05/Build_a_Blog_with_Antenna.html"
 
 By R. S. Doiel, 2025-09-05
 
-Antenna is a feed orient content management tool. It can use to build a and run a blog. What follows are the steps needed to create a simple blog using only Antenna application, Markdown and the Antenna YAML configuration files.
+Antenna is a feed oriented content management tool. In this tutorial it'll be used to build a very simple blog. I'll cover using the **antenna** command, describe how you can use Markdown for configuring the blog and posting content to the blog. Antenna is configured using YAML configuration files and HTML pages and posts are assembled using a YAML configuration.
 
 ## Setting up
 
@@ -37,7 +37,9 @@ The Antenna application, `antenna` has an "initialization" action. This creates 
 antenna init
 ~~~
 
-This will result in a file called "antenna.yaml" being created. If you are using macOS or Linux you can type the following and see it.
+This will result in a file called "antenna.yaml" being created. This is the main configuration file for Antenna. The "init" action will also create a "page.yaml" file[^1]. This is a page generator description in YAML. It contains the information to take a post or list of feed items and render a web page. If you are using macOS or Linux you can type the following and see them.
+
+[^1]: The "page.yaml" can be edited to define the HTML you want to include in pages and posts. It can also be easily themed using the "apply" action. See [theme.5.md](theme.5.md) for details.
 
 ~~~shell
 ls -l
@@ -64,7 +66,8 @@ we use the post action to add Markdown documents, with front matter, as blog pos
 action also generates an HTML version of the post based on the settings in the front matter. Finally
 the RSS feed and HTML aggregation page are render by Antenna's generate action. That's pretty much it.
 
-Let's first create our collection. I am going to call it "index.md". The readon I call it this is it'l result in an HTML page called "index.html", a RSS file called "index.xml" and a configuration page page called "page.yaml".  Here's an example of a Markdown document defining the blog.
+Let's first create our collection. I am going to call it "index.md". The reason I call it "index.md" is that it will result in an HTML page called "index.html" as well as an RSS file called index.xml and an OPML file called "index.opml". 
+
 
 ~~~markdown
 ---
@@ -77,7 +80,7 @@ This is My blog where I use the Antenna app to curate a simple blog.
 The Markdown forms the definition of the "index.md" collection. The blog
 will be managed in the "index.db" SQLite3 database. It can be configured by
 modifying the "page.yaml" file generated when this collection is added to the
-Antenna configuraiton using the "add" action.
+Antenna configuration using the "add" action.
 ~~~
 
 That's all that is needed, save this Markdown document as "index.md". Now let's add this to our Antenna collection. We only need to do this once.
@@ -133,7 +136,7 @@ postPath: "blog/2025/09/05/welcome.html"
 pubDate: "2025-09-05"
 ---
 
-# Weclome
+# Welcome
 
 This is a demonstration of Blogging with Antenna.
 
@@ -178,7 +181,7 @@ NOTE: If this was your blog you'd change the value I used for the link element t
 
 ## Enhancing you blog 
 
-You will likely want some navigation and other text on your blog pages. This is accomplished by updating the "index.yaml" file. In this file you can set the path to your custom CSS, to any JavaScript script you might want to include. You can also set your site header, footer and nav elements. Finnaly you can even include HTML elements before and after the generated content. Here's an example of a customized "page.yaml" file.
+You will likely want some navigation and other text on your blog pages. This is accomplished by updating the "index.yaml" file. In this file you can set the path to your custom CSS, to any JavaScript script you might want to include. You can also set your site header, footer and nav elements. Finally you can even include HTML elements before and after the generated content. Here's an example of a customized "page.yaml" file.
 
 
 ~~~yaml
@@ -194,7 +197,7 @@ nav: |
   </ul>
 
 footer: |
-  <!-- your custom footer innert HTML goes here -->
+  <!-- your custom footer inner HTML goes here -->
 ~~~
 
 Now re-post your welcome.md then generate followed by preview to see the changes.

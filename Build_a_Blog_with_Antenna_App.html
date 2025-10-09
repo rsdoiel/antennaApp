@@ -20,10 +20,12 @@
 <section>
 <h1 id="build-a-blog-with-antenna">Build a Blog with Antenna</h1>
 <p>By R. S. Doiel, 2025-09-05</p>
-<p>Antenna is a feed orient content management tool. It can use to build
-a and run a blog. What follows are the steps needed to create a simple
-blog using only Antenna application, Markdown and the Antenna YAML
-configuration files.</p>
+<p>Antenna is a feed oriented content management tool. In this tutorial
+it’ll be used to build a very simple blog. I’ll cover using the
+<strong>antenna</strong> command, describe how you can use Markdown for
+configuring the blog and posting content to the blog. Antenna is
+configured using YAML configuration files and HTML pages and posts are
+assembled using a YAML configuration.</p>
 <h2 id="setting-up">Setting up</h2>
 <p>The first thing we need is a directory to hold our website. That can
 be done from a terminal on Linux, macOS or Windows using the following
@@ -38,17 +40,22 @@ action. This creates the configuration file needed for your blog. Here’s
 what you need to type in the terminal (same for Linux, macOS and
 Windows).</p>
 <pre class="shell"><code>antenna init</code></pre>
-<p>This will result in a file called “antenna.yaml” being created. If
-you are using macOS or Linux you can type the following and see it.</p>
+<p>This will result in a file called “antenna.yaml” being created. This
+is the main configuration file for Antenna. The “init” action will also
+create a “page.yaml” file<a href="#fn1" class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a>. This is a page generator
+description in YAML. It contains the information to take a post or list
+of feed items and render a web page. If you are using macOS or Linux you
+can type the following and see them.</p>
 <pre class="shell"><code>ls -l</code></pre>
 <p>On Windows you would use the <code>dir</code> command instead.</p>
 <pre class="shell"><code>dir</code></pre>
 <h2 id="defining-our-blog-collection">Defining our blog collection</h2>
 <p>A blog is built from three parts</p>
 <ul>
-<li>file system path(s) holding the blog posts<a href="#fn1"
-class="footnote-ref" id="fnref1"
-role="doc-noteref"><sup>1</sup></a></li>
+<li>file system path(s) holding the blog posts<a href="#fn2"
+class="footnote-ref" id="fnref2"
+role="doc-noteref"><sup>2</sup></a></li>
 <li>One or more HTML pages showing the available posts in reverse
 chronological order</li>
 <li>An RSS feed of the recent blog posts</li>
@@ -60,10 +67,9 @@ version of the post based on the settings in the front matter. Finally
 the RSS feed and HTML aggregation page are render by Antenna’s generate
 action. That’s pretty much it.</p>
 <p>Let’s first create our collection. I am going to call it “index.md”.
-The readon I call it this is it’l result in an HTML page called
-“index.html”, a RSS file called “index.xml” and a configuration page
-page called “index.yaml”. Here’s an example of a Markdown document
-defining the blog.</p>
+The reason I call it “index.md” is that it will result in an HTML page
+called “index.html” as well as an RSS file called index.xml and an OPML
+file called “index.opml”.</p>
 <div class="sourceCode" id="cb6"><pre
 class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> My blog</span></span>
@@ -74,19 +80,19 @@ class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb6-1"><
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>This is My blog where I use the Antenna app to curate a simple blog.</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>The Markdown forms the definition of the &quot;index.md&quot; collection. The blog</span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>will be managed in the &quot;index.db&quot; SQLite3 database. It can be configured by</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>modifying the &quot;index.yaml&quot; file generated when this collection is added to the</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>Antenna configuraiton using the &quot;add&quot; action.</span></code></pre></div>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>modifying the &quot;page.yaml&quot; file generated when this collection is added to the</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>Antenna configuration using the &quot;add&quot; action.</span></code></pre></div>
 <p>That’s all that is needed, save this Markdown document as “index.md”.
 Now let’s add this to our Antenna collection. We only need to do this
 once.</p>
 <pre class="shell"><code>antenna add index.md</code></pre>
-<p>If you list the directory you should see “index.db” and “index.yaml”.
-You can modify the “index.yaml” to set the various HTML elements that
+<p>If you list the directory you should see “index.db” and “page.yaml”.
+You can modify the “page.yaml” to set the various HTML elements that
 will host either the list of blog posts or the individual blog post
 content.</p>
-<pre class="shell"><code>ls -1 index.*</code></pre>
+<pre class="shell"><code>ls -1 index.* page.*</code></pre>
 <p>or for Windows.</p>
-<pre class="shell"><code>dir index.*</code></pre>
+<pre class="shell"><code>dir index.* page.*</code></pre>
 <h2 id="adding-the-first-blog-post">Adding the first blog post</h2>
 <p>I am going to assume the first blog post is called “welcome.md”. I am
 also going to assume you’ll using a blog oriented directory structure.
@@ -108,14 +114,13 @@ Here’s my version of “welcome.md” Markdown.</p>
 <div class="sourceCode" id="cb14"><pre
 class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> Welcome</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="an">link:</span><span class="co"> &quot;http://localhost:8000/blog/2025/09/05/welcome.html&quot;</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="an">postPath:</span><span class="co"> &quot;blog/2025/09/05/welcome.html&quot;</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="an">pubDate:</span><span class="co"> &quot;2025-09-05&quot;</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu"># Weclome</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>This is a demonstration of Blogging with Antenna.</span></code></pre></div>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="an">postPath:</span><span class="co"> &quot;blog/2025/09/05/welcome.html&quot;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="an">pubDate:</span><span class="co"> &quot;2025-09-05&quot;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu"># Welcome</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>This is a demonstration of Blogging with Antenna.</span></code></pre></div>
 <p>NOTE: If you are on Windows, you’ll want to use the version of
 postPath that looks like this,
 <code>postPath: blog\2025\09\05\welcome.html</code>. You can now add the
@@ -151,23 +156,23 @@ allow us to test using the <code>antenna preview</code>.</p>
 pages. This is accomplished by updating the “index.yaml” file. In this
 file you can set the path to your custom CSS, to any JavaScript script
 you might want to include. You can also set your site header, footer and
-nav elements. Finnaly you can even include HTML elements before and
+nav elements. Finally you can even include HTML elements before and
 after the generated content. Here’s an example of a customized
-“index.yaml” file.</p>
+“page.yaml” file.</p>
 <div class="sourceCode" id="cb20"><pre
-class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">css</span><span class="kw">:</span><span class="at"> css/site.css</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">header</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  &lt;header&gt;&lt;h1&gt;Welcome to My Blog&lt;/h1&gt;&lt;/header&gt;</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">nav</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  &lt;nav&gt;</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    &lt;ul&gt;</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>      &lt;li&gt;&lt;a href=&quot;/&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    &lt;/ul&gt;</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  &lt;/nav&gt;</span>
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">rel</span><span class="kw">:</span><span class="at"> stylesheet</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">href</span><span class="kw">:</span><span class="at"> css/site.css</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="fu">header</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  &lt;h1&gt;Welcome to My Blog&lt;/h1&gt;</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="fu">nav</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  &lt;ul&gt;</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  &lt;/ul&gt;</span>
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="fu">footer</span><span class="kw">: </span><span class="ch">|</span></span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  &lt;footer&gt;&lt;!-- your custom footer innert HTML goes here --&gt;&lt;/footer&gt;</span></code></pre></div>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  &lt;!-- your custom footer inner HTML goes here --&gt;</span></code></pre></div>
 <p>Now re-post your welcome.md then generate followed by preview to see
 the changes.</p>
 <pre class="shell"><code>antenna post index.md blog/2025/09/05/welcome.md
@@ -190,6 +195,15 @@ broken to by year, month and day. The day directory holds the blog post.
 Example I have a post called “updates.md” for the date August 5th, 2025.
 That might be held in <code>blog/2025/08/05/updates.md</code> Markdown
 file.<a href="#fnref1" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>The file paths to posts can be whatever you want.
+Antenna doesn’t impose an structure. Traditionally a structure broken
+down for year, two digit month and another for two digit days is common.
+So posts are contained in a director called “blog” it’ll have a path
+broken to by year, month and day. The day directory holds the blog post.
+Example I have a post called “updates.md” for the date August 5th, 2025.
+That might be held in <code>blog/2025/08/05/updates.md</code> Markdown
+file.<a href="#fnref2" class="footnote-back"
 role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
