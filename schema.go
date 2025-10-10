@@ -43,7 +43,7 @@ type AppConfig struct {
 	UserAgent string `json:"userAgent,omitempty" yaml:"userAgent,omitempty"`
 
 	// BaseURL for the Antenna instance
-	BaseURL string `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
+	BaseURL string `json:"base_url,omitempty" yaml:"base_url,omitempty"`
 
 	// Generator holds a YAML file that describes the HTML page structure.
 	// This holds the default page generator description. Each collection can

@@ -109,7 +109,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 					link = cfg.BaseURL + "/" + postPath
 				}
 			} else {
-				return fmt.Errorf("missing baseUrl in antenna YAML, could not form link using postPath %q", postPath)
+				return fmt.Errorf("missing base_url in antenna YAML, could not form link using postPath %q", postPath)
 			}
 		}
 		// Write out an HTML page to the postPath, if Markdown doc, normalize .html

@@ -34,7 +34,7 @@ type Generator struct {
 	AppName string `json:"appName,omitempty" yaml:"appName,omitempty"`
 
 	// BaseURL used to form the feed Link
-	BaseURL string `json:"baseUrl,omitempty" yaml:"baseUrl,omitempty"`
+	BaseURL string `json:"base_url,omitempty" yaml:"base_url,omitempty"`
 
 	// Version holds the version of the generator application
 	// used when generating the "generator" metadata
@@ -76,11 +76,11 @@ type Generator struct {
 
 	// TopContent holds HTML that comes before the selecton element
 	// containing articles
-	TopContent string `json:"topContent,omitempty" yaml:"topContent,omitempty"`
+	TopContent string `json:"top_content,omitempty" yaml:"top_content,omitempty"`
 
 	// BottomContent holds HTML that comes before the selecton element
 	// containing articles
-	BottomContent string `json:"bottomContent,omitempty" yaml:"bottomContent,omitempty"`
+	BottomContent string `json:"bottom_content,omitempty" yaml:"bottom_content,omitempty"`
 
 	// Footer holds the HTML markup for the footer
 	Footer string `json:"footer,omitempty" yaml:"footer,omitempty"`
