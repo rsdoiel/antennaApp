@@ -85,7 +85,11 @@ func elementFromMap(element string, m map[string]string) string {
 	for k, v := range m {
 		parts = append(parts, fmt.Sprintf("%s=%q", k, v))
 	}
-	parts = append(parts, "/>")
+	if element == "script" {
+	  parts = append(parts, "></script>")
+	} else {
+	  parts = append(parts, ">")
+	}
 	return strings.Join(parts, " ")
 }
 
