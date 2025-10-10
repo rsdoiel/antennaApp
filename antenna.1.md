@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.11 7070849
+%antenna(1) user manual | version 0.0.11 771e8a6
 % R. S. Doiel
 % 2025-10-08
 
@@ -213,5 +213,9 @@ be written to the directory designated in the **antenna** YAML
 configuration file (defaults to to the current working directory, "").
 The "preview" action  serves that out over localhost (default port 8000)
 so you can read your static site with your favorite web browser.
+
+# Also 
+
+- [antenna-themes (5)](antenna-themes.5.md)
 
 

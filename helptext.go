@@ -233,6 +233,10 @@ configuration file (defaults to to the current working directory, "").
 The "preview" action  serves that out over localhost (default port 8000)
 so you can read your static site with your favorite web browser.
 
+# Also 
+
+- [antenna-themes (5)](antenna-themes.5.md)
+
 `
 
 	ThemeHelpText = `%{app_name}(5) user manual | version {version} {release_hash}
@@ -241,9 +245,11 @@ so you can read your static site with your favorite web browser.
 
 # NAME
 
-themes
+antenna themes
 
 # SYNOPSIS
+
+A directory with page elements in Markdown or YAML
 
 # DESCRIPTION
 
@@ -345,6 +351,10 @@ script:
   - type: module
     src: modules/myscript.js
 ~~~
+
+# Also 
+
+- [antenna (1)](antenna.1.md)
 
 `
 )

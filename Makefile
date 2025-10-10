@@ -76,7 +76,7 @@ $(PROGRAMS): $(PACKAGE)
 	@mkdir -p bin
 	go build -o "bin/$@$(EXT)" cmd/$@/*.go
 	@./bin/$@ -help >$@.1.md
-	@./bin/$@ -help themes >themes.5.md
+	@./bin/$@ -help themes >antenna-themes.5.md
 
 $(MAN_PAGES): .FORCE
 	mkdir -p man/man1
@@ -135,6 +135,8 @@ install: build
 	@for FNAME in $(MAN_PAGES_1); do if [ -f "./man/man1/$${FNAME}" ]; then cp -v "./man/man1/$${FNAME}" "$(PREFIX)/man/man1/$${FNAME}"; fi; done
 	@mkdir -p $(PREFIX)/man/man3
 	@for FNAME in $(MAN_PAGES_3); do if [ -f "./man/man3/$${FNAME}" ]; then cp -v "./man/man3/$${FNAME}" "$(PREFIX)/man/man3/$${FNAME}"; fi; done
+	@for FNAME in $(MAN_PAGES_5); do if [ -f "./man/man5/$${FNAME}" ]; then cp -v "./man/man5/$${FNAME}" "$(PREFIX)/man/man5/$${FNAME}"; fi; done
+	@mkdir -p $(PREFIX)/man/man7
 	@mkdir -p $(PREFIX)/man/man7
 	@for FNAME in $(MAN_PAGES_7); do if [ -f "./man/man7/$${FNAME}" ]; then cp -v "./man/man7/$${FNAME}" "$(PREFIX)/man/man7/$${FNAME}"; fi; done
 	@echo ""
@@ -146,6 +148,7 @@ uninstall: .FORCE
 	@echo "Removing man pages in $(PREFIX)/man"
 	@for FNAME in $(MAN_PAGES_1); do if [ -f "$(PREFIX)/man/man1/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man1/$${FNAME}"; fi; done
 	@for FNAME in $(MAN_PAGES_3); do if [ -f "$(PREFIX)/man/man3/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man3/$${FNAME}"; fi; done
+	@for FNAME in $(MAN_PAGES_5); do if [ -f "$(PREFIX)/man/man5/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man5/$${FNAME}"; fi; done
 	@for FNAME in $(MAN_PAGES_7); do if [ -f "$(PREFIX)/man/man7/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man7/$${FNAME}"; fi; done
 
 setup_dist: .FORCE
