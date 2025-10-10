@@ -38,7 +38,7 @@
   "version": "0.0.12",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- adding theme support to make it easy to customize generator YAML files\n- rename YAML attributes baseUrl to base_url, topContent to top_content, bottomContent to bottom_content\n- fixed broken script element generated HTML head element",
+  "releaseNotes": "- adding theme support to make it easy to customize generator YAML files\n- rename YAML attributes baseUrl to base_url, topContent to top_content, bottomContent to bottom_content\n- fixed broken script element generated HTML head element\n- renamed man page, themes, to antenna-themes",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }

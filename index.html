@@ -21,8 +21,9 @@
 <h1 id="antennaapp">antennaApp</h1>
 <p><strong>antenna</strong> is a command line feed oriented content
 management tool. It let’s you create and curate micro blogs, blogs, link
-blogs, news and wiki websites using Markdown. Configuration and metadata
-are maintained using YAML. It is inspired by Dave Winer’s <a
+blogs, news and wiki websites using Markdown and a sprinkling of YAML<a
+href="#fn1" class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a>. It is inspired by Dave Winer’s <a
 href="https://textcasting.org">Textcasting</a> and <a
 href="https://feedland.org">FeedLand</a> and my own experimental
 website, <a href="https://rsdoiel.github.io/antenna">antenna</a>.</p>
@@ -47,9 +48,11 @@ as YAML front matter</li>
 <li>A preview feature to view the render content in your web browser via
 a localhost URL</li>
 <li>Page generators are implemented as a YAML file</li>
-<li>Page generators can be “themed” using a directory with Markdown
-documents for each body element in the generator and a YAML file for
-head HTML element content</li>
+<li>Page generators YAML files can composed using a “themed” using a
+directory populated with Markdown files for the theme elements<a
+href="#fn2" class="footnote-ref" id="fnref2"
+role="doc-noteref"><sup>2</sup></a></li>
+<li>plays well with other static website development tools</li>
 </ul>
 <p>The ability to harvest feed items means we can read what others post
 on the web on our own website. Markdown content can be added to a feed
@@ -98,6 +101,18 @@ href="https://www.gnu.org/licenses/agpl-3.0.en.html">LICENSE</a></li>
 <li><a href="user_manual.html">User Manual</a></li>
 <li><a href="about.html">About</a></li>
 </ul>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Configuration and metadata (front matter in Markdown)
+are maintained using YAML.<a href="#fnref1" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>A YAML file called head.yaml is used to describe custom
+meta, link and script elements in the page.<a href="#fnref2"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
 </section>
 </body>
 </html>

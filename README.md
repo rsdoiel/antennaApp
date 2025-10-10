@@ -2,7 +2,9 @@
 
 # antennaApp
 
-**antenna** is a command line feed oriented content management tool. It let's you create and curate micro blogs, blogs, link blogs, news and wiki websites using Markdown. Configuration and metadata are maintained using YAML. It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and [FeedLand](https://feedland.org) and my own experimental website, [antenna](https://rsdoiel.github.io/antenna).
+**antenna** is a command line feed oriented content management tool. It let's you create and curate micro blogs, blogs, link blogs, news and wiki websites using Markdown and a sprinkling of YAML[^1]. It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and [FeedLand](https://feedland.org) and my own experimental website, [antenna](https://rsdoiel.github.io/antenna).
+
+[^1]: Configuration and metadata (front matter in Markdown) are maintained using YAML.
 
 Antenna App's Features:
 
@@ -17,7 +19,10 @@ Antenna App's Features:
 - Posts and pages are written using Markdown with metadata expressed as YAML front matter
 - A preview feature to view the render content in your web browser via a localhost URL
 - Page generators are implemented as a YAML file
-- Page generators can be "themed" using a directory with Markdown documents for each body element in the generator and a YAML file for head HTML element content
+- Page generators YAML files can composed using a "themed" using a directory populated with Markdown files for the theme elements[^2]
+- plays well with other static website development tools
+
+[^2]: A YAML file called head.yaml is used to describe custom meta, link and script elements in the page.
 
 The ability to harvest feed items means we can read what others post on the web on our own website. Markdown content can be added to a feed allows us to comment on the items read (thus being social). This can all be run on localhost (our own computer) or staged for public Web consumption via a static host provider.
 
