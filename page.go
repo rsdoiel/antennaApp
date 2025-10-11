@@ -39,7 +39,7 @@ meta:
 #    type: text/css
 #    href: /css/site.css
 #script:
-#  - rel: module
+#  - type: module
 #    src: /modules/date_filter.js
 
 ##
@@ -51,10 +51,10 @@ header: |
 nav: |
   <!-- your custom nav element's inner HTML goes here -->
 
-topContent: |
+top_content: |
   <!-- your custom HTML content before the section's element goes here -->
 
-bottomContent: |
+bottom_content: |
   <!-- your custom HTML content after the section's element goes here -->
 
 footer: |
@@ -70,7 +70,7 @@ func InitPageGenerator(pageName string) error {
 		return nil
 	} else {
 		// NOTE: Create a default page page Generator
-		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0775); err != nil {
+		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0664); err != nil {
 			fmt.Errorf("failed to create %q, %s", pageName, err)
 		}
 	}

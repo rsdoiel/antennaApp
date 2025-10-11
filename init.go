@@ -61,6 +61,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	cfg.Port = 8000
 	// By default the working directory is assumed to be the staging directory.
 	cfg.Htdocs = ""
+	cfg.BaseURL = "http://localhost:8000"
 	cfg.Generator = "page.yaml"
 	src, err := yaml.Marshal(cfg)
 	if err != nil {
