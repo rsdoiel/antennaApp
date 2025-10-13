@@ -146,6 +146,9 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 			fmt.Fprintf(out, "  %s\n", elementFromMap("script", m))
 		}
 	}
+	if gen.Style != "" {
+		fmt.Fprintf(out, "  <style>\n%s\n</style>\n", indentText(strings.TrimSpace(gen.Style), 4) )
+	}
 }
 
 // indentText splits  the string into lines, then prefixes the number of

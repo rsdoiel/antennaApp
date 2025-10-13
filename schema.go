@@ -154,7 +154,7 @@ func (cfg *AppConfig) GetCollection(cName string) (*Collection, error) {
 	if i > -1 {
 		return cfg.Collections[i], nil
 	}
-	return nil, fmt.Errorf("%s not found", cName)
+	return nil, fmt.Errorf("%s not in collection", cName)
 }
 
 func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface{}, cfg *AppConfig) error {

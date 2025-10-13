@@ -67,6 +67,9 @@ type Generator struct {
 	// Script holds a list of script elements rendered into the head element of HTML pages
 	Script []map[string]string `json:"script,omitempty" yaml:"script,omitempty"`
 
+	// Style holds an explicit Style blog that gets inserted as the last into the HTML head element
+	Style string `json:"style:omitempty" yaml:"style,omitempty"`
+
 	// Header hold the HTML markdup of the Header element. If not included
 	// then it will be generated using the Title and timestamp
 	Header string `json:"header,omitempty" yaml:"header,omitempty"`

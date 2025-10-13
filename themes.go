@@ -53,6 +53,7 @@ func (app AntennaApp) ApplyTheme(cfgName string, args []string) error {
 	if generatorName == "" || themeName == "" {
 		return fmt.Errorf("theme theme or generator name")
 	}
+	fmt.Printf("DEBUG theme name: %s, genetator name: %s\n", themeName, generatorName)
 	// Reading or create a generator using generatorName
 	if _, err := os.Stat(generatorName); err == nil {
 		if err := gen.LoadConfig(generatorName); err != nil {
@@ -85,6 +86,7 @@ func (app AntennaApp) ApplyTheme(cfgName string, args []string) error {
 // Update a generator's head elements from a theme head.yaml file.
 func updateHeadElements(gen *Generator, themeName string) (bool, error) {
 	fName := filepath.Join(themeName, "head.yaml")
+	fmt.Printf("DEBUG apply %s if available\n", fName)
 	changed := false
 	if _, err := os.Stat(fName); err == nil {
 		src, err := os.ReadFile(fName)
@@ -123,7 +125,21 @@ func updateHeadElements(gen *Generator, themeName string) (bool, error) {
 				gen.Script = append(gen.Script, obj)
 			}
 		}
-
+	
+	}
+	// Handle an included CSS style description
+	fName = filepath.Join(themeName, "style.css")
+	fmt.Printf("DEBUG applying %s if available\n", fName)
+	if _, err := os.Stat(fName); err == nil {
+		src, err := os.ReadFile(fName)
+		if err != nil {
+			return false, fmt.Errorf("failed to read %q, %s", fName, err)
+		}
+		if len(src) > 0 {
+			fmt.Printf("DEBUG apply style: %s\n", fName)
+			gen.Style = fmt.Sprintf("%s\n\n", src)
+			changed = true
+		}
 	}
 	return changed, nil
 }

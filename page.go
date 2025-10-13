@@ -41,6 +41,8 @@ meta:
 #script:
 #  - type: module
 #    src: /modules/date_filter.js
+#style: |
+#  /* CSS can go here */
 
 ##
 #  Visible HTML page elements
@@ -69,7 +71,7 @@ func InitPageGenerator(pageName string) error {
 		//FIXME: read in pageName and Make sure it has a valid structure
 		return nil
 	} else {
-		// NOTE: Create a default page page Generator
+		// NOTE: Create a default page pagefooter Generator
 		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0664); err != nil {
 			fmt.Errorf("failed to create %q, %s", pageName, err)
 		}
