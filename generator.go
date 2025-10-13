@@ -152,6 +152,9 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	if obj.Script != nil && len(obj.Script) > 0 {
 		gen.Script = obj.Script[:]
 	}
+	if obj.Style != "" {
+		gen.Style = obj.Style
+	}
 	if obj.Header != "" {
 		gen.Header = obj.Header
 	}

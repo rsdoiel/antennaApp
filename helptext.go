@@ -106,7 +106,7 @@ in the {app_name}.yaml file. It readings in the Markdown document from FILEPATH 
 writes it an HTML file using the the same basename. If OUTPUT_NAME is set it uses
 that name for the HTML file generated. (NOTE: he page action only renders and HTML file.
 If does not get included in a collection or result in as a listing in an RSS file.)
-The page action is useful for pages likey an about page, home page, and search page.
+The page action is useful for pages likely an about page, home page, and search page.
 NOTE: __The Markdown processed via page action will allow "unsafe" HTML to pass through.
 Only use page if you trust the Markdown document!!!__
 
@@ -143,7 +143,7 @@ your favorite web browser.
 apply THEME_PATH [FILEPATH]
 : This will apply the content THEME_PATH and update the YAML generator file described
 by FILEPATH. If FILEPATH is not provided it will set the contents of the default generator
-file based on the theme's ccontent.
+file based on the theme's content.
 
 # CONFIGURATION
 
@@ -270,6 +270,7 @@ theme\top_content.md
 theme\bottom_content.md
 theme\footer.md
 theme\head.yaml
+theme\style.css
 ~~~
 
 The following Markdown documents are used to express their related attributes in the
@@ -333,6 +334,10 @@ HTML elements attributes.  Each item in the list is formed from the attribute na
 and values that are defined in a script element. See
 https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script
 
+style
+: (optional, used when present) A string holding CSS to be injected as the last
+element of the head when rendering HTML.
+
 Here is an example "head.yaml"
 
 ~~~yaml
@@ -350,7 +355,18 @@ link:
 script:
   - type: module
     src: modules/myscript.js
+style: |+
+  /* This CSS will turn headings vertical */
+  h1 {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-orientation: mixed;
+  }
+
 ~~~
+
+NOTE: In this example the last style element will override the H1 definitions
+previously included in the CSS files using the link attributes.
 
 # Also 
 

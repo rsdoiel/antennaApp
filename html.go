@@ -298,7 +298,6 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 `, indentText(strings.TrimSpace(gen.TopContent), 4))
 	}
 
-	//fmt.Printf("DEBUG date-publised=%q data-link=%q\n", pubDate, link)
 	// Now render our innerHTML
 	if pubDate != "" && link != "" {
 		fmt.Fprintf(out, `

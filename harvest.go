@@ -276,11 +276,8 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 	if item.Extensions != nil {
 		if source, ok := item.Extensions["source"]; ok && len(source) > 0 {
 			if data, ok := source["markdown"]; ok {
-				//fmt.Printf("\nDEBUG source[%q] -> %T -> %+v\n", "markdown", data, data)
 				for _, val := range data {
-					//fmt.Printf("\nDEBUG source[%q][%d] -> %T -> %+v\n", "markdown", i, val, val)
 					if val.Name == "markdown" {
-						//fmt.Printf("\nDEBUG setting sourceMarkdown to\n%s\n\n", val)
 						sourceMarkdown = val.Value
 					}
 				}

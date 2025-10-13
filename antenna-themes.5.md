@@ -1,6 +1,6 @@
-%antenna(5) user manual | version 0.0.12 e13fc2b
+%antenna(5) user manual | version 0.0.13 be37599
 % R. S. Doiel
-% 2025-10-10
+% 2025-10-13
 
 # NAME
 
@@ -29,6 +29,7 @@ theme\top_content.md
 theme\bottom_content.md
 theme\footer.md
 theme\head.yaml
+theme\style.css
 ~~~
 
 The following Markdown documents are used to express their related attributes in the
@@ -92,6 +93,10 @@ HTML elements attributes.  Each item in the list is formed from the attribute na
 and values that are defined in a script element. See
 https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script
 
+style
+: (optional, used when present) A string holding CSS to be injected as the last
+element of the head when rendering HTML.
+
 Here is an example "head.yaml"
 
 ~~~yaml
@@ -109,7 +114,18 @@ link:
 script:
   - type: module
     src: modules/myscript.js
+style: |+
+  /* This CSS will turn headings vertical */
+  h1 {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-orientation: mixed;
+  }
+
 ~~~
+
+NOTE: In this example the last style element will override the H1 definitions
+previously included in the CSS files using the link attributes.
 
 # Also 
 

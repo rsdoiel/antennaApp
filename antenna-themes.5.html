@@ -38,7 +38,8 @@ theme\nav.md
 theme\top_content.md
 theme\bottom_content.md
 theme\footer.md
-theme\head.yaml</code></pre>
+theme\head.yaml
+theme\style.css</code></pre>
 <p>The following Markdown documents are used to express their related
 attributes in the page generator YAML files. Markdown is used to express
 the HTML values that will be used in the page generator file for these
@@ -116,6 +117,11 @@ script HTML elements attributes. Each item in the list is formed from
 the attribute names and values that are defined in a script element. See
 https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script
 </dd>
+<dt>style</dt>
+<dd>
+(optional, used when present) A string holding CSS to be injected as the
+last element of the head when rendering HTML.
+</dd>
 </dl>
 <p>Here is an example “head.yaml”</p>
 <div class="sourceCode" id="cb2"><pre
@@ -132,7 +138,17 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">href</span><span class="kw">:</span><span class="at"> /css/site.css</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">script</span><span class="kw">:</span></span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">type</span><span class="kw">:</span><span class="at"> module</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">src</span><span class="kw">:</span><span class="at"> modules/myscript.js</span></span></code></pre></div>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">src</span><span class="kw">:</span><span class="at"> modules/myscript.js</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">style</span><span class="kw">: </span><span class="ch">|+</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  /* This CSS will turn headings vertical */</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  h1 {</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    writing-mode: vertical-rl;</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    transform: rotate(180deg);</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    text-orientation: mixed;</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  }</span></code></pre></div>
+<p>NOTE: In this example the last style element will override the H1
+definitions previously included in the CSS files using the link
+attributes.</p>
 <h1 id="also">Also</h1>
 <ul>
 <li><a href="antenna.1.html">antenna (1)</a></li>

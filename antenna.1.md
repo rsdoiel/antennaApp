@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.12 e13fc2b
+%antenna(1) user manual | version 0.0.13 be37599
 % R. S. Doiel
-% 2025-10-10
+% 2025-10-13
 
 # NAME
 
@@ -87,7 +87,7 @@ in the antenna.yaml file. It readings in the Markdown document from FILEPATH and
 writes it an HTML file using the the same basename. If OUTPUT_NAME is set it uses
 that name for the HTML file generated. (NOTE: he page action only renders and HTML file.
 If does not get included in a collection or result in as a listing in an RSS file.)
-The page action is useful for pages likey an about page, home page, and search page.
+The page action is useful for pages likely an about page, home page, and search page.
 NOTE: __The Markdown processed via page action will allow "unsafe" HTML to pass through.
 Only use page if you trust the Markdown document!!!__
 
@@ -124,7 +124,7 @@ your favorite web browser.
 apply THEME_PATH [FILEPATH]
 : This will apply the content THEME_PATH and update the YAML generator file described
 by FILEPATH. If FILEPATH is not provided it will set the contents of the default generator
-file based on the theme's ccontent.
+file based on the theme's content.
 
 # CONFIGURATION
 
