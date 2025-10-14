@@ -145,30 +145,48 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	}
 	if obj.Meta != nil && len(obj.Meta) > 0 {
 		gen.Meta = obj.Meta[:]
+	} else {
+		gen.Meta = nil
 	}
 	if obj.Link != nil && len(obj.Link) > 0 {
 		gen.Link = append(gen.Link, obj.Link...)
+	} else {
+		gen.Link = nil
 	}
 	if obj.Script != nil && len(obj.Script) > 0 {
 		gen.Script = obj.Script[:]
+	} else {
+		gen.Script = nil
 	}
 	if obj.Style != "" {
 		gen.Style = obj.Style
+	} else {
+		gen.Style = ""
 	}
 	if obj.Header != "" {
 		gen.Header = obj.Header
+	} else {
+		gen.Header = ""
 	}
 	if obj.Nav != "" {
 		gen.Nav = obj.Nav
+	} else {
+		gen.Nav = ""
 	}
 	if obj.TopContent != "" {
 		gen.TopContent = obj.TopContent
+	} else {
+		gen.TopContent = ""
 	}
 	if obj.BottomContent != "" {
 		gen.BottomContent = obj.BottomContent
+	} else {
+		gen.BottomContent = ""
 	}
 	if obj.Footer != "" {
 		gen.Footer = obj.Footer
+	} else {
+		gen.Footer = ""
 	}
 	return nil
 }

@@ -63,6 +63,7 @@ About this software
 ## antennaApp 0.0.13
 
 - added style support in head element for themes and page generator YAML
+- when apply a theme replaces the content in the page generator YAML rather than appending values
 
 ### Authors
 

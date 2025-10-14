@@ -38,7 +38,7 @@
   "version": "0.0.13",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- added style support in head element for themes and page generator YAML",
+  "releaseNotes": "- added style support in head element for themes and page generator YAML\n- when apply a theme replaces the content in the page generator YAML rather than appending values",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }
