@@ -9,7 +9,8 @@
 
 ## Up Next
 
-- [ ] cmarkdoc.go should support @include-text-block and @include-code-block like I implemented in my commonMarkDoc processor, this will let me remove remaining Pandoc requirements from building my website
+- [ ] Explore a "reply" action, this would take a link or guide, find the markdown translation in a feed, then pop it into an editor as a a quoted Markdown content. The reply link should be tracked some how and displayed in relation to the item in the aggregated feed.  Enough metadata for threading will need to be tracked. Look at prior art to see what is easy to integrate without recreating ActivityPub or AT Proto
+- [X] cmarkdoc.go should support @include-text-block and @include-code-block like I implemented in my commonMarkDoc processor, this will let me remove remaining Pandoc requirements from building my website
 - [X] The Markdown document defining the feed should get rendered as a standard OPML file along side the HTML and RSS aggregated feed. This could then be linked shared with other people or systems
 - [X] Double check the ordering of my head element children, make sure the meta element for character encoding comes before title
 
@@ -20,7 +21,7 @@
   - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
   - [ ] The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page, I need a clean approach that will work for both
 - [ ] Documenting simple to complex integrations
-  - [ ] A simple website of "pages"
+  - [X] A simple website of "pages"
   - [ ] A blog example using a collection to host posts
   - [ ] A link blog with embedded responses (do I need a different action than post?)
   - [ ] An example should show how to integrated with with Pandoc, PageFind and FlatLake
