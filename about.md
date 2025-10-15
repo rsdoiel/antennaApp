@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.13
+version: 0.0.14
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,13 +54,13 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-10-13
+date_released: 2025-10-14
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.13
+## antennaApp 0.0.14
 
 - added style support in head element for themes and page generator YAML
 - when apply a theme replaces the content in the page generator YAML rather than appending values
