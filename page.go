@@ -102,6 +102,15 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if err := doc.Parse(src); err != nil {
 		return err
 	}
+	// NOTE: This is trusted content so I can support commonMarkDoc
+	// processor extensions safely.
+	if strings.Contains(doc.Text, "@include-text-block") {
+		doc.Text = IncludeTextBlock(doc.Text)
+	}
+	if strings.Contains(doc.Text, "@include-code-block") {
+		doc.Text = IncludeCodeBlock(doc.Text)
+	}
+
 	// Convert our document text to HTML
 	// NOTE: Pages are allowed to have "unsafe" embedded HTML because they are
 	// not reading from a feed, they are being read from your file system.

@@ -35,10 +35,10 @@
     "Pandoc >= 3.1",
     "Bash or Powershell"
   ],
-  "version": "0.0.14",
+  "version": "0.0.15",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- added style support in head element for themes and page generator YAML\n- when apply a theme replaces the content in the page generator YAML rather than appending values",
+  "releaseNotes": "- posted support for including text and code blocks based on commonMarkDoc processor, includes are processed when parsing CommonMark documents",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }

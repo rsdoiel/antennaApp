@@ -1,0 +1,277 @@
+:root {
+  /* Color Variables */
+  --main-text-color: black; /* Standard text color */
+  --main-bg-color: white; /* Standard background color */
+  --link-color: darkgreen; /* Color for standard links */
+  --link-hover-color: maroon; /* Color for links when hovered */
+  --nav-text-color: white; /* Text color in navigation */
+  --nav-bg-color: #5f0202; /* Background color for navigation */
+  --nav-hover-color: orange; /* Color for navigation links when hovered */
+  --footer-text-color: white; /* Text color in footer */
+  --footer-bg-color: black; /* Background color for footer */
+  --footer-link-color: #FF6E1E; /* Color for links in footer */
+  --footer-link-hover-color: lightgreen; /* Color for footer links when hovered */
+  --and-or-red: red; /* Color for AndOr specific elements */
+
+  /* Font Variables */
+  --main-font-family: sans-serif; /* Main font family for the body */
+  --footer-font-family: 'Dosis', sans-serif; /* Font family for footer */
+  --table-header-font-family: comic, cursive, helvetica; /* Font family for table headers */
+  --table-body-font-family: monospace, courier, serif; /* Font family for table body cells */
+
+  /* Font Size Variables */
+  --base-font-size: 1em; /* Base font size */
+  --link-font-size: 1.1em; /* Font size for links */
+  --h1-font-size: 2em; /* Font size for h1 elements */
+  --h2-font-size: 1.7em; /* Font size for h2 elements */
+  --h3-font-size: 1.2em; /* Font size for h3 elements */
+  --h4-font-size: 1em; /* Font size for h4 elements */
+  --footer-font-size: 0.82em; /* Font size for footer text */
+
+  /* Table Color Variables */
+  --table-text-color: white; /* Text color for tables */
+  --table-bg-color: darkblue; /* Background color for tables */
+  --table-odd-row-text-color: blue; /* Text color for odd rows in the table body */
+  --table-odd-row-bg-color: white; /* Background color for odd rows in the table body */
+  --table-even-row-text-color: white; /* Text color for even rows in the table body */
+  --table-even-row-bg-color: blue; /* Background color for even rows in the table body */
+  --table-caption-text-color: black; /* Text color for table captions */
+  --table-caption-bg-color: white; /* Background color for table captions */
+
+  /* Code Block Variables */
+  --code-font-family: monospace; /* Font family for the code block */
+  --code-border-color: #ccc; /* Border color for the code block */
+  --code-background-color: #f5f5f5; /* Background color for the entire code block */
+  --copy-button-bg-color: #fff; /* Background color for the copy button */
+  --copy-button-border-color: #ccc; /* Border color for the copy button */
+  --copy-button-text-color: #000; /* Text color for the copy button */
+  --copy-button-hover-bg-color: #f0f0f0; /* Background color for the copy button on hover */
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: var(--main-font-family);
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    color: var(--main-text-color);
+    background-color: var(--main-bg-color);
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    font-size: var(--h1-font-size);
+    margin-block: 0.67em;
+}
+
+h2 {
+    font-weight: lighter;
+    font-size: var(--h2-font-size);
+}
+
+h3 {
+    font-weight: lighter;
+    font-size: var(--h3-font-size);
+    text-transform: uppercase;
+}
+
+h4 {
+    font-weight: lighter;
+    font-size: var(--h4-font-size);
+    text-transform: lowercase;
+}
+
+h1 code, h2 code, h3 code, h4 code {
+    text-transform: none;
+}
+
+
+a, a:link, a:visited {
+    font-size: var(--link-font-size);
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a[name] {
+  color: var(--main-text-color);
+  text-decoration: none;
+  font-weight: inherit;
+}
+
+a:active, a:focus, a:hover {
+    font-size: var(--link-font-size);
+    color: var(--link-hover-color);
+    text-decoration: underline;
+}
+
+ul {
+    padding: 0;
+    margin-left: 1.24em;
+}
+
+nav {
+    position: fixed;
+    top: 0;
+    display: block;
+    width: 100%;
+    height: auto;
+    padding: 0.20em;
+    padding-bottom: 1.24em;
+    margin-bottom: 1.24em;
+    color: var(--nav-text-color);
+    background-color: var(--nav-bg-color);
+}
+
+nav a, nav a:link, nav a:visited {
+    font-weight: lighter;
+    color: var(--nav-text-color);
+    text-decoration: none;
+}
+
+nav a:active, nav a:focus, nav a:hover {
+    font-weight: lighter;
+    color: var(--nav-hover-color);
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+nav ul {
+    display: block;
+    width: 100%;
+    height: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    display: inline-block;
+    text-align: left;
+    padding-top: 0em;
+    padding-left: 0.82em;
+    padding-right: 0.24em;
+    padding-bottom: 0em;
+    margin: 0;
+}
+
+section, article {
+    flex: 1;
+    display: block;
+    max-width: 90%;
+    height: auto;
+    padding: 1.24em;
+    margin-top: 1.24em;
+    margin-bottom: 0.24em;
+}
+
+section h1 {
+    padding-top: 1.24em;
+    margin-block: 0.67em;
+    font-size: 2em;
+}
+
+img.rss-valid {
+    display: inline;
+    width: auto;
+    height: 0.82em;
+}
+
+footer {
+    font-size: var(--footer-font-size);
+    font-weight: lighter;
+    padding: 1em;
+    margin-top: auto; /* This will push the footer to the bottom */
+    width: 100%;
+    height: auto;
+    color: var(--footer-text-color);
+    background-color: var(--footer-bg-color);
+}
+
+footer p {
+    display: block;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    font-family: var(--footer-font-family);
+    font-size: var(--footer-font-size);
+    font-weight: lighter;
+    margin-top: 0.32em;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+}
+
+footer img {
+    display: block;
+    float: left;
+    vertical-align: top;
+    border: 1px solid var(--main-text-color);
+    border-top-left-radius: 1.2em;
+    border-top-right-radius: 1.2em;
+    box-shadow: inset 0.12em 0.12em var(--main-text-color);
+    width: 3.2em;
+    height: auto;
+    margin: 0.24em;
+}
+
+footer a, footer a:link, footer a:visited {
+    font-weight: lighter;
+    color: var(--footer-link-color);
+}
+
+footer a:active, footer a:focus, footer a:hover {
+    font-weight: lighter;
+    color: var(--footer-link-hover-color);
+}
+
+.red {
+    color: var(--and-or-red);
+}
+
+li.L0, li.L1, li.L2, li.L3, li.L4, li.L5, li.L6, li.L7, li.L8, li.L9 {
+    color: #555;
+    list-style-type: decimal;
+}
+
+#footnote-section {
+    font-size: 80%;
+    display: none;
+}
+
+.footnotes {
+    font-size: 80%;
+}
+
+div.project-name {
+    display: block;
+    width: 100%;
+    height: auto;
+    padding-top: 1.24em;
+    padding-left: 1.24em;
+    margin-top: 1.24em;
+}
+
+header blockquote {
+    display: block;
+    width: 100%;
+    height: auto;
+    padding: 0em;
+    margin-left: 2.48em;
+}
+
+img.blog-logo {
+  max-height: 2.0em; /* Set the maximum height to that of one line of text */
+  height: auto; /* Allow the height to adjust based on the width, maintaining aspect ratio */
+  width: auto; /* Allow the width to adjust based on the height */
+  padding: 0; /* Remove any padding */
+  margin: 0; /* Remove any margin */
+  vertical-align: bottom; /* Align the image vertically with the text */
+  display: inline-block; /* Ensure the image behaves like inline text */
+  background: inherit;
+}

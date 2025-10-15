@@ -61,9 +61,18 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	if err := doc.Parse(src); err != nil {
 		return err
 	}
+	// NOTE: This is trusted content so I can support commonMarkDoc
+	// processor extensions safely.
+	if strings.Contains(doc.Text, "@include-text-block") {
+		doc.Text = IncludeTextBlock(doc.Text)
+	}
+	if strings.Contains(doc.Text, "@include-code-block") {
+		doc.Text = IncludeCodeBlock(doc.Text)
+	}
+
 	sourceMarkdown := doc.Text
 	// Convert our document text to HTML
-	innerHTML, err := doc.ToHTML()
+	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return err
 	}

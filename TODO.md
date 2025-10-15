@@ -4,12 +4,13 @@
 ## Bugs
 
 - [ ] The RSS I'm producing isn't always valid for aggregated items
-  - [ ] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
+  - [X] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
 - [X] The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
 
 ## Up Next
 
-- [ ] The Markdown document defining the feed should get rendered as a standard OPML file along side the HTML and RSS aggregated feed. This could then be linked shared with other people or systems
+- [ ] cmarkdoc.go should support @include-text-block and @include-code-block like I implemented in my commonMarkDoc processor, this will let me remove remaining Pandoc requirements from building my website
+- [X] The Markdown document defining the feed should get rendered as a standard OPML file along side the HTML and RSS aggregated feed. This could then be linked shared with other people or systems
 - [X] Double check the ordering of my head element children, make sure the meta element for character encoding comes before title
 
 ## Thinking about

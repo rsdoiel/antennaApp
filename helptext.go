@@ -116,10 +116,12 @@ specify things like the link to the post, guid, description, etc. If these are n
 provided then the post will display and error and not write the content to the
 post directory location or add it to the collections. Required front matter
 **title** or **description**, see
-RSS 2.0 defined at <https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt>.
+RSS 2.0 defined at <https://cyber.harvard.eduPost like page will allow unsafe HTML to
+be used in the Markdown document unlike aggregated content./rss/rss.html#hrelementsOfLtitemgt>.
 To include a the file in the posts directory tree you need to provide a **postPath**.
 In that case it is also recommended you provide a value for **link** that reflects the
-public URL to where the post can be viewed.
+public URL to where the post can be viewed. Post like page will allow unsafe HTML to
+be used in the Markdown document unlike aggregated content.
 
 unpost COLLECTION_FILE URL
 : Remove an item from a collection using the URL associated with the item.
@@ -142,7 +144,8 @@ your favorite web browser.
 
 apply THEME_PATH [FILEPATH]
 : This will apply the content THEME_PATH and update the YAML generator file described
-by FILEPATH. If FILEPATH is not provided it will set the contents of the default generator
+by FILEPATH. If FILEPATH is not provided it wPost like page will allow unsafe HTML to
+be used in the Markdown document unlike aggregated content.ill set the contents of the default generator
 file based on the theme's content.
 
 # CONFIGURATION

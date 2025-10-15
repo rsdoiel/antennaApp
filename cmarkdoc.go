@@ -137,6 +137,7 @@ func (doc *CommonMark) Parse(src []byte) error {
 	return nil
 }
 
+
 // GetLinks process the Text of a CommonMark struct and returns
 // a list of Link objects if found.
 func (doc *CommonMark) GetLinks() ([]Link, error) {

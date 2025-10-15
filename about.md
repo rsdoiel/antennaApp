@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.14
+version: 0.0.15
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -60,10 +60,9 @@ date_released: 2025-10-14
 About this software
 ===================
 
-## antennaApp 0.0.14
+## antennaApp 0.0.15
 
-- added style support in head element for themes and page generator YAML
-- when apply a theme replaces the content in the page generator YAML rather than appending values
+- posted support for including text and code blocks based on commonMarkDoc processor, includes are processed when parsing CommonMark documents
 
 ### Authors
 
