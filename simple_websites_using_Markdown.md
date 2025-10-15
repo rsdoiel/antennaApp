@@ -25,7 +25,7 @@ keywords:
 
 By R. S. Doiel, 2025-10-14
 
-The Web as a __networked hypertext system__. A human friendly way of expressing hypertext is [Markdown](https://en.wikipedia.org/wiki/Markdown). Markdown has allowed many people to participate in creating content for the web. I think it deserves more focus. Between Markdown and a sprinkle of CSS and you can create entire websites using your own computer or hosted on a static site service[^1]. In this post I show how Markdown can be used for basic websites[^2]. All it requires is knowing a little Markdown, a text editor, web browser and the [Antenna App](https://rsdoiel.github.io/antennaApp).
+The Web is a __networked hypertext system__. A human friendly way of expressing hypertext is [Markdown](https://en.wikipedia.org/wiki/Markdown). Markdown has allowed many people to participate in creating content for the web. I think it deserves more focus. Between Markdown and a sprinkle of CSS and you can create entire websites using your own computer or hosted on a static site service[^1]. In this post I show how Markdown can be used for basic websites[^2]. All it requires is knowing a little Markdown, a text editor, web browser and the [Antenna App](https://rsdoiel.github.io/antennaApp).
 
 [^1]: Examples: [GitHub Pages](https://pages.github.com), S3 buckets setup as static websites at AWS, Dreamhost, my favorite [Mythic Beasts](https://www.mythic-beasts.com/)
 
