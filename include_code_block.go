@@ -33,7 +33,7 @@ import (
 //   string: the transformed text
 func IncludeCodeBlock(text string) string {
 	// Find the include-code-block directive in the page.
-	insertBlockRegExp := regexp.MustCompile(`@include-code-block\s+([^\s]+)(?:\s+(\w+))?`)
+	insertBlockRegExp := regexp.MustCompile(`\s+@include-code-block\s+([^\s]+)(?:\s+(\w+))?`)
 	// Insert the code blocks
 	return insertBlockRegExp.ReplaceAllStringFunc(text, replaceCodeBlock)
 }
@@ -59,7 +59,7 @@ func replaceCodeBlock(fullMatch string) string {
 
 	fileContent, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("Error inserting block from %s: %v\n", filePath, err)
+		fmt.Printf("Error inserting code block from %s: %v\n", filePath, err)
 		return fullMatch
 	}
 

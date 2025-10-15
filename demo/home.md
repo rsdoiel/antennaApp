@@ -18,7 +18,8 @@
 
 # Inspiration
 
-##https://thejapanesegarden.com/feed/ "~The Japanese Garden"
+https://thejapanesegarden.com/feed/ "~The Japanese Garden"
+
 - [Edible San Fernando Valley](https://www.ediblesfvalley.com/feed/)
 - [The Freckled Gardener](https://freckledcalifornian.com/feed/)
 - [The Gardener's Path](https://gardenerspath.com/feed/)
@@ -27,17 +28,19 @@
 # Companies and Suppliers
 
 - [San Diego Seed Company](https://sandiegoseedcompany.com/feed/)
-##https://friendlycontractor.com/feed/ "~PHB blog"
+
+https://friendlycontractor.com/feed/ "~PHB blog"
 
 
 # Food and Health, what our gardens deliver to us
 
-#https://www.hackingsalt.com/feed/ "~Hacking Salt"
+https://www.hackingsalt.com/feed/ "~Hacking Salt"
 
 
 # Magazines
 
-##https://www.dwell.com/@dwell/rss "~Dwell"
+https://www.dwell.com/@dwell/rss "~Dwell"
+
 - [Sunset Magazine - Living in the West](https://www.sunset.com/feed)
 
 

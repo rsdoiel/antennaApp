@@ -158,7 +158,7 @@ func (cfg *AppConfig) GetCollection(cName string) (*Collection, error) {
 }
 
 func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface{}, cfg *AppConfig) error {
-	rssFile := strings.TrimSuffix(collection.File, ".md") + "xml"
+	rssFile := strings.TrimSuffix(collection.File, ".md") + ".xml"
 	collection.Title = ""
 	if title, ok := frontMatter["title"].(string); ok {
 		collection.Title = title
@@ -166,7 +166,14 @@ func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface
 	if link, ok := frontMatter["link"].(string); ok {
 		collection.Link = link
 	} else if collection.Link == "" {
-		collection.Link = fmt.Sprintf(`http://localhost:%d/%s`, cfg.Port, rssFile)
+		if cfg.BaseURL != "" {
+			collection.Link = fmt.Sprintf(`%s/%s`, cfg.BaseURL, rssFile)
+		} else if cfg.Host != "" {
+			collection.Link = fmt.Sprintf(`http://%s:%d/%s`, cfg.Host, cfg.Port, rssFile)
+		} else {
+			collection.Link = rssFile
+		}
+
 	}
 	collection.Description = ""
 	if description, ok := frontMatter["description"].(string); ok {

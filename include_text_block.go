@@ -31,7 +31,7 @@ import (
 //   string: the transformed text
 func IncludeTextBlock(text string) string {
 	// Find the include-text-block directive in the page.
-	insertBlockRegExp := regexp.MustCompile(`@include-text-block\s+([^\s]+)(?:\s+(\w+))?`)
+	insertBlockRegExp := regexp.MustCompile(`\s+@include-text-block\s+([^\s]+)(?:\s+(\w+))?`)
 	// Insert the text blocks
 	return insertBlockRegExp.ReplaceAllStringFunc(text, replaceTextBlock)
 }
@@ -45,17 +45,24 @@ func IncludeTextBlock(text string) string {
 //   string: the replacement string
 func replaceTextBlock(fullMatch string) string {
 	// Extract filePath from the matched string
-	matches := regexp.MustCompile(`@include-text-block\s+([^\s]+)(?:\s+(\w+))?`).FindStringSubmatch(fullMatch)
+	matches := regexp.MustCompile(`\s+@include-text-block\s+([^\s]+)(?:\s+(\w+))?`).FindStringSubmatch(fullMatch)
 	if len(matches) < 2 {
 		return fullMatch // retur(src); errn original if no match
 	}
 	filePath := matches[1]
 
-	fileContent, err := ioutil.ReadFile(filePath)
+	src, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		fmt.Printf("Error inserting block from %s: %v\n", filePath, err)
+		fmt.Printf("Error inserting text block from %s: %v\n", filePath, err)
 		return fullMatch
 	}
-
-	return string(fileContent)
+	var fileContent string
+	// Split off front matter before including content
+	doc := &CommonMark{}
+	if err := doc.Parse(src); err == nil {
+		fileContent = "\n" + doc.Text + "\n"
+	} else {
+		fileContent = fmt.Sprintf("\n%s\n", src)
+	}
+	return fileContent
 }

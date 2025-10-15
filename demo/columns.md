@@ -80,7 +80,9 @@
 # Frank Bennett is the creator of CSL and CSL Project JavaScript
 - [Frank Bennett blog](https://fgbjr.name/index.xml)
 # Prent Rogers, Microtonal music
-##http://ripnread.com/sample-page/blog/ "~Prent Rogers"
+
+http://ripnread.com/sample-page/blog/ "~Prent Rogers"
+
 # Molly White blog
 - [Molly White blogs](https://www.mollywhite.net/feed/feed.xml)
 # Dave Rupert

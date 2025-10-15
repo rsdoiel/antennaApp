@@ -9,7 +9,7 @@
 
 
 # Government sites/feeds
-#https://www.whitehouse.gov/ostp/news-updates/blogs/feed/ "~Office of Science and Technology Policy blog" # Trump purged this. 
+https://www.whitehouse.gov/ostp/news-updates/blogs/feed/ "~Office of Science and Technology Policy blog" # Trump purged this. 
 - [California Energy Blog](https://www.calenergyblog.com/blog-feed.xml)
 
 # Podcasts

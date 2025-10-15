@@ -3,7 +3,7 @@
 
 - [The Register (UK I.T. News)](https://www.theregister.com/headlines.atom)
 - [NASA breaking news](https://www.nasa.gov/news-release/feed/)
-#https://www.darpa.mil/rss.xml "~Darpa News" # feed links not reolvong after Musk purge
+- https://www.darpa.mil/rss.xml "~Darpa News" # feed links not reolvong after Musk purge
 - [Quanta Magazine](https://www.quantamagazine.org/feed/)
 - [The Hidden Brain Podcast](https://feeds.npr.org/423302056/rss.xml)
 - [Smithsonian Magazine](https://www.smithsonianmag.com/rss/smart-news/)

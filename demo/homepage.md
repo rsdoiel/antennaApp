@@ -16,13 +16,13 @@ title : "Robert's Ramblings"
 
 [Series](./series/index.md) start as blog posts but continue as collections that explore an idea, topic or theme.
 
-The toolbox
------------
+
+# The toolbox
 
 @include-text-block cli-tools.md
 
-North L.A. County
------------------
+
+# North L.A. County
 
 - [Cal Fire Incident Map](https://www.fire.ca.gov/incidents)
   - [Cal Fire on BSky](https://bsky.app/profile/calfire.bsky.social)
