@@ -9,6 +9,12 @@
 
 ## Up Next
 
+- [ ] Added PWA generation support. If Antenna app had an option of generating websites as a PWA you could use a Pi Access Point/Website to distribute the "app" and the content would be available "off line" when people are away from the access point
+  - [ ] The "app" name should come from the antenna.yaml file
+  - [ ] The "page" action should track which pages are added to the site, needed when regenerating the cache page list
+  - [ ] The antenna.yaml should have a boolean to indicate if the site should be configured as a pwa
+  - [ ] There needs to be a command line easy way to set things up or turn them off for pwa support
+  - [ ] If a page list is included these could be automatically regenerated from the "generate" action.
 - [ ] Explore a "reply" action, this would take a link or guide, find the markdown translation in a feed, then pop it into an editor as a a quoted Markdown content. The reply link should be tracked some how and displayed in relation to the item in the aggregated feed.  Enough metadata for threading will need to be tracked. Look at prior art to see what is easy to integrate without recreating ActivityPub or AT Proto
 - [X] cmarkdoc.go should support @include-text-block and @include-code-block like I implemented in my commonMarkDoc processor, this will let me remove remaining Pandoc requirements from building my website
 - [X] The Markdown document defining the feed should get rendered as a standard OPML file along side the HTML and RSS aggregated feed. This could then be linked shared with other people or systems
