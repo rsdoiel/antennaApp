@@ -140,15 +140,29 @@ ORDER BY pubDate DESC, updated DESC;`
 	// SQLCountPage returns a list of items in the items table
 	SQLCountPage = `SELECT COUNT(*) FROM pages;`
 
-	// SQLCountPage returns a list of items in the items table
+	// SQLDisplayPage returns a list of pages in the pages table
 	SQLDisplayPage = `SELECT inputPath, outputPath, updated
 FROM pages
 ORDER BY updated desc
 ;`
 
-	// SQLDeletePageByInputPath removes a page form the collection.
-	SQLDeletePageByInputPath = `DELETE
+	// SQLSitemapListPages returns a list of pages by outputPath
+	SQLSitemapListPages = `SELECT outputPath, updated
 FROM pages
-WHERE inputPath = ?1
+ORDER BY outputPath
 ;`
+	// SQLListPosts will list all posts by post path
+	SQLSitemapListPosts = `SELECT postPath as outputPath, updated
+FROM items
+WHERE pubDate IS NOT NULL AND pubDate != ""
+ORDER BY postPath;`
+
+	// SQLDeletePageByPath removes a page by either input or output paths.
+	SQLDeletePageByPath = `DELETE
+FROM pages
+WHERE inputPath = ?1 or outputPath = ?2
+;`
+
+
+
 )

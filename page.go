@@ -17,10 +17,13 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -92,7 +95,7 @@ func InitPageGenerator(pageName string) error {
 // for a handful of page.
 func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("expected a collection name and filepath for Markdown content")
+		return fmt.Errorf("expected filepath for Markdown content")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
@@ -150,4 +153,66 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 		return err
 	}
 	return nil
+}
+
+// Unpage will remove a CommonMark document filePath
+func (app *AntennaApp) Unpage(cfgName string, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("expected filepath for Markdown content")
+	}
+	cfg := &AppConfig{}
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
+	}
+	fName, oName := strings.TrimSpace(args[0]), strings.TrimSpace(args[0]) 
+	if len(args) == 2 {
+		oName = strings.TrimSpace(args[1])
+	}
+	// NOTE: remove the page from pages table.
+	dbName := "pages.db"
+    db, err := sql.Open("sqlite", dbName)
+    if err != nil {
+        return fmt.Errorf("failed to open %s, %s", dbName, err)
+    }
+    defer db.Close()
+    
+    if _, err := db.Exec(SQLDeletePageByPath, fName, oName); err != nil {
+        return err
+    }
+    return nil
+}
+
+// Pages will list the pages in the pages collection
+func (app *AntennaApp) Pages(cfgName string, args []string) error {
+	cfg := &AppConfig{}
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
+	}
+	// NOTE: remove the page from pages table.
+	dbName := "pages.db"
+    db, err := sql.Open("sqlite", dbName)
+    if err != nil {
+        return fmt.Errorf("failed to open %s, %s", dbName, err)
+    }
+    defer db.Close()
+   
+    rows, err := db.Query(SQLDisplayPage)
+    if err != nil {
+        return err
+    }
+    defer rows.Close()
+    
+    for rows.Next() {
+        var (
+            iName string
+            oName string
+            updated string
+        )
+        if err := rows.Scan(&iName, &oName, &updated); err != nil {
+            fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+            continue
+        }
+        fmt.Printf("%s\t%s\t%d\n", iName, oName, updated)
+    }
+    return nil
 }

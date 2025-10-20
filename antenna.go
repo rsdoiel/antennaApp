@@ -51,10 +51,16 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Unpost(cfgName, args)
 	case "page":
 		return app.Page(cfgName, args)
+	case "pages":
+		return app.Pages(cfgName, args)
+	case "unpage":
+		return app.Unpage(cfgName, args)
 	case "harvest":
 		return app.Harvest(out, eout, cfgName, args)
 	case "generate":
 		return app.Generate(out, eout, cfgName, args)
+	case "sitemap":
+		return app.Sitemap(cfgName, args)
 	case "preview":
 		return app.Preview(cfgName)
 	default:

@@ -52,6 +52,14 @@ type AppConfig struct {
 
 	// Collections holds a list of collections to curate
 	Collections []*Collection `json:"collections,omitempty" yaml:"collections,omitempty"`
+
+	// Sitemap settings, these should get sane defaults in the sitemap action
+	ChunkSize    int
+	DefaultFreq  string
+	DefaultPri   string
+	FreqRules    map[string]string // outputPath prefix -> changefreq
+	PriRules     map[string]string // outputPath prefix -> priority
+
 }
 
 // Collection describes the metadata about a collection of feeds.

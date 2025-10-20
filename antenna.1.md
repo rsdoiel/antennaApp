@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.16-alpha dd580ff
+%antenna(1) user manual | version 0.0.16-alpha 0c1ef13
 % R. S. Doiel
 % 2025-10-14
 
@@ -69,7 +69,9 @@ is a list of supported ACTION and their purpose. ACTION can be split between two
 
 init
 : Initialize an Antenna instances by creating a YAML configuration file or validating one. The file
-generated is called "antenna.yaml".
+generated is called "antenna.yaml". It'll create a Markdown document called pages.md (if none exists)
+and a pages.db SQLite3 file to hold the default collection. Collections hold posts and pages metadata.
+Posts will be be included in RSS feed output while pages will be excluded from feed output.
 
 add COLLECTION_FILE [NAME DESCRIPTION]
 : Add the feed collection name by COLLECTION_FILE to your Antenna configuration.
@@ -81,15 +83,25 @@ the Front Matter of the Markdown document.
 del COLLECTION_FILE
 : Remove a collection from the Antenna configuration.
 
-page FILEPATH [OUTPUT_NAME]
-: This will create a standalone HTML page using the default page generator defined
-in the antenna.yaml file. It readings in the Markdown document from FILEPATH and
-writes it an HTML file using the the same basename. If OUTPUT_NAME is set it uses
-that name for the HTML file generated. (NOTE: he page action only renders and HTML file.
-If does not get included in a collection or result in as a listing in an RSS file.)
-The page action is useful for pages likely an about page, home page, and search page.
-NOTE: __The Markdown processed via page action will allow "unsafe" HTML to pass through.
-Only use page if you trust the Markdown document!!!__
+page INPUT_PATH [OUTPUT_PATH]
+: This will create a standalone HTML page in a collection called pages.db (created
+by the init action). It uses the default page generator defined in the antenna.yaml
+if one is not specifically set for the pages.db collection. The pages command reads
+in the Markdown document from INPUT_PATH and writes it an HTML file using the 
+same basename. If OUTPUT_PATH is set it uses that name for the HTML file generated.
+(NOTE: the pages are not shown in the RSS feed. The page action is useful for pages
+like an about page, home page, and search page. __The Markdown processed via page
+action will allow "unsafe" HTML to pass through. Only use page if you trust the
+Markdown document!!!__)
+
+unpage FILEPATH
+: This will will remove a page's from a collection based in the input filepath provided.
+It does not remove the page on disk, just from the collection so that it will no longer
+be used to create a corresponding HTML page when the generate action is run.
+
+pages [COLLECTION_FILE]
+: List the pages in a collection. Pages are ordered by descrending updated timestamp.
+
 
 post COLLECTION_FILE FILEPATH
 : Add a Markdown document to a feed collection. The front matter is used to 
