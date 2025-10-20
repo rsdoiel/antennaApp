@@ -58,7 +58,14 @@ CREATE TABLE IF NOT EXISTS items (
 	label TEXT DEFAULT '',
 	updated DATETIME
 );
+
+CREATE TABLE IF NOT EXIST pages (
+  inputPath TEXT PRIMARY KEY,
+  outputPath TEXT DEFAULT ''
+  updated DATETIME
+);
 `
+
 	// SQLResetChannels clear the channels table
 	SQLResetChannels = `DELETE FROM channels;`
 
@@ -108,7 +115,7 @@ ORDER by title, link
   channel, status, updated, label,
   postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
 FROM items
-WHERE (description != '' OR title != '') AND status = 'published'
+WHERE (description != '' OR title = '') AND status = 'published'
 ORDER BY pubDate DESC, updated DESC;`
 
 	// SQLSetStatusToReview
@@ -120,4 +127,28 @@ ORDER BY pubDate DESC, updated DESC;`
 
 	// SQLDeleteItemByLink removes an item in the items table with provided link
 	SQLDeleteItemByLink = `DELETE FROM items WHERE link = ?`
+
+	// Update a feed item in the items table
+	SQLUpdatePage = `INSERT INTO pages (
+	inputPath, outputPath, updated
+) VALUES (
+	?1, ?2, ?3
+) ON CONFLICT (inputPath) DO
+  UPDATE SET 
+  	inputPath = ?2, updated = NOW();`
+
+	// SQLCountPage returns a list of items in the items table
+	SQLCountPage = `SELECT COUNT(*) FROM pages;`
+
+	// SQLCountPage returns a list of items in the items table
+	SQLDisplayPage = `SELECT inputPath, outputPath, updated
+FROM pages
+ORDER BY updated desc
+;`
+
+	// SQLDeletePageByInputPath removes a page form the collection.
+	SQLDeletePageByInputPath = `DELETE
+FROM pages
+WHERE inputPath = ?1
+;`
 )

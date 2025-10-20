@@ -1,4 +1,4 @@
-%antenna(5) user manual | version 0.0.15 f76cd2b
+%antenna(5) user manual | version 0.0.16-alpha dd580ff
 % R. S. Doiel
 % 2025-10-14
 

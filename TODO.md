@@ -9,6 +9,11 @@
 
 ## Up Next
 
+- [ ] init needs to create the default pages.md collection, that way Antenna will be able to manage
+      collections pages and posts.
+- [ ] pages always go in the pages collection, this will let me generate a sitemap by taking the pages
+      and posts from the pages collection along with the items from other collections and rendering out
+      the appropriate sitemap.xml file(s).
 - [ ] Added PWA generation support. If Antenna app had an option of generating websites as a PWA you could use a Pi Access Point/Website to distribute the "app" and the content would be available "off line" when people are away from the access point
   - [ ] The "app" name should come from the antenna.yaml file
   - [ ] The "page" action should track which pages are added to the site, needed when regenerating the cache page list

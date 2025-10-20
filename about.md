@@ -42,7 +42,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.15
+version: 0.0.16-alpha
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -60,7 +60,7 @@ date_released: 2025-10-14
 About this software
 ===================
 
-## antennaApp 0.0.15
+## antennaApp 0.0.16-alpha
 
 - posted support for including text and code blocks based on commonMarkDoc processor, includes are processed when parsing CommonMark documents
 
@@ -121,7 +121,7 @@ You can even use **{app_name}** to augment your existing blog.
 
 ### Software Requirements
 
-- Go >= 1.25.1
+- Go >= 1.25.3
 - CMTools >= 0.0.40
 
 

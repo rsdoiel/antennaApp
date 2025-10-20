@@ -45,7 +45,7 @@ authors:
 
 
 repository-code: "https://github.com/rsdoiel/antennaApp"
-version: 0.0.15
+version: 0.0.16-alpha
 date-released: 2025-10-14
 
 license-url: "https://www.gnu.org/licenses/agpl-3.0.en.html"

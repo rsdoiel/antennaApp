@@ -51,8 +51,18 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 			return err
 		}
 		if cfg.Collections == nil {
-			return fmt.Errorf("no collections defined in %s, try adding one", fName)
+			// Add the default pages.md collection.
+			cName := "pages.md"
+			if _, err := os.Stats(cName); err != nil {
+				if err := os.WriteFile(cName, DefaultPageCollectionMarkdown, 0664); err != nil {
+					return fmt.Errorf("failed to created %s, %s", cName, err)
+				}
+			}
+			if err := app.Add(cName); err != nil {
+				return fmt.Errorf("failed to create defalt collection, %s, %s", cName, err)
+			}
 		} else {
+			// FIXME: make sure the pages collection exists
 			// FIXME: check one on each collection, update database scheme if needed
 		}
 		return nil
