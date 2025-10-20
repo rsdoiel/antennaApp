@@ -86,9 +86,9 @@ func elementFromMap(element string, m map[string]string) string {
 		parts = append(parts, fmt.Sprintf("%s=%q", k, v))
 	}
 	if element == "script" {
-	  parts = append(parts, "></script>")
+		parts = append(parts, "></script>")
 	} else {
-	  parts = append(parts, ">")
+		parts = append(parts, ">")
 	}
 	return strings.Join(parts, " ")
 }
@@ -147,7 +147,7 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 		}
 	}
 	if gen.Style != "" {
-		fmt.Fprintf(out, "  <style>\n%s\n</style>\n", indentText(strings.TrimSpace(gen.Style), 4) )
+		fmt.Fprintf(out, "  <style>\n%s\n</style>\n", indentText(strings.TrimSpace(gen.Style), 4))
 	}
 }
 

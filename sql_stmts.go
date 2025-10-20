@@ -59,9 +59,9 @@ CREATE TABLE IF NOT EXISTS items (
 	updated DATETIME
 );
 
-CREATE TABLE IF NOT EXIST pages (
-  inputPath TEXT PRIMARY KEY,
-  outputPath TEXT DEFAULT ''
+CREATE TABLE IF NOT EXISTS pages (
+  inputPath PRIMARY KEY,
+  outputPath TEXT DEFAULT '',
   updated DATETIME
 );
 `
@@ -162,7 +162,4 @@ ORDER BY postPath;`
 FROM pages
 WHERE inputPath = ?1 or outputPath = ?2
 ;`
-
-
-
 )

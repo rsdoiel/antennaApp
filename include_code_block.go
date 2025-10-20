@@ -28,9 +28,12 @@ import (
 // with the language name provided in the opening delimiter.
 //
 // Parameters:
-//   text (string): the text to be transformed
+//
+//	text (string): the text to be transformed
+//
 // Returns:
-//   string: the transformed text
+//
+//	string: the transformed text
 func IncludeCodeBlock(text string) string {
 	// Find the include-code-block directive in the page.
 	insertBlockRegExp := regexp.MustCompile(`\s+@include-code-block\s+([^\s]+)(?:\s+(\w+))?`)
@@ -42,9 +45,12 @@ func IncludeCodeBlock(text string) string {
 // of the matched RegExp.
 //
 // Parameters:
-//   fullMatch (string): the full matched string
+//
+//	fullMatch (string): the full matched string
+//
 // Returns:
-//   string: the replacement string
+//
+//	string: the replacement string
 func replaceCodeBlock(fullMatch string) string {
 	// Extract filePath and language from the matched string
 	matches := regexp.MustCompile(`@include-code-block\s+([^\s]+)(?:\s+(\w+))?`).FindStringSubmatch(fullMatch)

@@ -117,14 +117,14 @@ func startsWith(s, prefix string) bool {
 // sitemap generates the needed sitemaps for a given collection
 func sitemap(cfg *AppConfig, dbName string) ([]string, error) {
 	var (
-		urls []URL
+		urls         []URL
 		sitemapFiles []string
 	)
 
 	// Open the SQLite database
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
-		return  sitemapFiles, fmt.Errorf("failed to open database (%s): %s", dbName, err)
+		return sitemapFiles, fmt.Errorf("failed to open database (%s): %s", dbName, err)
 	}
 	defer db.Close()
 
@@ -179,7 +179,6 @@ func sitemap(cfg *AppConfig, dbName string) ([]string, error) {
 	return sitemapFiles, nil
 }
 
-
 func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt string) ([]URL, error) {
 	var urls []URL
 	// Query the pages table for in the collection.
@@ -188,7 +187,6 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 		return urls, fmt.Errorf("failed to query %s collection, %s", dbName, err)
 	}
 	defer rows.Close()
-
 
 	for rows.Next() {
 		var outputPath string
@@ -214,8 +212,8 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 			}
 		}
 		u := URL{
-			Loc:        fmt.Sprintf("%s/%s", cfg.BaseURL, outputPath),
-			LastMod:    updated.Format("2006-01-02"),
+			Loc:     fmt.Sprintf("%s/%s", cfg.BaseURL, outputPath),
+			LastMod: updated.Format("2006-01-02"),
 		}
 		if changeFreq != "" {
 			u.ChangeFreq = changeFreq

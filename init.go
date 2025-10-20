@@ -29,6 +29,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	// Check if antenna.yaml exists, confirm I can read it.
 	cfg := &AppConfig{}
 	if _, err := os.Stat(fName); err == nil {
+	    fmt.Printf("using %s\n", fName)
 		src, err := os.ReadFile(fName)
 		if err != nil {
 			return err
@@ -36,53 +37,56 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 		if err := yaml.Unmarshal(src, &cfg); err != nil {
 			return err
 		}
-		if cfg.Port == 0 {
-			return fmt.Errorf("invalid port number in %s", fName)
-		}
-		if cfg.Htdocs != "" {
-			if _, err := os.Stat(cfg.Htdocs); err != nil {
-				return fmt.Errorf("problem with htdocs: %q in %s: %s", cfg.Htdocs, fName, err)
-			}
-		}
-		if cfg.Generator == "" {
-			cfg.Generator = "page.yaml"
-		}
-		if err := InitPageGenerator(cfgName); err != nil {
-			return err
-		}
-		if cfg.Collections == nil {
-			// Add the default pages.md collection.
-			cName := "pages.md"
-			if _, err := os.Stat(cName); err != nil {
-				if err := os.WriteFile(cName, []byte(DefaultPageCollectionMarkdown), 0664); err != nil {
-					return fmt.Errorf("failed to created %s, %s", cName, err)
-				}
-			}
-			if err := app.Add(cName, []string{}); err != nil {
-				return fmt.Errorf("failed to create default collection, %s, %s", cName, err)
-			}
-		} else {
-			// FIXME: make sure the pages collection exists
-			// FIXME: check one on each collection, update database scheme if needed
-		}
-		return nil
+	} else {
+	    fmt.Printf("creating %s\n", fName)
+		cfg.Htdocs = ""
+		cfg.Port = 8000
+		cfg.BaseURL = "http://localhost:8000"
 	}
-	// If antenna.yaml does not exist, create it
-	cfg.Port = 8000
-	// By default the working directory is assumed to be the staging directory.
-	cfg.Htdocs = ""
-	cfg.BaseURL = "http://localhost:8000"
-	cfg.Generator = "page.yaml"
-	src, err := yaml.Marshal(cfg)
-	if err != nil {
-		// This shouldn't happen ever, if it does it is a programming error
-		return fmt.Errorf("unable to generate YAML, %s", err)
+	if cfg.Port == 0 {
+		cfg.Port = 8000
 	}
-	fp, err := os.Create(fName)
-	if err != nil {
-		return err
+	if cfg.Host == "" && cfg.BaseURL == "" {
+		cfg.Host = "localhost"
 	}
-	defer fp.Close()
-	fmt.Fprintf(fp, "%s", src)
-	return InitPageGenerator(cfg.Generator)
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = fmt.Sprintf("http://%s:%s", cfg.Host, cfg.Port)
+	}
+
+	if cfg.Htdocs != "" {
+		if _, err := os.Stat(cfg.Htdocs); err != nil {
+			return fmt.Errorf("problem with htdocs: %q in %s: %s", cfg.Htdocs, fName, err)
+		}
+	}
+	if cfg.Generator == "" {
+		cfg.Generator = "page.yaml"
+	}
+	if err := cfg.SaveConfig(cfgName); err != nil {
+		return fmt.Errorf("failed to save %s, %s", cfgName, err)
+	}
+
+	if err := InitPageGenerator(cfg.Generator); err != nil {
+		return fmt.Errorf("failed to generate default %s, %s", cfg.Generator, err)
+	}
+	// Add the default pages.md collection.
+	cName := "pages.md"
+	dbName := "pages.db"
+	if _, err := os.Stat(cName); err != nil {
+		fmt.Printf("Creating the %s\n", cName)
+		if err := os.WriteFile(cName, []byte(DefaultPageCollectionMarkdown), 0664); err != nil {
+			return fmt.Errorf("failed to created %s, %s", cName, err)
+		}
+	} else {
+	    fmt.Printf("using existing %s\n", cName)
+	}
+	
+	if _, err := os.Stat(dbName); err != nil {
+		fmt.Printf("Adding %s\n", cName)
+		if err := app.Add(cfgName, []string{cName}); err != nil {
+			return fmt.Errorf("failed to create default collection, %s, %s", cName, err)
+		}
+	} else {
+	    fmt.Printf("using existing %s\n", dbName)
+	}
+	return nil
 }

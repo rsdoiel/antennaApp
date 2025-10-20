@@ -64,7 +64,7 @@ func (app AntennaApp) ApplyTheme(cfgName string, args []string) error {
 		}
 	}
 	changed := false
-	if ok, err := updateBodyElements(gen, themeName);err != nil {
+	if ok, err := updateBodyElements(gen, themeName); err != nil {
 		return err
 	} else if ok {
 		changed = ok
@@ -123,7 +123,7 @@ func updateHeadElements(gen *Generator, themeName string) (bool, error) {
 				gen.Script = append(gen.Script, obj)
 			}
 		}
-	
+
 	}
 	// Handle an included CSS style description
 	fName = filepath.Join(themeName, "style.css")

@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.16-alpha
+version: 0.0.16-beta
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -47,15 +47,19 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-10-14
+date_released: 2025-10-20
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.16-alpha
+## antennaApp 0.0.16-beta
 
 - posted support for including text and code blocks based on commonMarkDoc processor, includes are processed when parsing CommonMark documents
+- pages are now tracked in the default pages.md collection
+- page actions are now page, pages and unpage
+- sitemap files are generated for pages and posts
+- posts by default go into the pages collection unless collection name is provided.
 
 ### Authors
 

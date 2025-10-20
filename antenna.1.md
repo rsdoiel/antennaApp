@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.16-alpha 0c1ef13
+%antenna(1) user manual | version 0.0.16-beta f83cd2c
 % R. S. Doiel
-% 2025-10-14
+% 2025-10-20
 
 # NAME
 
@@ -103,9 +103,9 @@ pages [COLLECTION_FILE]
 : List the pages in a collection. Pages are ordered by descrending updated timestamp.
 
 
-post COLLECTION_FILE FILEPATH
-: Add a Markdown document to a feed collection. The front matter is used to 
-specify things like the link to the post, guid, description, etc. If these are not
+post [COLLECTION_FILE] FILEPATH
+: Add a Markdown document to a feed collection (default is pages.md). The front matter is
+used to specify things like the link to the post, guid, description, etc. If these are not
 provided then the post will display and error and not write the content to the
 post directory location or add it to the collections. Required front matter
 **title** or **description**, see

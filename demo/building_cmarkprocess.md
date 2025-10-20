@@ -24,7 +24,7 @@ atTags:
   - '@include'
 dateCreated: '2025-07-26'
 dateModified: '2025-07-28'
-datePublished: '2025-07-26'
+datePublished: '2025-10-20'
 postPath: 'building_cmarkprocess.md'
 ---
 

@@ -35,10 +35,10 @@
     "Pandoc >= 3.1",
     "Bash or Powershell"
   ],
-  "version": "0.0.16",
+  "version": "0.0.16-beta",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- posted support for including text and code blocks based on commonMarkDoc processor, includes are processed when parsing CommonMark documents\n- pages are now tracked in the default pages.md collection\n- page actions are now page, pages and unpage\n- sitemap files are generated for pages and posts",
+  "releaseNotes": "- posted support for including text and code blocks based on commonMarkDoc processor, includes are processed when parsing CommonMark documents\n- pages are now tracked in the default pages.md collection\n- page actions are now page, pages and unpage\n- sitemap files are generated for pages and posts\n- posts by default go into the pages collection unless collection name is provided.",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }

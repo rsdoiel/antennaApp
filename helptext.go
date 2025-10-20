@@ -122,9 +122,9 @@ pages [COLLECTION_FILE]
 : List the pages in a collection. Pages are ordered by descrending updated timestamp.
 
 
-post COLLECTION_FILE FILEPATH
-: Add a Markdown document to a feed collection. The front matter is used to 
-specify things like the link to the post, guid, description, etc. If these are not
+post [COLLECTION_FILE] FILEPATH
+: Add a Markdown document to a feed collection (default is pages.md). The front matter is
+used to specify things like the link to the post, guid, description, etc. If these are not
 provided then the post will display and error and not write the content to the
 post directory location or add it to the collections. Required front matter
 **title** or **description**, see
@@ -389,4 +389,3 @@ previously included in the CSS files using the link attributes.
 
 `
 )
-

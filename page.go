@@ -164,22 +164,22 @@ func (app *AntennaApp) Unpage(cfgName string, args []string) error {
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	fName, oName := strings.TrimSpace(args[0]), strings.TrimSpace(args[0]) 
+	fName, oName := strings.TrimSpace(args[0]), strings.TrimSpace(args[0])
 	if len(args) == 2 {
 		oName = strings.TrimSpace(args[1])
 	}
 	// NOTE: remove the page from pages table.
 	dbName := "pages.db"
-    db, err := sql.Open("sqlite", dbName)
-    if err != nil {
-        return fmt.Errorf("failed to open %s, %s", dbName, err)
-    }
-    defer db.Close()
-    
-    if _, err := db.Exec(SQLDeletePageByPath, fName, oName); err != nil {
-        return err
-    }
-    return nil
+	db, err := sql.Open("sqlite", dbName)
+	if err != nil {
+		return fmt.Errorf("failed to open %s, %s", dbName, err)
+	}
+	defer db.Close()
+
+	if _, err := db.Exec(SQLDeletePageByPath, fName, oName); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Pages will list the pages in the pages collection
@@ -190,29 +190,29 @@ func (app *AntennaApp) Pages(cfgName string, args []string) error {
 	}
 	// NOTE: remove the page from pages table.
 	dbName := "pages.db"
-    db, err := sql.Open("sqlite", dbName)
-    if err != nil {
-        return fmt.Errorf("failed to open %s, %s", dbName, err)
-    }
-    defer db.Close()
-   
-    rows, err := db.Query(SQLDisplayPage)
-    if err != nil {
-        return err
-    }
-    defer rows.Close()
-    
-    for rows.Next() {
-        var (
-            iName string
-            oName string
-            updated string
-        )
-        if err := rows.Scan(&iName, &oName, &updated); err != nil {
-            fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
-            continue
-        }
-        fmt.Printf("%s\t%s\t%d\n", iName, oName, updated)
-    }
-    return nil
+	db, err := sql.Open("sqlite", dbName)
+	if err != nil {
+		return fmt.Errorf("failed to open %s, %s", dbName, err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(SQLDisplayPage)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			iName   string
+			oName   string
+			updated string
+		)
+		if err := rows.Scan(&iName, &oName, &updated); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			continue
+		}
+		fmt.Printf("%s\t%s\t%d\n", iName, oName, updated)
+	}
+	return nil
 }

@@ -6,10 +6,10 @@ function removeFile() {
     fi
 }
 
-for FNAME in antenna.yaml page.yaml; do
+for FNAME in antenna.yaml page.yaml pages.md; do
     removeFile "${FNAME}"
 done
 
-ls -1 *.html *.db 2>/dev/null | while read -r FNAME; do
+ls -1 *.html *.db *.opml 2>/dev/null | while read -r FNAME; do
     removeFile "${FNAME}"
 done

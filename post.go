@@ -34,14 +34,19 @@ import (
 // Post will add a CommonMark document as a feed item and if the postPath and link
 // are provided it will convert the CommonMark document to HTML and save it in the postPath.
 func (app *AntennaApp) Post(cfgName string, args []string) error {
-	if len(args) != 2 {
-		return fmt.Errorf("expected a collection name and filepath in the collection")
+	if len(args) < 1  {
+		return fmt.Errorf("expected a Markdown filename or collection name and Markdown filename")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	cName, fName := strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+	cName, fName := "pages.md", ""
+	if len(args) == 1 {
+	    fName = strings.TrimSpace(args[0])
+	} else {
+    	cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+	}
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
 		return err

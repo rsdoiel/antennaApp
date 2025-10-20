@@ -26,9 +26,12 @@ import (
 // based on the file path included in the line.
 //
 // Parameters:
-//   text (string): the text to be transformed
+//
+//	text (string): the text to be transformed
+//
 // Returns:
-//   string: the transformed text
+//
+//	string: the transformed text
 func IncludeTextBlock(text string) string {
 	// Find the include-text-block directive in the page.
 	insertBlockRegExp := regexp.MustCompile(`\s+@include-text-block\s+([^\s]+)(?:\s+(\w+))?`)
@@ -40,9 +43,12 @@ func IncludeTextBlock(text string) string {
 // of the matched RegExp.
 //
 // Parameters:
-//   fullMatch (string): the full matched string
+//
+//	fullMatch (string): the full matched string
+//
 // Returns:
-//   string: the replacement string
+//
+//	string: the replacement string
 func replaceTextBlock(fullMatch string) string {
 	// Extract filePath from the matched string
 	matches := regexp.MustCompile(`\s+@include-text-block\s+([^\s]+)(?:\s+(\w+))?`).FindStringSubmatch(fullMatch)
