@@ -135,7 +135,7 @@ ORDER BY pubDate DESC, updated DESC;`
 	?1, ?2, ?3
 ) ON CONFLICT (inputPath) DO
   UPDATE SET 
-  	inputPath = ?2, updated = NOW();`
+  	outputPath = ?2, updated = ?3;`
 
 	// SQLCountPage returns a list of items in the items table
 	SQLCountPage = `SELECT COUNT(*) FROM pages;`

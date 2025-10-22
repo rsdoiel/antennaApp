@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -152,6 +153,18 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
 		return err
 	}
+	// NOTE: I need to add the page to pages.db
+	// NOTE: remove the page from pages table.
+	dbName := "pages.db"
+	db, err := sql.Open("sqlite", dbName)
+	if err != nil {
+		return fmt.Errorf("failed to open %s, %s", dbName, err)
+	}
+	defer db.Close()
+	timestamp := time.Now().Format(time.RFC3339)
+	if _, err := db.Exec(SQLUpdatePage, fName, oName, timestamp); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -212,7 +225,7 @@ func (app *AntennaApp) Pages(cfgName string, args []string) error {
 			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
 			continue
 		}
-		fmt.Printf("%s\t%s\t%d\n", iName, oName, updated)
+		fmt.Printf("%s\t%s\t%s\n", iName, oName, updated)
 	}
 	return nil
 }

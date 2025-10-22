@@ -292,6 +292,7 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 			return nil
 		}
 	}
+
 	// Create the HTML file
 	out, err := os.Create(htmlName)
 	if err != nil {

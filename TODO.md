@@ -6,9 +6,14 @@
 - [ ] The RSS I'm producing isn't always valid for aggregated items
   - [X] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
 - [X] The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
+- [ ] generate is not generating everything for the collection
+  - [ ] re-rendering post lists correctly
+  - [ ] pages are not being rendered for pages collection
 
 ## Up Next
 
+- [ ] When I pass the collection on the command I should not require the ".md" filename
+- [ ] Figure out how I want to handle a list of links to posts, e.g. recent posts and archive of posts instead of feed reading posts
 - [X] init needs to create the default pages.md collection, that way Antenna will be able to manage
       collections pages and posts.
 - [ ] pages always go in the pages collection, this will let me generate a sitemap by taking the pages
