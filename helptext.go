@@ -113,16 +113,16 @@ like an about page, home page, and search page. __The Markdown processed via pag
 action will allow "unsafe" HTML to pass through. Only use page if you trust the
 Markdown document!!!__)
 
-unpage FILEPATH
+unpage INPUT_PATH
 : This will will remove a page's from a collection based in the input filepath provided.
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
-pages [COLLECTION_FILE]
+pages [COLLECTION_NAME]
 : List the pages in a collection. Pages are ordered by descrending updated timestamp.
 
 
-post [COLLECTION_FILE] FILEPATH
+post [COLLECTION_NAME] FILEPATH
 : Add a Markdown document to a feed collection (default is pages.md). The front matter is
 used to specify things like the link to the post, guid, description, etc. If these are not
 provided then the post will display and error and not write the content to the
@@ -135,18 +135,18 @@ In that case it is also recommended you provide a value for **link** that reflec
 public URL to where the post can be viewed. Post like page will allow unsafe HTML to
 be used in the Markdown document unlike aggregated content.
 
-unpost COLLECTION_FILE URL
+unpost COLLECTION_NAME URL
 : Remove an item from a collection using the URL associated with the item.
 
 
 The following commands are related to producing a link blog static website.
 
-harvest [COLLECTION_FILE]
-: The harvest retrieves feed content. If COLLECTION_FILE is provided then only the 
+harvest [COLLECTION_NAME]
+: The harvest retrieves feed content. If COLLECTION_NAME is provided then only the 
 the single collection will be harvested otherwise all collections defined in your
 Antenna YAML configuration are harvested.
 
-generate [COLLECTION_FILE]
+generate [COLLECTION_NAME]
 : This process the collections rendering HTML pages and RSS 2.0 feeds for each collection.
 If the collection name is provided then only that HTML page will be generated.
 
@@ -154,11 +154,10 @@ preview
 : Let's your preview the rendered your Antenna instance as a localhost website using
 your favorite web browser.
 
-apply THEME_PATH [FILEPATH]
+apply THEME_PATH [YAML_FILE_PATH]
 : This will apply the content THEME_PATH and update the YAML generator file described
-by FILEPATH. If FILEPATH is not provided it wPost like page will allow unsafe HTML to
-be used in the Markdown document unlike aggregated content.ill set the contents of the default generator
-file based on the theme's content.
+by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
+will be replaced by the theme.
 
 # CONFIGURATION
 
