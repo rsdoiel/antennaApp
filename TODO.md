@@ -12,6 +12,11 @@
 
 ## Up Next
 
+- [ ] the default collection shoul be antenna.db and antenna.md instead of pages.md
+- [ ] Need an archive action for posts
+  - [ ] An archive RSS XML should be generated for all posts
+  - [ ] An archive RSS XML should be importable to allow backing up a whole repository without resorting to SQL dumps
+- [ ] There should be options for how the posts are rendered. The minimal setting is title and link (or non-titled posts, the post body as link). A by line should be composable from the available front matter, e.g. author, datePublished and a byline prefix (e.g. "by", "from the desk of "). There should be an option as to weather or not to include the description or abstract. Look at citation citeproc description as a means of defining how items are listed
 - [ ] When I pass the collection on the command I should not require the ".md" filename
 - [ ] Figure out how I want to handle a list of links to posts, e.g. recent posts and archive of posts instead of feed reading posts
 - [X] init needs to create the default pages.md collection, that way Antenna will be able to manage
