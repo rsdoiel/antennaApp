@@ -12,7 +12,13 @@
 
 ## Up Next
 
-- [ ] the default collection shoul be antenna.db and antenna.md instead of pages.md
+- [ ] the default collection should be antenna.db and antenna.md instead of pages.md
+  - [ ] turotials should ordered as simple site (page), blog (post and page), feed reader (feed collection), news site (multiple feed collections)
+  - [ ] text fragment links as social connections
+- [ ] multiples feeds output from a feed collection
+  - [ ] recent (last N posts and items)
+  - [ ] archive (all posts, used to export/import purposes)
+  - [ ] commented on (feed of text fragment links by extracting "#:~:" links from posts)
 - [ ] Need an archive action for posts
   - [ ] An archive RSS XML should be generated for all posts
   - [ ] An archive RSS XML should be importable to allow backing up a whole repository without resorting to SQL dumps
