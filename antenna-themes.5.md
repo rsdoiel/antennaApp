@@ -1,4 +1,4 @@
-%antenna(5) user manual | version 0.0.16-gamma 55ec995
+%antenna(5) user manual | version 0.0.16 a3e68d1
 % R. S. Doiel
 % 2025-10-22
 

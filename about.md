@@ -20,7 +20,7 @@ may have it&#x27;s own theme.
 Features:
 
 - Makes it easy to generate a website only using Markdown
-- Makes it trivial to generate a blog, linkblog or feed reading site using Markdown
+- Makes it trivial to generate a blog, link blog or feed reading site using Markdown
 - supports as multiple feed collections per site
 - provides actions to automate most of your site curation leaving you time to focus on Markdown content
 - HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically
@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.16-gamma
+version: 0.0.16
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -53,7 +53,7 @@ date_released: 2025-10-22
 About this software
 ===================
 
-## antennaApp 0.0.16-gamma
+## antennaApp 0.0.16
 
 - posted support for including text and code blocks based on commonMarkDoc processor, includes are processed when parsing CommonMark documents
 - pages are now tracked in the default pages.md collection
@@ -90,7 +90,7 @@ may have it&#x27;s own theme.
 Features:
 
 - Makes it easy to generate a website only using Markdown
-- Makes it trivial to generate a blog, linkblog or feed reading site using Markdown
+- Makes it trivial to generate a blog, link blog or feed reading site using Markdown
 - supports as multiple feed collections per site
 - provides actions to automate most of your site curation leaving you time to focus on Markdown content
 - HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically

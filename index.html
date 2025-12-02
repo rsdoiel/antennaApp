@@ -22,55 +22,65 @@
 <h1 id="antennaapp">antennaApp</h1>
 <p><strong>antenna</strong> is a command line feed oriented content
 management tool. It let’s you create and curate micro blogs, blogs, link
-blogs, news and wiki websites using Markdown and a sprinkling of YAML<a
-href="#fn1" class="footnote-ref" id="fnref1"
-role="doc-noteref"><sup>1</sup></a>. It is inspired by Dave Winer’s <a
+blogs, news sites using Markdown and a sprinkling of YAML<a href="#fn1"
+class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. It
+is inspired by Dave Winer’s <a
 href="https://textcasting.org">Textcasting</a> and <a
 href="https://feedland.org">FeedLand</a> and my own experimental
 website, <a href="https://rsdoiel.github.io/antenna">antenna</a>.</p>
 <p>Antenna App’s Features:</p>
 <ul>
-<li>support for multiple collections of feeds, each defined by a simple
-Markdown document
+<li>Pages and posts are written using Markdown
 <ul>
-<li>a feed collection is a Markdown document containing a list of links
-to feeds</li>
+<li>Pages are excluded from feeds</li>
 </ul></li>
-<li>collections can be harvested individually or collectively</li>
-<li>harvested content is stored in a SQLite3 database</li>
+<li>Posts use metadata expressed as YAML front matter
+<ul>
+<li>Posts are included in feeds</li>
+</ul></li>
+<li>Support for multiple collections of feeds
+<ul>
+<li>A feed collection is defined by a Markdown document containing a
+list of links to feeds</li>
+</ul></li>
+<li>Collections can be harvested individually or collectively
+<ul>
+<li>harvested content is stored in a SQLite3 database(s)</li>
 <li>harvested content in a collection can be aggregated and rendered as
 an HTML page for reading</li>
-<li>Markdown documents can be imported into a collection as a feed item
-(e.g. as a blog post or micro blog post)</li>
-<li>RSS 2.0, OPML and HTML documents are generated per collection</li>
+<li>Posts are associated with a collection and are part of the output
+feeds</li>
+</ul></li>
+<li>HTML, RSS 2.0, OPML and sitemap.xml documents are automatically
+generated without additional configuration
+<ul>
 <li>HTML files are generated for each post or page</li>
-<li>Posts and pages are written using Markdown with metadata expressed
-as YAML front matter</li>
+</ul></li>
 <li>A preview feature to view the render content in your web browser via
 a localhost URL</li>
-<li>Page generators are implemented as a YAML file</li>
-<li>Page generators YAML files can composed using a “themed” using a
-directory populated with Markdown files for the theme elements<a
-href="#fn2" class="footnote-ref" id="fnref2"
+<li>Page generators YAML files can composed using a “themes”
+<ul>
+<li>themes are a directory populated with Markdown files for other theme
+elements<a href="#fn2" class="footnote-ref" id="fnref2"
 role="doc-noteref"><sup>2</sup></a></li>
-<li>plays well with other static website development tools</li>
+<li>Page generators are implemented as a YAML file, they are used to
+frame the Markdown content added a pages and posts</li>
+</ul></li>
+<li>Antenna plays well with other static website tools (e.g. PageFind,
+FlatLake)</li>
 </ul>
 <p>The ability to harvest feed items means we can read what others post
 on the web on our own website. Markdown content can be added to a feed
 allows us to comment on the items read (thus being social). This can all
 be run on localhost (our own computer) or staged for public Web
 consumption via a static host provider.</p>
-<p>Through YAML configuration files you can customize the HTML rendered
-by <strong>antenna</strong> on a per collection basis. That means it is
-possible to recreate a “news paper” like experience.</p>
 <p>While Antenna App was initially conceived as a link blogging tool, it
-doesn’t impose a directory structure on the site. It can be used for
-wiki like websites too (e.g. you could structure posts around topics
-expressed as paths).</p>
+doesn’t impose a directory structure on your site. It can be used for
+general purpose sites, blogs, microblogs and linkblogs too.</p>
 <p>A static website using <strong>antenna</strong> can grow through
 either enhancing the HTML markup defined in the YAML configuration,
-theming or through manipulation of the collection contents in the
-SQLite3 database. This provides opportunities to integrate with other
+through themes or through manipulation of the SQLite3 databases holding
+collection metadata. This provides opportunities to integrate with other
 static website tools like <a href="https://pagefind.app"
 title="A browser side search engine">PageFind</a> and <a
 href="https://flatlake.app"
@@ -82,11 +92,13 @@ blog.</p>
 <li>Doiel, R. S. Doiel</li>
 </ul>
 <h2 id="software-requirements">Software Requirements</h2>
+<p>Requirements top compile the Antenna App.</p>
 <ul>
-<li>Go &gt;= 1.25.2</li>
+<li>Go &gt;= 1.25.3</li>
 <li>CMTools &gt;= 0.0.40</li>
 </ul>
 <h3 id="software-suggestions">Software Suggestions</h3>
+<p>Helpful if you are developing the Antenna App.</p>
 <ul>
 <li>GNU Make &gt;= 3.4</li>
 <li>Pandoc &gt;= 3.1</li>
@@ -102,16 +114,18 @@ href="https://www.gnu.org/licenses/agpl-3.0.en.html">LICENSE</a></li>
 <li><a href="user_manual.html">User Manual</a></li>
 <li><a href="about.html">About</a></li>
 </ul>
-<section class="footnotes footnotes-end-of-document"
+<section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1" role="doc-endnote"><p>Configuration and metadata (front
-matter in Markdown) are maintained using YAML.<a href="#fnref1"
-class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2" role="doc-endnote"><p>A YAML file called head.yaml is used
-to describe custom meta, link and script elements in the page.<a
-href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1"><p>Configuration and metadata (front matter in Markdown)
+are maintained using YAML.<a href="#fnref1" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>A YAML file called head.yaml is used to describe custom
+meta, link and script elements in the page. There is a style.css file
+that can be included in a theme to be included in the head element of
+rendered HTML.<a href="#fnref2" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
 </section>
