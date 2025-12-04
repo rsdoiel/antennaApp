@@ -1,7 +1,7 @@
 package antennaApp
 
 import (
-//	"encoding/json"
+	//"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -14,6 +14,7 @@ import (
 type TextFragment struct {
 	Text    string    `json:"text,omitempty" yaml:"text,omitempty" xml:"text,omitempty"`
 	Link    string    `json:"link,omitempty" yaml:"link,omitempty" yaml:"text,omitempty"`
+	Host string `json:"host,omitempty" yaml:"host,omitempty" xml:"host,omitempty"`
 	Created time.Time `json:"created,omitemtpy" yaml:"created,omitempty" xml:"created,omitempt"`
 }
 
@@ -28,11 +29,21 @@ func ParseTextFragmentURL(s string) (*TextFragment, error) {
 	if err != nil {
 		return nil, err
 	}
-//	src, _ := json.MarshalIndent(u, "", "  ")
+	//src, _ := json.MarshalIndent(u, "", "  ") // DEBUG
+	//fmt.Printf("DEBUG src: %s\n", src) //DEBUG
 	tf := new(TextFragment)
 	tf.Link = s
 	tf.Text, err = url.QueryUnescape(u.Fragment)
-	tf.Text = strings.TrimPrefix(tf.Text, ":~:text=")
+	tf.Host = u.Hostname()
+	if strings.Contains(tf.Text, ":~:") {
+		parts := strings.SplitN(tf.Text, ":~:", 2)
+		fragment := parts[1]
+		if strings.Contains(fragment, "=") {
+			parts = strings.SplitN(fragment, "=", 2)
+			fragment = parts[1]
+		}
+		tf.Text = fragment
+	}
 	tf.Created = time.Now()
 	return tf, err
 }
@@ -47,8 +58,9 @@ func (app *AntennaApp) Reply(out io.Writer, cfgName string, args []string) error
 	if err != nil {
 		return fmt.Errorf("failed to parse, %q, %s", args[0], err)
 	}
-	fmt.Fprintf(out, "\n\n> %s\n\n[cited](%s) %s\n\n",
+	fmt.Fprintf(out, "\n\n> %s\n\n([%s](%s), accessed %s)\n\n",
 		strings.TrimSpace(tf.Text),
+		tf.Host,
 		strings.TrimSpace(tf.Link),
 		tf.Created.Format("2006-01-02"))
 	return nil
