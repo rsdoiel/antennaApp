@@ -119,7 +119,7 @@ It does not remove the page on disk, just from the collection so that it will no
 be used to create a corresponding HTML page when the generate action is run.
 
 pages [COLLECTION_NAME]
-: List the pages in a collection. Pages are ordered by descrending updated timestamp.
+: List the pages in a collection. Pages are ordered by descending updated timestamp.
 
 
 post [COLLECTION_NAME] FILEPATH
@@ -127,17 +127,20 @@ post [COLLECTION_NAME] FILEPATH
 used to specify things like the link to the post, guid, description, etc. If these are not
 provided then the post will display and error and not write the content to the
 post directory location or add it to the collections. Required front matter
-**title** or **description**, see
-RSS 2.0 defined at <https://cyber.harvard.eduPost like page will allow unsafe HTML to
-be used in the Markdown document unlike aggregated content./rss/rss.html#hrelementsOfLtitemgt>.
-To include a the file in the posts directory tree you need to provide a **postPath**.
-In that case it is also recommended you provide a value for **link** that reflects the
-public URL to where the post can be viewed. Post like page will allow unsafe HTML to
-be used in the Markdown document unlike aggregated content.
+**title** or **description**, see RSS 2.0 defined at
+<https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt>. To include a the file in
+the posts directory tree you need to provide a **postPath**. In that case it is also
+recommended you provide a value for **link** that reflects the public URL to where the
+post can be viewed. Post like page will allow unsafe HTML to be used in the Markdown
+document unlike aggregated content.
 
 unpost COLLECTION_NAME URL
 : Remove an item from a collection using the URL associated with the item.
 
+reply TEXT_FRAGMENT_URL
+: This will parse a TEXT_FRAGMENT_URL into a Markdown text. The text is
+written to standard out. You can redirect this into a file. The purpose of
+the "reply" action is to simply quoting another site for use in a post.
 
 The following commands are related to producing a link blog static website.
 

@@ -63,6 +63,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Sitemap(cfgName, args)
 	case "preview":
 		return app.Preview(cfgName)
+	case "reply":
+		return app.Reply(out, cfgName, args)
 	default:
 		return fmt.Errorf("%s not supported", action)
 	}
