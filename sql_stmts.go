@@ -118,6 +118,12 @@ FROM items
 WHERE (description != '' OR title = '') AND status = 'published'
 ORDER BY pubDate DESC, updated DESC;`
 
+	// SQLListPosts will list all published posts with a postPath by their descending pubDate
+	SQLListPosts = `SELECT link, title, pubDate, postPath
+FROM items
+WHERE pubDate IS NOT NULL AND pubDate != "" and postPath != ""
+ORDER BY pubDate DESC;`
+
 	// SQLSetStatusToReview
 	SQLUpdateStatusToReview = `UPDATE items SET status = 'review';`
 
@@ -151,6 +157,7 @@ ORDER BY updated desc
 FROM pages
 ORDER BY outputPath
 ;`
+
 	// SQLListPosts will list all posts by post path
 	SQLSitemapListPosts = `SELECT postPath as outputPath, updated
 FROM items

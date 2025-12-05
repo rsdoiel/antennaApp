@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.17
+version: 0.0.18
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -47,15 +47,16 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-12-03
+date_released: 2025-12-05
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.17
+## antennaApp 0.0.18
 
-- Added reply action which takes a text fragment URL and turns it into a Markdown text
+- Improved text fragment handling
+- Added posts action, this renders a Markdown list of all posts in a collection that have postPath set  and pubDate set
 
 ### Authors
 

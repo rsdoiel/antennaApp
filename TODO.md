@@ -1,6 +1,8 @@
 
 # TODO
 
+Ideas, not quite a roadmap
+
 ## Bugs
 
 - [ ] The RSS I'm producing isn't always valid for aggregated items
@@ -12,21 +14,31 @@
 
 ## Up Next
 
-- [ ] the default collection should be antenna.db and antenna.md instead of pages.md
-  - [ ] turotials should ordered as simple site (page), blog (post and page), feed reader (feed collection), news site (multiple feed collections)
-  - [ ] text fragment links as social connections
+- [ ] should the "reply" action have a different name? While my intension was to work with text fragment URLs, it could also be extended to format any URL as a Markdown output. If so it might make more sense to call it "link"
+- [ ] Look at the pttk bits I am still rely on for producing my personal website, see which make sense to fold into antennaApp
+- [ ] Look at https://www.seanh.cc/oatcake/ a CSS typography style that gives simple plain results, oriented to Markdown content.
+- [ ] FlatLake might be abandonware, hasn't be updated in two years and now doesn't compile cleanly. Figure out an alternative
+  - [ ] Why I don't want don't want to require programming, it'd be nice to have
+        a static JSON API available for people who were enhancing browser side
+        experiences
+        - A path like api/<COLLECTION_NAME>/<end points> is a nice
+        - The output of the API could actually be JSON, Markdown  and HTML so
+          it is still useful when JavaScript is disabled or unavailable
+        - The focus  of output would be front matter metadata and general URL details
+- [ ] tutorials should ordered as simple site (page), blog (post and page), feed reader (feed collection), news site (multiple feed collections)
+- [X] text fragment links as social connections
 - [ ] multiples feeds output from a feed collection
   - [ ] recent (last N posts and items)
   - [ ] archive (all posts, used to export/import purposes)
   - [ ] commented on (feed of text fragment links by extracting "#:~:" links from posts)
-- [ ] Need an archive action for posts
+- [ ] Need to generate archive listings collection
+  - [X] A Markdown list of all posts in a collection
   - [ ] An archive RSS XML should be generated for all posts
   - [ ] An archive RSS XML should be importable to allow backing up a whole repository without resorting to SQL dumps
-- [ ] There should be options for how the posts are rendered. The minimal setting is title and link (or non-titled posts, the post body as link). A by line should be composable from the available front matter, e.g. author, datePublished and a byline prefix (e.g. "by", "from the desk of "). There should be an option as to weather or not to include the description or abstract. Look at citation citeproc description as a means of defining how items are listed
-- [ ] When I pass the collection on the command I should not require the ".md" filename
+- [ ] There should be options for how the posts are rendered. The minimal setting is title, link and date (or non-titled posts, the post body as link). A by line should be composable from the available front matter, e.g. author, datePublished and a byline prefix (e.g. "by", "from the desk of "). There should be an option as to weather or not to include the description or abstract. Look at citation citeproc description as a means of defining how items are listed
+- [ ] When I pass the collection on the command I should not require the ".md" filename extension
 - [ ] Figure out how I want to handle a list of links to posts, e.g. recent posts and archive of posts instead of feed reading posts
-- [X] init needs to create the default pages.md collection, that way Antenna will be able to manage
-      collections pages and posts.
+- [X] init needs to create the default pages.md collection, that way Antenna will be able to manage collections pages and posts.
 - [ ] pages always go in the pages collection, this will let me generate a sitemap by taking the pages
       and posts from the pages collection along with the items from other collections and rendering out
       the appropriate sitemap.xml file(s).
@@ -56,7 +68,7 @@
   - [ ] An example should show how to integrated with with Pandoc, PageFind and FlatLake
 - [ ] Should antenna init also generate some sample CSS and JavaScript modules?
   - [ ] Should it setup for integrations with Pandoc, PageFind or FlatLake?
-- [ ] To make Antenna app more interesting  I need to include some sample themes other people would use. 
+- [ ] To make Antenna app more interesting  I need to include some sample themes other people would use
   - I could look over the websites for feeds followed in the Antenna website and see if I could recreate similar styles
   - I could look at the WP theme gallery for ideas and see what could be implemented
 - [ ] In the front matter defining a collection, should the link element require full URL or a partial one?

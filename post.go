@@ -179,6 +179,59 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath, sourceMarkdown)
 }
 
+func (app *AntennaApp) Posts(cfgName string, args []string) error {
+	cfg := &AppConfig{}
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
+	}
+	cName := "pages.md"
+	if len(args) == 1 {
+	    cName = strings.TrimSpace(args[0])
+	}
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return err
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(SQLListPosts)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	i := 0
+	for rows.Next() {
+		var (
+			link string
+			title string
+			pubDate string
+			postPath string
+		)
+		if err := rows.Scan(&link, &title, &pubDate, &postPath); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			continue
+		}
+		if strings.Contains(pubDate, "T") {
+			parts := strings.SplitN(pubDate, "T", 2)
+			pubDate = parts[0]
+		}
+		if i == 0 {
+			fmt.Println("")
+			i++
+		}
+		fmt.Printf("- [%s](%s), %s\n",
+		   title, postPath, pubDate)
+	}
+	fmt.Println("")
+
+	return nil
+}
+
 func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 	if len(args) != 2 {
 		return fmt.Errorf("expected a collection name and url in the collection")

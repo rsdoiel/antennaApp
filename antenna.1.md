@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.17 f32fc59
+%antenna(1) user manual | version 0.0.18 9ebe1f5
 % R. S. Doiel
-% 2025-12-03
+% 2025-12-05
 
 # NAME
 
@@ -117,6 +117,12 @@ document unlike aggregated content.
 
 unpost COLLECTION_NAME URL
 : Remove an item from a collection using the URL associated with the item.
+
+posts [COLLECTION_NAME]
+: List the posts in a collection expressed as a Markdown list. The post
+must contain both a pubDate value and postPath value. The list is in descending
+pubDate order. The list includes a Markdown link made of the title and postPath
+followed by the pubDate.
 
 reply TEXT_FRAGMENT_URL
 : This will parse a TEXT_FRAGMENT_URL into a Markdown text. The text is

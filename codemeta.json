@@ -12,8 +12,8 @@
     }
   ],
   "dateCreated": "2025-08-22",
-  "dateModified": "2025-12-03",
-  "datePublished": "2025-12-03",
+  "dateModified": "2025-12-05",
+  "datePublished": "2025-12-05",
   "description": "**antenna** is a tool for building feed oriented websites using Markdown.\nIf you can edit a Markdown list of links you can generate a static site\nRSS Reader with little effort beyond curating your list of links.\nYou can create simple websites make from the content of Markdown pages.\nYou can create blog by posting the Markdown documents to a collection.\nThe goal of **antenna** is to put you in control of the web content\nyou read or write through using Markdown.\n\n**antenna** automates must of the process of creating a site using Markdown\nfiles. It handles the creation of HTML, RSS, OPML and sitemap.xml for you. This\nlet's you focus on the content written in Markdown.\n\n**antenna** supports a simple theme system defined Markdown files used to\ndescribe page elements, a file to define page metadata and CSS files to define\nthe page's layout and presentation. Each collection defined for your site\nmay have it's own theme.\n\nFeatures:\n\n- Makes it easy to generate a website only using Markdown\n- Makes it trivial to generate a blog, link blog or feed reading site using Markdown\n- supports as multiple feed collections per site\n- provides actions to automate most of your site curation leaving you time to focus on Markdown content\n- HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically\n- A preview web server is provided so you can read the curated content on your computer\n- pages nice with other static site tools like  [PageFind](https://pagefind.app \"A browser side search engine\") and\n[FlatLake](https://flatlake.app \"A static JSON API driven by front matter in Markdown documents\")",
   "keywords": [
     "RSS",
@@ -35,10 +35,10 @@
     "Pandoc >= 3.1",
     "Bash or Powershell"
   ],
-  "version": "0.0.17",
+  "version": "0.0.18",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- Added reply action which takes a text fragment URL and turns it into a Markdown text",
+  "releaseNotes": "- Improved text fragment handling\n- Added posts action, this renders a Markdown list of all posts in a collection that have postPath set  and pubDate set",
   "copyrightYear": 2025,
   "copyrightHolder": "R. S. Doiel"
 }
