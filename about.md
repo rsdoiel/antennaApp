@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.18
+version: 0.0.19
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -47,16 +47,18 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-12-05
+date_released: 2025-12-06
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.18
+## antennaApp 0.0.19
 
-- Improved text fragment handling
-- Added posts action, this renders a Markdown list of all posts in a collection that have postPath set  and pubDate set
+- Improved posts action, allow for filtering by count and date ranges.
+- renamed "reply" action to  "quote" since that better describes the output
+  from the text fragment.
+- updated the "unpost" command to use with postPath or link to remove posts.
 
 ### Authors
 

@@ -14,7 +14,10 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
-- [ ] should the "reply" action have a different name? While my intension was to work with text fragment URLs, it could also be extended to format any URL as a Markdown output. If so it might make more sense to call it "link"
+- [ ] I need to be able to render RSS feeds based on posts (e.g. RSS for all posts, recent posts or date ranges of posts)
+- [X] add options for limiting posts actions to recent by count and date ranges
+- [X] should the "reply" action have a different name? While my intension was to work with text fragment URLs, it could also be extended to format any URL as a Markdown output. If so it might make more sense to call it "link"
+  - changing action name to "quote"
 - [ ] Look at the pttk bits I am still rely on for producing my personal website, see which make sense to fold into antennaApp
 - [ ] Look at https://www.seanh.cc/oatcake/ a CSS typography style that gives simple plain results, oriented to Markdown content.
 - [ ] FlatLake might be abandonware, hasn't be updated in two years and now doesn't compile cleanly. Figure out an alternative
@@ -57,6 +60,13 @@ Ideas, not quite a roadmap
 
 ## Thinking about
 
+- [ ] add an API action to generate posts and pages data to a JSON API
+- [ ] consider adding a server option that has a read/write API and used to host an antenna site (this would give us both static site capability AND dynamic interactive capability)
+  - The service would function on localhost
+  - Be designed to run behind a web server like Apache2 or NginX using reverse proxy
+- [ ] a variation of server action could be used to pulled together a graphical UI for the content system using Gnome-Web (or other browser)
+  - The service would listen on a localhost URL
+  - To limit access to the instance on the local machine we could strict using basic auth where a one time password is used along side the open action launching the browser
 - [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
   - [X] seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
   - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.

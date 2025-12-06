@@ -72,7 +72,7 @@ func generateSitemaps(cfg *AppConfig) error {
 		}
 		l, err := sitemap(cfg, col.DbName)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%q (%q) sitemap error, %s\n", col.File, col.DbName)
+			fmt.Fprintf(os.Stderr, "%q (%q) sitemap error, %s\n", col.File, col.DbName, err)
 		}
 		sitemapFiles = append(sitemapFiles, l...)
 	}

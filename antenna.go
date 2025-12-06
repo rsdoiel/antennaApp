@@ -65,8 +65,10 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Sitemap(cfgName, args)
 	case "preview":
 		return app.Preview(cfgName)
-	case "reply":
-		return app.Reply(out, cfgName, args)
+	case "reply": // FIXME: need to update blog post describing "reply" to use "quote", then remove this
+		return app.QuoteTextFragment(out, cfgName, args)
+	case "quote":
+		return app.QuoteTextFragment(out, cfgName, args)
 	default:
 		return fmt.Errorf("%s not supported", action)
 	}

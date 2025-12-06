@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -185,12 +186,12 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 		return err
 	}
 	cName := "pages.md"
-	if len(args) == 1 {
+	if len(args) > 0 {
 	    cName = strings.TrimSpace(args[0])
 	}
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s, %s", cName, err)
 	}
 	dsn := collection.DbName
 	db, err := sql.Open("sqlite", dsn)
@@ -199,11 +200,36 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 	}
 	defer db.Close()
 
-	rows, err := db.Query(SQLListPosts)
-	if err != nil {
-		return err
+	// NOTES: posts action supports three different SQL statements
+	var (
+		rows *sql.Rows
+	)
+	switch {
+	case len(args) == 3:
+		fromDate, toDate := args[1], args[2]
+		rows, err = db.Query(SQLListDateRangePosts, fromDate, toDate)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLListDateRangePosts, dsn, err)
+		}
+	case len(args) == 2:
+		count, err := strconv.Atoi(args[1])
+		if err != nil {
+			return err
+		}
+		rows, err = db.Query(SQLListRecentPosts, count)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLListRecentPosts, dsn, err)
+		}
+	default:
+		rows, err = db.Query(SQLListPosts)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLListPosts, dsn, err)
+		}
 	}
-	defer rows.Close()
+	if rows != nil {
+		defer rows.Close()
+	}
+
 	i := 0
 	for rows.Next() {
 		var (
@@ -276,7 +302,7 @@ func updateItem(db *sql.DB, link string, title string, description string, autho
 }
 
 func removeItem(db *sql.DB, link string) error {
-	_, err := db.Exec(SQLDeleteItemByLink, link)
+	_, err := db.Exec(SQLDeleteItemByLinkOrPostPath, link, link)
 	if err != nil {
 		return err
 	}

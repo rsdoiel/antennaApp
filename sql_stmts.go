@@ -114,14 +114,33 @@ ORDER by title, link
   enclosures, guid, pubDate, dcExt,
   channel, status, updated, label,
   postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
-FROM items
-WHERE (description != '' OR title = '') AND status = 'published'
+FROM items WHERE (description != '' OR title = '') AND status = 'published'
 ORDER BY pubDate DESC, updated DESC;`
 
 	// SQLListPosts will list all published posts with a postPath by their descending pubDate
 	SQLListPosts = `SELECT link, title, pubDate, postPath
 FROM items
-WHERE pubDate IS NOT NULL AND pubDate != "" and postPath != ""
+WHERE (pubDate IS NOT NULL) AND 
+   (pubDate != "") AND
+   (postPath != "")
+ORDER BY pubDate DESC;`
+
+	// SQLListRecentPosts will list recent published posts with a postPath by their descending pubDate
+	SQLListRecentPosts = `SELECT link, title, pubDate, postPath
+FROM items
+WHERE (pubDate IS NOT NULL) AND 
+   (pubDate != "") AND
+   (postPath != "")
+ORDER BY pubDate DESC
+LIMIT ?;`
+
+	// SQLListDateRangePosts will list all published posts with a postPath by their descending pubDate
+	SQLListDateRangePosts = `SELECT link, title, pubDate, postPath
+FROM items
+WHERE (pubDate IS NOT NULL) AND 
+   (postPath != "") AND
+   (pubDate >= ?) AND
+   (pubDate <= ?)
 ORDER BY pubDate DESC;`
 
 	// SQLSetStatusToReview
@@ -131,8 +150,8 @@ ORDER BY pubDate DESC;`
 	// Items have a published date greater than or equal to the date provided.
 	SQLSetStatusPublishedForRecentlyPublished = `UPDATE items SET status = 'published' WHERE pubDate >= date('now', '-21 days');`
 
-	// SQLDeleteItemByLink removes an item in the items table with provided link
-	SQLDeleteItemByLink = `DELETE FROM items WHERE link = ?`
+	// SQLDeleteItemByLinkOrPostPath removes an item in the items table with provided link
+	SQLDeleteItemByLinkOrPostPath = `DELETE FROM items WHERE link = ? OR postPath = ?`
 
 	// Update a feed item in the items table
 	SQLUpdatePage = `INSERT INTO pages (
@@ -159,7 +178,12 @@ ORDER BY outputPath
 ;`
 
 	// SQLListPosts will list all posts by post path
-	SQLSitemapListPosts = `SELECT postPath as outputPath, updated
+	SQLSitemapListPosts = `SELECT 
+	 CASE
+        WHEN postPath LIKE '%.md' THEN REPLACE(postPath, '.md', '.html')
+        ELSE postPath
+    END as outputPath,
+	updated
 FROM items
 WHERE pubDate IS NOT NULL AND pubDate != ""
 ORDER BY postPath;`

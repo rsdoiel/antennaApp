@@ -163,7 +163,7 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	defer db.Close()
 	timestamp := time.Now().Format(time.RFC3339)
 	if _, err := db.Exec(SQLUpdatePage, fName, oName, timestamp); err != nil {
-		return err
+		return fmt.Errorf("%s, %s", dbName, err)
 	}
 	return nil
 }
@@ -190,7 +190,7 @@ func (app *AntennaApp) Unpage(cfgName string, args []string) error {
 	defer db.Close()
 
 	if _, err := db.Exec(SQLDeletePageByPath, fName, oName); err != nil {
-		return err
+		return fmt.Errorf("%s, %s", dbName, err)
 	}
 	return nil
 }
@@ -211,7 +211,7 @@ func (app *AntennaApp) Pages(cfgName string, args []string) error {
 
 	rows, err := db.Query(SQLDisplayPage)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s, %s", dbName, err)
 	}
 	defer rows.Close()
 

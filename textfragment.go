@@ -48,9 +48,9 @@ func ParseTextFragmentURL(s string) (*TextFragment, error) {
 	return tf, err
 }
 
-// Reply takes a text fragment URL and writes a Markdown text from it to
+// QuoteTextFragment takes a text fragment URL and writes a Markdown text from it to
 // standard  output.
-func (app *AntennaApp) Reply(out io.Writer, cfgName string, args []string) error {
+func (app *AntennaApp) QuoteTextFragment(out io.Writer, cfgName string, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("expected a text fragment URL to parse")
 	}

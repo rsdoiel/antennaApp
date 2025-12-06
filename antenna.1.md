@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.18 1be19b6
+%antenna(1) user manual | version 0.0.19 f135272
 % R. S. Doiel
-% 2025-12-05
+% 2025-12-06
 
 # NAME
 
@@ -83,7 +83,7 @@ the Front Matter of the Markdown document.
 del COLLECTION_FILE
 : Remove a collection from the Antenna configuration.
 
-page INPUT_PATH [OUTPUT_PATH]
+page COLLECTION_NAME INPUT_PATH [OUTPUT_PATH]
 : This will create a standalone HTML page in a collection called pages.db (created
 by the init action). It uses the default page generator defined in the antenna.yaml
 if one is not specifically set for the pages.db collection. The pages command reads
@@ -94,7 +94,7 @@ like an about page, home page, and search page. __The Markdown processed via pag
 action will allow "unsafe" HTML to pass through. Only use page if you trust the
 Markdown document!!!__)
 
-unpage INPUT_PATH
+unpage COLLECTION_NAME INPUT_PATH
 : This will will remove a page's from a collection based in the input filepath provided.
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
@@ -115,19 +115,22 @@ recommended you provide a value for **link** that reflects the public URL to whe
 post can be viewed. Post like page will allow unsafe HTML to be used in the Markdown
 document unlike aggregated content.
 
-unpost COLLECTION_NAME URL
-: Remove an item from a collection using the URL associated with the item.
+unpost COLLECTION_NAME URL | POST_PATH
+: Remove an item from a collection using the URL associated with the item. You can
+provide either the full URL or the POST_PATH value to trigger the removal.
 
-posts [COLLECTION_NAME]
+posts COLLECTION_NAME [COUNT | FROM_DATE TO_DATE]
 : List the posts in a collection expressed as a Markdown list. The post
 must contain both a pubDate value and postPath value. The list is in descending
 pubDate order. The list includes a Markdown link made of the title and postPath
-followed by the pubDate.
+followed by the pubDate. If you provide the optional elements then the list will
+be constrained by a count or time range. COUNT  is an integer, FROM_DATE and TO_DATE
+are dates in the YYYY-MM-DD format.
 
-reply TEXT_FRAGMENT_URL
+quote TEXT_FRAGMENT_URL
 : This will parse a TEXT_FRAGMENT_URL into a Markdown text. The text is
 written to standard out. You can redirect this into a file. The purpose of
-the "reply" action is to simply quoting another site for use in a post.
+the "quote" action is to simply quoting another site for use in a post.
 
 The following commands are related to producing a link blog static website.
 
@@ -139,6 +142,10 @@ Antenna YAML configuration are harvested.
 generate [COLLECTION_NAME]
 : This process the collections rendering HTML pages and RSS 2.0 feeds for each collection.
 If the collection name is provided then only that HTML page will be generated.
+
+sitemap
+: This will generate a set of sitemap files for pages and posts found through the
+antenna.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
 
 preview
 : Let's your preview the rendered your Antenna instance as a localhost website using
