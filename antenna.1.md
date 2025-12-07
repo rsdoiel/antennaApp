@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.19 f135272
+%antenna(1) user manual | version 0.0.19 d754a1e
 % R. S. Doiel
 % 2025-12-06
 
@@ -126,6 +126,10 @@ pubDate order. The list includes a Markdown link made of the title and postPath
 followed by the pubDate. If you provide the optional elements then the list will
 be constrained by a count or time range. COUNT  is an integer, FROM_DATE and TO_DATE
 are dates in the YYYY-MM-DD format.
+
+rss COLLECTION_NAME RSS_FILENAME [COUNT | FROM_DATE TO_DATE]
+: Generate an RSS feed from posts. The optional parameters are applied
+like the posts action.
 
 quote TEXT_FRAGMENT_URL
 : This will parse a TEXT_FRAGMENT_URL into a Markdown text. The text is

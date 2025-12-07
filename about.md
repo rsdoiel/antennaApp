@@ -56,9 +56,14 @@ About this software
 ## antennaApp 0.0.19
 
 - Improved posts action, allow for filtering by count and date ranges.
-- renamed "reply" action to  "quote" since that better describes the output
+- added an alias for "reply" action of  "quote" since that better describes the output
   from the text fragment.
 - updated the "unpost" command to use with postPath or link to remove posts.
+- fixed bug in sitemap for posts inclusion where the Markdown extension was used
+  instead the HTML filename
+- fixed missing sitemap docs in helptext.go
+- add "rss" action which will generate an RSS feed using the same select
+  process as the "pages" action.
 
 ### Authors
 
@@ -118,6 +123,6 @@ Features:
 
 - GNU Make &gt;&#x3D; 3.4
 - Pandoc &gt;&#x3D; 3.1
-- Bash or Powershell
+- Bash or PowerShell
 
 

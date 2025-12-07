@@ -20,11 +20,17 @@
 </nav>
 <section>
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.18">antennaApp 0.0.18</h2>
+<h2 id="antennaapp-0.0.19">antennaApp 0.0.19</h2>
 <ul>
-<li>Improved text fragment handling</li>
-<li>Added posts action, this renders a Markdown list of all posts in a
-collection that have postPath set and pubDate set</li>
+<li>Improved posts action, allow for filtering by count and date
+ranges.</li>
+<li>renamed “reply” action to “quote” since that better describes the
+output from the text fragment.</li>
+<li>updated the “unpost” command to use with postPath or link to remove
+posts.</li>
+<li>fixed bug in sitemap for posts inclusion where the Markdown
+extension was used instead the HTML filename</li>
+<li>fixed missing sitemap docs in helptext.go</li>
 </ul>
 <h3 id="authors">Authors</h3>
 <ul>

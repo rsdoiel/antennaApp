@@ -308,3 +308,69 @@ func removeItem(db *sql.DB, link string) error {
 	}
 	return nil
 }
+
+
+// RssPosts, gernate RSS to stdout for posts
+func (app *AntennaApp) RssPosts(cfgName string, args []string) error {
+	cfg := &AppConfig{}
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
+	}
+	cName := "pages.md"
+	rssFeed := ""
+	if len(args) > 0 {
+	    cName = strings.TrimSpace(args[0])
+	} else {
+		return fmt.Errorf("missing collection to use for RSS feed")
+	}
+	if len(args) > 1 {
+		rssFeed = strings.TrimSpace(args[1])
+	} else {
+		return fmt.Errorf("missing RSS filename to generate")
+	}
+	feedLink := fmt.Sprintf("%s/%s", cfg.BaseURL, rssFeed)
+	out, err := os.Create(rssFeed)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return fmt.Errorf("%s, %s", cName, err)
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// NOTES: posts action supports three different SQL statements
+	var (
+		sqlStmt string
+	)
+
+	gen, err := NewGenerator(app.appName, cfg.BaseURL)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case len(args) == 4:
+		fromDate, toDate := args[2], args[3]
+		sqlStmt = fmt.Sprintf(SQLRssDateRangePosts, fromDate, toDate)
+	case len(args) == 3:
+		count, err := strconv.Atoi(args[2])
+		if err != nil {
+			return fmt.Errorf("%q, %s", args[2], err)
+		}
+		sqlStmt = fmt.Sprintf(SQLRssRecentPosts, count)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLRssRecentPosts, dsn, err)
+		}
+	default:
+		sqlStmt = SQLRssPosts
+	}
+	return gen.WriteCustomRSS(out, db, sqlStmt, feedLink, app.appName, collection)
+}

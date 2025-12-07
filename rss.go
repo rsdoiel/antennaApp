@@ -123,6 +123,11 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 			feedLink = fmt.Sprintf("%s/%s", gen.BaseURL, collection.Link)
 		}
 	}
+	return gen.WriteCustomRSS(out, db, SQLDisplayItems, feedLink, appName, collection)
+}
+
+// WriteCustomRSS generates a custom RSS feed given a SQL statement
+func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, feedLink string, appName string, collection *Collection) error {
 	fmt.Fprintf(out, `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:source="https://source.scripting.com/">
   <atom:link href=%q rel="self" type="application/rss+xml" />
@@ -172,8 +177,9 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 `, appName, Version)
 
 	// Setup  items
-	stmt := SQLDisplayItems
-	rows, err := db.Query(stmt)
+	//stmt := SQLDisplayItems
+	//rows, err := db.Query(stmt)
+	rows, err := db.Query(sqlStmt)
 	if err != nil {
 		return err
 	}

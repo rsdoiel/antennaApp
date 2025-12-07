@@ -55,6 +55,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Page(cfgName, args)
 	case "pages":
 		return app.Pages(cfgName, args)
+	case "rss":
+		return app.RssPosts(cfgName, args)
 	case "unpage":
 		return app.Unpage(cfgName, args)
 	case "harvest":

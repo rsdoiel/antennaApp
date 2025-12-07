@@ -117,20 +117,55 @@ ORDER by title, link
 FROM items WHERE (description != '' OR title = '') AND status = 'published'
 ORDER BY pubDate DESC, updated DESC;`
 
-	// SQLListPosts will list all published posts with a postPath by their descending pubDate
-	SQLListPosts = `SELECT link, title, pubDate, postPath
+	// SQLRssPosts generate an RSS feed for all posts
+	SQLRssPosts = `SELECT link, title, description, authors,
+  enclosures, guid, pubDate, dcExt,
+  channel, status, updated, label,
+  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
 FROM items
 WHERE (pubDate IS NOT NULL) AND 
    (pubDate != "") AND
    (postPath != "")
 ORDER BY pubDate DESC;`
 
+	// SQLRssRecentPosts generate an RSS feed for recent posts
+	SQLRssRecentPosts = `SELECT link, title, description, authors,
+  enclosures, guid, pubDate, dcExt,
+  channel, status, updated, label,
+  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
+FROM items
+WHERE (pubDate IS NOT NULL) AND 
+   (pubDate != '') AND
+   (postPath != '')
+ORDER BY pubDate DESC
+LIMIT %d;`
+
+	// SQLRssDateRangePosts generate an RSS feed for recent posts
+	SQLRssDateRangePosts = `SELECT link, title, description, authors,
+  enclosures, guid, pubDate, dcExt,
+  channel, status, updated, label,
+  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
+FROM items
+WHERE (pubDate IS NOT NULL) AND 
+   (postPath != '') AND
+   (pubDate >= '%s') AND
+   (pubDate <= '%s')
+ORDER BY pubDate DESC;`
+
+	// SQLListPosts will list all published posts with a postPath by their descending pubDate
+	SQLListPosts = `SELECT link, title, pubDate, postPath
+FROM items
+WHERE (pubDate IS NOT NULL) AND 
+   (pubDate != '') AND
+   (postPath != '')
+ORDER BY pubDate DESC;`
+
 	// SQLListRecentPosts will list recent published posts with a postPath by their descending pubDate
 	SQLListRecentPosts = `SELECT link, title, pubDate, postPath
 FROM items
 WHERE (pubDate IS NOT NULL) AND 
-   (pubDate != "") AND
-   (postPath != "")
+   (pubDate != '') AND
+   (postPath != '')
 ORDER BY pubDate DESC
 LIMIT ?;`
 
@@ -138,7 +173,7 @@ LIMIT ?;`
 	SQLListDateRangePosts = `SELECT link, title, pubDate, postPath
 FROM items
 WHERE (pubDate IS NOT NULL) AND 
-   (postPath != "") AND
+   (postPath != '') AND
    (pubDate >= ?) AND
    (pubDate <= ?)
 ORDER BY pubDate DESC;`
