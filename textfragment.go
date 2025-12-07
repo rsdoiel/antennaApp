@@ -14,7 +14,7 @@ import (
 type TextFragment struct {
 	Text    string    `json:"text,omitempty" yaml:"text,omitempty" xml:"text,omitempty"`
 	Link    string    `json:"link,omitempty" yaml:"link,omitempty" yaml:"text,omitempty"`
-	Host string `json:"host,omitempty" yaml:"host,omitempty" xml:"host,omitempty"`
+	Host    string    `json:"host,omitempty" yaml:"host,omitempty" xml:"host,omitempty"`
 	Created time.Time `json:"created,omitemtpy" yaml:"created,omitempty" xml:"created,omitempt"`
 }
 
@@ -29,8 +29,6 @@ func ParseTextFragmentURL(s string) (*TextFragment, error) {
 	if err != nil {
 		return nil, err
 	}
-	//src, _ := json.MarshalIndent(u, "", "  ") // DEBUG
-	//fmt.Printf("DEBUG src: %s\n", src) //DEBUG
 	tf := new(TextFragment)
 	tf.Link = s
 	tf.Text, err = url.QueryUnescape(u.Fragment)

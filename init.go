@@ -29,7 +29,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	// Check if antenna.yaml exists, confirm I can read it.
 	cfg := &AppConfig{}
 	if _, err := os.Stat(fName); err == nil {
-	    fmt.Printf("using %s\n", fName)
+		fmt.Printf("using %s\n", fName)
 		src, err := os.ReadFile(fName)
 		if err != nil {
 			return err
@@ -38,7 +38,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 			return err
 		}
 	} else {
-	    fmt.Printf("creating %s\n", fName)
+		fmt.Printf("creating %s\n", fName)
 		cfg.Htdocs = ""
 		cfg.Port = 8000
 		cfg.BaseURL = "http://localhost:8000"
@@ -50,7 +50,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 		cfg.Host = "localhost"
 	}
 	if cfg.BaseURL == "" {
-		cfg.BaseURL = fmt.Sprintf("http://%s:%s", cfg.Host, cfg.Port)
+		cfg.BaseURL = fmt.Sprintf("http://%s:%d", cfg.Host, cfg.Port)
 	}
 
 	if cfg.Htdocs != "" {
@@ -77,16 +77,16 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 			return fmt.Errorf("failed to created %s, %s", cName, err)
 		}
 	} else {
-	    fmt.Printf("using existing %s\n", cName)
+		fmt.Printf("using existing %s\n", cName)
 	}
-	
+
 	if _, err := os.Stat(dbName); err != nil {
 		fmt.Printf("Adding %s\n", cName)
 		if err := app.Add(cfgName, []string{cName}); err != nil {
 			return fmt.Errorf("failed to create default collection, %s, %s", cName, err)
 		}
 	} else {
-	    fmt.Printf("using existing %s\n", dbName)
+		fmt.Printf("using existing %s\n", dbName)
 	}
 	return nil
 }

@@ -35,7 +35,7 @@ import (
 // Post will add a CommonMark document as a feed item and if the postPath and link
 // are provided it will convert the CommonMark document to HTML and save it in the postPath.
 func (app *AntennaApp) Post(cfgName string, args []string) error {
-	if len(args) < 1  {
+	if len(args) < 1 {
 		return fmt.Errorf("expected a Markdown filename or collection name and Markdown filename")
 	}
 	cfg := &AppConfig{}
@@ -44,9 +44,9 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	}
 	cName, fName := "pages.md", ""
 	if len(args) == 1 {
-	    fName = strings.TrimSpace(args[0])
+		fName = strings.TrimSpace(args[0])
 	} else {
-    	cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+		cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
 	}
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
@@ -187,7 +187,7 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 	}
 	cName := "pages.md"
 	if len(args) > 0 {
-	    cName = strings.TrimSpace(args[0])
+		cName = strings.TrimSpace(args[0])
 	}
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
@@ -233,9 +233,9 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 	i := 0
 	for rows.Next() {
 		var (
-			link string
-			title string
-			pubDate string
+			link     string
+			title    string
+			pubDate  string
 			postPath string
 		)
 		if err := rows.Scan(&link, &title, &pubDate, &postPath); err != nil {
@@ -251,7 +251,7 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 			i++
 		}
 		fmt.Printf("- [%s](%s), %s\n",
-		   title, postPath, pubDate)
+			title, postPath, pubDate)
 	}
 	fmt.Println("")
 
@@ -309,7 +309,6 @@ func removeItem(db *sql.DB, link string) error {
 	return nil
 }
 
-
 // RssPosts, gernate RSS to stdout for posts
 func (app *AntennaApp) RssPosts(cfgName string, args []string) error {
 	cfg := &AppConfig{}
@@ -319,7 +318,7 @@ func (app *AntennaApp) RssPosts(cfgName string, args []string) error {
 	cName := "pages.md"
 	rssFeed := ""
 	if len(args) > 0 {
-	    cName = strings.TrimSpace(args[0])
+		cName = strings.TrimSpace(args[0])
 	} else {
 		return fmt.Errorf("missing collection to use for RSS feed")
 	}

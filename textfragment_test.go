@@ -1,8 +1,9 @@
 package antennaApp
 
 import (
-	"fmt"
+	//"fmt"
 	"testing"
+	"strings"
 )
 
 // TestParse tests the Parse method that returns a TextFragment struct and error
@@ -18,11 +19,14 @@ func TestParse(t *testing.T) {
 	// NOTE: With Firefox I could not copy the whole paragraph. Not sure if this this to limit the URL length or
 	// was that content would have cause issues in interpretation.
 	// I was trying to highlight this: `A Text Fragment (scroll-to-text) link lets you create URLs that automatically scroll to and highlight specific text on a web page using the #:~:text= syntax. Supported by Chrome and other Chromium-based browsers, this feature is perfect for sharing quotes, emphasizing content, or linking directly to important passages. `
-	for _, link := range testLinks {
+	for i, link := range testLinks {
 		tf, err := ParseTextFragmentURL(link)
 		if err != nil {
 			t.Error(err)
 		}
-		fmt.Printf("DEBUG tf.Text -> %s\ntf.Link -> %s\n", tf.Text, tf.Link)
+		if ! strings.Contains(tf.Link, testLinks[i]) {
+			t.Errorf("expected tf.link, %q in %q", testLinks[i], tf.Link)
+		}
+		//fmt.Printf("DEBUG tf.Text -> %s\ntf.Link -> %s\n", tf.Text, tf.Link)
 	}
 }

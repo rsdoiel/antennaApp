@@ -24,13 +24,15 @@
 <ul>
 <li>Improved posts action, allow for filtering by count and date
 ranges.</li>
-<li>renamed “reply” action to “quote” since that better describes the
-output from the text fragment.</li>
+<li>added an alias for “reply” action of “quote” since that better
+describes the output from the text fragment.</li>
 <li>updated the “unpost” command to use with postPath or link to remove
 posts.</li>
 <li>fixed bug in sitemap for posts inclusion where the Markdown
 extension was used instead the HTML filename</li>
 <li>fixed missing sitemap docs in helptext.go</li>
+<li>add “rss” action which will generate an RSS feed using the same
+select process as the “pages” action.</li>
 </ul>
 <h3 id="authors">Authors</h3>
 <ul>
@@ -88,7 +90,7 @@ class="uri">https://github.com/rsdoiel/antennaApp/issues</a></p></li>
 <ul>
 <li>GNU Make &gt;= 3.4</li>
 <li>Pandoc &gt;= 3.1</li>
-<li>Bash or Powershell</li>
+<li>Bash or PowerShell</li>
 </ul>
 </section>
 </body>
