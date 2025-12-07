@@ -30,7 +30,7 @@ PACKAGE = $(shell ls -1 *.go)
 
 VERSION = $(shell grep '"version":' codemeta.json | cut -d\"  -f 4)
 
-BRANCH = $(shell git branch | grep '* ' | cut -d  -f 2)
+BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
 
 OS = $(shell uname)
 
