@@ -1,53 +1,55 @@
 
 
-# antennaApp
+# Antenna App
 
-**antenna** is a command line feed oriented content management tool. It let's you create and curate micro blogs, blogs, link blogs, news sites using Markdown and a sprinkling of YAML[^1]. It is inspired by Dave Winer's [Textcasting](https://textcasting.org) and [FeedLand](https://feedland.org) and my own experimental website, [antenna](https://rsdoiel.github.io/antenna).
-
-[^1]: Configuration and metadata (front matter in Markdown) are maintained using YAML.
+**antenna** is a command line feed oriented content management tool. It let's you create and curate simple website, micro blogs, blogs, link blogs, and person news sites using Markdown. It was inspired by Dave Winer's [Textcasting](https://textcasting.org) concept, [FeedLand](https://feedland.org) and my own experimental website, [antenna](https://rsdoiel.github.io/antenna). The goal of the Antenna App is to make it easy for writers create web sites without being required to be web developers or software engineers.
 
 Antenna App's Features:
 
 - Pages and posts are written using Markdown
-  - Pages are excluded from feeds
-- Posts use metadata expressed as YAML front matter
-  - Posts are included in feeds
-- Support for multiple collections of feeds
-  - A feed collection is defined by a Markdown document containing a list of links to feeds
+- Posts are automatically included in an RSS feed for your site
+- Aggregations of feeds can be included by providing Markdown list of links to RSS, Atom and JSON feeds
+- Pages, posts and aggregations can include metadata expressed as YAML front matter[^1]
+- Posts can be added to curated feed collection too
+- You can have multiple collections of feeds
 - Collections can be harvested individually or collectively
-  - harvested content is stored in a SQLite3 database(s)
-  - harvested content in a collection can be aggregated and rendered as an HTML page for reading
-  - Posts are associated with a collection and are part of the output feeds
+- The managed content is stored in SQLite3 database(s)
 - HTML, RSS 2.0, OPML and sitemap.xml documents are automatically generated without additional configuration
-  - HTML files are generated for each post or page 
+  - HTML files are generated for each post, page and aggregation collection 
 - A preview feature to view the render content in your web browser via a localhost URL
-- Page generators YAML files can composed using a "themes"
-  - themes are a directory populated with Markdown files for other theme elements[^2]
+- Site customization is possible through the use of page generators
+  - Page generators YAML files describing basic elements of a page, header, navigation, before/after content section, footer
+  - Custom page generators are composed by apply "themes"
+  - Themes are a directory populated with Markdown files describing each element of the theme[^2]
   - Page generators are implemented as a YAML file, they are used to frame the Markdown content added a pages and posts
-- Antenna plays well with other static website tools (e.g. PageFind, FlatLake)
+  - Each collection may contain its own page generator
+- Antenna App plays well with other static website tools (e.g. PageFind)
+
+[^1]: YAML is a simple notation describing structed data. Front matter is a block of text hodling metadata about the document. Using YAML Front Matter is a common practice in the Markdown community. I first encountered it in the data science community and other scholarly science communities.
 
 [^2]: A YAML file called head.yaml is used to describe custom meta, link and script elements in the page. There is a style.css file that can be included in a theme to be included in the head element of rendered HTML.
 
-The ability to harvest feed items means we can read what others post on the web on our own website. Markdown content can be added to a feed allows us to comment on the items read (thus being social). This can all be run on localhost (our own computer) or staged for public Web consumption via a static host provider.
+The combined features of Antenna App go beyond most static site generators. It provides a means of making collaboritive website through the ability to import feeds from one or more people. You can add your own Markdown content to a feed allowing for commentary in a specific feed collection. Feed orientation allows Antenna App sites to be social without turning over atonomy of our content to another site. 
 
-While Antenna App was initially conceived as a link blogging tool, it doesn't impose a directory structure on your site. It can be used for general purpose sites, blogs, microblogs and linkblogs too.
-
-A static website using **antenna** can grow through either enhancing the HTML markup defined in the YAML configuration, through themes or through manipulation of the SQLite3 databases holding collection metadata. This provides opportunities to integrate with other static website tools like [PageFind](https://pagefind.app "A browser side search engine") and [FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents"). You can even use **antenna** to augment your existing blog.
+I believe Antenna App is well suited for creating local community sites where each contributed produces a feed of articles that are then linked from a common website. This could be used for aggregating content of special interest groups or for local neighborhood news sites. The site doing the aggregation can control those feed items to be published allowing for editorial control. Since this runs on your computer you don't need to run specialized services hosted on the public web. You get the flexibity of a dynamic system with the low overhead and high availability provided by static websites.
 
 ### Authors
 
-- Doiel, R. S. Doiel
+- Doiel, R. S. DoielHelpful if you are developing the Antenna App.
+
 
 ## Software Requirements
 
-Requirements top compile the Antenna App.
+To run Antenna App you just need to [install](INSTALL.md) it on a Raspberry Pi, Linux, macOS or Windows computer.
+
+Requirements top compile the Antenna App from source code.
 
 - Go >= 1.25.3
 - CMTools >= 0.0.40
 
 ### Software Suggestions
 
-Helpful if you are developing the Antenna App.
+The following are helpful if you want to develop or customize the Antenna App software.
 
 - GNU Make >= 3.4
 - Pandoc >= 3.1
