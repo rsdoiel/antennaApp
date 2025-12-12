@@ -14,6 +14,8 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] The interactive terminal interface lead the user to compose the commands available directly form the command line to re-enforce what the program will actually do for them.
+  - [ ] Filter is often a feature that causes confusion, the interactive terminal interface should provide human friendly guidence for forming a filter and provide an option of saving it as the default filter to apply for a specific feed or executing the filter as a one off. This guidence should be reproducible in the command line interface too as well as show SQL implementation as needed
 - [ ] Need a way to current items in a collection and set their publication status easily
   - [ ] A terminal based CUI
   - [ ] A localhost WUI

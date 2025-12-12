@@ -21,16 +21,63 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // CurateCollection displays items in a collection so you can select items for publication
-func (app *AntennaApp) CurateItems(collection *Collection) error {
-	return fmt.Errorf("CutateItems not implemented")
+func curateItems(collection *Collection) error {
+	return fmt.Errorf("curateItems not implemented")
 }
 
 func clearScreen() {
 	// ANSI escape code to clear the screen and move the cursor to the top-left
 	fmt.Print("\033[H\033[2J")
+}
+
+// createCollections provides the prompts to add a new collection 
+func createCollection(params []string) error {
+	return fmt.Errorf("createCollection not implemented")
+}
+
+// editCollections provides the prompts to edit an existing collection 
+func editCollection(params []string) error {
+	return fmt.Errorf("editCollection not implemented")
+}
+
+// removeCollection provides the prompts to delete a collection	scanner := bufio.NewScanner(os.Stdin)
+func removeCollection(params []string) error {
+	return fmt.Errorf("removeCollection not implemented")
+}
+
+// helpCollectionMenu explains how the options in the collection menu
+func helpCollectionMenu() {
+	clearScreen()
+	fmt.Printf(`
+
+Collection menu options. Commands have the following form.
+
+  MENU_NUMBER ENTER_KEY
+  ACTION [PARAMETERS] ENTER_KEY
+
+Choices:	scanner := bufio.NewScanner(os.Stdin)
+	clearScreen()
+	for quit := false; quit == false; {
+		// - A List collections
+
+
+- To curate a collection's items, type in the menu number and
+  press enter
+- To create a new collection type in "n" or "new", a space then
+  the collection name and press enter
+- To edit a collection's metadata type in "edit", a space then the
+  menu number for the collection and press enter
+- To remove a collection type "remove", a space and the menu number
+  for the collection you want to remove.
+- To view help type "h" or "help" and press enter
+- To quit type "q" or "quit" and press the enter
+
+Press enter to exit help.
+`)
 }
 
 // Curate provides a simple terminal interface to curating feed items for publication in your Antenna site.
@@ -40,32 +87,52 @@ func (app *AntennaApp) Curate(cfgName string, args []string) error {
 		return err
 	}
 	if cfg.Collections == nil || len(cfg.Collections) == 0 {
-		return fmt.Errorf("no collections found in  %s", cfgName)
+		return fmt.Errorf("no collections found in %s", cfgName)
 	}
 
 	colCount := len(cfg.Collections)
-	// If we only have the default collection, jump to curate the items in the collection.
-	if colCount == 1 {
-		return CurateItems(cfg.Collections[0])
-	}
 	scanner := bufio.NewScanner(os.Stdin)
 	clearScreen()
 	for quit := false; quit == false; {
 		// - A List collections
-		fmt.Printf("Collections to curate\n\n")
+		fmt.Printf("Curate Collections\n\n")
 		for i, col := range cfg.Collections {
-			fmt.Printf("\t%2d: %s\n", i + 1, col.Title)
+			fmt.Printf("\t%2d: %s, %s\n", i + 1, col.File, col.Title)
 		}
 		// FIXME: if there is only one collection, jump into it to curate items
-		fmt.Printf("\nenter collection number or q to quit\n")
+		fmt.Printf("\n(q to quit, h for help): \n")
 		// Read entry
 		if ! scanner.Scan() {
 			continue
 		}
 		answer := scanner.Text()
-		switch answer {
-		case "q":
+		params := []string{}
+		if strings.Contains(answer, " ") {
+			params = strings.Split(answer, " ")
+			answer, params = params[0], params[1:]
+		}
+		answer = strings.TrimSpace(strings.ToLower(answer))
+		switch  {
+		case (answer == "q" || answer == "quit"):
 			quit = true
+		case (answer == "n" || answer == "new"):
+			if err := createCollection(params); err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				continue
+			}
+		case (answer == "e" || answer == "edit"):
+			if err := editCollection(params); err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				continue
+			}
+		case (answer == "r" || answer == "remove" ):
+			if err := removeCollection(params); err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				continue
+			}
+		case (answer == "h" || answer == "help"):
+			helpCollectionMenu()
+			continue
 		default:
 			val, err := strconv.Atoi(answer)
 			if err != nil {
@@ -78,7 +145,7 @@ func (app *AntennaApp) Curate(cfgName string, args []string) error {
 			}
 			// calc collection number to curate
 			i := val - 1
-			if err := app.CurateItems(cfg.Collections[i]); err != nil {
+			if err := curateItems(cfg.Collections[i]); err != nil {
 				fmt.Fprintf(os.Stderr, "%q\n", err)
 				continue
 			}

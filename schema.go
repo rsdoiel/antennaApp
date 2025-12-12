@@ -116,6 +116,11 @@ type Collection struct {
 	DbName string `json:"dbName,omitempty" yaml:"dbName,omitempty"`
 }
 
+// Name returns the collection basename used for the collection
+func (col *Collection) Name() string {
+	return strings.TrimSuffix(col.File, ".md")
+}
+
 // Link represents a Markdown link with Label, URL, and optional Description.
 type Link struct {
 	// Label holds the text label that will be used when displaying the feed
