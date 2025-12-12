@@ -4,6 +4,7 @@
 *.bak
 *.yaml
 *.db
+pages.md
 TODO.html
 bin/
 man/

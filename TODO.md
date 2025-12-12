@@ -14,20 +14,15 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
-- [ ] I need to be able to render RSS feeds based on posts (e.g. RSS for all posts, recent posts or date ranges of posts)
+- [ ] Need a way to current items in a collection and set their publication status easily
+  - [ ] A terminal based CUI
+  - [ ] A localhost WUI
+- [X] I need to be able to render RSS feeds based on posts (e.g. RSS for all posts, recent posts or date ranges of posts)
 - [X] add options for limiting posts actions to recent by count and date ranges
 - [X] should the "reply" action have a different name? While my intension was to work with text fragment URLs, it could also be extended to format any URL as a Markdown output. If so it might make more sense to call it "link"
   - changing action name to "quote"
 - [ ] Look at the pttk bits I am still rely on for producing my personal website, see which make sense to fold into antennaApp
 - [ ] Look at https://www.seanh.cc/oatcake/ a CSS typography style that gives simple plain results, oriented to Markdown content.
-- [ ] FlatLake might be abandonware, hasn't be updated in two years and now doesn't compile cleanly. Figure out an alternative
-  - [ ] Why I don't want don't want to require programming, it'd be nice to have
-        a static JSON API available for people who were enhancing browser side
-        experiences
-        - A path like api/<COLLECTION_NAME>/<end points> is a nice
-        - The output of the API could actually be JSON, Markdown  and HTML so
-          it is still useful when JavaScript is disabled or unavailable
-        - The focus  of output would be front matter metadata and general URL details
 - [ ] tutorials should ordered as simple site (page), blog (post and page), feed reader (feed collection), news site (multiple feed collections)
 - [X] text fragment links as social connections
 - [ ] multiples feeds output from a feed collection
