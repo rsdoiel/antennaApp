@@ -59,11 +59,7 @@ Collection menu options. Commands have the following form.
   MENU_NUMBER ENTER_KEY
   ACTION [PARAMETERS] ENTER_KEY
 
-Choices:	scanner := bufio.NewScanner(os.Stdin)
-	clearScreen()
-	for quit := false; quit == false; {
-		// - A List collections
-
+Choices:
 
 - To curate a collection's items, type in the menu number and
   press enter
