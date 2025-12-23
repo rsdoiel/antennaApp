@@ -7,6 +7,7 @@ Ideas, not quite a roadmap
 
 - [ ] The RSS I'm producing isn't always valid for aggregated items
   - [X] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
+  - [ ] Seem to have some XML entity errors still, example see columns's RSS feed in Antenna
 - [X] The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
 - [ ] generate is not generating everything for the collection
   - [ ] re-rendering post lists correctly
@@ -14,6 +15,7 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] There should be a means of applying the filter SQL statements on a collection's items without running harvest or generate
 - [ ] I need to port blogit from TypeScript to Go an integrate into antennaApp, it should populate the front matter in posts appropriately.
 - [ ] The interactive terminal interface lead the user to compose the commands available directly form the command line to re-enforce what the program will actually do for them.
   - [ ] Filter is often a feature that causes confusion, the interactive terminal interface should provide human friendly guidence for forming a filter and provide an option of saving it as the default filter to apply for a specific feed or executing the filter as a one off. This guidence should be reproducible in the command line interface too as well as show SQL implementation as needed

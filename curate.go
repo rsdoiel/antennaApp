@@ -18,20 +18,149 @@ package antennaApp
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+	"unicode"
+
+	// My packages
+	"github.com/rsdoiel/termlib"
+
+	// 3rd Party
+	_ "github.com/glebarez/go-sqlite"
+
 )
 
-// CurateCollection displays items in a collection so you can select items for publication
-func curateItems(collection *Collection) error {
-	return fmt.Errorf("curateItems not implemented")
+var term = termlib.New(os.Stdout)
+
+func mappedString(m map[string]string, key string) string {
+	if s, ok := m[key]; ok {
+		return s
+	}
+	return ""
 }
 
-func clearScreen() {
-	// ANSI escape code to clear the screen and move the cursor to the top-left
-	fmt.Print("\033[H\033[2J")
+func extractInt(s string) (int, error) {
+	var numStr string
+	for _, r := range s {
+		if unicode.IsDigit(r) {
+			numStr += string(r)
+		}
+	}
+	return strconv.Atoi(numStr)
+}
+
+func normalizePos(curPos int, tot int, pageSize int) {
+	if curPos < 0 {
+		curPos = 0
+	} else if curPos >= tot {
+		curPos = tot - pageSize
+	}
+	return curPos
+}
+
+// CurateCollection displays items in a collection so you can select items for publication
+func curateItems(scanner *bufio.Scanner, collection *Collection) error {
+	// Clear the screen
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	args := []string{}
+	pageSize := int((term.GetTerminalHeight() - 6) / 2)
+	curPos := 0
+	args = append(args, fmt.Sprintf("%d", pageSize))
+	items, err := listItems(collection, args)
+	if err != nil {
+		displayErrorStatus("%s", err)
+	}
+	tot := len(items)
+	term.Clear()
+	for quit := false; ! quit; {
+		term.Move(1,1)
+		term.ClrToEOL()
+
+		term.Printf("Items in %s\n\n", collection.File)
+		for i := curPos; i < tot && i < (curPos + pageSize); i++ {
+			//link := mappedString(items[i], "link")
+			title := mappedString(items[i], "title")
+			postPath := mappedString(items[i], "postPath")
+			status := mappedString(items[i], "status")
+			//channel := mappedString(items[i], "channel")
+			label := mappedString(items[i], "label")
+			pubDate := mappedString(items[i], "pubDate")
+			updated := mappedString(items[i], "updated")
+			term.ClrToEOL()
+			term.Printf("%3d %s\n\t%q %s %s %s %s\n",
+				i + 1, title, status, label, postPath, pubDate, updated) 
+		}
+		// Display prompt
+		term.ResetStyle()
+		term.Printf("\n%d items (%d) ([n]exit, [p]rev, [h]elp or [q]uit): ", tot, pageSize)
+		term.ClrToEOL()
+		term.Refresh()
+		if ! scanner.Scan() {
+			continue
+		}
+		answer := scanner.Text()
+		answer = strings.TrimSpace(strings.ToLower(answer))
+		switch {
+		case strings.HasPrefix(answer, "q"):
+			quit = true
+		case strings.HasPrefix(answer, "^"):
+			curPos = 0
+		case strings.HasPrefix(answer, "$"):
+			curPos = tot - pageSize
+		case strings.HasPrefix(answer, "+"):
+			curPos = normalizePos(val + curPos)
+		case strings.HasPrefix(answer, "+"):
+			val, err := extractInt(answer)
+			if err == nil {
+			curPos = normalizePos(val + curPos, tot, pageSize)
+			} else {
+				displayErrorStatus("%s", err)
+			}
+		case strings.HasPrefix(answer, "-"):
+			val, err := extractInt(answer)
+			if err == nil {
+				curPos = normalizePos(val - curPos, tot, pageSize)
+			} else {
+				displayErrorStatus("%s", err)
+			}
+		case strings.HasPrefix(answer, "f"):
+			//FIXME: need to implement
+			displayErrorStatus("apply filters not implemented")
+			continue
+		case strings.HasPrefix(answer, "p"):
+			val, err := extractInt(answer)
+			if err == nil {
+			   displayStatus("Set %d to published", val)
+			   //FIXME: update status to published for ink 
+			   continue
+			}
+		case strings.HasPrefix(answer, "r"):
+			val, err := extractInt(answer)
+			if err == nil {
+			   displayStatus("Set %d to review", val)
+			   //FIXME: update status to review for link 
+			   continue
+			}			
+		case answer == "":
+			curPos = curPos + pageSize
+			if curPos >= len(items) {
+				curPos = 0
+			}
+		default:
+			val, err := extractInt(answer)
+			if err == nil {
+				curPos = normalizePos( val - 1, tot, pageSize)
+			}
+			displayErrorStatus("%q, unknown command", answer)
+		}
+		term.Clear()
+	}
+	return nil
 }
 
 // createCollections provides the prompts to add a new collection 
@@ -50,15 +179,17 @@ func removeCollection(params []string) error {
 }
 
 // helpCollectionMenu explains how the options in the collection menu
-func helpCollectionMenu() {
-	clearScreen()
-	fmt.Printf(`
+func helpCollectionMenu(scanner *bufio.Scanner) {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	term.Printf(`
 
-Collection menu options. Commands have the following form.
-
+%sCollection menu options. Commands have the following form.
+%s
   MENU_NUMBER ENTER_KEY
   ACTION [PARAMETERS] ENTER_KEY
-
+%s
 Choices:
 
 - To curate a collection's items, type in the menu number and
@@ -73,7 +204,31 @@ Choices:
 - To quit type "q" or "quit" and press the enter
 
 Press enter to exit help.
-`)
+`, termlib.Cyan, termlib.Italic, termlib.Reset)
+	term.Refresh()
+	scanner.Scan()
+}
+
+
+// display the status line
+func displayStatus(format string, params ...interface{}) {
+	// Get the current position
+	row, col := term.GetCurPos()
+	// Calc where the status line should go
+	statusRow, statusCol := term.GetTerminalHeight(), 1
+	term.Move(statusRow, statusCol)
+	term.ClrToEOL()
+	term.Printf(format, params...)
+	term.Refresh()
+	// Return to original position	
+	term.Move(row, col)
+}
+
+// displayErrorStatus, show a status message in Red
+func displayErrorStatus(format string, params ...interface{}) {
+	fgColor := term.GetFgColor()
+        newFormat := fmt.Sprintf("%s%s%s", termlib.Red, format, fgColor)
+	displayStatus(newFormat, params...)
 }
 
 // Curate provides a simple terminal interface to curating feed items for publication in your Antenna site.
@@ -88,15 +243,21 @@ func (app *AntennaApp) Curate(cfgName string, args []string) error {
 
 	colCount := len(cfg.Collections)
 	scanner := bufio.NewScanner(os.Stdin)
-	clearScreen()
+	term.Clear()
 	for quit := false; quit == false; {
+		term.Move(1,1)
+		term.ClrToEOL()
 		// - A List collections
-		fmt.Printf("Curate Collections\n\n")
+		term.Printf("Curate Collections\n\n")
+		term.SetBold()
 		for i, col := range cfg.Collections {
-			fmt.Printf("\t%2d: %s, %s\n", i + 1, col.File, col.Title)
+			term.ClrToEOL()
+			term.Printf("\t%2d: %s, %s\n", i + 1, col.File, col.Title)
 		}
-		// FIXME: if there is only one collection, jump into it to curate items
-		fmt.Printf("\n(q to quit, h for help): \n")
+		term.ResetStyle()
+		term.Printf("\n(q to quit, h for help): ")
+		term.ClrToEOL()
+		term.Refresh()
 		// Read entry
 		if ! scanner.Scan() {
 			continue
@@ -109,44 +270,133 @@ func (app *AntennaApp) Curate(cfgName string, args []string) error {
 		}
 		answer = strings.TrimSpace(strings.ToLower(answer))
 		switch  {
+		case answer == "":
+			// just refresh display
+			continue
 		case (answer == "q" || answer == "quit"):
 			quit = true
 		case (answer == "n" || answer == "new"):
 			if err := createCollection(params); err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
+				displayStatus("%s", err)
 				continue
 			}
 		case (answer == "e" || answer == "edit"):
 			if err := editCollection(params); err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
+				displayStatus("%s", err)
 				continue
 			}
 		case (answer == "r" || answer == "remove" ):
 			if err := removeCollection(params); err != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", err)
+				displayErrorStatus("%s",err)
 				continue
 			}
 		case (answer == "h" || answer == "help"):
-			helpCollectionMenu()
+			helpCollectionMenu(scanner)
 			continue
 		default:
 			val, err := strconv.Atoi(answer)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%q\n", err)
+				displayErrorStatus("%q", err)
 				continue
 			}
 			if (val < 1) || (val > colCount) {
-				fmt.Fprintf(os.Stderr, "enter a number between 1 and %d or enter q to quit\n", colCount)
+				displayErrorStatus("enter a number between 1 and %d or enter q to quit", colCount)
 				continue
 			}
 			// calc collection number to curate
 			i := val - 1
-			if err := curateItems(cfg.Collections[i]); err != nil {
-				fmt.Fprintf(os.Stderr, "%q\n", err)
+			if err := curateItems(scanner, cfg.Collections[i]); err != nil {
+				displayErrorStatus("%q", err)
 				continue
 			}
 		}
-		clearScreen()
+		term.Clear()
 	}
 	return nil
 }
+
+// listItems returns a list of items for a collection
+func listItems (collection *Collection, args []string) ([]map[string]string, error) {
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var (
+		rows *sql.Rows
+	)
+	switch {
+	case len(args) == 3:
+		fromDate, toDate := args[1], args[2]
+		rows, err = db.Query(SQLListDateRangeItems, fromDate, toDate)
+		if err != nil {
+			return nil, fmt.Errorf("%s\n%s, %s", SQLListDateRangeItems, dsn, err)
+		}
+	case len(args) == 2:
+		count, err := strconv.Atoi(args[1])
+		if err != nil {
+			return nil, err
+		}
+		rows, err = db.Query(SQLListRecentItems, count)
+		if err != nil {
+			return nil, fmt.Errorf("%s\n%s, %s", SQLListRecentItems, dsn, err)
+		}
+	default:
+		rows, err = db.Query(SQLListItems)
+		if err != nil {
+			return nil, fmt.Errorf("%s\n%s, %s", SQLListItems, dsn, err)
+		}
+	}
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	i := 0
+	items := []map[string]string{}
+	for rows.Next() {
+		var (
+			link     string
+			title    string
+			description string
+			sourceMarkdown string
+			pubDate  string
+			postPath string
+			status   string
+			channel string
+			label string
+			updated  string
+		)
+		if err := rows.Scan(&link, &title, &description, &sourceMarkdown, &pubDate, &postPath, &status, &channel, &label, &updated); err != nil {
+			displayErrorStatus("failed to read row (%d), %s\n", i, err)
+			continue
+		}
+		if strings.Contains(pubDate, "T") {
+			parts := strings.SplitN(pubDate, "T", 2)
+			pubDate = parts[0]
+		}
+		if i == 0 {
+			i++
+		}
+		item := map[string]string {
+			"link": link,
+			"title": title,
+			"description": description,
+			"sourceMarkdown": sourceMarkdown,
+			"pubDate": pubDate,
+			"postPath": postPath,
+			"status": status,
+			"channel": channel,
+			"label": label,
+			"updated": updated,
+			
+		}
+		items = append(items, item)
+	}
+	if i == 0 {
+		return nil, fmt.Errorf("no published posts")
+	}
+	return items, nil
+}
+

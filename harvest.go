@@ -101,6 +101,15 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
 			if strings.HasPrefix(item.Link, "/") {
 				item.Link = fmt.Sprintf("%s%s", strings.TrimSuffix(feed.Link, "/"), item.Link)
 			}
+			// Default to the feed dates if not set at item level
+			if item.Updated == "" && item.UpdatedParsed == nil {
+				item.Updated = feed.Updated
+				item.UpdatedParsed = feed.UpdatedParsed
+			}
+			if item.Published == "" && item.PublishedParsed == nil {
+				item.Published = feed.Published
+				item.PublishedParsed = feed.PublishedParsed
+			}
 			// Add items from feed to database table
 			if err := saveItem(db, link.Label, link.URL, "", item); err != nil {
 				return err
@@ -241,9 +250,14 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 
 	if item.UpdatedParsed != nil {
 		updated = item.UpdatedParsed.Format("2006-01-02 15:04:05")
+	} else {
+		updated = item.Updated
 	}
+	
 	if item.PublishedParsed != nil {
 		pubDate = item.PublishedParsed.Format("2006-01-02 15:04:05")
+	} else {
+		pubDate = item.Published
 	}
 	var (
 		authors    []byte

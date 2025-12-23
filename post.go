@@ -253,6 +253,9 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 		fmt.Printf("- [%s](%s), %s\n",
 			title, postPath, pubDate)
 	}
+	if i == 0 {
+		return fmt.Errorf("no published posts")
+	}
 	fmt.Println("")
 
 	return nil

@@ -228,4 +228,37 @@ ORDER BY postPath;`
 FROM pages
 WHERE inputPath = ?1 or outputPath = ?2
 ;`
+
+	//
+	// curate items SQL methods
+	//
+	
+	// SQLListRecentItems will list recent Itemsby their descending pubDate
+	SQLListRecentItems = `SELECT
+  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
+FROM items
+ORDER BY pubDate DESC
+LIMIT ?`
+
+	// SQLListDateRangeItems will list items in date range by their descending pubDate
+	SQLListDateRangeItems = `SELECT
+  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
+FROM items
+WHERE
+   (pubDate >= ?) AND
+   (pubDate <= ?)
+ORDER BY pubDate DESC`
+
+	// SQLListItems will list all items by their descending pubDate
+	SQLListItems = `SELECT
+  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
+FROM items
+ORDER BY pubDate DESC`
+
+	// SQLViewItem returns a single item
+	SQLViewItem = `SELECT
+  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, labek, updated
+FROM items
+WHERE link = ?`
+
 )
