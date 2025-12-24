@@ -46,7 +46,7 @@ func getString(m map[string]string, key string) string {
 // parseAnswer takes a string, parses it into args using
 // flag package.
 func parseAnswer(s string) (string, []string, error) {
-	options := strings.Split(s, " ")
+	options := strings.Fields(s)	
 	if len(options) > 1 {
 		return options[0], options[1:], nil
 	}
@@ -94,13 +94,16 @@ NUMBER
 : Page by NUMBER of items through list
 
 [f]ilter
-: apply SQL fitlers to items in collection
+: apply SQL filters to items in the collection
 
 [p]ublish NUMBER [NUMBER ...]
 : set item NUMBER to published status
 
 [r]eview NUMBER [NUMBER ...]
 : set item NUMBER to review status
+
+[c]lear NUMBER [NUMBER ...]
+: clear item NUMBER to status value
 
 [h]elp
 : This help page
@@ -118,19 +121,33 @@ Press enter to exit help.
 
 // applyFilter, runs the SQL filters defined for the collection
 func applyFilter(collection *Collection) error {
-	return fmt.Errorf("applyFilter not implemented")
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	if db == nil {
+		return fmt.Errorf("%s opened and returned nil", dsn)
+	}
+	return collection.ApplyFilters(db)
 }
 
-// setPublishStatus sets the status column to "published" for each
+// setPublishedStatus sets the status column to "published" for each
 // item number provided
-func setPublishStatus(options []string, items []map[string]string, collection *Collection) error {
-	return fmt.Errorf("setPublishStatus not implemented")
+func setPublishedStatus(options []string, items []map[string]string, collection *Collection) error {
+	return fmt.Errorf("setPublishedStatus not implemented")
 }
 
 // setReviewStatus sets the status column to "published" for each
 // item number provided
 func setReviewStatus(options []string, items []map[string]string, collection *Collection) error {
 	return fmt.Errorf("setReviewStatus not implemented")
+}
+
+// clearStatus clears the item's status of any value
+func clearStatus(options []string, items []map[string]string, collection *Collection) error {
+	return fmt.Errorf("clearStatus not implemented")
 }
 
 // pageTo calculates the new position based on a string indicating distance
@@ -176,10 +193,10 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 		term.Printf("Items in %s\n\n", collection.File)
 		for i := curPos; i < tot && i < (curPos+pageSize); i++ {
 			//link := getString(items[i], "link")
+			//channel := getString(items[i], "channel")
 			title := getString(items[i], "title")
 			postPath := getString(items[i], "postPath")
 			status := getString(items[i], "status")
-			//channel := getString(items[i], "channel")
 			label := getString(items[i], "label")
 			pubDate := getString(items[i], "pubDate")
 			updated := getString(items[i], "updated")
@@ -223,12 +240,17 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 			}
 			tot = len(items)
 		case strings.HasPrefix(answer, "p"):
-			if err := setPublishStatus(options, items, collection); err != nil {
+			if err := setPublishedStatus(options, items, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
 		case strings.HasPrefix(answer, "r"):
 			if err := setReviewStatus(options, items, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "c"):
+			if err := clearStatus(options, items, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
@@ -251,29 +273,178 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 	return nil
 }
 
-// createCollections provides the prompts to add a new collection
-func createCollection(options []string) error {
-	return fmt.Errorf("createCollection not implemented - %q", strings.Join(options,", "))
+// addCollections provides the prompts to add a new collection
+func addCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	var (
+		cName string
+		title string
+		description string
+	)
+	displayStatus("DEBUG options list -> %s", strings.Join(options,", "))
+	if len(options) < 1 {
+		term.Printf("Enter a collection name: ")
+		scanner.Scan()
+		cName = scanner.Text()
+	} else {
+		cName = options[0]
+	}
+	if cName == "" {
+		return fmt.Errorf("Missing collection name")
+	}
+	
+	if _, err := os.Stat(cName); os.IsNotExist(err) {
+		if len(options) < 2 {
+			term.Printf("Enter title: ")
+			scanner.Scan()
+			title = scanner.Text()
+		}
+		if len(options) < 3 {
+			term.Printf("Enter description: ")
+			scanner.Scan()
+			description = scanner.Text()			
+		}
+		text := fmt.Sprintf(`---
+title: %q
+description: %q
+---
+
+# %s
+
+%s
+
+(enter any feeds you want to aggregate here as a Markdown list of links)
+
+`, title, description, title, description)
+		if err := os.WriteFile(cName, []byte(text), 0664); err != nil {
+			return err
+		}
+	}
+	return cfg.AddCollection(cfgName, cName)	
 }
 
-// editCollections provides the prompts to edit an existing collection
-func editCollection(options []string) error {
-	return fmt.Errorf("editCollection not implemented - %q", strings.Join(options,", "))
-}
+// deleteCollection provides the prompts to delete a collection	scanner := bufio.NewScanner(os.Stdin)
+func deleteCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	if cfg.Collections == nil {
+		return fmt.Errorf("no collections to delete")
+	}	
+	var cName string
+	if len(options) < 1 {
+		term.Printf("Enter a collection name: ")
+		scanner.Scan()
+		cName = scanner.Text()
+	} else {
+		cName = options[0]
+		// See if this is a collection name or number
+		if val, err := extractInt(options[0]); err == nil {
+			// Figure out the cName for collection
+			val = val - 1 // Adjust for zero based array
+			if val >= 0 && val < len(cfg.Collections) {
+				cName = cfg.Collections[val].File
+				term.Printf("Remove %s? yes/NO ", cName)
+				scanner.Scan()
+				answer, _, _ := parseAnswer(scanner.Text())
+				if (answer != "yes" && answer != "y") {
+					return fmt.Errorf("delete %s cancelled", cName)
+				}
+			} else {
+				return fmt.Errorf("%d is not a collection number", val + 1);
+			}
+		}
+	}
+	if cName == "" {
+		return fmt.Errorf("Missing collection name")
+	}
+	return cfg.DelCollection(cfgName, cName)	
 
-// removeCollection provides the prompts to delete a collection	scanner := bufio.NewScanner(os.Stdin)
-func removeCollection(options []string) error {
-	return fmt.Errorf("removeCollection not implemented - %q", strings.Join(options,", "))
 }
 
 // harvestCollection will retrieve and aggregate collection items
-func harvestCollection(options []string) error {
-	return fmt.Errorf("harvestCollection not implemented - %q", strings.Join(options,", "))
+func harvestCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	args := []string{}
+	for _, cName := range options {
+		if val, err := extractInt(cName); err == nil {
+			// Figure out the cName for collection
+			val = val - 1 // Adjust for zero based array
+			if val >= 0 && val < len(cfg.Collections) {
+				cName = cfg.Collections[val].File
+			}
+		}
+		args = append(args, cName)
+	}
+
+	if len(args) == 0 {
+		for _, col := range cfg.Collections {
+			args = append(args, col.File)
+		}
+	}
+	term.Clear()
+	for _, cName := range args {
+		col, err := cfg.GetCollection(cName)
+		if err != nil {
+			return err
+		}
+		if col == nil {
+			displayErrorStatus("warning could not retrieve %q, skipping\n", cName)
+			continue
+		}
+		term.Printf("Harvesting %s\n", cName)
+		// Harvest the collection
+		if err := col.Harvest(os.Stdout, os.Stderr, cfg.UserAgent); err != nil {
+			displayErrorStatus("warning %s: %s\n", col.File, err)
+		}
+	}
+	term.Printf("\n\tPress enter to return to collections menu.\n")
+	term.Refresh()
+	scanner.Scan()
+	scanner.Text()
+	return nil
 }
 
 // generateCollection will generate pages and posts
-func generateCollection(options []string) error {
-	return fmt.Errorf("generateCollection not implemented - %q", strings.Join(options,", "))
+func generateCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	args := []string{}
+	for _, cName := range options {
+		if val, err := extractInt(cName); err == nil {
+			// Figure out the cName for collection
+			val = val - 1 // Adjust for zero based array
+			if val >= 0 && val < len(cfg.Collections) {
+				cName = cfg.Collections[val].File
+			}
+		}
+		args = append(args, cName)
+	}
+
+	if len(args) == 0 {
+		for _, col := range cfg.Collections {
+			args = append(args, col.File)
+		}
+	}
+	for _, cName := range args {
+		col, err := cfg.GetCollection(cName)
+		if err != nil {
+			return err
+		}
+		if col == nil {
+			displayErrorStatus("warning could not retrieve %q, skipping\n", cName)
+			continue
+		}
+		term.Printf("Generating %s\n", cName)
+		// Generate the aggregated page
+		if err := col.Generate(os.Stdout, os.Stderr, "curate", cfg); err != nil {
+			displayErrorStatus("warning %s: %s\n", col.File, err)
+		}
+	}
+	term.Printf("\n\tPress enter to return to collections menu.\n")
+	term.Refresh()
+	scanner.Scan()
+	scanner.Text()
+	return nil
 }
 
 
@@ -297,11 +468,12 @@ NUMBER
 +NUMBER or -NUMBER
 : Page by NUMBER of items through list
 
-[a]dd NAME
-: Add a new collection with NAME
+[a]dd
+: Add a new collection. You'll be prompted for a Markdown filename, a title
+and description. If Markdown file already exists it'll be used along with any front matter providing title and description.
 
-[r]emove NAME
-: Remove collection with NAME
+[d]elete NAME|NUMBER
+: Remove collection with NAME or collection NUMBER from configuration. It does not remove the files from disk.
 
 [H]arvest [NAME|NUMBER]
 : Harvest all collections or one specified by NAME
@@ -432,8 +604,7 @@ func listItems(collection *Collection, args []string) ([]map[string]string, erro
 }
 
 // curateCollections provides the interaction loop for curating collections.
-func curateCollections(cfg *AppConfig) error {
-	scanner := bufio.NewScanner(os.Stdin)
+func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) error {
 	term.Clear()
 	pageSize := int((term.GetTerminalHeight() - 5) / 2)
 	curPos := 0
@@ -460,44 +631,46 @@ func curateCollections(cfg *AppConfig) error {
 		answer, options, err := parseAnswer(scanner.Text())
 		switch {
 		case strings.HasPrefix(answer, "+"):
+			// page forward by N
 			curPos, err = pageTo(answer, curPos, pageSize, tot)
 			if err != nil { 
 				displayErrorStatus("%s", err)
 				continue
 			}
 		case strings.HasPrefix(answer, "-"):
+			// page backward by N
 			curPos, err = pageTo(answer, curPos, pageSize, tot)
 			if err != nil { 
 				displayErrorStatus("%s", err)
 				continue
 			}
 		case answer == "":
+			// next page
 			curPos = normalizePos(curPos+pageSize, pageSize, tot)
 		case strings.HasPrefix(answer,"a"):
 			// Add a collection
-			if err := createCollection(options); err != nil {
+			if err := addCollection(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
-			}
-		case strings.HasPrefix(answer, "e"):
-			if err := editCollection(options); err != nil {
+			}	
+			if err := cfg.LoadConfig(cfgName); err != nil {
 				displayErrorStatus("%s", err)
-				continue
 			}
-		case strings.HasPrefix(answer, "r"):
-			if err := removeCollection(options); err != nil {
+		case strings.HasPrefix(answer, "d"):
+			if err := deleteCollection(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
 		case strings.HasPrefix(answer, "H"):
 			// Harvest collection(s)
-			if err := harvestCollection(options); err != nil {
+			if err := harvestCollection(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
+			displayErrorStatus("DEBUG performed harvest?")
 		case strings.HasPrefix(answer, "g"):
 			// Generate pages and posts
-			if err := generateCollection(options); err != nil {
+			if err := generateCollection(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue	
 			}
@@ -533,14 +706,29 @@ func curateCollections(cfg *AppConfig) error {
 // Curate provides a simple terminal interface to curating collections and 
 // feed items for publication in your Antenna site.
 func (app *AntennaApp) Curate(cfgName string, args []string) error {
+	scanner := bufio.NewScanner(os.Stdin)
+	if _, err := os.Stat(cfgName); os.IsNotExist(err) {
+		term.Clear()
+		term.Printf(`
+	%s does not exist. Create it? %syes%s/no `, cfgName, termlib.Bold + termlib.Italic, termlib.Reset)
+		scanner.Scan()
+		answer, _, _ := parseAnswer(scanner.Text())
+		if answer == "y" || answer == "yes" {
+			if err := app.Init(cfgName, []string{}); err != nil {
+				return err
+			}
+		}
+	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
 	if cfg.Collections == nil || len(cfg.Collections) == 0 {
+		// FIXME: see if the default collection is defined, and created
+		// it if needed
 		return fmt.Errorf("no collections found in %s", cfgName)
 	}
-	if err := curateCollections(cfg); err != nil {
+	if err := curateCollections(scanner, cfgName, cfg); err != nil {
 		return err
 	}
 	return nil
