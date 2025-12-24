@@ -232,7 +232,7 @@ WHERE inputPath = ?1 or outputPath = ?2
 	//
 	// curate items SQL methods
 	//
-	
+
 	// SQLListRecentItems will list recent Itemsby their descending pubDate
 	SQLListRecentItems = `SELECT
   link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
@@ -260,5 +260,4 @@ ORDER BY pubDate DESC`
   link, title, description, sourceMarkdown, pubDate, postPath, status, channel, labek, updated
 FROM items
 WHERE link = ?`
-
 )

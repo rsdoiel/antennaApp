@@ -253,7 +253,7 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 	} else {
 		updated = item.Updated
 	}
-	
+
 	if item.PublishedParsed != nil {
 		pubDate = item.PublishedParsed.Format("2006-01-02 15:04:05")
 	} else {
