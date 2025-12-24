@@ -52,13 +52,55 @@ func extractInt(s string) (int, error) {
 	return strconv.Atoi(numStr)
 }
 
-func normalizePos(curPos int, tot int, pageSize int) {
+func normalizePos(curPos int, tot int, pageSize int) int {
 	if curPos < 0 {
 		curPos = 0
 	} else if curPos >= tot {
 		curPos = tot - pageSize
 	}
 	return curPos
+}
+
+// helpItemMenu explains how the options in the collection menu
+func helpItemMenu(scanner *bufio.Scanner) {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	term.Printf(`
+
+%sItem menu actions. Commands have the following form.
+%s
+  ACTION [ITEM_NO] ENTER_KEY
+%s
+Choices:
+
++NUMBER or -NUMBER
+: Page by NUMBER of items through list
+
+f
+: apply fitler to items in collection
+
+[g]oto NUMBER
+: Move so item NUMBER is at top of page
+
+[p]ublish NUMBER
+: set item NUMBER to published status
+
+[r]eview NUMBER
+: set item NUMBER to review status
+
+[h]elp
+: This help page
+
+[q]uit
+: Exit the items menu
+
+Pressing enter without action will move the item to the next set of results.
+
+Press enter to exit help.
+`, termlib.Cyan, termlib.Italic, termlib.Reset)
+	term.Refresh()
+	scanner.Scan()
 }
 
 // CurateCollection displays items in a collection so you can select items for publication
@@ -92,12 +134,12 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 			pubDate := mappedString(items[i], "pubDate")
 			updated := mappedString(items[i], "updated")
 			term.ClrToEOL()
-			term.Printf("%3d %s\n\t%q %s %s %s %s\n",
-				i + 1, title, status, label, postPath, pubDate, updated) 
+			term.Printf("%4d %s%s%s\n\t%q %s %s %s %s\n",
+				i + 1, termlib.Bold + termlib.Italic, title, termlib.Reset, status, label, postPath, pubDate, updated) 
 		}
 		// Display prompt
 		term.ResetStyle()
-		term.Printf("\n%d items (%d) ([n]exit, [p]rev, [h]elp or [q]uit): ", tot, pageSize)
+		term.Printf("\n(%d items, [h]elp or [q]uit): ", tot)
 		term.ClrToEOL()
 		term.Refresh()
 		if ! scanner.Scan() {
@@ -105,58 +147,68 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 		}
 		answer := scanner.Text()
 		answer = strings.TrimSpace(strings.ToLower(answer))
+		val, valErr := extractInt(answer)
 		switch {
 		case strings.HasPrefix(answer, "q"):
 			quit = true
-		case strings.HasPrefix(answer, "^"):
-			curPos = 0
-		case strings.HasPrefix(answer, "$"):
-			curPos = tot - pageSize
 		case strings.HasPrefix(answer, "+"):
-			curPos = normalizePos(val + curPos)
-		case strings.HasPrefix(answer, "+"):
-			val, err := extractInt(answer)
-			if err == nil {
-			curPos = normalizePos(val + curPos, tot, pageSize)
+			if valErr == nil {
+				curPos = normalizePos(val + curPos, tot, pageSize)
 			} else {
 				displayErrorStatus("%s", err)
+				continue
 			}
 		case strings.HasPrefix(answer, "-"):
-			val, err := extractInt(answer)
-			if err == nil {
+			if valErr == nil {
+				curPos = normalizePos(curPos - val, tot, pageSize)
+			} else {
+				displayErrorStatus("%s", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "-"):
+			if valErr == nil {
 				curPos = normalizePos(val - curPos, tot, pageSize)
 			} else {
 				displayErrorStatus("%s", err)
+				continue
 			}
 		case strings.HasPrefix(answer, "f"):
 			//FIXME: need to implement
 			displayErrorStatus("apply filters not implemented")
 			continue
 		case strings.HasPrefix(answer, "p"):
-			val, err := extractInt(answer)
-			if err == nil {
-			   displayStatus("Set %d to published", val)
+			if valErr == nil {
+			   displayStatus("published %d", val)
 			   //FIXME: update status to published for ink 
 			   continue
+			} else {
+				displayErrorStatus("%s", valErr)
+				continue
 			}
 		case strings.HasPrefix(answer, "r"):
-			val, err := extractInt(answer)
-			if err == nil {
-			   displayStatus("Set %d to review", val)
+			if valErr == nil {
+			   displayStatus("review %d", val)
 			   //FIXME: update status to review for link 
 			   continue
+			} else {
+				displayErrorStatus("%s", valErr)
+				continue
 			}			
+		case strings.HasPrefix(answer, "h"):
+			helpItemMenu(scanner)
+			continue
 		case answer == "":
-			curPos = curPos + pageSize
-			if curPos >= len(items) {
-				curPos = 0
-			}
-		default:
-			val, err := extractInt(answer)
-			if err == nil {
+			curPos = normalizePos(curPos + pageSize, tot, pageSize)
+		case strings.HasPrefix(answer, "g"):
+			if valErr == nil {
 				curPos = normalizePos( val - 1, tot, pageSize)
-			}
+			} else {
+				displayErrorStatus("%s", valErr)
+				continue
+			}			
+		default:
 			displayErrorStatus("%q, unknown command", answer)
+			continue
 		}
 		term.Clear()
 	}
@@ -187,21 +239,31 @@ func helpCollectionMenu(scanner *bufio.Scanner) {
 
 %sCollection menu options. Commands have the following form.
 %s
-  MENU_NUMBER ENTER_KEY
-  ACTION [PARAMETERS] ENTER_KEY
+  NUMBER ENTER_KEY
+  ACTION [NAME] ENTER_KEY
 %s
 Choices:
 
-- To curate a collection's items, type in the menu number and
-  press enter
-- To create a new collection type in "n" or "new", a space then
-  the collection name and press enter
-- To edit a collection's metadata type in "edit", a space then the
-  menu number for the collection and press enter
-- To remove a collection type "remove", a space and the menu number
-  for the collection you want to remove.
-- To view help type "h" or "help" and press enter
-- To quit type "q" or "quit" and press the enter
+NUMBER
+: Curate items in collection NUMBER
+
+[a]dd NAME
+: Add a new collection with NAME
+
+[r]emove NAME
+: Remove collection with NAME
+
+[ha]rvest [NAME]
+: Harvest all or NAME collection(s)
+
+[ge]nerate [NAME]
+: Generate pages for all or NAME collection
+
+[h]elp
+: Display this help
+
+[q]uit
+: To quit
 
 Press enter to exit help.
 `, termlib.Cyan, termlib.Italic, termlib.Reset)
