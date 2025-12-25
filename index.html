@@ -19,86 +19,88 @@
 </ul>
 </nav>
 <section>
-<h1 id="antennaapp">antennaApp</h1>
+<h1 id="antenna-app">Antenna App</h1>
 <p><strong>antenna</strong> is a command line feed oriented content
-management tool. It let’s you create and curate micro blogs, blogs, link
-blogs, news sites using Markdown and a sprinkling of YAML<a href="#fn1"
-class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. It
-is inspired by Dave Winer’s <a
-href="https://textcasting.org">Textcasting</a> and <a
+management tool. It let’s you create and curate simple websites, micro
+blogs, blogs, link blogs, and person news sites using Markdown. It was
+inspired by Dave Winer’s <a
+href="https://textcasting.org">Textcasting</a> concept, <a
 href="https://feedland.org">FeedLand</a> and my own experimental
-website, <a href="https://rsdoiel.github.io/antenna">antenna</a>.</p>
+website, <a href="https://rsdoiel.github.io/antenna">antenna</a>. The
+goal of the Antenna App is to make it easy for writers create web sites
+without being required to be web developers or software engineers.
+Ideally all you need to know Markdown and that would be enough to create
+writer oriented websites you can host publically or privately.</p>
 <p>Antenna App’s Features:</p>
 <ul>
-<li>Pages and posts are written using Markdown
-<ul>
-<li>Pages are excluded from feeds</li>
-</ul></li>
-<li>Posts use metadata expressed as YAML front matter
-<ul>
-<li>Posts are included in feeds</li>
-</ul></li>
-<li>Support for multiple collections of feeds
-<ul>
-<li>A feed collection is defined by a Markdown document containing a
-list of links to feeds</li>
-</ul></li>
-<li>Collections can be harvested individually or collectively
-<ul>
-<li>harvested content is stored in a SQLite3 database(s)</li>
-<li>harvested content in a collection can be aggregated and rendered as
-an HTML page for reading</li>
-<li>Posts are associated with a collection and are part of the output
-feeds</li>
-</ul></li>
+<li>Pages and posts are written using Markdown</li>
+<li>Posts are automatically included in an RSS feed for your site</li>
+<li>Aggregations of feeds can be included by providing Markdown list of
+links to RSS, Atom and JSON feeds</li>
+<li>Pages, posts and aggregations can include metadata expressed as YAML
+front matter<a href="#fn1" class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a></li>
+<li>Posts can be added to curated feed collection too</li>
+<li>You can have multiple collections of feeds</li>
+<li>Collections can be harvested individually or collectively</li>
+<li>The managed content is stored in SQLite3 database(s)</li>
 <li>HTML, RSS 2.0, OPML and sitemap.xml documents are automatically
 generated without additional configuration
 <ul>
-<li>HTML files are generated for each post or page</li>
+<li>HTML files are generated for each post, page and aggregation
+collection</li>
 </ul></li>
 <li>A preview feature to view the render content in your web browser via
 a localhost URL</li>
-<li>Page generators YAML files can composed using a “themes”
+<li>Site customization is possible through the use of page generators
 <ul>
-<li>themes are a directory populated with Markdown files for other theme
-elements<a href="#fn2" class="footnote-ref" id="fnref2"
+<li>Page generators YAML files describing basic elements of a page,
+header, navigation, before/after content section, footer</li>
+<li>Custom page generators are composed by apply “themes”</li>
+<li>Themes are a directory populated with Markdown files describing each
+element of the theme<a href="#fn2" class="footnote-ref" id="fnref2"
 role="doc-noteref"><sup>2</sup></a></li>
 <li>Page generators are implemented as a YAML file, they are used to
 frame the Markdown content added a pages and posts</li>
+<li>Each collection may contain its own page generator</li>
 </ul></li>
-<li>Antenna plays well with other static website tools (e.g. PageFind,
-FlatLake)</li>
+<li>Antenna App plays well with other static website tools
+(e.g. PageFind)</li>
+<li>Antenna App includes an experimental interactive terminal interface
+for curating your collections and posts</li>
 </ul>
-<p>The ability to harvest feed items means we can read what others post
-on the web on our own website. Markdown content can be added to a feed
-allows us to comment on the items read (thus being social). This can all
-be run on localhost (our own computer) or staged for public Web
-consumption via a static host provider.</p>
-<p>While Antenna App was initially conceived as a link blogging tool, it
-doesn’t impose a directory structure on your site. It can be used for
-general purpose sites, blogs, microblogs and linkblogs too.</p>
-<p>A static website using <strong>antenna</strong> can grow through
-either enhancing the HTML markup defined in the YAML configuration,
-through themes or through manipulation of the SQLite3 databases holding
-collection metadata. This provides opportunities to integrate with other
-static website tools like <a href="https://pagefind.app"
-title="A browser side search engine">PageFind</a> and <a
-href="https://flatlake.app"
-title="A static JSON API driven by front matter in Markdown documents">FlatLake</a>.
-You can even use <strong>antenna</strong> to augment your existing
-blog.</p>
+<p>The combined features of Antenna App go beyond most static site
+generators. It provides a means of making collaboritive website through
+the ability to import feeds from one or more people. You can add your
+own Markdown content to a feed allowing for commentary in a specific
+feed collection. Feed orientation allows Antenna App sites to be social
+without turning over atonomy of our content to another site.</p>
+<p>I believe Antenna App is well suited for creating local community
+sites where each contributed produces a feed of articles that are then
+linked from a common website. This could be used for aggregating content
+of special interest groups or for local neighborhood news sites. The
+site doing the aggregation can control those feed items to be published
+allowing for editorial control. Since this runs on your computer you
+don’t need to run specialized services hosted on the public web. You get
+the flexibity of a dynamic system with the low overhead and high
+availability provided by static websites.</p>
 <h3 id="authors">Authors</h3>
 <ul>
-<li>Doiel, R. S. Doiel</li>
+<li>Doiel, R. S. DoielHelpful if you are developing the Antenna
+App.</li>
 </ul>
 <h2 id="software-requirements">Software Requirements</h2>
-<p>Requirements top compile the Antenna App.</p>
+<p>To run Antenna App you just need to <a
+href="INSTALL.html">install</a> it on a Raspberry Pi, Linux, macOS or
+Windows computer.</p>
+<p>Requirements top compile the Antenna App from source code.</p>
 <ul>
 <li>Go &gt;= 1.25.3</li>
 <li>CMTools &gt;= 0.0.40</li>
 </ul>
 <h3 id="software-suggestions">Software Suggestions</h3>
-<p>Helpful if you are developing the Antenna App.</p>
+<p>The following are helpful if you want to develop or customize the
+Antenna App software.</p>
 <ul>
 <li>GNU Make &gt;= 3.4</li>
 <li>Pandoc &gt;= 3.1</li>
@@ -118,8 +120,11 @@ href="https://www.gnu.org/licenses/agpl-3.0.en.html">LICENSE</a></li>
 role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1"><p>Configuration and metadata (front matter in Markdown)
-are maintained using YAML.<a href="#fnref1" class="footnote-back"
+<li id="fn1"><p>YAML is a simple notation describing structed data.
+Front matter is a block of text hodling metadata about the document.
+Using YAML Front Matter is a common practice in the Markdown community.
+I first encountered it in the data science community and other scholarly
+science communities.<a href="#fnref1" class="footnote-back"
 role="doc-backlink">↩︎</a></p></li>
 <li id="fn2"><p>A YAML file called head.yaml is used to describe custom
 meta, link and script elements in the page. There is a style.css file

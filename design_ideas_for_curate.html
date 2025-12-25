@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="curate-concept">Curate Concept</h1>
+<p>I want an easy way to perform the actions supported by Antenna App
+when using the command line isn’t the right choice. Something
+interactive but still in the terminal. In an ideal world all the YAML
+configuration and front matter would be automatically generated and
+editable without having to know YAML. An interactive command could move
+the Antenna App in that direction.</p>
+<h2 id="the-command">the command</h2>
+<p>The command I’m describing is <code>antenna curate</code>. The goal
+of the command is to provide an interactive terminal interface for
+curating our Antenna App collection(s).</p>
+<h3 id="curate-collections">Curate collections</h3>
+<p>The bare command <code>antenna curate</code> should display the list
+of collections discovered in the current directory. If the directory you
+are in does not have an Antenna App configuration file (antenna.yaml),
+it will prompt you to initialize the project. Otherwise you are dropped
+into the collection level curation options. The following are planned or
+being implemented.</p>
+<ul>
+<li>initialize a project</li>
+<li>list available collections</li>
+<li>add COLLECTION</li>
+<li>del COLLECTION</li>
+<li>harvest COLLECTION</li>
+<li>generate COLLECTION</li>
+<li>curate items in a collection</li>
+<li>command history (on FILENAME | off)
+<ul>
+<li>saves the commands composed into a text file</li>
+</ul></li>
+</ul>
+<h3 id="curate-items-in-a-collection">Curate items in a collection</h3>
+<p>When you enter this menu items are listed. You can review help to see
+the implemented actions. The follow actions are either implemented or
+planned.</p>
+<ul>
+<li>set items to published status</li>
+<li>set items to review status</li>
+<li>clear items status</li>
+<li>page through items</li>
+<li>apply the collection’s default SQL filters</li>
+<li>if command history is active the commands you execute will be saved
+in the command history file</li>
+</ul>
+<h3 id="curate-a-theme-and-page-elements">Curate a theme and page
+elements</h3>
+<p>TBD</p>
+<h3 id="curate-the-antenna-app-configuration">Curate the antenna App
+configuration</h3>
+<p>TBD</p>
+<h3 id="someday-maybe-ideas">someday, maybe ideas</h3>
+<p>I think most writers like to use their favorite writing tool so when
+I say “edit” I really meaning envoking a writer’s favorite editor and
+passing content to it be edited. Antenna App shouldn’t privide an editor
+but should use the one provided by the system.</p>
+<ul>
+<li>edit collection Markdown front matter</li>
+<li>edit collection Markdown text</li>
+<li>edit item Markdown front matter</li>
+<li>edit item Markdown text</li>
+<li>blogit will import a Markdown document, setting up appropriate front
+matter</li>
+<li>post adds an item to a collection’s feed from a local Markdown
+document</li>
+<li>unpost removes a local Markdown document from feed</li>
+<li>pages lists the pages so you can curate them</li>
+<li>posts lists just the post items so you can curate them</li>
+<li>themes lists the themes available
+<ul>
+<li>create, add, edit, apply or remove themes from this view</li>
+</ul></li>
+<li>antenna.yaml manager, allow easy configuration without knowing
+YAML</li>
+<li>a tool for create common SQL filters, sort of a Q &amp; A dialog
+that results in generate SQLite3 SQL for the collection</li>
+</ul>
+<h1 id="notes">Notes</h1>
+<p>One of my goals with antenna command line tool is to make the actions
+highly scriptable. This is helpful for when your own site finds it
+rythem of updates. The terminal interface should map to the command line
+version commands such that you can use the interactive interface to
+construct a script of actions you can run automatically.</p>
+<p>I think the URL should display the command line version of the
+comments being presented interactively. This could be used to construct
+automations without resorting to direct shell programming.</p>
+<p>I was playing with the editor, <a
+href="https://aretext.org">aretext</a>, and the way it handles the UI
+would be interesting to explore for curate action. Take a closer look at
+the find and open method, how it displays files in the current directory
+and lets you scroll around it. It uses tcell module for UI. I need to
+decide if that’s the direction I want to go with curate action or if I
+want something simpler.</p>
+</section>
+</body>
+</html>

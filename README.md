@@ -2,7 +2,7 @@
 
 # Antenna App
 
-**antenna** is a command line feed oriented content management tool. It let's you create and curate simple website, micro blogs, blogs, link blogs, and person news sites using Markdown. It was inspired by Dave Winer's [Textcasting](https://textcasting.org) concept, [FeedLand](https://feedland.org) and my own experimental website, [antenna](https://rsdoiel.github.io/antenna). The goal of the Antenna App is to make it easy for writers create web sites without being required to be web developers or software engineers.
+**antenna** is a command line feed oriented content management tool. It let's you create and curate simple websites, micro blogs, blogs, link blogs, and person news sites using Markdown. It was inspired by Dave Winer's [Textcasting](https://textcasting.org) concept, [FeedLand](https://feedland.org) and my own experimental website, [antenna](https://rsdoiel.github.io/antenna). The goal of the Antenna App is to make it easy for writers create web sites without being required to be web developers or software engineers. Ideally all you need to know Markdown and that would be enough to create writer oriented websites you can host publically or privately.
 
 Antenna App's Features:
 
@@ -24,6 +24,7 @@ Antenna App's Features:
   - Page generators are implemented as a YAML file, they are used to frame the Markdown content added a pages and posts
   - Each collection may contain its own page generator
 - Antenna App plays well with other static website tools (e.g. PageFind)
+- Antenna App includes an experimental interactive terminal interface for curating your collections and posts
 
 [^1]: YAML is a simple notation describing structed data. Front matter is a block of text hodling metadata about the document. Using YAML Front Matter is a common practice in the Markdown community. I first encountered it in the data science community and other scholarly science communities.
 
