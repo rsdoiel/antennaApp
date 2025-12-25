@@ -264,4 +264,11 @@ ORDER BY pubDate DESC`
   link, title, description, sourceMarkdown, pubDate, postPath, status, channel, labek, updated
 FROM items
 WHERE link = ?`
+
+	// SQLListPages will list all the pages in a collection by filename
+	SQLListPages = `SELECT
+  inputPath, outputPath, updated
+FROM pages
+ORDER BY outputPath, updated DESC`
+
 )

@@ -699,7 +699,6 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 				displayErrorStatus("%s", err)
 				continue
 			}
-			displayErrorStatus("DEBUG performed harvest?")
 		case strings.HasPrefix(answer, "g"):
 			// Generate pages and posts
 			if err := generateCollection(scanner, options, cfgName, cfg); err != nil {
@@ -732,6 +731,98 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 		term.Clear()
 	}
 	return nil
+}
+
+// listPages returns a list of items for a collection
+func listPages(collection *Collection, args []string) ([]map[string]string, error) {
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var (
+		rows *sql.Rows
+	)
+	rows, err = db.Query(SQLListPages)
+	if err != nil {
+		return nil, fmt.Errorf("%s\n%s, %s", SQLListItems, dsn, err)
+	}
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	i := 0
+	pages := []map[string]string{}
+	for rows.Next() {
+		var (
+			inputPath string
+			outputPath string
+			updated string
+		)
+		if err := rows.Scan(&inputPath, &outputPath, &updated)
+			displayErrorStatus("failed to read row (%d), %s\n", i, err)
+			continue
+		}
+		if i == 0 {
+			i++
+		}
+		item := map[string]string{
+			"inputPath": inputPath,
+			"outputPath": outputPath,
+			"updated": updated,
+		}
+		fmt.Fprintf(os.Stderr, "DEBUG page inputPath %q, outputPath %q, updated: %s\n", inputPath, outputPath, updated) // DEBUG
+		items = append(items, item)
+	}
+	if i == 0 {
+		return nil, fmt.Errorf("no pages found")
+	}
+	return items, nil
+}
+
+// helpCuratePages explains how the options in the collection pages menu
+func helpCuratePages(scanner *bufio.Scanner) {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	term.Printf(`
+
+%sCurate pages. Command syntax.
+%s
+  NUMBER ENTER
+  ACTION [PARAMETERS] ENTER_KEY
+%s
+Actions:
+
+NUMBER
+: Move to item NUMBER
+
++NUMBER or -NUMBER
+: Page by NUMBER of items through list
+
+[a]dd
+: Add a page to the collection
+
+[d]el NUMBER|NAME
+: Delete a page from the collection. Doesn't delete the file on disk.
+
+[g]enerate NUMBER [NUMBER ...]
+: Render HTML for pages indicated by their number or name
+
+[h]elp
+: This help page
+
+[q]uit
+: Exit the items menu
+
+(NOTE: Pressing enter without an action will page through results)
+
+Press enter to exit help.
+`, termlib.Cyan, termlib.Italic, termlib.Reset)
+	term.Refresh()
+	scanner.Scan()
 }
 
 

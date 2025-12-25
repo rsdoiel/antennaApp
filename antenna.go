@@ -74,6 +74,6 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 	case "curate":
 		return app.Curate(cfgName, args)
 	default:
-		return fmt.Errorf("%s not supported", action)
+		return fmt.Errorf("%q not supported", action)
 	}
 }

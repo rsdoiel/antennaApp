@@ -64,9 +64,9 @@ func main() {
 		fmt.Fprintf(out, "%s\n", licenseText)
 		os.Exit(0)
 	}
+	// NOTE: no parameters provided then startup in curate mode
 	if len(args) == 0 {
-		fmt.Fprintf(eout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
-		os.Exit(0)
+		args = append(args,  "curate")
 	}
 
 	action, args := args[0], args[1:]
