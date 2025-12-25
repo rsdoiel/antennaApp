@@ -133,22 +133,38 @@ func applyFilter(collection *Collection) error {
 	return collection.ApplyFilters(db)
 }
 
-// setPublishedStatus sets the status column to "published" for each
+// setItemStatus sets the status column to "published" for each
 // item number provided
-func setPublishedStatus(options []string, items []map[string]string, collection *Collection) error {
-	return fmt.Errorf("setPublishedStatus not implemented")
+func setItemStatus(status string, options []string, items []map[string]string, collection *Collection) error {
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	if db == nil {
+		return fmt.Errorf("%s opened and returned nil", dsn)
+	}
+	for _, option := range options {
+		val, err := extractInt(option)
+		if err != nil {
+			displayErrorStatus("failed to parse item number %q, %s", option, err)
+			continue
+		}
+		itemNo := val - 1
+		if itemNo >= 0 && itemNo < len(items) {
+			link := getString(items[itemNo], "link")
+			if _, err := db.Exec(SQLSetItemStatus, status, link); err != nil {
+				displayErrorStatus("set to %s failed for item %d, %s", status, itemNo, err)
+			}
+		} else {
+			displayErrorStatus("%d is out of item range", itemNo)
+			continue
+		}
+	}
+	return nil
 }
 
-// setReviewStatus sets the status column to "published" for each
-// item number provided
-func setReviewStatus(options []string, items []map[string]string, collection *Collection) error {
-	return fmt.Errorf("setReviewStatus not implemented")
-}
-
-// clearStatus clears the item's status of any value
-func clearStatus(options []string, items []map[string]string, collection *Collection) error {
-	return fmt.Errorf("clearStatus not implemented")
-}
 
 // pageTo calculates the new position based on a string indicating distance
 // the current position, pagesize and total items. If an error occurs
@@ -240,20 +256,35 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 			}
 			tot = len(items)
 		case strings.HasPrefix(answer, "p"):
-			if err := setPublishedStatus(options, items, collection); err != nil {
+			if err := setItemStatus("published", options, items, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
+			items, err = listItems(collection, args)
+			if err != nil {
+				displayErrorStatus("%s", err)
+			}
+			tot = len(items)
 		case strings.HasPrefix(answer, "r"):
-			if err := setReviewStatus(options, items, collection); err != nil {
+			if err := setItemStatus("review", options, items, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
+			items, err = listItems(collection, args)
+			if err != nil {
+				displayErrorStatus("%s", err)
+			}
+			tot = len(items)
 		case strings.HasPrefix(answer, "c"):
-			if err := clearStatus(options, items, collection); err != nil {
+			if err := setItemStatus("", options, items, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
+			items, err = listItems(collection, args)
+			if err != nil {
+				displayErrorStatus("%s", err)
+			}
+			tot = len(items)
 		case strings.HasPrefix(answer, "h"):
 			helpCurateItems(scanner)
 			continue
@@ -595,6 +626,7 @@ func listItems(collection *Collection, args []string) ([]map[string]string, erro
 			"label":          label,
 			"updated":        updated,
 		}
+		fmt.Fprintf(os.Stderr, "DEBUG item link %q, postPath %q\n", link, postPath) // DEBUG
 		items = append(items, item)
 	}
 	if i == 0 {
@@ -724,8 +756,8 @@ func (app *AntennaApp) Curate(cfgName string, args []string) error {
 		return err
 	}
 	if cfg.Collections == nil || len(cfg.Collections) == 0 {
-		// FIXME: see if the default collection is defined, and created
-		// it if needed
+		// NOTE: shouldn't see this unless you have a partially
+		// initialized project
 		return fmt.Errorf("no collections found in %s", cfgName)
 	}
 	if err := curateCollections(scanner, cfgName, cfg); err != nil {

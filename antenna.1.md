@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.19 9e76517
+%antenna(1) user manual | version 0.0.20 13763d0
 % R. S. Doiel
-% 2025-12-06
+% 2025-12-24
 
 # NAME
 
@@ -150,6 +150,9 @@ If the collection name is provided then only that HTML page will be generated.
 sitemap
 : This will generate a set of sitemap files for pages and posts found through the
 antenna.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
+
+curate
+: Interactive collection and item curation.
 
 preview
 : Let's your preview the rendered your Antenna instance as a localhost website using

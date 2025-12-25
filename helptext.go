@@ -170,6 +170,9 @@ sitemap
 : This will generate a set of sitemap files for pages and posts found through the
 {app_name}.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
 
+curate
+: Interactive collection and item curation.
+
 preview
 : Let's your preview the rendered your Antenna instance as a localhost website using
 your favorite web browser.

@@ -188,6 +188,10 @@ ORDER BY pubDate DESC;`
 	// SQLDeleteItemByLinkOrPostPath removes an item in the items table with provided link
 	SQLDeleteItemByLinkOrPostPath = `DELETE FROM items WHERE link = ? OR postPath = ?`
 
+	// SQLSetItemStatus is used when curating items in collections
+	SQLSetItemStatus = `UPDATE items SET status = ?
+WHERE link = ?`
+
 	// Update a feed item in the items table
 	SQLUpdatePage = `INSERT INTO pages (
 	inputPath, outputPath, updated
