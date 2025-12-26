@@ -761,7 +761,7 @@ func listPages(collection *Collection, args []string) ([]map[string]string, erro
 			outputPath string
 			updated string
 		)
-		if err := rows.Scan(&inputPath, &outputPath, &updated)
+		if err = rows.Scan(&inputPath, &outputPath, &updated) {
 			displayErrorStatus("failed to read row (%d), %s\n", i, err)
 			continue
 		}
