@@ -32,7 +32,8 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-var term = termlib.New(os.Stdout)
+var term = termlib.New(os.Stdout) 
+
 
 // getString retrieves a string by the map's key, returns
 // empty string if not found.
@@ -79,7 +80,6 @@ func helpCurateItems(scanner *bufio.Scanner) {
 	defer term.Clear()
 	term.ResetStyle()
 	term.Printf(`
-
 %sCurate items. Command syntax.
 %s
   NUMBER ENTER
@@ -104,6 +104,135 @@ NUMBER
 
 [c]lear NUMBER [NUMBER ...]
 : clear item NUMBER to status value
+
+[h]elp
+: This help page
+
+[q]uit
+: Exit the items menu
+
+(NOTE: Pressing enter without an action will page through results)
+
+Press enter to exit help.
+`, termlib.Cyan, termlib.Italic, termlib.Reset)
+	term.Refresh()
+	scanner.Scan()
+}
+
+// listPosts returns a list of posts in a collection
+func listPosts(collection *Collection, args []string) ([]map[string]string, error) {
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var (
+		rows *sql.Rows
+	)
+	switch {
+	case len(args) == 3:
+		fromDate, toDate := args[1], args[2]
+		rows, err = db.Query(SQLListDateRangeItems, fromDate, toDate)
+		if err != nil {
+			return nil, fmt.Errorf("%s\n%s, %s", SQLListDateRangePosts, dsn, err)
+		}
+	case len(args) == 2:
+		count, err := strconv.Atoi(args[1])
+		if err != nil {
+			return nil, err
+		}
+		rows, err = db.Query(SQLListRecentPosts, count)
+		if err != nil {
+			return nil, fmt.Errorf("%s\n%s, %s", SQLListRecentPosts, dsn, err)
+		}
+	default:
+		rows, err = db.Query(SQLListItems)
+		if err != nil {
+			return nil, fmt.Errorf("%s\n%s, %s", SQLListPosts, dsn, err)
+		}
+	}
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	i := 0
+	items := []map[string]string{}
+	for rows.Next() {
+		var (
+			link           string
+			title          string
+			description    string
+			sourceMarkdown string
+			pubDate        string
+			postPath       string
+			status         string
+			channel        string
+			label          string
+			updated        string
+		)
+		if err := rows.Scan(&link, &title, &description, &sourceMarkdown, &pubDate, &postPath, &status, &channel, &label, &updated); err != nil {
+			displayErrorStatus("failed to read row (%d), %s\n", i, err)
+			continue
+		}
+		if strings.Contains(pubDate, "T") {
+			parts := strings.SplitN(pubDate, "T", 2)
+			pubDate = parts[0]
+		}
+		if i == 0 {
+			i++
+		}
+		item := map[string]string{
+			"link":           link,
+			"title":          title,
+			"description":    description,
+			"sourceMarkdown": sourceMarkdown,
+			"pubDate":        pubDate,
+			"postPath":       postPath,
+			"status":         status,
+			"channel":        channel,
+			"label":          label,
+			"updated":        updated,
+		}
+		fmt.Fprintf(os.Stderr, "DEBUG item link %q, postPath %q\n", link, postPath) // DEBUG
+		items = append(items, item)
+	}
+	if i == 0 {
+		return nil, fmt.Errorf("no published posts")
+	}
+	return items, nil
+}
+
+
+// helpCuratePosts explains how the options in the collection posts menu
+func helpCuratePosts(scanner *bufio.Scanner) {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	term.Printf(`
+%sCurate posts. Command syntax.
+%s
+  NUMBER ENTER
+  ACTION [PARAMETERS] ENTER_KEY
+%s
+Actions:
+
+NUMBER
+: Move to item NUMBER
+
++NUMBER or -NUMBER
+: Page by NUMBER of items through list
+
+[a]dd
+: Add Markdown document as a post from the local file system
+
+[d]el
+: Removes a post from the collection. Does not remove the Markdown document from
+the file system.
+
+[p]ublish
+: Set all posts status to a "published".
 
 [h]elp
 : This help page
@@ -186,7 +315,7 @@ func pageTo(s string, curPos int, pageSize int, tot int) (int, error)  {
 	return curPos, nil
 }
 
-// CurateCollection displays items in a collection so you can select items for publication
+// curateItems displays items in a collection so you can select items for publication
 func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 	// Clear the screen
 	term.Clear()
@@ -263,6 +392,7 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 			items, err = listItems(collection, args)
 			if err != nil {
 				displayErrorStatus("%s", err)
+				continue
 			}
 			tot = len(items)
 		case strings.HasPrefix(answer, "r"):
@@ -273,6 +403,7 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 			items, err = listItems(collection, args)
 			if err != nil {
 				displayErrorStatus("%s", err)
+				continue
 			}
 			tot = len(items)
 		case strings.HasPrefix(answer, "c"):
@@ -283,10 +414,271 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 			items, err = listItems(collection, args)
 			if err != nil {
 				displayErrorStatus("%s", err)
+				continue
 			}
 			tot = len(items)
 		case strings.HasPrefix(answer, "h"):
 			helpCurateItems(scanner)
+			continue
+		case strings.HasPrefix(answer, "q"):
+			quit = true
+		default:
+			// If the answer is a number, go to item number
+			if val, err := extractInt(answer); err == nil {
+				curPos = normalizePos(val-1, pageSize, tot)
+			} else {
+				displayErrorStatus("%q, unknown command", answer)
+				continue
+			}
+		}
+		term.Clear()
+	}
+	return nil
+}
+
+// addPost prompts for setting up a post in the collection from a Markdown document
+// on local disk.
+func addPost(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+	return fmt.Errorf("addPost() not implemented.")
+}
+
+// delPost removes a post from the collection. Does not remove the Markdown or HTML renderings from local disk.
+func delPost(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+	return fmt.Errorf("delPost() not implemented.")
+}
+
+// publishPosts sets all post status to "published"
+func publishPosts(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+	return fmt.Errorf("publishPosts() not implemented.")
+}
+
+// curatePosts displays items in a collection so you can select items for publication
+func curatePosts(scanner *bufio.Scanner, collection *Collection) error {
+	// Clear the screen
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	args := []string{}
+	pageSize := int((term.GetTerminalHeight() - 5) / 2)
+	curPos := 0
+	args = append(args, fmt.Sprintf("%d", pageSize))
+	posts, err := listPosts(collection, args)
+	if err != nil {
+		displayErrorStatus("%s", err)
+	}
+	tot := len(posts)
+	term.Clear()
+	for quit := false; !quit; {
+		term.Move(1, 1)
+		term.ClrToEOL()
+
+		term.Printf("Posts in %s\n\n", collection.File)
+		for i := curPos; i < tot && i < (curPos+pageSize); i++ {
+			//link := getString(items[i], "link")
+			//channel := getString(items[i], "channel")
+			title := getString(posts[i], "title")
+			postPath := getString(posts[i], "postPath")
+			status := getString(posts[i], "status")
+			label := getString(posts[i], "label")
+			pubDate := getString(posts[i], "pubDate")
+			updated := getString(posts[i], "updated")
+			term.ClrToEOL()
+			term.Printf("%4d %s%s%s\n\t%q %s %s %s %s\n",
+				i+1, termlib.Bold+termlib.Italic, title, termlib.Reset, status, label, postPath, pubDate, updated)
+		}
+		// Display prompt
+		term.ResetStyle()
+		term.Printf("\n(%d/%d, [h]elp or [q]uit): ", curPos + 1,tot)
+		term.ClrToEOL()
+		term.Refresh()
+		if !scanner.Scan() {
+			continue
+		}
+		answer, options, err := parseAnswer(scanner.Text())
+		answer = strings.TrimSpace(strings.ToLower(answer))
+		switch {
+		case answer == "":
+			curPos = normalizePos(curPos+pageSize, pageSize, tot)
+		case strings.HasPrefix(answer, "+"):
+			curPos, err = pageTo(answer, curPos, pageSize, tot)
+			if err != nil { 
+				displayErrorStatus("%s", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "-"):
+			curPos, err = pageTo(answer, curPos, pageSize, tot)
+			if err != nil { 
+				displayErrorStatus("%s", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "a"):
+			if err = addPost(scanner, options, posts, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			posts, err = listPosts(collection, []string{})
+			if err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			tot = len(posts)
+		case strings.HasPrefix(answer, "d"):
+			if err = delPost(scanner, options, posts, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue				
+			}
+			posts, err = listPosts(collection, []string{})
+			if err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			tot = len(posts)
+		case strings.HasPrefix(answer, "p"):
+			if err := publishPosts(scanner, options, posts, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			posts, err = listPosts(collection, args)
+			if err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			tot = len(posts)
+		case strings.HasPrefix(answer, "r"):
+			if err := setItemStatus("review", options, posts, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			posts, err = listPosts(collection, args)
+			if err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			tot = len(posts)
+		case strings.HasPrefix(answer, "c"):
+			if err := setItemStatus("", options, posts, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			posts, err = listPosts(collection, args)
+			if err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			tot = len(posts)
+		case strings.HasPrefix(answer, "h"):
+			helpCuratePosts(scanner)
+			continue
+		case strings.HasPrefix(answer, "q"):
+			quit = true
+		default:
+			// If the answer is a number, go to item number
+			if val, err := extractInt(answer); err == nil {
+				curPos = normalizePos(val-1, pageSize, tot)
+			} else {
+				displayErrorStatus("%q, unknown command", answer)
+				continue
+			}
+		}
+		term.Clear()
+	}
+	return nil
+}
+
+
+// addPage prompts for setting up a page in the collection from a Markdown document
+// on local disk.
+func addPage(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+	return fmt.Errorf("addPage() not implemented.")
+}
+
+// delPage removes a page from the collection. Does not remove the Markdown or HTML renderings from local disk.
+func delPage(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+	return fmt.Errorf("delPage() not implemented.")
+}
+
+
+
+// curatePages displays items in a collection so you can select items for publication
+func curatePages(scanner *bufio.Scanner, collection *Collection) error {
+	// Clear the screen
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	args := []string{}
+	pageSize := int((term.GetTerminalHeight() - 5) / 2)
+	curPos := 0
+	args = append(args, fmt.Sprintf("%d", pageSize))
+	pages, err := listPages(collection, args)
+	if err != nil {
+		displayErrorStatus("%s", err)
+	}
+	tot := len(pages)
+	term.Clear()
+	for quit := false; !quit; {
+		term.Move(1, 1)
+		term.ClrToEOL()
+
+		term.Printf("Pages in %s\n\n", collection.File)
+		for i := curPos; i < tot && i < (curPos+pageSize); i++ {
+			inputPath := getString(pages[i], "inputPath")
+			outputPath := getString(pages[i], "outputPath")
+			updated := getString(pages[i], "updated")
+			term.ClrToEOL()
+			term.Printf("%4d %s%s%s\n\t%q %s %s %s %s\n",
+				i+1, termlib.Bold+termlib.Italic, inputPath, termlib.Reset, outputPath,updated)
+		}
+		// Display prompt
+		term.ResetStyle()
+		term.Printf("\n(%d/%d, [h]elp or [q]uit): ", curPos + 1,tot)
+		term.ClrToEOL()
+		term.Refresh()
+		if !scanner.Scan() {
+			continue
+		}
+		answer, options, err := parseAnswer(scanner.Text())
+		answer = strings.TrimSpace(strings.ToLower(answer))
+		switch {
+		case answer == "":
+			curPos = normalizePos(curPos+pageSize, pageSize, tot)
+		case strings.HasPrefix(answer, "+"):
+			curPos, err = pageTo(answer, curPos, pageSize, tot)
+			if err != nil { 
+				displayErrorStatus("%s", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "-"):
+			curPos, err = pageTo(answer, curPos, pageSize, tot)
+			if err != nil { 
+				displayErrorStatus("%s", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "a"):
+			// Add a page
+			if err = addPage(scanner, options, pages, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			pages, err = listPages(collection, []string{})
+			if err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			tot = len(pages)
+		case strings.HasPrefix(answer, "d"):
+			// Remove a page
+			if err = delPage(scanner, options, pages, collection); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			pages, err = listPages(collection, []string{})
+			if err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+			tot = len(pages)			
+		case strings.HasPrefix(answer, "h"):
+			helpCuratePages(scanner)
 			continue
 		case strings.HasPrefix(answer, "q"):
 			quit = true
@@ -311,7 +703,7 @@ func addCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg
 		title string
 		description string
 	)
-	displayStatus("DEBUG options list -> %s", strings.Join(options,", "))
+	//displayStatus("DEBUG options list -> %s", strings.Join(options,", "))
 	if len(options) < 1 {
 		term.Printf("Enter a collection name: ")
 		scanner.Scan()
@@ -485,7 +877,6 @@ func helpCurateCollections(scanner *bufio.Scanner) {
 	defer term.Clear()
 	term.ResetStyle()
 	term.Printf(`
-
 %sCurate collection(s). Command syntax.
 %s
   NUMBER ENTER_KEY
@@ -635,6 +1026,105 @@ func listItems(collection *Collection, args []string) ([]map[string]string, erro
 	return items, nil
 }
 
+// helpCurateCollection explains how a collection works and what can be curated
+func helpCurateCollection(scanner *bufio.Scanner) {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	term.Printf(`
+%sCurate collection. 
+
+Collections contain three content types.
+
+page
+: Markdown expressing the contents of an HTML page. These are listed
+in the generated sitemap but not list in any feeds.
+
+post
+: Markdown expressing a post (e.g. blog post) that will be rendered as
+an HTML page and a feed item. These are also included in the sitemap.
+
+item
+: Items can hold a post or an RSS (feed) item harvested from the web. These are
+listed in the aggregation pages but not explicitly included in the sitemap because
+they may point to another web resource.
+
+Each content type is managed in its own list. 
+%s
+
+
+Actions:
+
+[p]ages, curate pages or generates their HTML representations and
+         updates the sitemap
+[P]ost, curates posts in a collection or generates their HTML representations,
+        updates the RSS 2.0 feeds and sitemap.
+[i]tems, curated aggregated items and generates the aggregated HTML page,
+         RSS 2.0 file, OPML file and updates the sitemap.
+
+[h]elp
+: Display this help
+
+[q]uit
+: To quit
+
+Press enter to exit help.
+`, termlib.Cyan, termlib.Italic, termlib.Reset)
+	term.Refresh()
+	scanner.Scan()
+}
+
+// curateCollection, curates a collections pages, posts and items
+func curateCollection(scanner *bufio.Scanner, cfgName string, cfg *AppConfig, collection *Collection) error {
+	term.Clear()
+	defer term.Clear()
+	for quit := false; quit == false; {
+		term.Printf(`
+Curate %s:
+
+	[P]osts
+	[p]ages
+	[i]items
+
+`, collection.File)
+		term.ResetStyle()
+		term.Printf("\n([h]elp or [q]uit): ")
+		term.ClrToEOL()
+		term.Refresh()
+		// Read entry
+		if !scanner.Scan() {
+			continue
+		}
+		answer, _, _ := parseAnswer(scanner.Text())
+		switch {
+		case strings.HasPrefix(answer, "P"):
+			if err := curatePages(scanner, collection); err != nil {
+				displayErrorStatus("%q", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "p"):
+			// Curate posts
+			if err := curatePosts(scanner, collection); err != nil {
+				displayErrorStatus("%q", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "i"):	
+			// Curate items
+			if err := curateItems(scanner, collection); err != nil {
+				displayErrorStatus("%q", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "h"):
+			helpCurateCollection(scanner)
+			continue
+		case strings.HasPrefix(answer, "q"):
+			quit = true
+		}
+	
+	}
+	return nil
+}
+
 // curateCollections provides the interaction loop for curating collections.
 func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) error {
 	term.Clear()
@@ -656,6 +1146,7 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 		term.Printf("\n(%d/%d, [h]elp or [q]uit): ", curPos + 1,tot)
 		term.ClrToEOL()
 		term.Refresh()
+		
 		// Read entry
 		if !scanner.Scan() {
 			continue
@@ -717,9 +1208,8 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 					displayErrorStatus("enter a number the range of 1 to %d", tot)
 					continue
 				}
-				// calc collection number to curate
-				if err := curateItems(scanner, cfg.Collections[val - 1]); err != nil {
-					displayErrorStatus("%q", err)
+				if err := curateCollection(scanner, cfgName, cfg,  cfg.Collections[val - 1]); err != nil {
+					displayErrorStatus("%s", err)
 					continue
 				}
 			} else {
@@ -761,25 +1251,25 @@ func listPages(collection *Collection, args []string) ([]map[string]string, erro
 			outputPath string
 			updated string
 		)
-		if err := rows.Scan(&inputPath, &outputPath, &updated)
+		if err = rows.Scan(&inputPath, &outputPath, &updated); err != nil {
 			displayErrorStatus("failed to read row (%d), %s\n", i, err)
 			continue
 		}
 		if i == 0 {
 			i++
 		}
-		item := map[string]string{
+		page := map[string]string{
 			"inputPath": inputPath,
 			"outputPath": outputPath,
 			"updated": updated,
 		}
 		fmt.Fprintf(os.Stderr, "DEBUG page inputPath %q, outputPath %q, updated: %s\n", inputPath, outputPath, updated) // DEBUG
-		items = append(items, item)
+		pages = append(pages, page)
 	}
 	if i == 0 {
 		return nil, fmt.Errorf("no pages found")
 	}
-	return items, nil
+	return pages, nil
 }
 
 // helpCuratePages explains how the options in the collection pages menu
@@ -788,7 +1278,6 @@ func helpCuratePages(scanner *bufio.Scanner) {
 	defer term.Clear()
 	term.ResetStyle()
 	term.Printf(`
-
 %sCurate pages. Command syntax.
 %s
   NUMBER ENTER
@@ -803,13 +1292,10 @@ NUMBER
 : Page by NUMBER of items through list
 
 [a]dd
-: Add a page to the collection
+: Add a Markdown document as a page to the collection
 
 [d]el NUMBER|NAME
-: Delete a page from the collection. Doesn't delete the file on disk.
-
-[g]enerate NUMBER [NUMBER ...]
-: Render HTML for pages indicated by their number or name
+: Remove the page from the collection. Does not delete the file(s) on disk.
 
 [h]elp
 : This help page

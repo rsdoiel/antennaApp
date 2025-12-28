@@ -234,7 +234,7 @@ WHERE inputPath = ?1 or outputPath = ?2
 ;`
 
 	//
-	// curate items SQL methods
+	// curate items and pages SQL methods
 	//
 
 	// SQLListRecentItems will list recent Itemsby their descending pubDate
@@ -269,6 +269,17 @@ WHERE link = ?`
 	SQLListPages = `SELECT
   inputPath, outputPath, updated
 FROM pages
-ORDER BY outputPath, updated DESC`
+ORDER BY inputPath, updated DESC`
 
+	// SQLViewPage returns a single page
+	SQLViewPage = `SELECT
+inputPath, outputPath, updated
+FROM pages
+WHERE inputPath = ?`
+
+	// SQLSetAllPostToStatus sets all items with postPath set to a given
+	// status value.
+	SQLSetAllPostToStatus = `UPDATE posts
+SET status = ?
+WHERE postPath != ""`
 )

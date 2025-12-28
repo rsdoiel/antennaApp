@@ -134,7 +134,8 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	htmlName := filepath.Join(cfg.Htdocs, postPath)
 	if oName != "" {
 		htmlName = filepath.Join(cfg.Htdocs, oName)
-	} else if strings.HasSuffix(htmlName, ".md") {
+	} 
+	if strings.HasSuffix(htmlName, ".md") {
 		htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
 	}
 	dName := filepath.Dir(htmlName)

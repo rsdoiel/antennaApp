@@ -102,7 +102,7 @@ the Front Matter of the Markdown document.
 del COLLECTION_FILE
 : Remove a collection from the Antenna configuration.
 
-page COLLECTION_NAME INPUT_PATH [OUTPUT_PATH]
+page INPUT_PATH [OUTPUT_PATH]
 : This will create a standalone HTML page in a collection called pages.db (created
 by the init action). It uses the default page generator defined in the {app_name}.yaml
 if one is not specifically set for the pages.db collection. The pages command reads
@@ -113,7 +113,7 @@ like an about page, home page, and search page. __The Markdown processed via pag
 action will allow "unsafe" HTML to pass through. Only use page if you trust the
 Markdown document!!!__)
 
-unpage COLLECTION_NAME INPUT_PATH
+unpage INPUT_PATH
 : This will will remove a page's from a collection based in the input filepath provided.
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
