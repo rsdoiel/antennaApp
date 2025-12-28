@@ -260,6 +260,19 @@ func (doc *CommonMark) GetAttributeBool(key string, defaultValue bool) bool {
 	return defaultValue
 }
 
+func (doc *CommonMark) String() string {
+	if len(doc.FrontMatter) > 0 {
+		src, _ := yaml.Marshal(doc.FrontMatter)
+		return fmt.Sprintf(`---
+%s
+---
+
+%s
+`, src, doc.Text)
+	}
+	return doc.Text
+}
+
 func (doc *CommonMark) ToHTML() (string, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(

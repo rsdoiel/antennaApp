@@ -32,6 +32,24 @@ import (
 	ext "github.com/mmcdole/gofeed/extensions"
 )
 
+
+func saveMarkdown(fName string, doc *CommonMark) error {
+	backupName := strings.TrimSuffix(fName, ".md") + ".bak"
+	if _, err := os.Stat(backupName); err == nil {
+		if err := os.Remove(backupName); err != nil {
+			return fmt.Errorf("failed to back %q as %q, %s", fName, backupName, err)
+		}
+	}
+	if err := os.Rename(fName, backupName); err != nil {
+		return err
+	}
+	txt := doc.String()
+	if err := os.WriteFile(fName, []byte(txt), 0666); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Post will add a CommonMark document as a feed item and if the postPath and link
 // are provided it will convert the CommonMark document to HTML and save it in the postPath.
 func (app *AntennaApp) Post(cfgName string, args []string) error {
@@ -76,7 +94,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		doc.Text = IncludeCodeBlock(doc.Text)
 	}
 
-	sourceMarkdown := doc.Text
+	updateMarkdownDoc := false
 	// Convert our document text to HTML
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
@@ -93,20 +111,40 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	}
 	link := doc.GetAttributeString("link", "")
 	postPath := doc.GetAttributeString("postPath", "")
-	pubDate := doc.GetAttributeString("pubDate", "")
-	if pubDate == "" {
-		pubDate = doc.GetAttributeString("datePublished", "")
+	if postPath != "" {
+		postPath = fName
+		updateMarkdownDoc = true
 	}
-	dateModified := doc.GetAttributeString("dateModified", pubDate)
 	draft := doc.GetAttributeBool("draft", false)
-	channel := doc.GetAttributeString("channel", collection.Link)
-	guid := doc.GetAttributeString("guid", link)
-	status := "review"
-	if draft || pubDate == "" {
-		return fmt.Errorf("%s is set to draft or is missing pubDate %q", fName, pubDate)
-	} else {
+	today := time.Now().Format("2006-01-02")
+	dateModified := doc.GetAttributeString("dateModified", "")
+	if dateModified == "" {
+		dateModified = today
+		updateMarkdownDoc = true
+	}	
+	pubDate := doc.GetAttributeString("datePublished", "")
+	if pubDate == "" {
+		pubDate = doc.GetAttributeString("pubDate", "")
+	}
+	if pubDate == "" {
+		draft = true
+		updateMarkdownDoc = true
+	}
+	status := ""
+	if draft {
+		status = "review"
+	} else if postPath != "" && pubDate != "" {
 		status = "published"
 	}
+	sourceMarkdown := doc.Text
+	if updateMarkdownDoc {
+		if err = saveMarkdown(fName, doc); err != nil {
+			return fmt.Errorf("unable to save %s, %s", fName, err)
+		}	 	
+	}
+
+	channel := doc.GetAttributeString("channel", collection.Link)
+	guid := doc.GetAttributeString("guid", link)
 
 	// When no description is provided the description is set with the body text
 	if description == "" {
@@ -115,6 +153,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	if title == "" && description == "" {
 		return fmt.Errorf("missing both title and description")
 	}
+
 	if postPath != "" {
 		if link == "" {
 			if cfg.BaseURL != "" {
@@ -180,6 +219,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath, sourceMarkdown)
 }
 
+// This lists published posts
 func (app *AntennaApp) Posts(cfgName string, args []string) error {
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {

@@ -169,10 +169,39 @@ WHERE (pubDate IS NOT NULL) AND
 ORDER BY pubDate DESC
 LIMIT ?;`
 
+
 	// SQLListDateRangePosts will list all published posts with a postPath by their descending pubDate
 	SQLListDateRangePosts = `SELECT link, title, pubDate, postPath
 FROM items
 WHERE (pubDate IS NOT NULL) AND 
+   (postPath != '') AND
+   (pubDate >= ?) AND
+   (pubDate <= ?)
+ORDER BY pubDate DESC;`
+
+	// SQLCuratePosts will list all posts with a postPath by their descending pubDate
+	SQLCuratePosts = `SELECT
+  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
+FROM items
+WHERE
+   (postPath != '')
+ORDER BY pubDate DESC;`
+
+	// SQLCurateRecentPosts will list recent posts with a postPath by their descending pubDate
+	SQLCurateRecentPosts = `SELECT 
+  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
+FROM items
+WHERE
+   (postPath != '')
+ORDER BY pubDate DESC
+LIMIT ?;`
+
+
+	// SQLCurateDateRangePosts will list all posts with a postPath by their descending pubDate
+	SQLCurateDateRangePosts = `SELECT
+  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
+FROM items
+WHERE
    (postPath != '') AND
    (pubDate >= ?) AND
    (pubDate <= ?)
@@ -233,9 +262,9 @@ FROM pages
 WHERE inputPath = ?1 or outputPath = ?2
 ;`
 
-	//
-	// curate items and pages SQL methods
-	//
+	/**
+	 * curate items and pages SQL methods
+	 */
 
 	// SQLListRecentItems will list recent Itemsby their descending pubDate
 	SQLListRecentItems = `SELECT
