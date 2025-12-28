@@ -1,31 +1,35 @@
 
 # Getting Started
 
-Antenna App is a program desided to allow you to easily create and curate websites, blogs and personal news sites with only a knowledge of Markdown and the ability to navigate your computer's terminal application.
+The Antenna App is a program desided to allow you to easily create and curate websites, blogs and personal news sites with the following knowledge a knowledge of Markdown, the software that comes with your computer and its web browser. Here's the software you should already have.
 
-You'll need a text editor, your computer's terminal application, a web browser and [Antenna App installed](https://rsdoiel.github.io/antennaApp/INSTALL.html) to follow this tutorial.  In my examples I'm using a Raspberry Pi computer but you can adapt this tutorial  to also work on Windows and macOS.
+- Text Editor
+- Web Browser
+- Terminal
 
-You'll need to know how to do the following in the terminal application.
+You'll also need the [Antenna App installed](https://rsdoiel.github.io/antennaApp/INSTALL.html). In my examples I'm using a Raspberry Pi computer. The instructions should work on macOS or Windows with minor adjustments.
+
+The things we'll be doing inside the Terminal application include the following.
 
 - list files
 - create a directory
 - show the name of the current working directory
 - change your working directory
-- edit files in the working directory
+- edit files in the working directory using your text editor
 - run the `antenna` command in the terminal
 - how to start your web browser and navigate to the preview URL
 
-## Terminal basics
+## Terminal Basics
 
 On a Raspberry Pi computer running the graphical desktop you launch the terminal application by clicking on the Raspberry icon at the left of the top menu bar. Click on the "Accessories" menu, then find and click on "Terminal". Once the Terminal application has started, click into the main window. You're now ready to start.
 
 NOTE: If you are not running the graphical desktop you are already in a terminal when you log into your Pi. NOTE: Firefox and Chrome don't work without the graphical desktop installed but `lynx` and `elinks` work well in a terminal[^1].
 
-[^1]: To install lynx and elinks on Raspberry Pi OS, type the following into the terminal window, `sudo apt install -y lynx elinks`
+[^1]: To install lynx and elinks on Raspberry Pi OS, type the following into the Terminal, `sudo apt install -y lynx elinks`. macOS and Windows differ on how you install software.
 
 ### Prep Work
 
-In the terminal application we need to create we need to create directory where we'll hold our website. A website is a collection of documents so let's create a project directory inside the Documents directory setup with your Raspberry Pi. I'm going to call our first website "project1" and create it in the Documents directory but before that I want to show you how to find out what your current working directory is.
+In the Terminal application we need to create we need to create directory where we'll hold our website. A website is a collection of documents so let's create a project directory inside the Documents directory setup with your Raspberry Pi. I'm going to call our first website "project1" and create it in the Documents directory but before that I want to show you how to find out what your current working directory is.
 
 ~~~shell
 pwd
@@ -37,13 +41,13 @@ On my Raspberry Pi computer this shows something like this.
 /home/pi
 ~~~
 
-In this case "pi" is the defalut user. If you've created a different username when you setup your Pi, example "robert", `pwd` will probably show something like this.
+In this case "pi" is the username. If my username had been "robert" the path returned by `pwd` would look like this.
 
 ~~~
 /home/robert
 ~~~
 
-When you startup Terminal, unless you've customized something, you'll usually be in this "HOME" directory.  You can make sure you are starting in your HOME directory by using the change directory command by itself. Type in `cd` press enter, then use the `pwd` command to confirm your working directory.
+When you startup Terminal the working directory is usually set similarly to the above. This is referred to as your HOME directory. You can always go back to your HOME directory by using the "cd" command without any additional parameters, e.g. type in `cd` press enter. Use the `pwd` command to confirm your working directory.
 
 ~~~shell
 cd
@@ -121,7 +125,6 @@ Curate Collections
 If you type "h" and press enter you'll be taken to the help page for managing collections. That should look something like this.
 
 ~~~
-
 Curate collection(s). Command syntax.
 
   NUMBER ENTER_KEY
