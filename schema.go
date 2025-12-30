@@ -17,16 +17,22 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"encoding/json"
 	"fmt"
 	"database/sql"
 	"os"
+	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 
 	// 3rd Party Package
 	"gopkg.in/yaml.v3"
+	//"github.com/mmcdole/gofeed"
+	ext "github.com/mmcdole/gofeed/extensions"
+
 )
 
 // AntennaApp configuration structure
@@ -166,6 +172,7 @@ func (cfg *AppConfig) AddCollection(cfgName string, cName string) error {
 	}
 	return nil
 }
+
 
 // DelCollection removes a collection from the configuration, saving it.
 func (cfg *AppConfig) DelCollection(cfgName string, cName string) error {
@@ -348,3 +355,329 @@ func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface
 	}
 	return nil
 }
+
+// Posts lists posts in a collection
+func (cfg *AppConfig) Posts(cName string, options []string) error {
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return fmt.Errorf("%s, %s", cName, err)
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// NOTES: posts action supports three different SQL statements
+	var (
+		rows *sql.Rows
+	)
+	switch {
+	case len(options) == 3:
+		fromDate, toDate := options[1], options[2]
+		rows, err = db.Query(SQLListDateRangePosts, fromDate, toDate)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLListDateRangePosts, dsn, err)
+		}
+	case len(options) == 2:
+		count, err := strconv.Atoi(options[1])
+		if err != nil {
+			return err
+		}
+		rows, err = db.Query(SQLListRecentPosts, count)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLListRecentPosts, dsn, err)
+		}
+	default:
+		rows, err = db.Query(SQLListPosts)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLListPosts, dsn, err)
+		}
+	}
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	i := 0
+	for rows.Next() {
+		var (
+			link     string
+			title    string
+			pubDate  string
+			postPath string
+		)
+		if err := rows.Scan(&link, &title, &pubDate, &postPath); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			continue
+		}
+		if strings.Contains(pubDate, "T") {
+			parts := strings.SplitN(pubDate, "T", 2)
+			pubDate = parts[0]
+		}
+		if i == 0 {
+			fmt.Println("")
+			i++
+		}
+		fmt.Printf("- [%s](%s), %s\n",
+			title, postPath, pubDate)
+	}
+	if i == 0 {
+		return fmt.Errorf("no published posts")
+	}
+	fmt.Println("")
+
+	return nil
+}
+
+// updateItem will perform an "upsert" to insert or update the row
+func updateItem(db *sql.DB, link string, title string, description string, authors string,
+	enclosures []*Enclosure, guid string, pubDate string, dcExt *ext.DublinCoreExtension,
+	channel, status string, updated string, label string, postPath string, sourceMarkdown string) error {
+	enclosuresSrc, err := json.Marshal(enclosures)
+	if err != nil {
+		return nil
+	}
+	dcExtSrc, err := json.Marshal(dcExt)
+	if err != nil {
+		return nil
+	}
+	_, err = db.Exec(SQLUpdateItem, link, title, description, authors,
+		enclosuresSrc, guid, pubDate, dcExtSrc,
+		channel, status, updated, label, postPath, sourceMarkdown)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// publishPost publishes an item in the items table using link
+func publishPost(db *sql.DB, postPath string, pubDate string, status string, updated string) error {
+	_, err := db.Exec(SQLPublishPost, pubDate, status, postPath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// PublishPost sets the publication date if not set in the front matter
+// of the Markdown document, then sets the publication date and status to published
+// in the items table.
+func (cfg *AppConfig) PublishPost(cName string, fName string) error {
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return err
+	}
+	
+	src, err := os.ReadFile(fName)
+	if err != nil {
+		return fmt.Errorf("failed to read %q, %s", fName, err)
+	}
+	doc := &CommonMark{}
+	if err := doc.Parse(src); err != nil {
+		return fmt.Errorf("failed to parse %q, %s", fName, err)
+	}
+	postPath := doc.GetAttributeString("postPath", "")
+	if postPath == "" {
+		return fmt.Errorf("missing postPath")
+	}
+	updateMarkdownDoc := false
+	if doc.FrontMatter == nil {
+		doc.FrontMatter = map[string]interface{}{}
+	}
+	today := time.Now().Format("2006-01-02")
+	pubDate := doc.GetAttributeString("pubDate", "")
+	if pubDate == "" {
+		pubDate = doc.GetAttributeString("datePublished", today)
+		doc.FrontMatter["datePublished"] = pubDate
+		updateMarkdownDoc = true
+	}
+	if updateMarkdownDoc {
+		doc.FrontMatter["dateModified"] = today
+		if err = saveMarkdown(fName, doc); err != nil {
+			return fmt.Errorf("unable to save %s, %s", fName, err)
+		}	 	
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	status := "published"
+	updated := time.Now().Format(time.RFC3339)
+	return publishPost(db, postPath, pubDate, status, updated)
+}
+
+
+// Post adds a post to a collection
+func (cfg *AppConfig) Post(cName string, fName string) error {
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return err
+	}
+	
+	src, err := os.ReadFile(fName)
+	if err != nil {
+		return fmt.Errorf("failed to read %q, %s", fName, err)
+	}
+	doc := &CommonMark{}
+	if err := doc.Parse(src); err != nil {
+		return fmt.Errorf("failed to parse %q, %s", fName, err)
+	}
+	updateMarkdownDoc := false
+	if doc.FrontMatter == nil {
+		doc.FrontMatter = map[string]interface{}{}
+	}
+	postPath := doc.GetAttributeString("postPath", "")
+	if postPath == "" {
+		postPath = fName
+		doc.FrontMatter["postPath"] = fName
+		updateMarkdownDoc = true
+	}
+	today := time.Now().Format("2006-01-02")
+	dateModified := doc.GetAttributeString("dateModified", "")
+	if dateModified == "" {
+		doc.FrontMatter["dateModified"] = today
+		updateMarkdownDoc = true
+	}
+	if updateMarkdownDoc {
+		if err = saveMarkdown(fName, doc); err != nil {
+			return fmt.Errorf("unable to save %s, %s", fName, err)
+		}	 	
+	}
+	
+	// NOTE: This is trusted content so I can support commonMarkDoc
+	// processor extensions safely.
+	if strings.Contains(doc.Text, "@include-text-block") {
+		doc.Text = IncludeTextBlock(doc.Text)
+	}
+	if strings.Contains(doc.Text, "@include-code-block") {
+		doc.Text = IncludeCodeBlock(doc.Text)
+	}
+
+	// Convert our document text to HTML
+	innerHTML, err := doc.ToUnsafeHTML()
+	if err != nil {
+		return err
+	}
+	title := doc.GetAttributeString("title", "")
+
+	authors, err := doc.GetPersons("author", false)
+	if err != nil {
+		return err
+	}
+	description := doc.GetAttributeString("description", "")
+	if description == "" {
+		description = doc.GetAttributeString("abstract", "")
+	}
+	link := doc.GetAttributeString("link", "")
+
+	pubDate := doc.GetAttributeString("pubDate", "")
+	if pubDate == "" {
+		pubDate = doc.GetAttributeString("datePublished", "")
+	}
+	status := ""
+	if postPath != "" && pubDate != "" {
+		status = "published"
+	} else if postPath != "" {
+		status = "draft"
+	}
+	sourceMarkdown := doc.String()
+
+	channel := doc.GetAttributeString("channel", collection.Link)
+	guid := doc.GetAttributeString("guid", link)
+
+	// When no description is provided the description is set with the body text
+	if description == "" {
+		description = innerHTML
+	}
+	if title == "" && description == "" {
+		return fmt.Errorf("missing both title and description")
+	}
+
+	if postPath != "" {
+		if link == "" {
+			if cfg.BaseURL != "" {
+				if strings.HasSuffix(postPath, ".md") {
+					link = cfg.BaseURL + "/" + strings.TrimSuffix(postPath, ".md") + ".html"
+				} else {
+					link = cfg.BaseURL + "/" + postPath
+				}
+			} else {
+				return fmt.Errorf("missing base_url in antenna YAML, could not form link using postPath %q", postPath)
+			}
+		}
+		// Write out an HTML page to the postPath, if Markdown doc, normalize .html
+		htmlName := filepath.Join(cfg.Htdocs, postPath)
+		if strings.HasSuffix(htmlName, ".md") {
+			htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
+		}
+		gen, err := NewGenerator(path.Base(os.Args[0]), cfg.BaseURL)
+		if err != nil {
+			return err
+		}
+		if err := gen.LoadConfig(collection.Generator); err != nil {
+			return err
+		}
+		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML); err != nil {
+			return err
+		}
+	}
+	// FIXME: Need to handle getting enclosures and publishing them to posts tree
+	// NOTE: Insert/update item in collection
+	// FIXME: need to populate the enclosures
+	enclosures := []*Enclosure{}
+	// FIXME: need to populate the Dublin Core extension
+	dcExt := &ext.DublinCoreExtension{}
+	updated := time.Now().Format(time.RFC3339)
+	if dateModified != "" {
+		d, err := time.Parse("2006-01-02", dateModified)
+		if err != nil {
+			return fmt.Errorf("failed to parse dateModified: %q, %s", dateModified, err)
+		}
+		updated = d.Format(time.RFC3339)
+	}
+
+	label := collection.Title
+	authorsSrc := []byte{}
+	if authors != nil {
+		authorsSrc, err = json.Marshal(authors)
+		if err != nil {
+			return fmt.Errorf("failed to marshal author, %s", err)
+		}
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	return updateItem(db, link, title, description, fmt.Sprintf("%s", authorsSrc), enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath, sourceMarkdown)
+}
+
+// removePost removes an item from the items table using postPath
+func removePost(db *sql.DB, postPath string) error {
+	_, err := db.Exec(SQLDeletePost, postPath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Unpost deletes a post from the items table. Does not remove content on disk
+func (cfg *AppConfig) Unpost(cName string, fName string) error {
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return err
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	return removePost(db, fName)
+}
+
+

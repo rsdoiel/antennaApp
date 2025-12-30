@@ -207,6 +207,22 @@ WHERE
    (pubDate <= ?)
 ORDER BY pubDate DESC;`
 
+	// SQLCurateUnpost delete the post with the matching postPath from the
+	// collection.
+	SQLCurateDelPost = `DELETE
+FROM items
+WHERE postPath = ?`;
+
+	// SQLPublishPost will update the pubDate and status field.
+	SQLPublishPost = `UPDATE items
+SET pubDate = ?, status = ?
+WHERE postPath = ?`;
+
+	// SQLDeletePost will remove the Post from the items table using
+	// the postPath
+	SQLDeletePost = `DELETE FROM items
+WHERE postPath = ?`;
+
 	// SQLSetStatusToReview
 	SQLUpdateStatusToReview = `UPDATE items SET status = 'review';`
 
@@ -219,6 +235,9 @@ ORDER BY pubDate DESC;`
 
 	// SQLSetItemStatus is used when curating items in collections
 	SQLSetItemStatus = `UPDATE items SET status = ?
+WHERE link = ?`
+
+	SQLSetItemPubDate = `UPDATE items SET pubDate = ?
 WHERE link = ?`
 
 	// Update a feed item in the items table
@@ -310,5 +329,12 @@ WHERE inputPath = ?`
 	// status value.
 	SQLSetAllPostToStatus = `UPDATE posts
 SET status = ?
-WHERE postPath != ""`
+WHERE postPath != ''`
+
+	// SQLFixPubDates in items table. 
+	SQLFixPubDates = `UPDATE posts
+SET pubDate = COALESCE(
+    NULLIF(pubDate, updated),
+    DATE('now'))
+WHERE postPath != "" and (pubDate IS NULL or pubDate = '')`
 )

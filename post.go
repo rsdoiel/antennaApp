@@ -18,18 +18,13 @@ package antennaApp
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	// 3rd Party
 	_ "github.com/glebarez/go-sqlite"
-	//"github.com/mmcdole/gofeed"
-	ext "github.com/mmcdole/gofeed/extensions"
 )
 
 
@@ -66,157 +61,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	} else {
 		cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
 	}
-	collection, err := cfg.GetCollection(cName)
-	if err != nil {
-		return err
-	}
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	src, err := os.ReadFile(fName)
-	if err != nil {
-		return err
-	}
-	doc := &CommonMark{}
-	if err := doc.Parse(src); err != nil {
-		return err
-	}
-	// NOTE: This is trusted content so I can support commonMarkDoc
-	// processor extensions safely.
-	if strings.Contains(doc.Text, "@include-text-block") {
-		doc.Text = IncludeTextBlock(doc.Text)
-	}
-	if strings.Contains(doc.Text, "@include-code-block") {
-		doc.Text = IncludeCodeBlock(doc.Text)
-	}
-
-	updateMarkdownDoc := false
-	// Convert our document text to HTML
-	innerHTML, err := doc.ToUnsafeHTML()
-	if err != nil {
-		return err
-	}
-	title := doc.GetAttributeString("title", "")
-	authors, err := doc.GetPersons("author", false)
-	if err != nil {
-		return err
-	}
-	description := doc.GetAttributeString("description", "")
-	if description == "" {
-		description = doc.GetAttributeString("abstract", "")
-	}
-	link := doc.GetAttributeString("link", "")
-	postPath := doc.GetAttributeString("postPath", "")
-	if postPath != "" {
-		postPath = fName
-		updateMarkdownDoc = true
-	}
-	draft := doc.GetAttributeBool("draft", false)
-	today := time.Now().Format("2006-01-02")
-	dateModified := doc.GetAttributeString("dateModified", "")
-	if dateModified == "" {
-		dateModified = today
-		updateMarkdownDoc = true
-	}	
-	pubDate := doc.GetAttributeString("datePublished", "")
-	if pubDate == "" {
-		pubDate = doc.GetAttributeString("pubDate", "")
-	}
-	if pubDate == "" {
-		draft = true
-		updateMarkdownDoc = true
-	}
-	status := ""
-	if draft {
-		status = "review"
-	} else if postPath != "" && pubDate != "" {
-		status = "published"
-	}
-	sourceMarkdown := doc.Text
-	if updateMarkdownDoc {
-		if err = saveMarkdown(fName, doc); err != nil {
-			return fmt.Errorf("unable to save %s, %s", fName, err)
-		}	 	
-	}
-
-	channel := doc.GetAttributeString("channel", collection.Link)
-	guid := doc.GetAttributeString("guid", link)
-
-	// When no description is provided the description is set with the body text
-	if description == "" {
-		description = innerHTML
-	}
-	if title == "" && description == "" {
-		return fmt.Errorf("missing both title and description")
-	}
-
-	if postPath != "" {
-		if link == "" {
-			if cfg.BaseURL != "" {
-				if strings.HasSuffix(postPath, ".md") {
-					link = cfg.BaseURL + "/" + strings.TrimSuffix(postPath, ".md") + ".html"
-				} else {
-					link = cfg.BaseURL + "/" + postPath
-				}
-			} else {
-				return fmt.Errorf("missing base_url in antenna YAML, could not form link using postPath %q", postPath)
-			}
-		}
-		// Write out an HTML page to the postPath, if Markdown doc, normalize .html
-		htmlName := filepath.Join(cfg.Htdocs, postPath)
-		if strings.HasSuffix(htmlName, ".md") {
-			htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
-		}
-		dName := filepath.Dir(htmlName)
-		if _, err := os.Stat(dName); err != nil {
-			if err := os.MkdirAll(dName, 0775); err != nil {
-				return err
-			}
-		}
-		gen, err := NewGenerator(app.appName, cfg.BaseURL)
-		if err != nil {
-			return err
-		}
-		collection, err := cfg.GetCollection(cName)
-		if err != nil {
-			return err
-		}
-		if err := gen.LoadConfig(collection.Generator); err != nil {
-			return err
-		}
-		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML); err != nil {
-			return err
-		}
-	}
-	// FIXME: Need to handle getting enclosures and publishing them to posts tree
-	// NOTE: Insert/update item in collection
-	// FIXME: need to populate the enclosures
-	enclosures := []*Enclosure{}
-	// FIXME: need to populate the Dublin Core extension
-	dcExt := &ext.DublinCoreExtension{}
-	updated := time.Now().Format(time.RFC3339)
-	if dateModified != "" {
-		d, err := time.Parse("2006-01-02", dateModified)
-		if err != nil {
-			return fmt.Errorf("failed to parse dateModified: %q, %s", dateModified, err)
-		}
-		updated = d.Format(time.RFC3339)
-	}
-
-	label := collection.Title
-	authorsSrc := []byte{}
-	if authors != nil {
-		authorsSrc, err = json.Marshal(authors)
-		if err != nil {
-			return fmt.Errorf("failed to marshal author, %s", err)
-		}
-	}
-	return updateItem(db, link, title, description, fmt.Sprintf("%s", authorsSrc),
-		enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath, sourceMarkdown)
+	return cfg.Post(cName, fName)
 }
 
 // This lists published posts
@@ -229,77 +74,9 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 	if len(args) > 0 {
 		cName = strings.TrimSpace(args[0])
 	}
-	collection, err := cfg.GetCollection(cName)
-	if err != nil {
-		return fmt.Errorf("%s, %s", cName, err)
-	}
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	// NOTES: posts action supports three different SQL statements
-	var (
-		rows *sql.Rows
-	)
-	switch {
-	case len(args) == 3:
-		fromDate, toDate := args[1], args[2]
-		rows, err = db.Query(SQLListDateRangePosts, fromDate, toDate)
-		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLListDateRangePosts, dsn, err)
-		}
-	case len(args) == 2:
-		count, err := strconv.Atoi(args[1])
-		if err != nil {
-			return err
-		}
-		rows, err = db.Query(SQLListRecentPosts, count)
-		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLListRecentPosts, dsn, err)
-		}
-	default:
-		rows, err = db.Query(SQLListPosts)
-		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLListPosts, dsn, err)
-		}
-	}
-	if rows != nil {
-		defer rows.Close()
-	}
-
-	i := 0
-	for rows.Next() {
-		var (
-			link     string
-			title    string
-			pubDate  string
-			postPath string
-		)
-		if err := rows.Scan(&link, &title, &pubDate, &postPath); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
-			continue
-		}
-		if strings.Contains(pubDate, "T") {
-			parts := strings.SplitN(pubDate, "T", 2)
-			pubDate = parts[0]
-		}
-		if i == 0 {
-			fmt.Println("")
-			i++
-		}
-		fmt.Printf("- [%s](%s), %s\n",
-			title, postPath, pubDate)
-	}
-	if i == 0 {
-		return fmt.Errorf("no published posts")
-	}
-	fmt.Println("")
-
-	return nil
+	return cfg.Posts(cName, args)
 }
+
 
 func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 	if len(args) != 2 {
@@ -310,46 +87,7 @@ func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 		return err
 	}
 	cName, link := strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
-	collection, err := cfg.GetCollection(cName)
-	if err != nil {
-		return err
-	}
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	return removeItem(db, link)
-}
-
-// updateItem will perform an "upsert" to insert or update the row
-func updateItem(db *sql.DB, link string, title string, description string, authors string,
-	enclosures []*Enclosure, guid string, pubDate string, dcExt *ext.DublinCoreExtension,
-	channel, status string, updated string, label string, postPath string, sourceMarkdown string) error {
-	enclosuresSrc, err := json.Marshal(enclosures)
-	if err != nil {
-		return nil
-	}
-	dcExtSrc, err := json.Marshal(dcExt)
-	if err != nil {
-		return nil
-	}
-	_, err = db.Exec(SQLUpdateItem, link, title, description, authors,
-		enclosuresSrc, guid, pubDate, dcExtSrc,
-		channel, status, updated, label, postPath, sourceMarkdown)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func removeItem(db *sql.DB, link string) error {
-	_, err := db.Exec(SQLDeleteItemByLinkOrPostPath, link, link)
-	if err != nil {
-		return err
-	}
-	return nil
+	return cfg.Unpost(cName, link)
 }
 
 // RssPosts, gernate RSS to stdout for posts

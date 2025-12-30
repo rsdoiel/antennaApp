@@ -293,52 +293,99 @@ func listPosts(collection *Collection, args []string) ([]map[string]string, erro
 
 // addPost prompts for setting up a post in the collection from a Markdown document
 // on local disk.
-func addPost(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+func addPost(scanner *bufio.Scanner, options []string, cfg *AppConfig, collection *Collection) error {
 	// Clear the screen
 	term.Clear()
 	defer term.Clear()
-	term.Println(`
-
-	DEBUG addPost not implemented yet.
-
-press enter to return to previous menu
-`)
+	var fName string
+	if len(options) > 0 {
+		fName = options[0]
+	}
+	if fName == "" {
+		term.Printf("Enter name: ")
+		scanner.Scan()
+		fName, _, _ = parseAnswer(scanner.Text())
+	}
+	if fName == "" {
+		return fmt.Errorf("No filename entered")
+	}
+	cName := collection.File
+	if err := cfg.Post(cName, fName); err != nil {
+		return fmt.Errorf("failed to add post %q, %s", fName, err)
+	}
+	term.Printf("%s added to %s, press enter to return menu", fName, cName)
 	scanner.Scan()
-	_, _, _ = parseAnswer(scanner.Text())
-	return fmt.Errorf("addPost() not implemented.")
+	scanner.Text()
+	return nil
 }
+
+// setPublishPost will set the publication date from the front matter and status to published. If datePublished is misisng from front matter it'll update the Markdown post's front matter then set the item row values.
+func setPublishPost(scanner *bufio.Scanner, options []string, posts []map[string]string, cfg *AppConfig, collection *Collection) error {
+	// Clear the screen
+	term.Clear()
+	defer term.Clear()
+	if len(options) == 0 {
+		return fmt.Errorf("Missing post no or file path")
+	}
+	cName := collection.File
+	var fName string
+	for _, option := range options {
+		itemNo := -1
+		if val, err := extractInt(option); err == nil {
+			itemNo = val - 1
+			if itemNo >= 0 && itemNo < len(posts) {
+				fName = getString(posts[itemNo], "postPath")
+				if fName == "" {
+					fName = getString(posts[itemNo], "postPath")
+				}
+			}
+		} else {
+			fName = option
+		}
+		if fName == "" {
+			return fmt.Errorf("cannot find post to publish")
+		}
+		if err := cfg.PublishPost(cName, fName); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 
 // delPost removes a post from the collection. Does not remove the Markdown or HTML renderings from local disk.
-func delPost(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+func delPost(scanner *bufio.Scanner, options []string, posts []map[string]string, cfg *AppConfig, collection *Collection) error {
 	// Clear the screen
 	term.Clear()
 	defer term.Clear()
-	term.Println(`
-
-DEBUG delPost not implemented yet.
-
-press enter to return to previous menu
-`)
-	scanner.Scan()
-	_, _, _ = parseAnswer(scanner.Text())
-	return fmt.Errorf("delPost() not implemented.")
+	if len(options) == 0 {
+		return fmt.Errorf("Missing post no or file path")		
+	}
+	cName := collection.File
+	var fName string
+	for _, option := range options {
+		fName = ""
+		itemNo := -1
+		if val, err := extractInt(option); err == nil {
+			itemNo = val - 1
+			term.Printf("DEBUG itemNo -> %d\n", itemNo)
+			if itemNo >= 0 && itemNo < len(posts) {
+				fName = getString(posts[itemNo], "postPath")
+			}
+		}
+		if fName == "" {
+			fName = option
+		}
+		if fName == "" {
+			return fmt.Errorf("cannot find post to remove")
+		}
+		if err := cfg.Unpost(cName, fName); err != nil {
+			return fmt.Errorf("unable to remove post %q for %q, %s", fName, cName, err)
+		}
+	}
+	return nil
 }
 
-// publishPosts sets all post status to "published"
-func publishPosts(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
-	// Clear the screen
-	term.Clear()
-	defer term.Clear()
-	term.Println(`
-
-DEBUG publishPost not implemented yet.
-
-press enter to return to previous menu
-`)
-	scanner.Scan()
-	_, _, _ = parseAnswer(scanner.Text())
-	return fmt.Errorf("publishPosts() not implemented.")
-}
 
 
 // helpCuratePosts explains how the options in the collection posts menu
@@ -388,7 +435,7 @@ Press enter to exit help.
 }
 
 // curatePosts displays items in a collection so you can select items for publication
-func curatePosts(scanner *bufio.Scanner, collection *Collection) error {
+func curatePosts(scanner *bufio.Scanner, cfgName string, cfg *AppConfig, collection *Collection) error {
 	// Clear the screen
 	term.Clear()
 	defer term.Clear()
@@ -401,11 +448,10 @@ func curatePosts(scanner *bufio.Scanner, collection *Collection) error {
 	if err != nil {
 		displayErrorStatus("%s", err)
 	}
-	tot := len(posts)
 	for quit := false; !quit; {
+		tot := len(posts)
 		term.Move(1, 1)
 		term.ClrToEOL()
-
 		term.Printf("Posts in %s\n\n", collection.File)
 		for i := curPos; i < tot && i < (curPos+pageSize); i++ {
 			title := constrainText(getString(posts[i], "title"), pageWidth)
@@ -444,7 +490,7 @@ func curatePosts(scanner *bufio.Scanner, collection *Collection) error {
 				continue
 			}
 		case strings.HasPrefix(answer, "a"):
-			if err = addPost(scanner, options, posts, collection); err != nil {
+			if err = addPost(scanner, options, cfg, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
@@ -455,7 +501,7 @@ func curatePosts(scanner *bufio.Scanner, collection *Collection) error {
 			}
 			tot = len(posts)
 		case strings.HasPrefix(answer, "d"):
-			if err = delPost(scanner, options, posts, collection); err != nil {
+			if err = delPost(scanner, options, posts, cfg, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue				
 			}
@@ -466,7 +512,8 @@ func curatePosts(scanner *bufio.Scanner, collection *Collection) error {
 			}
 			tot = len(posts)
 		case strings.HasPrefix(answer, "p"):
-			if err := publishPosts(scanner, options, posts, collection); err != nil {
+			// FIXME: Make sure the Front Matter is updated and we
+			if err := setPublishPost(scanner, options, posts, cfg, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
@@ -1226,7 +1273,7 @@ Curate %s:
 			}
 		case strings.HasPrefix(answer, "po"):
 			// Curate posts
-			if err := curatePosts(scanner, collection); err != nil {
+			if err := curatePosts(scanner, cfgName, cfg, collection); err != nil {
 				displayErrorStatus("%q", err)
 				continue
 			}
