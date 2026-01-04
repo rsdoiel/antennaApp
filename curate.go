@@ -368,7 +368,6 @@ func delPost(scanner *bufio.Scanner, options []string, posts []map[string]string
 		itemNo := -1
 		if val, err := extractInt(option); err == nil {
 			itemNo = val - 1
-			term.Printf("DEBUG itemNo -> %d\n", itemNo)
 			if itemNo >= 0 && itemNo < len(posts) {
 				fName = getString(posts[itemNo], "postPath")
 			}
@@ -1023,7 +1022,6 @@ func delPage(scanner *bufio.Scanner, options []string, pages []map[string]string
 		itemNo := -1
 		if val, err := extractInt(option); err == nil {
 			itemNo = val - 1
-			term.Printf("DEBUG itemNo -> %d\n", itemNo)
 			if itemNo >= 0 && itemNo < len(pages) {
 				inputPath = getString(pages[itemNo], "inputPath")
 			}
