@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.20 b734f46
+%antenna(1) user manual | version 0.0.20 9ebe3f1
 % R. S. Doiel
 % 2025-12-24
 
@@ -84,13 +84,14 @@ del COLLECTION_FILE
 : Remove a collection from the Antenna configuration.
 
 page INPUT_PATH [OUTPUT_PATH]
-: This will create a standalone HTML page in a collection called pages.db (created
-by the init action). It uses the default page generator defined in the antenna.yaml
-if one is not specifically set for the pages.db collection. The pages command reads
-in the Markdown document from INPUT_PATH and writes it an HTML file using the 
-same basename. If OUTPUT_PATH is set it uses that name for the HTML file generated.
-(NOTE: the pages are not shown in the RSS feed. The page action is useful for pages
-like an about page, home page, and search page. __The Markdown processed via page
+: This will create a standalone HTML page in a collection called pages.md. The pages.md
+is the only collection that has pages (hense the name). It is also the default collection
+(created by the init action). It uses the default page generator defined in the
+antenna.yaml if one is not specifically set for the pages.db collection. The pages
+command reads in the Markdown document from INPUT_PATH and writes it an HTML file
+using the  same basename. If OUTPUT_PATH is set it uses that name for the HTML file
+generated. (NOTE: the pages are not shown in the RSS feed. The page action is useful for
+pages like an about page, home page, and search page. __The Markdown processed via page
 action will allow "unsafe" HTML to pass through. Only use page if you trust the
 Markdown document!!!__)
 
@@ -99,8 +100,9 @@ unpage INPUT_PATH
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
-pages [COLLECTION_NAME]
-: List the pages in a collection. Pages are ordered by descending updated timestamp.
+pages
+: List the page entries in the pages.md collection. Pages are ordered by
+descending updated timestamp.
 
 
 post [COLLECTION_NAME] FILEPATH

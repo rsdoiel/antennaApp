@@ -17,12 +17,9 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -106,68 +103,9 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if len(args) == 2 {
 		oName = strings.TrimSpace(args[1])
 	}
-	src, err := os.ReadFile(fName)
-	if err != nil {
-		return err
-	}
-	doc := &CommonMark{}
-	if err := doc.Parse(src); err != nil {
-		return err
-	}
-	// NOTE: This is trusted content so I can support commonMarkDoc
-	// processor extensions safely.
-	if strings.Contains(doc.Text, "@include-text-block ") {
-		doc.Text = IncludeTextBlock(doc.Text)
-	}
-	if strings.Contains(doc.Text, "@include-code-block ") {
-		doc.Text = IncludeCodeBlock(doc.Text)
-	}
-
-	// Convert our document text to HTML
-	// NOTE: Pages are allowed to have "unsafe" embedded HTML because they are
-	// not reading from a feed, they are being read from your file system.
-	innerHTML, err := doc.ToUnsafeHTML()
-	if err != nil {
-		return err
-	}
-	postPath := doc.GetAttributeString("postPath", fName)
-	htmlName := filepath.Join(cfg.Htdocs, postPath)
-	if oName != "" {
-		htmlName = filepath.Join(cfg.Htdocs, oName)
-	} 
-	if strings.HasSuffix(htmlName, ".md") {
-		htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
-	}
-	dName := filepath.Dir(htmlName)
-	if _, err := os.Stat(dName); err != nil {
-		if err := os.MkdirAll(dName, 0775); err != nil {
-			return err
-		}
-	}
-	gen, err := NewGenerator(app.appName, cfg.BaseURL)
-	if err != nil {
-		return err
-	}
-	if err := gen.LoadConfig(cfg.Generator); err != nil {
-		return err
-	}
-	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
-		return err
-	}
-	// NOTE: I need to add the page to pages.db
-	// NOTE: remove the page from pages table.
-	dbName := "pages.db"
-	db, err := sql.Open("sqlite", dbName)
-	if err != nil {
-		return fmt.Errorf("failed to open %s, %s", dbName, err)
-	}
-	defer db.Close()
-	timestamp := time.Now().Format(time.RFC3339)
-	if _, err := db.Exec(SQLUpdatePage, fName, oName, timestamp); err != nil {
-		return fmt.Errorf("%s, %s", dbName, err)
-	}
-	return nil
+	return cfg.Page(fName, oName)
 }
+
 
 // Unpage will remove a CommonMark document filePath
 func (app *AntennaApp) Unpage(cfgName string, args []string) error {
@@ -178,22 +116,8 @@ func (app *AntennaApp) Unpage(cfgName string, args []string) error {
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	fName, oName := strings.TrimSpace(args[0]), strings.TrimSpace(args[0])
-	if len(args) == 2 {
-		oName = strings.TrimSpace(args[1])
-	}
-	// NOTE: remove the page from pages table.
-	dbName := "pages.db"
-	db, err := sql.Open("sqlite", dbName)
-	if err != nil {
-		return fmt.Errorf("failed to open %s, %s", dbName, err)
-	}
-	defer db.Close()
-
-	if _, err := db.Exec(SQLDeletePageByPath, fName, oName); err != nil {
-		return fmt.Errorf("%s, %s", dbName, err)
-	}
-	return nil
+	fName := strings.TrimSpace(args[0])
+	return cfg.Unpage(fName)
 }
 
 // Pages will list the pages in the pages collection
@@ -202,31 +126,6 @@ func (app *AntennaApp) Pages(cfgName string, args []string) error {
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	// NOTE: remove the page from pages table.
-	dbName := "pages.db"
-	db, err := sql.Open("sqlite", dbName)
-	if err != nil {
-		return fmt.Errorf("failed to open %s, %s", dbName, err)
-	}
-	defer db.Close()
-
-	rows, err := db.Query(SQLDisplayPage)
-	if err != nil {
-		return fmt.Errorf("%s, %s", dbName, err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var (
-			iName   string
-			oName   string
-			updated string
-		)
-		if err := rows.Scan(&iName, &oName, &updated); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
-			continue
-		}
-		fmt.Printf("%s\t%s\t%s\n", iName, oName, updated)
-	}
-	return nil
+	return cfg.Pages()
 }
+

@@ -512,7 +512,6 @@ func curatePosts(scanner *bufio.Scanner, cfgName string, cfg *AppConfig, collect
 			}
 			tot = len(posts)
 		case strings.HasPrefix(answer, "p"):
-			// FIXME: Make sure the Front Matter is updated and we
 			if err := setPublishPost(scanner, options, posts, cfg, collection); err != nil {
 				displayErrorStatus("%s", err)
 				continue
@@ -973,58 +972,10 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
  * Page methods
  */
 
-// listPages returns a list of items for a collection
-func listPages(collection *Collection, args []string) ([]map[string]string, error) {
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	var (
-		rows *sql.Rows
-	)
-	rows, err = db.Query(SQLListPages)
-	if err != nil {
-		return nil, fmt.Errorf("%s\n%s, %s", SQLListItems, dsn, err)
-	}
-	if rows != nil {
-		defer rows.Close()
-	}
-
-	i := 0
-	pages := []map[string]string{}
-	for rows.Next() {
-		var (
-			inputPath string
-			outputPath string
-			updated string
-		)
-		if err = rows.Scan(&inputPath, &outputPath, &updated); err != nil {
-			displayErrorStatus("failed to read row (%d), %s\n", i, err)
-			continue
-		}
-		if i == 0 {
-			i++
-		}
-		page := map[string]string{
-			"inputPath": inputPath,
-			"outputPath": outputPath,
-			"updated": updated,
-		}
-		pages = append(pages, page)
-	}
-	if i == 0 {
-		return nil, fmt.Errorf("no pages found")
-	}
-	return pages, nil
-}
-
 
 // addPage prompts for setting up a page in the collection from a Markdown document
 // on local disk.
-func addPage(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+func addPage(scanner *bufio.Scanner, options []string, pages []map[string]string, cfg *AppConfig) error {
 	// Clear the screen
 	term.Clear()
 	defer term.Clear()
@@ -1040,19 +991,37 @@ press enter to return to previous menu
 }
 
 // delPage removes a page from the collection. Does not remove the Markdown or HTML renderings from local disk.
-func delPage(scanner *bufio.Scanner, options []string, pages []map[string]string, collection *Collection) error {
+func delPage(scanner *bufio.Scanner, options []string, pages []map[string]string, cfg *AppConfig) error {
 	// Clear the screen
 	term.Clear()
 	defer term.Clear()
-	term.Println(`
-
-DEBUG delPage not implemented yet.
-
-press enter to return to previous menu
-`)
-	scanner.Scan()
-	_, _, _ = parseAnswer(scanner.Text())
-	return fmt.Errorf("delPage() not implemented.")
+	if len(options) == 0 {
+		return fmt.Errorf("Missing page no or file path")		
+	}
+	var (
+		inputPath string
+	)
+	for _, option := range options {
+		inputPath = ""
+		itemNo := -1
+		if val, err := extractInt(option); err == nil {
+			itemNo = val - 1
+			term.Printf("DEBUG itemNo -> %d\n", itemNo)
+			if itemNo >= 0 && itemNo < len(pages) {
+				inputPath = getString(pages[itemNo], "inputPath")
+			}
+		}
+		if inputPath == "" {
+			inputPath = option
+		}
+		if inputPath == "" {
+			return fmt.Errorf("cannot find page to remove")
+		}
+		if err := cfg.Unpage(inputPath); err != nil {
+			return fmt.Errorf("unable to remove page %q, %s", inputPath, err)
+		}
+	}
+	return nil
 }
 
 // helpCuratePages explains how the options in the collection pages menu
@@ -1069,7 +1038,7 @@ func helpCuratePages(scanner *bufio.Scanner) {
 Actions:
 
 NUMBER
-: Move to item NUMBER
+: Move to item NUMBERbecause
 
 +NUMBER or -NUMBER
 : Page by NUMBER of items through list
@@ -1096,7 +1065,7 @@ Press enter to exit help.
 
 
 // curatePages displays items in a collection so you can select items for publication
-func curatePages(scanner *bufio.Scanner, collection *Collection) error {
+func curatePages(scanner *bufio.Scanner, cfg *AppConfig, collection *Collection) error {
 	// Clear the screen
 	term.Clear()
 	defer term.Clear()
@@ -1105,7 +1074,7 @@ func curatePages(scanner *bufio.Scanner, collection *Collection) error {
 	pageSize := int((term.GetTerminalHeight() - 5) / 2)
 	curPos := 0
 	args = append(args, fmt.Sprintf("%d", pageSize))
-	pages, err := listPages(collection, args)
+	pages, err := cfg.GetPages()
 	if err != nil {
 		displayErrorStatus("%s", err)
 	}
@@ -1150,11 +1119,11 @@ func curatePages(scanner *bufio.Scanner, collection *Collection) error {
 			}
 		case strings.HasPrefix(answer, "a"):
 			// Add a page
-			if err = addPage(scanner, options, pages, collection); err != nil {
+			if err = addPage(scanner, options, pages, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
-			pages, err = listPages(collection, []string{})
+			pages, err = cfg.GetPages()
 			if err != nil {
 				displayErrorStatus("%s", err)
 				continue
@@ -1162,11 +1131,11 @@ func curatePages(scanner *bufio.Scanner, collection *Collection) error {
 			tot = len(pages)
 		case strings.HasPrefix(answer, "d"):
 			// Remove a page
-			if err = delPage(scanner, options, pages, collection); err != nil {
+			if err = delPage(scanner, options, pages, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
-			pages, err = listPages(collection, []string{})
+			pages, err = cfg.GetPages()
 			if err != nil {
 				displayErrorStatus("%s", err)
 				continue
@@ -1215,8 +1184,8 @@ an HTML page and a feed item. These are also included in the sitemap.
 
 item
 : Items can hold a post or an RSS (feed) item harvested from the web. These are
-listed in the aggregation pages but not explicitly included in the sitemap because
-they may point to another web resource.
+listed in the aggregation pages but may not explicitly included in the sitemap
+when they may point to another web resource.
 
 Each content type is managed in its own list. 
 %s%s
@@ -1267,7 +1236,7 @@ Curate %s:
 		answer = strings.ToLower(answer)
 		switch {
 		case strings.HasPrefix(answer, "pa"):
-			if err := curatePages(scanner, collection); err != nil {
+			if err := curatePages(scanner, cfg, collection); err != nil {
 				displayErrorStatus("%q", err)
 				continue
 			}

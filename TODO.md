@@ -15,6 +15,11 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] add/del pages
+- [ ] add/del posts
+- [ ] add/del items
+- [ ] blogit like feature needs to be integrated into post, the blog function needs a blog prefix path, then the published date will be used to form the blog path and the Markdown document will be copied into the newly created location
+  - [ ] a means for creating a "podcast" post/item in the feed easily
 - [ ] There should be a means of applying the filter SQL statements on a collection's items without running harvest or generate
 - [ ] I need to port blogit from TypeScript to Go an integrate into antennaApp, it should populate the front matter in posts appropriately.
 - [ ] The interactive terminal interface lead the user to compose the commands available directly form the command line to re-enforce what the program will actually do for them.

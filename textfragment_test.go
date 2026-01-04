@@ -27,6 +27,5 @@ func TestParse(t *testing.T) {
 		if !strings.Contains(tf.Link, testLinks[i]) {
 			t.Errorf("expected tf.link, %q in %q", testLinks[i], tf.Link)
 		}
-		//fmt.Printf("DEBUG tf.Text -> %s\ntf.Link -> %s\n", tf.Text, tf.Link)
 	}
 }
