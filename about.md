@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.20
+version: 0.0.21
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -47,16 +47,20 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2025-12-24
+date_released: 2026-01-04
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.20
+## antennaApp 0.0.21
 
-- added curate action for interactive curation of collections and items
-- minor code cleanup
+- added interactive  curation collections and items
+- added interactive curation actions for pages
+- added interactive curation actions for posts
+- refactored app methods to be AppConfig methods so they
+  are shared between interactive text interface and command
+  line interface
 
 ### Authors
 

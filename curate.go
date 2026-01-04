@@ -976,18 +976,32 @@ func curateItems(scanner *bufio.Scanner, collection *Collection) error {
 // addPage prompts for setting up a page in the collection from a Markdown document
 // on local disk.
 func addPage(scanner *bufio.Scanner, options []string, pages []map[string]string, cfg *AppConfig) error {
-	// Clear the screen
 	term.Clear()
 	defer term.Clear()
-	term.Println(`
-
-DEBUG addPage not implemented yet.
-
-press enter to return to previous menu
-`)
-	scanner.Scan()
-	_, _, _ = parseAnswer(scanner.Text())
-	return fmt.Errorf("addPage() not implemented.")
+	var (
+		fName string
+		oName string
+	)
+	if len(options) > 0 {
+		fName = options[0]
+	}
+	if len(options) > 1 {
+		oName = options[1]
+	}
+	if fName == "" {
+		term.Printf("Enter file name: ")
+		scanner.Scan()
+		fName, _, _ = parseAnswer(scanner.Text())
+	}
+	if fName == "" {
+		return fmt.Errorf("No filename entered")
+	}
+	if oName == "" {
+		term.Printf("Enter output name: ")
+		scanner.Scan()
+		fName, _, _ = parseAnswer(scanner.Text())
+	}	
+	return cfg.Page(fName, oName)
 }
 
 // delPage removes a page from the collection. Does not remove the Markdown or HTML renderings from local disk.
