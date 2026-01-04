@@ -115,30 +115,32 @@ Matter of the Markdown document.
 <dd>
 Remove a collection from the Antenna configuration.
 </dd>
-<dt>page COLLECTION_NAME INPUT_PATH [OUTPUT_PATH]</dt>
+<dt>page INPUT_PATH [OUTPUT_PATH]</dt>
 <dd>
-This will create a standalone HTML page in a collection called pages.db
-(created by the init action). It uses the default page generator defined
-in the antenna.yaml if one is not specifically set for the pages.db
-collection. The pages command reads in the Markdown document from
-INPUT_PATH and writes it an HTML file using the same basename. If
-OUTPUT_PATH is set it uses that name for the HTML file generated. (NOTE:
-the pages are not shown in the RSS feed. The page action is useful for
-pages like an about page, home page, and search page. <strong>The
-Markdown processed via page action will allow “unsafe” HTML to pass
-through. Only use page if you trust the Markdown document!!!</strong>)
+This will create a standalone HTML page in a collection called pages.md.
+The pages.md is the only collection that has pages (hense the name). It
+is also the default collection (created by the init action). It uses the
+default page generator defined in the antenna.yaml if one is not
+specifically set for the pages.db collection. The pages command reads in
+the Markdown document from INPUT_PATH and writes it an HTML file using
+the same basename. If OUTPUT_PATH is set it uses that name for the HTML
+file generated. (NOTE: the pages are not shown in the RSS feed. The page
+action is useful for pages like an about page, home page, and search
+page. <strong>The Markdown processed via page action will allow “unsafe”
+HTML to pass through. Only use page if you trust the Markdown
+document!!!</strong>)
 </dd>
-<dt>unpage COLLECTION_NAME INPUT_PATH</dt>
+<dt>unpage INPUT_PATH</dt>
 <dd>
 This will will remove a page’s from a collection based in the input
 filepath provided. It does not remove the page on disk, just from the
 collection so that it will no longer be used to create a corresponding
 HTML page when the generate action is run.
 </dd>
-<dt>pages [COLLECTION_NAME]</dt>
+<dt>pages</dt>
 <dd>
-List the pages in a collection. Pages are ordered by descending updated
-timestamp.
+List the page entries in the pages.md collection. Pages are ordered by
+descending updated timestamp.
 </dd>
 <dt>post [COLLECTION_NAME] FILEPATH</dt>
 <dd>

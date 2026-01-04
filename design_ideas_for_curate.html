@@ -20,6 +20,12 @@
 </nav>
 <section>
 <h1 id="curate-concept">Curate Concept</h1>
+<p>Curate is the interactive text interface for Antenna App. It is the
+default interface designed for novice and casual use. When completed
+it’ll include support for all the actions provided in the scriptable
+command line interface. It’ll also provide a more fluid means of
+managing metadata than hand coded YAML.</p>
+<h2 id="origin-idea">Origin idea</h2>
 <p>I want an easy way to perform the actions supported by Antenna App
 when using the command line isn’t the right choice. Something
 interactive but still in the terminal. In an ideal world all the YAML
@@ -27,27 +33,34 @@ configuration and front matter would be automatically generated and
 editable without having to know YAML. An interactive command could move
 the Antenna App in that direction.</p>
 <h2 id="the-command">the command</h2>
-<p>The command I’m describing is <code>antenna curate</code>. The goal
-of the command is to provide an interactive terminal interface for
-curating our Antenna App collection(s).</p>
-<h3 id="curate-collections">Curate collections</h3>
-<p>The bare command <code>antenna curate</code> should display the list
-of collections discovered in the current directory. If the directory you
-are in does not have an Antenna App configuration file (antenna.yaml),
-it will prompt you to initialize the project. Otherwise you are dropped
-into the collection level curation options. The following are planned or
+<p>The command I’m describing is <code>antenna curate</code> or simply
+invoking <code>antenna</code> without any options. If an antenna.yaml
+file is not in the current working directory you’ll be prompted to
+initialize an Antenna managed website in the current directory. If
+initialization has already occurred then you’ll be shown a list of
+currently defined collections.</p>
+<h2 id="curating-collections">Curating collections</h2>
+<p>There are several possible actions at the site level. These commands
+can be run on all collections or specific ones. It also provides a means
+of curating a specific collection. The following actions are planned or
 being implemented.</p>
 <ul>
 <li>initialize a project</li>
 <li>list available collections</li>
-<li>add COLLECTION</li>
-<li>del COLLECTION</li>
-<li>harvest COLLECTION</li>
-<li>generate COLLECTION</li>
+<li>add a collection</li>
+<li>del a collection</li>
+<li>harvest all or a single collection</li>
+<li>generate HTML, RSS, OPML, Sitemaps for all or a single
+collection</li>
 <li>curate items in a collection</li>
-<li>command history (on FILENAME | off)
+<li>action recorder (on FILENAME | off)
 <ul>
-<li>saves the commands composed into a text file</li>
+<li>saves the the cli commands representing you interactive actions
+taken</li>
+<li>generate shell and PowerShell scripts of action sequence with
+comments</li>
+<li>action player that will execute the shell or PowerShell script
+generated</li>
 </ul></li>
 </ul>
 <h3 id="curate-items-in-a-collection">Curate items in a collection</h3>
@@ -55,16 +68,33 @@ being implemented.</p>
 the implemented actions. The follow actions are either implemented or
 planned.</p>
 <ul>
-<li>set items to published status</li>
-<li>set items to review status</li>
-<li>clear items status</li>
-<li>page through items</li>
+<li>list items</li>
+<li>set items status
+<ul>
+<li>to published, review or clear status</li>
+</ul></li>
+<li>list pages in a collection</li>
+<li>render pages in a collection</li>
+<li>choose and apply a theme to collection</li>
+<li>render posts as HTML</li>
 <li>apply the collection’s default SQL filters</li>
-<li>if command history is active the commands you execute will be saved
-in the command history file</li>
 </ul>
-<h3 id="curate-a-theme-and-page-elements">Curate a theme and page
-elements</h3>
+<h2 id="curate-pages-in-a-collection">Curate pages in a collection</h2>
+<ul>
+<li>list pages</li>
+<li>render pages or page as HTML</li>
+</ul>
+<h2 id="curate-a-themes">Curate a themes</h2>
+<p>TBD</p>
+<ul>
+<li>list themes</li>
+<li>create/add a theme</li>
+<li>edit elements in a theme</li>
+<li>apply theme to collection</li>
+<li>remove theme from collection (e.g. set back to default theme)</li>
+</ul>
+<h2 id="curate-default-and-named-filters">Curate default and named
+filters</h2>
 <p>TBD</p>
 <h3 id="curate-the-antenna-app-configuration">Curate the antenna App
 configuration</h3>
@@ -75,6 +105,7 @@ I say “edit” I really meaning envoking a writer’s favorite editor and
 passing content to it be edited. Antenna App shouldn’t privide an editor
 but should use the one provided by the system.</p>
 <ul>
+<li>named custom filters</li>
 <li>edit collection Markdown front matter</li>
 <li>edit collection Markdown text</li>
 <li>edit item Markdown front matter</li>
@@ -86,10 +117,6 @@ document</li>
 <li>unpost removes a local Markdown document from feed</li>
 <li>pages lists the pages so you can curate them</li>
 <li>posts lists just the post items so you can curate them</li>
-<li>themes lists the themes available
-<ul>
-<li>create, add, edit, apply or remove themes from this view</li>
-</ul></li>
 <li>antenna.yaml manager, allow easy configuration without knowing
 YAML</li>
 <li>a tool for create common SQL filters, sort of a Q &amp; A dialog

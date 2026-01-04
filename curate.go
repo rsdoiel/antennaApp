@@ -997,10 +997,13 @@ func addPage(scanner *bufio.Scanner, options []string, pages []map[string]string
 		return fmt.Errorf("No filename entered")
 	}
 	if oName == "" {
-		term.Printf("Enter output name: ")
+		term.Printf("Enter output name (default %s.html): ", strings.TrimSuffix(fName, ".md"))
 		scanner.Scan()
-		fName, _, _ = parseAnswer(scanner.Text())
-	}	
+		oName, _, _ = parseAnswer(scanner.Text())
+		if oName == "" {
+			oName = strings.TrimSuffix(fName, ".md") + ".html"
+		}
+	}
 	return cfg.Page(fName, oName)
 }
 
@@ -1057,7 +1060,7 @@ NUMBER
 +NUMBER or -NUMBER
 : Page by NUMBER of items through list
 
-[a]dd
+[a]dd [INPUT_NAME] [OUTPUT_NAME]
 : Add a Markdown document as a page to the collection
 
 [d]el NUMBER|NAME
@@ -1092,19 +1095,19 @@ func curatePages(scanner *bufio.Scanner, cfg *AppConfig, collection *Collection)
 	if err != nil {
 		displayErrorStatus("%s", err)
 	}
-	tot := len(pages)
 	for quit := false; !quit; {
 		term.Move(1, 1)
 		term.ClrToEOL()
 
 		term.Printf("Pages in %s\n\n", collection.File)
+		tot := len(pages)
 		for i := curPos; i < tot && i < (curPos+pageSize); i++ {
 			inputPath := getString(pages[i], "inputPath")
 			outputPath := getString(pages[i], "outputPath")
 			updated := getString(pages[i], "updated")
 			term.ClrToEOL()
-			term.Printf("%4d %s%s%s\n\t%q %s %s %s %s\n",
-				i+1, termlib.Bold+termlib.Italic, inputPath, termlib.Reset, outputPath,updated)
+			term.Printf("%4d %s%s%s\n\t%q %s\n",
+				i+1, termlib.Bold+termlib.Italic, inputPath, termlib.Reset, outputPath, updated)
 		}
 		// Display prompt
 		term.ResetStyle()
