@@ -283,7 +283,7 @@ func (doc *CommonMark) ToHTML() (string, error) {
 			figure.Figure,
 			figure.Figure.WithImageLink(),
 			figure.Figure.WithSkipNoCaption(),
-			mathjax.MathJax,
+			//mathjax.MathJax,
 			extension.CJK,
 			&fences.Extender{},
 		),
