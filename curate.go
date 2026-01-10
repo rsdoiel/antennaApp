@@ -31,7 +31,7 @@ import (
 	// 3rd Party
 	//_ "github.com/glebarez/go-sqlite"
 
-	//"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/filepicker"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -203,7 +203,7 @@ func (m modelCollections) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m modelCollections) View() string {
-	return baseStyle.Render(m.table.View()) + "\n  [q]uit, [h]elp, [a]dd or [d]elete collections\n"
+	return baseStyle.Render(m.table.View()) + "\n [q]uit, [h]elp, [a]dd or [d]elete collections\n"
 }
 
 func curateCollections(cfgName string, cfg *AppConfig) error {
@@ -250,26 +250,83 @@ func curateCollections(cfgName string, cfg *AppConfig) error {
 	return nil
 }
 
+/**
+ * init a project
+ */
+type modelInit struct {
+	textInput textinput.Model
+	err error
+}
+
+type (
+	errMsg error
+)
+
+func initModelInit () modelInit {
+	ti := textinput.New()
+	ti.Placeholder = ""
+	ti.Focus()
+	ti.CharLimit = 156
+	ti.Width = 20
+
+	return modelInit{
+		textInput: ti,
+		err:       nil,
+	}
+}
+
+func (m modelInit) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+func (m modelInit) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyEnter:
+			return m, tea.Quit
+		case tea.KeyCtrlC, tea.KeyEsc:
+			m.err = fmt.Errorf("aborting init")
+			return m, nil
+		}
+		switch msg.String() {
+		case "y":
+			return m, tea.Quit
+		case "Y":
+			return m, tea.Quit
+		default:
+			m.err = fmt.Errorf("aborting init")
+			return m, nil
+		}
+	// We handle errors just like any other message
+	case errMsg:
+		m.err = msg
+		return m, nil
+	}
+	m.textInput, cmd = m.textInput.Update(msg)
+	return m, cmd
+}
+
+func (m modelInit) View() string {
+	return fmt.Sprintf(
+		"Initialize project? Y/n %s\n\n",
+		m.textInput.View(),
+	)
+}
+
 // Curate provides a simple terminal interface to curating collections and 
 // feed items for publication in your Antenna site.
 func (app *AntennaApp) Curate(cfgName string, args []string) error {
 	if _, err := os.Stat(cfgName); os.IsNotExist(err) {
-		return fmt.Errorf("%d does not exist, run `antenna init` to created it.")
-/*
-		term.Clear()
-		term.Printf(`
-
-	%s does not exist. Create it? %syes%s/no `, cfgName, termlib.Bold + termlib.Italic, termlib.Reset)
-
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Scan()
-		answer, _, _ := parseAnswer(scanner.Text())
-		if answer == "y" || answer == "yes" {
-			if err := app.Init(cfgName, []string{}); err != nil {
-				return err
-			}
+		m := initModelInit()
+		p := tea.NewProgram(m)
+		if _, err := p.Run(); err != nil {
+			return err
 		}
-*/
+		if err := app.Init(cfgName, []string{}); err != nil {
+			return err
+		}
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
