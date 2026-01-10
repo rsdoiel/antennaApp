@@ -800,7 +800,7 @@ func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
 			updated    string
 		)
 		if err = rows.Scan(&inputPath, &outputPath, &updated); err != nil {
-			displayErrorStatus("failed to read row (%d), %s\n", i, err)
+			fmt.Fprintf(os.Stderr, "failed to read row (%d), %s\n", i, err)
 			continue
 		}
 		if i == 0 {
