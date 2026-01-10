@@ -38,7 +38,7 @@
   "version": "0.0.21",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- added interactive  curation collections and items\n- added interactive curation actions for pages\n- added interactive curation actions for posts\n- refactored app methods to be AppConfig methods so they\n  are shared between interactive text interface and command\n  line interface",
+  "releaseNotes": "- added interactive  curation collections and items\n- added interactive curation actions for pages\n- added interactive curation actions for posts\n- refactored app methods to be AppConfig methods so they\n  are shared between interactive text interface and command\n  line interface\n- turned off MathJax support in rendering Markdown to match Glow",
   "copyrightYear": 2026,
   "copyrightHolder": "R. S. Doiel"
 }

@@ -45,7 +45,10 @@ type CommonMark struct {
 	FrontMatter map[string]interface{} `json:"frontMatter,omitempty" yaml:"frontMatter,omitempty"`
 	// Text holds the CommonMark text that comes after any front matter
 	Text string `json:"text,omitempty" yaml:"text,omitempty"`
+	// useMathJax controls if MathJax support is included when rendering HTML
+	useMathJax bool `json:"-"`
 }
+
 
 // ParseMarkdownLinks parses a Markdown text for links in the format `- [LABEL](URL "DESCRIPTION")`
 // and returns a slice of Link structures.
@@ -123,6 +126,12 @@ func SplitFrontMatter(src []byte) (map[string]interface{}, string, error) {
 	}
 	// The rest of the document starts after the second "---"
 	return result, strings.Join(rest, "\n"), nil
+}
+
+// UseMathJax will set whether or not the MathJax extension is loaded when
+// converting to HTML
+func (doc *CommonMark) UseMathJax(value bool) {
+	doc.useMathJax = value
 }
 
 // Parse will read a byte slice and populate any FrontMatter found
@@ -274,8 +283,7 @@ func (doc *CommonMark) String() string {
 }
 
 func (doc *CommonMark) ToHTML() (string, error) {
-	md := goldmark.New(
-		goldmark.WithExtensions(
+	extenders := []goldmark.Extender{
 			extension.GFM,
 			extension.DefinitionList,
 			extension.Footnote,
@@ -283,9 +291,15 @@ func (doc *CommonMark) ToHTML() (string, error) {
 			figure.Figure,
 			figure.Figure.WithImageLink(),
 			figure.Figure.WithSkipNoCaption(),
-			//mathjax.MathJax,
 			extension.CJK,
 			&fences.Extender{},
+	}
+	if doc.useMathJax {
+			extenders = append(extenders, mathjax.MathJax)
+	}
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extenders...
 		),
 	)
 	var buf bytes.Buffer
@@ -296,8 +310,7 @@ func (doc *CommonMark) ToHTML() (string, error) {
 }
 
 func (doc *CommonMark) ToUnsafeHTML() (string, error) {
-	md := goldmark.New(
-		goldmark.WithExtensions(
+	extenders := []goldmark.Extender{
 			extension.GFM,
 			extension.DefinitionList,
 			extension.Footnote,
@@ -305,9 +318,15 @@ func (doc *CommonMark) ToUnsafeHTML() (string, error) {
 			figure.Figure,
 			figure.Figure.WithImageLink(),
 			figure.Figure.WithSkipNoCaption(),
-			mathjax.MathJax,
 			extension.CJK,
 			&fences.Extender{},
+	}
+	if doc.useMathJax {
+			extenders = append(extenders, mathjax.MathJax)
+	}
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extenders...
 		),
 		goldmark.WithRendererOptions(
 			html.WithUnsafe(),

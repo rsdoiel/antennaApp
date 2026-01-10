@@ -61,6 +61,7 @@ About this software
 - refactored app methods to be AppConfig methods so they
   are shared between interactive text interface and command
   line interface
+- turned off MathJax support in rendering Markdown to match Glow
 
 ### Authors
 
