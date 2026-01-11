@@ -203,7 +203,7 @@ func (m modelCollections) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m modelCollections) View() string {
-	return baseStyle.Render(m.table.View()) + "\n [q]uit, [h]elp, [a]dd or [d]elete collections\n"
+	return baseStyle.Render(m.table.View()) + "\n[q]uit, [h]elp, [a]dd, [d]elete, [p]ull, [b]uild, [c]onfigure\n"
 }
 
 func curateCollections(cfgName string, cfg *AppConfig) error {
