@@ -1,4 +1,4 @@
-%antenna(5) user manual | version 0.0.21 20dd692
+%antenna(5) user manual | version 0.0.21 a557f5d
 % R. S. Doiel
 % 2026-01-04
 
@@ -12,15 +12,17 @@ A directory with page elements in Markdown or YAML
 
 # DESCRIPTION
 
-A directory with files that can be used to generate an antenna page generator
-description. The antenna uses a page generator description YAML file to render
-HTML pages. The YAML structure is organized around those elements that are in the
-HTML head element as well as the body elements of HTML pages.
+A directory with files that can be used to generate an antenna page
+generator description. The antenna uses a page generator description
+YAML file to render HTML pages. The YAML structure is organized around
+those elements that are in the HTML head element as well as the body
+elements of HTML pages.
 
-A theme is held in a directory. The directory name is used as the theme's name.
-Inside the directory are zero or more files where their names map the YAML attribute
-names in a page generator YAML file. Here is an example of a theme called "theme"
-that can be applied to generate a generator YAML file.
+A theme is held in a directory. The directory name is used as the theme's
+name. Inside the directory are zero or more files where their names map
+the YAML attribute names in a page generator YAML file. Here is an example
+of a theme called "theme" that can be applied to generate a generator YAML
+file.
 
 ~~~
 theme\header.md
@@ -32,11 +34,11 @@ theme\head.yaml
 theme\style.css
 ~~~
 
-The following Markdown documents are used to express their related attributes in the
-page generator YAML files. Markdown is used to express the HTML values that will be
-used in the page generator file for these attributes. The elements describe form
-the innerHTML of the body element in an HTML document. They are rendered in the
-order presented if they are present.
+The following Markdown documents are used to express their related attributes
+in the page generator YAML files. Markdown is used to express the HTML values
+that will be used in the page generator file for these attributes. The
+elements describe form the innerHTML of the body element in an HTML document.
+They are rendered in the order presented if they are present.
 
 header.md
 : (optional, used when present) This Markdown document contains a Markdown
@@ -61,41 +63,43 @@ footer.md
 expressing of the innerHTML of a footer HTML element. It is rendered before
 closing the body element.
 
-The head element's content may also be included in a theme. It is expressed as a
-YAML file called "head.yaml". YAML is used because there 
-is not a direct relationship between the element attributes and how they could be expressed
-using Markdown. Most of the time the head.yaml isn't necessary in the theme because 
-antenna generates most of the head elements' content automatically.  There are times when
-my wish to enhance the generated content (e.g. include link elements pointing to files or
-include script elements JavaScript). The head element's innerHTML is populated in the order of
-meta elements, link elements and script elements if they are defined in the YAML as the 
-attributes meta, link and script. Each of these top level YAML elements are list and the
-individual items in the list express the attribute names and values that form that element.
+The head element's content may also be included in a theme. It is expressed
+as a YAML file called "head.yaml". YAML is used because there is not a
+direct relationship between the element attributes and how they could be
+expressed using Markdown. Most of the time the head.yaml isn't necessary in
+the theme because antenna generates most of the head elements' content
+automatically. There are times when my wish to enhance the generated content
+(e.g. include link elements pointing to files or include script elements
+JavaScript). The head element's innerHTML is populated in the order of
+meta elements, link elements and script elements if they are defined in the
+YAML as the attributes meta, link and script. Each of these top level YAML
+elements are list and the individual items in the list express the attribute
+names and values that form that element.
 
 title
 : (optional, used when present) A page title represented as a string.
 
 meta
-: (optional, used when present) A list of objects expressing a sequence of meta 
-HTML elements attributes. Each item in the list is formed from the attribute names
-and values that are define in a meta element. See 
+: (optional, used when present) A list of objects expressing a sequence of
+meta HTML elements attributes. Each item in the list is formed from the
+attribute names and values that are define in a meta element. See 
 <https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/meta>
 
 link
 : (optional, used when present) A list of objects expressing a sequence of link 
-HTML elements attributes. Each item in the list is formed from the attribute names
-and values that are defined in a link element. See
+HTML elements attributes. Each item in the list is formed from the attribute
+names and values that are defined in a link element. See
 <https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link>
 
 script
-: (optional, used when present) A list of objects expressing a sequence of script 
-HTML elements attributes.  Each item in the list is formed from the attribute names
-and values that are defined in a script element. See
-https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script
+: (optional, used when present) A list of objects expressing a sequence of
+script HTML elements attributes.  Each item in the list is formed from the
+attribute names and values that are defined in a script element. See
+<https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script>
 
 style
-: (optional, used when present) A string holding CSS to be injected as the last
-element of the head when rendering HTML.
+: (optional, used when present) A string holding CSS to be injected as the
+last element of the head when rendering HTML.
 
 Here is an example "head.yaml"
 

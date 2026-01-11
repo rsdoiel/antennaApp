@@ -66,7 +66,7 @@ func main() {
 	}
 	// NOTE: no parameters provided then startup in curate mode
 	if len(args) == 0 {
-		args = append(args,  "curate")
+		args = append(args,  "interactive")
 	}
 
 	action, args := args[0], args[1:]
