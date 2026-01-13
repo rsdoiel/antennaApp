@@ -66,7 +66,7 @@ func main() {
 	}
 	// NOTE: no parameters provided then startup in curate mode
 	if len(args) == 0 {
-		args = append(args,  "interactive")
+		args = append(args,  "tui")
 	}
 
 	action, args := args[0], args[1:]

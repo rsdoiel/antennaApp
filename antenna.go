@@ -31,6 +31,12 @@ func NewAntennaApp(appName string) *AntennaApp {
 	}
 }
 
+// Init initialize a new Antenna App project
+func (app *AntennaApp) Init(cfgName string, args []string) error {
+	_, err := NewAppConfig(cfgName)
+	return err
+}
+
 // Run implements the command line functionality of the Antenna App.
 func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName string, action string, args []string) error {
 	switch action {
@@ -59,7 +65,7 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.RssPosts(cfgName, args)
 	case "unpage":
 		return app.Unpage(cfgName, args)
-	case "harvest":
+	case "harvest", "fetch":
 		return app.Harvest(out, eout, cfgName, args)
 	case "generate":
 		return app.Generate(out, eout, cfgName, args)
@@ -67,12 +73,10 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Sitemap(cfgName, args)
 	case "preview":
 		return app.Preview(cfgName)
-	case "reply": // FIXME: need to update blog post describing "reply" to use "quote", then remove this
+	case "quote", "reply":
 		return app.QuoteTextFragment(out, cfgName, args)
-	case "quote":
-		return app.QuoteTextFragment(out, cfgName, args)
-	case "interactive":
-		return app.Interactive(cfgName, args)
+	case "interactive", "tui":
+		return app.TUI(cfgName, args)
 	default:
 		return fmt.Errorf("%q not supported", action)
 	}

@@ -69,6 +69,73 @@ type AppConfig struct {
 
 }
 
+// NewAppConfig initiualizes a new antenna app project
+func NewAppConfig(cfgName string) (*AppConfig, error) {
+	// Check if antenna.yaml exists, confirm I can read it.
+	cfg := &AppConfig{}
+	if _, err := os.Stat(cfgName); err == nil {
+		fmt.Printf("using %s\n", cfgName)
+		src, err := os.ReadFile(cfgName)
+		if err != nil {
+			return nil, err
+		}
+		if err := yaml.Unmarshal(src, &cfg); err != nil {
+			return nil, err
+		}
+	} else {
+		fmt.Printf("creating %s\n", cfgName)
+		cfg.Htdocs = ""
+		cfg.Port = 8000
+		cfg.BaseURL = "http://localhost:8000"
+	}
+	if cfg.Port == 0 {
+		cfg.Port = 8000
+	}
+	if cfg.Host == "" && cfg.BaseURL == "" {
+		cfg.Host = "localhost"
+	}
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = fmt.Sprintf("http://%s:%d", cfg.Host, cfg.Port)
+	}
+
+	if cfg.Htdocs != "" {
+		if _, err := os.Stat(cfg.Htdocs); err != nil {
+			return cfg, fmt.Errorf("problem with htdocs: %q in %s: %s", cfg.Htdocs, cfgName, err)
+		}
+	}
+	if cfg.Generator == "" {
+		cfg.Generator = "page.yaml"
+	}
+	if err := cfg.SaveConfig(cfgName); err != nil {
+		return cfg, fmt.Errorf("failed to save %s, %s", cfgName, err)
+	}
+
+	if err := InitPageGenerator(cfg.Generator); err != nil {
+		return cfg, fmt.Errorf("failed to generate default %s, %s", cfg.Generator, err)
+	}
+	// Add the default pages.md collection.
+	cName := "pages.md"
+	dbName := "pages.db"
+	if _, err := os.Stat(cName); err != nil {
+		fmt.Printf("Creating the %s\n", cName)
+		if err := os.WriteFile(cName, []byte(DefaultPageCollectionMarkdown), 0664); err != nil {
+			return cfg, fmt.Errorf("failed to created %s, %s", cName, err)
+		}
+	} else {
+		fmt.Printf("using existing %s\n", cName)
+	}
+
+	if _, err := os.Stat(dbName); err != nil {
+		fmt.Printf("Adding %s\n", cName)
+		if err := cfg.AddCollection(cfgName, cName); err != nil {
+			return cfg, fmt.Errorf("failed to create default collection, %s, %s", cName, err)
+		}
+	} else {
+		fmt.Printf("using existing %s\n", dbName)
+	}
+	return cfg, nil
+}
+
 // setupDatabase checks to see if anything needs to be setup (or fixed) for AntennaApp to run.
 func setupDatabase(cName string, dbName string) error {
 	// Check to see if we have an existing SQLite3 file
