@@ -172,12 +172,12 @@ the "quote" action is to simply quoting another site for use in a post.
 
 The following commands are related to producing a link blog static website.
 
-harvest [COLLECTION_NAME]
+fetch [COLLECTION_NAME]
 : The harvest retrieves feed content. If COLLECTION_NAME is provided then
 only the the single collection will be harvested otherwise all collections
 defined in your Antenna YAML configuration are harvested.
 
-generate [COLLECTION_NAME]
+make [COLLECTION_NAME]
 : This process the collections rendering HTML pages and RSS 2.0 feeds for
 each collection. If the collection name is provided then only that HTML
 page will be generated.
@@ -187,9 +187,9 @@ sitemap
 the {app_name}.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml,
 sitemap_2.xml, ...)
 
-interactive
+tui
 : Interactively curate configuration, themes, collections, pages, posts
-and items
+and items. It is the default action when you start {app_name}
 
 preview
 : Let's your preview the rendered your Antenna instance as a localhost
@@ -435,6 +435,38 @@ previously included in the CSS files using the link attributes.
 # Also 
 
 - [antenna (1)](antenna.1.md)
+
+`
+
+/**
+ * TUI help screens
+ */
+
+  collectionsTUIHelp = `%{app_name} TUI Help | version {version} {release_hash}
+% R. S. Doiel
+% {release_date}
+
+# Name
+
+collections
+
+# DESCRIPTION
+
+The collections view provides for high level management of your {app_name}
+site. The screen is split into two elements. At the top is a table of the
+currently configure collections. If there is more than one collections then
+can navigate up and down the list of collection. Pressing the enter key will
+allow you to work with (curate) the specific collection highlighted.
+
+The second screen element is below the table. This is a brief menu. It lists
+the available actions that can be performed on a collection. The letter in the
+square brackets will trigger the action. Example "[q]uit" means if you type
+the letter "q" you will quit {app_name}. If you had typed "h" for "[h]elp"
+help screen would be displayed.
+
+Each view of your {ann_name} project has it's own help screen. The views are
+heirarchical. Pressing "q" in view exits to it's parent except of the collection
+view which exits the program.
 
 `
 )

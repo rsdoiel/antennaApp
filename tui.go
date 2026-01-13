@@ -26,8 +26,10 @@ import (
 	//_ "github.com/glebarez/go-sqlite"
 
 	//"github.com/charmbracelet/bubbles/filepicker"
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -51,12 +53,14 @@ var (
 	baseStyle = lipgloss.NewStyle().
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240"))
+	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
 )
 
 /**
  * Setup BubbleTea for managing the TUI
  */
 
+/*
 // Model, we need an interface to beable to pass specific model adjustments 
 type Model interface {
     // Init is the first function that will be called. It returns an optional
@@ -71,6 +75,7 @@ type Model interface {
     // rendered after every Update.
     View() string
 }
+*/
 
 type errMsg struct{ err error }
 
@@ -84,12 +89,15 @@ type model struct {
 	// terminal hight
 	height int
 	
-	// table
+	// table for primary view navigation
 	table table.Model
+
+	// viewport holds views for help, individual items,
+	// post and pages
+	viewport viewport.Model
 
 	// Choice (the current chosen view)
 	Choice int
-	
 	err          error
 
 	CfgName string
@@ -170,6 +178,65 @@ func (m model) View() string {
 /**
  * the following functions binds the model to specific view and update funcs
  */
+
+func viewHelp(m model) string {
+	const width = 78
+	content := HelpText
+	
+	switch m.Choice {
+	case actionCollections:
+		content = collectionsTUIHelp
+	}
+	vp := viewport.New(width, 20)
+	vp.Style = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("62")).
+		PaddingRight(2)
+
+	// We need to adjust the width of the glamour render from our main width
+	// to account for a few things:
+	//
+	//  * The viewport border width
+	//  * The viewport padding
+	//  * The viewport margins
+	//  * The gutter glamour applies to the left side of the content
+	//
+	const glamourGutter = 2
+	glamourRenderWidth := width - vp.Style.GetHorizontalFrameSize() - glamourGutter
+
+	renderer, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(glamourRenderWidth),
+	)
+	if err != nil {
+		return fmt.Sprintf("%s\n", err)
+	}
+
+	str, err := renderer.Render(content)
+	if err != nil {
+		return fmt.Sprintf("%s\n", err)
+	}
+
+	vp.SetContent(str)
+	return helpStyle.Render(m.viewport.View() + "\n[q]uit ↑/↓: Navigate\n")
+}
+
+func updateHelp(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "ctrl+c", "esc":
+			return m, tea.Quit
+		default:
+			var cmd tea.Cmd
+			m.viewport, cmd = m.viewport.Update(msg)
+			return m, cmd
+		}
+	default:
+		return m, nil
+	}
+}
+
 func viewInit(m model) string {
 	wDir, err := os.Getwd()
 	if err != nil {
@@ -242,6 +309,11 @@ func viewCollections(m model) string {
 		Bold(false)
 	t.SetStyles(s)
 	m.table = t
+	if m.err != nil {
+		return fmt.Sprintf("ERROR: %s\n", m.err) +
+			baseStyle.Render(m.table.View()) +
+		"\n[q]uit, [h]elp, [a]dd, [d]elete, [f]etch, [m]ake site, [c]onfigure\n"
+	}
 	return baseStyle.Render(m.table.View()) + "\n[q]uit, [h]elp, [a]dd, [d]elete, [f]etch, [m]ake site, [c]onfigure\n"
 }
 
@@ -270,9 +342,7 @@ func updateCollections(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			)
 		case "h":
 			// Display Help screen
-			return m, tea.Batch(
-				tea.Printf("Display help for currating collections"),
-			)
+			return updateHelp(msg, m)
 		case "enter":
 			return m, tea.Batch(
 				tea.Printf("Curate %s", m.table.SelectedRow()[1]),

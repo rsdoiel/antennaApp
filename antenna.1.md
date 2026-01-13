@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.21 2c642bb
+%antenna(1) user manual | version 0.0.21 258e78f
 % R. S. Doiel
 % 2026-01-04
 
@@ -153,12 +153,12 @@ the "quote" action is to simply quoting another site for use in a post.
 
 The following commands are related to producing a link blog static website.
 
-harvest [COLLECTION_NAME]
+fetch [COLLECTION_NAME]
 : The harvest retrieves feed content. If COLLECTION_NAME is provided then
 only the the single collection will be harvested otherwise all collections
 defined in your Antenna YAML configuration are harvested.
 
-generate [COLLECTION_NAME]
+make [COLLECTION_NAME]
 : This process the collections rendering HTML pages and RSS 2.0 feeds for
 each collection. If the collection name is provided then only that HTML
 page will be generated.
@@ -168,9 +168,9 @@ sitemap
 the antenna.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml,
 sitemap_2.xml, ...)
 
-interactive
+tui
 : Interactively curate configuration, themes, collections, pages, posts
-and items
+and items. It is the default action when you start antenna
 
 preview
 : Let's your preview the rendered your Antenna instance as a localhost
