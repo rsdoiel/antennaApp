@@ -35,7 +35,7 @@
     "Pandoc >= 3.1",
     "Bash or PowerShell"
   ],
-  "version": "0.0.21",
+  "version": "0.0.22",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
   "releaseNotes": "- refactored app methods to be AppConfig methods so they\n  are shared between a planned interactive text interface and command\n  line interface\n- turned off MathJax support in rendering Markdown to match Glow\n- added blogit action to copy a Markdown file into a blog path and post it",

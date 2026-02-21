@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.21
+version: 0.0.22
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -53,7 +53,7 @@ date_released: 2026-02-21
 About this software
 ===================
 
-## antennaApp 0.0.21
+## antennaApp 0.0.22
 
 - refactored app methods to be AppConfig methods so they
   are shared between a planned interactive text interface and command
