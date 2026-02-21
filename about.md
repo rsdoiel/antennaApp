@@ -47,7 +47,7 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-01-04
+date_released: 2026-02-21
 ---
 
 About this software
@@ -55,13 +55,11 @@ About this software
 
 ## antennaApp 0.0.21
 
-- added interactive  curation collections and items
-- added interactive curation actions for pages
-- added interactive curation actions for posts
 - refactored app methods to be AppConfig methods so they
-  are shared between interactive text interface and command
+  are shared between a planned interactive text interface and command
   line interface
 - turned off MathJax support in rendering Markdown to match Glow
+- added blogit action to copy a Markdown file into a blog path and post it
 
 ### Authors
 

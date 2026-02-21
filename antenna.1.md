@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.21 f4e2096
+%antenna(1) user manual | version 0.0.21 e505e56
 % R. S. Doiel
-% 2026-01-04
+% 2026-02-21
 
 # NAME
 
@@ -117,6 +117,11 @@ recommended you provide a value for **link** that reflects the public URL to whe
 post can be viewed. Post like page will allow unsafe HTML to be used in the Markdown
 document unlike aggregated content.
 
+blogit [COLLECTION_NAME] FILEPATH [POST_DATE]
+: This is a varation of post where the FILEPATH is used as the source Markdown text
+to be posted in a blog style directory path. After calculating the target path and
+copying the file to the target location it uses post to finish the additiona.
+
 unpost COLLECTION_NAME URL | POST_PATH
 : Remove an item from a collection using the URL associated with the item. You can
 provide either the full URL or the POST_PATH value to trigger the removal.
@@ -152,9 +157,6 @@ If the collection name is provided then only that HTML page will be generated.
 sitemap
 : This will generate a set of sitemap files for pages and posts found through the
 antenna.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
-
-curate
-: Interactive collection and item curation.
 
 preview
 : Let's your preview the rendered your Antenna instance as a localhost website using

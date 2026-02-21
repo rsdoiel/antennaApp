@@ -30,13 +30,15 @@ and build websites</p>
 friendly way of expressing hypertext is <a
 href="https://en.wikipedia.org/wiki/Markdown">Markdown</a>. Markdown has
 allowed many people to participate in creating content for the web. I
-think it deserves more focus. Between Markdown and a sprinkle of CSS and
-you can create entire websites using your own computer or hosted on a
-static site service<a href="#fn1" class="footnote-ref" id="fnref1"
-role="doc-noteref"><sup>1</sup></a>. In this post I show how Markdown
-can be used for basic websites<a href="#fn2" class="footnote-ref"
-id="fnref2" role="doc-noteref"><sup>2</sup></a>. All it requires is
-knowing a little Markdown, a text editor, web browser and the <a
+think it deserves more focus. Between Markdown and a sprinkle of CSS<a
+href="#fn1" class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a> and you can create entire websites
+using your own computer or hosted on a static site service<a href="#fn2"
+class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. In
+this post I show how Markdown can be used for basic websites<a
+href="#fn3" class="footnote-ref" id="fnref3"
+role="doc-noteref"><sup>3</sup></a>. All it requires is knowing a little
+Markdown, a text editor, web browser and the <a
 href="https://rsdoiel.github.io/antennaApp">Antenna App</a>.</p>
 <p>Demonstrated in this post:</p>
 <ul>
@@ -59,22 +61,26 @@ Antenna App theme</li>
 describe in this ports should work on computers running Windows, macOS
 and Linux based systems. If you need to acquire a computer and already
 have a HDMI television I recommend getting a Raspberry Pi Computer. The
-Raspberry Pi 500 Kit is a nice middle range device that runs about
+<a
+href="https://www.pishop.us/product/raspberry-pi-500-us-complete-kit/?searchid=0&amp;search_query=Raspberry+Pi+500+Desktop+">Raspberry
+Pi 500 Desktop Kit</a> is a nice middle range device that runs about
 $120.00 US. It includes a book about using Raspberry Pi computers. If
-you can afford a bit more the Raspberry Pi 500+ Kit should be out by
-Christmas 2025 and that’ll probably run in the ballpark of $240.00 US.
-That’s a nice computer with lots of storage and the bells and whistles
-to do image, audio and light video work. If you are on a budget then you
-can squeak by with a Raspberry Pi Zero 2W running the software. That
-setup will set you back about $50.00 US with the minimum accessories
-needed like case, keyboard, mouse, power supply and cables to connect
-things up. The Official Raspberry Pi Handbook print edition runs between
-$25.00 US but the electronic edition that you can read on your phone or
-tablet is free. My point is that for a little bit of investment or using
-your existing resources you have the means of building websites for
-yourself and others. You don’t need to be a programmer or even a web
-designer if you are comfortable editing text and doing a bit of
-writing.</p>
+you can afford a bit more the <a
+href="https://www.pishop.us/product/raspberry-pi-500-desktop-kit/">Raspberry
+Pi 500+ Desktop Kit</a> runs $230.00 US. That’s a <strong>nice
+computer</strong> with solid state storage and 16 Gig of RAM. That is
+enough bells and whistles to do light duty image, audio and video work.
+If you are on a budget then you can squeak by with a Raspberry Pi Zero
+2W running the Antenna App software and a plain old text editor in the
+console. That setup will set you back about $50.00 US with the minimum
+accessories needed like case, keyboard, mouse, power supply and cables
+to connect things up. The Official Raspberry Pi Handbook print edition
+runs between $25.00 US but the electronic edition that you can read on
+your phone or tablet is free. My point is that for a little bit of
+investment or using your existing resources you have the means of
+building websites for yourself and others. You don’t need to be a
+programmer or even a web designer if you are comfortable editing text
+and doing a bit of writing.</p>
 <p>The <a href="https://rsdoiel.github.io/antennaApp">Antenna App</a> is
 software I wrote to prove to myself that building websites could be made
 simpler. I currently use it to curate my own websites include my blog
@@ -106,52 +112,271 @@ you’ll be taking are the following.</p>
 <pre class="shell"><code>
 mkdir simple
 cd simple
-antenna init</code></pre>
-<p>If you look at the contents of that directory.</p>
-<pre class="shell"><code>
-ls</code></pre>
-<p>You should see the following files in the simple directory.</p>
-<pre class="shell"><code>
-antenna.yaml
-page.yaml</code></pre>
-<p>These files are used by Antenna App to generate your website. The
-“antenna.yaml” is the main configuration file. The “page.yaml” file is
-used by Antenna App to know how to construct an HTML page.</p>
-<p>For step three we need to use a text editor. On Raspberry Pi mousepad
-is the the default editor. On Windows it is notepad and macOS its
-textedit. Many people use <a
-href="https://code.visualstudio.com/download">VS Code</a> editor which
-is available on macOS, Windows and Raspberry Pi OS. That is what I’ll be
-using in my examples. You can change the “code” references to the editor
-you prefer.</p>
-<p>On my Raspberry Pi I can run the editor creating “index.md” when I
-save it. Here is the command I type into my terminal to do that.</p>
-<pre class="shell"><code>
-code index.md</code></pre>
-<p>In the editor window you should see an empty file. Type in the
-following and save the file as “index.md” in the simple directory.</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>Hello World! </span></code></pre></div>
-<p>Now we want to use Antenna App “page” command to turn that “index.md”
-into our home web page. This is the command you type into your Terminal
-window.</p>
-<pre class="shell"><code>
-antenna page index.md</code></pre>
-<p>If you check the contents of the simple directory.</p>
-<pre class="shell"><code>
-ls</code></pre>
-<p>You should see three four files now.</p>
-<pre><code>
-antenna.yaml
-index.md
-index.html
-page.yaml</code></pre>
-<p>We can new preview the website by run the Antenna App’s “preview’
-command. This command runs a little web server on your computer so you
-can view the results of your handy work in your web browser.</p>
-<pre class="shell"><code>
-antenna preview</code></pre>
+antenna</code></pre>
+<p>The terminal will clear and you’ll be prompted by a question</p>
+<pre><code>    antenna.yaml does not exist. Create it? yes/no </code></pre>
+<p>Type “yes” and press the enter key. This will create the project
+files used to manage your website. The project files include
+antenna.yaml, pages.md and pages.db. I’ll talk more about these as we
+go. Assuming you answer “yes” and pressed the enter key you should see a
+screen that looks like this.</p>
+<pre><code>Curate Collections
+
+     1: pages.md, An Antenna Website
+
+(1/1, [h]elp or [q]uit): </code></pre>
+<p>A simple website or blog may only have one collection. You can press
+“1” and the enter key so we can manage our collection. This presents the
+definition for the collection defined by the Markdown document pages.md.
+From here you can curate pages, posts and items. These are the three
+basic types Antenna App supports.</p>
+<dl>
+<dt>pages</dt>
+<dd>
+These are Markdown documents that will be turned into web pages. When
+your website is generate they’ll be included the sitemap but will NOT be
+included in any feeds associated with the site.
+</dd>
+<dt>posts</dt>
+<dd>
+Posts are Markdown documents that are aggregated into the website
+feed(s). These include things like blog posts. They are organized
+temporially and tend to accumulate over time. Unlike pages, these are
+included in both the sitemap and feeds. Normally you’ll put these in a
+directory structured around the date, example “posts/2026/01/09”, could
+be used as the path for posts made on January 9th, 2026.
+</dd>
+<dt>items</dt>
+<dd>
+Are similar to posts except they come from other websites. These are
+used to present aggregated posts used in personal news sites. The
+individual items will not appear in the sitemap but will appear in the
+aggregated feed for the collection. You can aggreate many items from
+many feeds. Feeds are defined using Markdown in the collection’s
+Markdown definition file. You define them by included a list of links.
+</dd>
+</dl>
+<p>In our first effort we’re going to work with pages. If you’ve entered
+the pages.md collection you should a menu like this now.</p>
+<pre><code>Curate pages.md:
+
+    [pa]ges
+    [po]osts
+    [i]tems
+
+
+([h]elp or [q]uit): </code></pre>
+<p>This is the list of things to curate. The “[” and ”]” indicate the
+menu shortcut to type in before pressing the enter key. Since we want to
+curate some pages you should type “pa” and then press the enter key.
+That should leave you with a menu like this.</p>
+<pre><code>Pages in pages.md
+
+
+(1/0, [h]elp or [q]uit): </code></pre>
+<p>At this point we don’t have any pages to curate so the list is empty.
+Type “h” and press enter. This shows you help for curating pages. You
+can add, delete and list pages.</p>
+<dl>
+<dt>add</dt>
+<dd>
+This adds an existing Markdown document to the collection
+</dd>
+<dt>del</dt>
+<dd>
+This removes the Markdown content from a collection but does not remove
+the Markdown document from the disk.
+</dd>
+</dl>
+<p>When we generate our website the “add” operation generates and
+updated HTML file. Also when we later generate our whole website each
+page in the collection as well as each post and the aggregation pages
+for items will get automatically generated in their HTML versions (along
+with other useful files).</p>
+<p>To back out of this menu type “q” and press enter. This will take you
+back to our curate pages.md menu, repeat typing “q” and press enter.
+This backs us out to the first menu listing the collections associated
+with this website. Type “q” and press enter one my time and we should be
+back at our terminal.</p>
+<p>Now it’s time to create two Markdown documents, “index.md” and
+“about.md”.</p>
+<dl>
+<dt>index.md</dt>
+<dd>
+This will be our welcome page. This is the default page shown for the
+website.
+</dd>
+<dt>about.md</dt>
+<dd>
+This is a short descriptive page about our simple website.
+</dd>
+</dl>
+<p>We are goint to create these two files using a text editor. There
+don’t have to be long. Here’s example content for each Markdown
+document.</p>
+<p>index.md:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu"># Welcome</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>This is a simple webpage for a simple website. See <span class="co">[</span><span class="ot">about</span><span class="co">](about.html)</span> for more information.</span></code></pre></div>
+<p>about.md</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu"># About a simple website</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>This is just a demo of a two page website generated with <span class="co">[</span><span class="ot">Antenna App</span><span class="co">](https://rsdoiel.github.io/antennaApp)</span></span></code></pre></div>
+<p>Now we have two Markdown documents. We need to add them to our
+pages.md collection. Fire up antenna and enter the following text.</p>
+<pre><code>antenna
+1
+pa
+a index.md
+
+a about.md
+</code></pre>
+<p>NOTE: the each newline is input by pressing the enter key. When you
+add index.md it’ll give you a chance to also set the the output name to
+associated with index.md. By default that would be “index.html”. You can
+just press enter without typing anything else to accept the default.</p>
+<p>You should now see a menu like this.</p>
+<pre><code>Pages in pages.md
+
+   1 about.md
+    &quot;about.html&quot; 2026-01-09T17:12:56-08:00
+   2 index.md
+    &quot;index.html&quot; 2026-01-09T17:12:36-08:00
+
+(1/2, [h]elp or [q]uit): </code></pre>
+<p>The timestamp will of course be different but you should see the
+Markdown document added to the collection as a page along with the name
+used when rendering to HTML.</p>
+<p>We can now quit our way back to the terminal prompt.</p>
+<pre><code>q
+q
+q</code></pre>
+<p>You can preview the website using <code>antenna preview</code>, type
+that into the terminal.</p>
+<pre class="shell"><code>antenna preview</code></pre>
+<p>You should see output like this.</p>
+<pre class="shell"><code>$ antenna preview
+2026/01/09 17:16:30 Document root 
+2026/01/09 17:16:30 Listening for http://localhost:8000</code></pre>
+<p>You can now start your web browser and input the URL
+“http://localhost:8000”. Do you see our Welcome page? Is there a link to
+the about page? Try clicking the links to confirm all is working. If you
+look back in the terminal window you should see something like this.</p>
+<pre class="shell"><code>2026/01/09 17:19:40 Document root 
+2026/01/09 17:19:40 Listening for http://localhost:8000
+2026/01/09 17:19:42 request Method: GET Path: / RemoteAddr: 127.0.0.1:57295 UserAgent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0
+2026/01/09 17:19:44 request Method: GET Path: /about.html RemoteAddr: 127.0.0.1:57295 UserAgent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0</code></pre>
+<p>Each line is what we call a log line. It shows for each page you
+click on. This helps us identify when we have problems and that the
+preview is working. To exit the preview hold the control key down and
+type the letter “c”. This is referred to as “ctrl+c” in computer jargon.
+At this point you should be back at the terminal prompt. Take a look at
+the files in the directory using the “ls” command. You should see
+something like this.</p>
+<pre class="shell"><code>$ ls
+about.html   about.md     antenna.yaml index.html   index.md     page.yaml    pages.db     pages.md</code></pre>
+<p>You’ve create your first website! Let me explain each of the
+files.</p>
+<dl>
+<dt>index.md and about.md</dt>
+<dd>
+These are Markdown files that Antenna App will turn into HTML pages.
+</dd>
+<dt>about.html and index.html</dt>
+<dd>
+These are the files you web browser understands and uses as hypertext.
+</dd>
+<dt>antenna.yaml</dt>
+<dd>
+A configuration file used by and maintained by Antenna App.
+</dd>
+<dt>page.yaml</dt>
+<dd>
+A configuration file used Antenna App describing how to layout a web
+page (more on that later)
+</dd>
+<dt>pages.md</dt>
+<dd>
+A Markdown document used to configure the collection. The any front
+matter (more on that later) provided will be used when generate feeds.
+Also if you are aggregated feeds from other websites they needed to be
+included in a Markdown list of links in the body of the Markdown
+document.
+</dd>
+<dt>pages.db</dt>
+<dd>
+This is an SQLite3 database used by Antenna App for managing your
+collection of items, pages and posts.
+</dd>
+</dl>
+<h2 id="improving-our-simple-site">Improving our simple site</h2>
+<p>The site right now is very plain. There is only the text we typed
+into the web pages. Usually you want to include a simple means of
+navigating between web pages without requiring explicit linking in our
+Markdown documents. You can do that be configuring site navigation in a
+“theme” for your website. Let’s create that in a momement. A theme is a
+folder of Markdown documents named for each part of the webpage. A theme
+can be associated with an Antenna App collection. Antenna App is unusual
+in that you can define the elements of the page using Markdown. The
+page.yaml file describes how to use each Markdown document to render a
+part of the web page. Supported elements in a webpage are head, header,
+navigation, top content, bottom content and footer. These are defined
+using the following file names in the theme folder.</p>
+<dl>
+<dt>head.yaml</dt>
+<dd>
+This is a YAML document that defines the head element in the HTML page.
+Don’t worry about it yet. Antenna App will make that easier to edit than
+having to learn YAML.
+</dd>
+<dt>header.md</dt>
+<dd>
+If present this will cause a header element to be created at the start
+of the body element in the HTML page. Usually you would have things like
+a logo, sitename or other branding content in the header.md file.
+</dd>
+</dl>
+<p>nav.md ; If present this will create a nav element towards the top of
+the body element in the HTML page. Usually you use a Markdown list of
+links to define navigation around you website.</p>
+<dl>
+<dt>top_content.md</dt>
+<dd>
+This is Markdown to be included before your Markdown document.
+</dd>
+<dt>bottom_content.md</dt>
+<dd>
+This is Markdown to be included after your Markdown document.
+</dd>
+<dt>footer.md</dt>
+<dd>
+If presnet this will cause the footer element to be created just before
+the closing of the body lement in the HTML page. Usually sites include
+things like copyright information, or less used navigation details,
+links to feeds, link to an about page, contact information here.
+</dd>
+</dl>
+<p>Let’s create Markdown files of the theme above.</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>FIXME: show a basic step through of theming and how to apply them
+here</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<p>When you are previewing your website you see how the theme is applied
+to the webiste.</p>
 <p>Started your web browser and open the URL <a
 href="http://localhost:8000" class="uri">http://localhost:8000</a>. You
 should see your Hello World homepage. If you open <a
@@ -165,12 +390,12 @@ the pages are not available.</p>
 <h3 id="expanding-our-site">Expanding our site</h3>
 <p>Our site isn’t useful website yet. There are no links. Modify
 “index.md” file to look like this.</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu"># Hello World!</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>Learn about <span class="co">[</span><span class="ot">Markdown</span><span class="co">](https://en.wikipedia.org/wiki/Markdown)</span> on</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>John Grubber&#39;s website <span class="ot">&lt;https://daringfireball.net/projects/markdown/&gt;</span>.</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu"># Hello World!</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>Learn about <span class="co">[</span><span class="ot">Markdown</span><span class="co">](https://en.wikipedia.org/wiki/Markdown)</span> on</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>John Grubber&#39;s website <span class="ot">&lt;https://daringfireball.net/projects/markdown/&gt;</span>.</span></code></pre></div>
 <p>Once you’ve saved this revision use the page command to update the
 HTML. After that run the preview command like before. Switch back to
 your terminal and type the following.</p>
@@ -199,13 +424,13 @@ fruits.</p>
 <pre class="shell"><code>
 code fruit.md</code></pre>
 <p>Here’s the text of the fruits.md page.</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu"># Fruit</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Dragon Fruit</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Lime</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Mango</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu"># Fruit</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Dragon Fruit</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Lime</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Mango</span></code></pre></div>
 <p>You turn the page into HTML using the page command and then preview
 the website again</p>
 <pre class="shell"><code>
@@ -243,9 +468,9 @@ follows.</p>
 mkdir theme
 code theme/nav.md</code></pre>
 <p>The content to type into “nav.md” is as follows.</p>
-<div class="sourceCode" id="cb18"><pre
-class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">home</span><span class="co">](index.html)</span> <span class="co">[</span><span class="ot">fruit</span><span class="co">](fruit.html)</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">home</span><span class="co">](index.html)</span> <span class="co">[</span><span class="ot">fruit</span><span class="co">](fruit.html)</span></span></code></pre></div>
 <p>Save the result then in the terminal window type the following to
 finish steps four and five.</p>
 <pre class="shell"><code>
@@ -318,14 +543,14 @@ embedding a style element in the HTML page’s head element by including a
 code theme/style.css</code></pre>
 <p>Paste in the follow CSS. It’ll turn your top level page titles
 vertical using CSS.</p>
-<div class="sourceCode" id="cb21"><pre
-class="sourceCode css"><code class="sourceCode css"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">/* Turn the H1 elements vertical */</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>h1 {</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">writing-mode</span><span class="ch">:</span> <span class="dv">vertical-rl</span><span class="op">;</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">transform</span><span class="ch">:</span> <span class="fu">rotate(</span><span class="dv">180</span><span class="dt">deg</span><span class="fu">)</span><span class="op">;</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">text-orientation</span><span class="ch">:</span> <span class="dv">mixed</span><span class="op">;</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">/* Turn the H1 elements vertical */</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>h1 {</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">writing-mode</span><span class="ch">:</span> <span class="dv">vertical-rl</span><span class="op">;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">transform</span><span class="ch">:</span> <span class="fu">rotate(</span><span class="dv">180</span><span class="dt">deg</span><span class="fu">)</span><span class="op">;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">text-orientation</span><span class="ch">:</span> <span class="dv">mixed</span><span class="op">;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>After creating and save the “style.css” you theme directory should
 have two files.</p>
 <pre><code>
@@ -363,18 +588,27 @@ content</li>
 role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1"><p>Examples: <a href="https://pages.github.com">GitHub
-Pages</a>, S3 buckets setup as static websites at AWS, Dreamhost, my
-favorite <a href="https://www.mythic-beasts.com/">Mythic Beasts</a><a
-href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2"><p>Antenna supports creating many types of websites.
+<li id="fn1"><p>Antenna supports creating many types of websites.
 Examples include <a
 href="https://en.wikipedia.org/wiki/Microblogging">microblogs</a>, <a
 href="https://en.wikipedia.org/wiki/Blog">blogs</a>, <a
 href="https://en.wikipedia.org/wiki/Linklog">linkblogs</a>, <a
 href="https://en.wikipedia.org/wiki/Wiki">wikis</a> and hybrids of
 these. Pretty much what you need to be social on the web without
-resorting to the silos of Big Corp.<a href="#fnref2"
+resorting to the silos of Big Corp.<a href="#fnref1"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Examples: <a href="https://pages.github.com">GitHub
+Pages</a>, S3 buckets setup as static websites at AWS, Dreamhost, my
+favorite <a href="https://www.mythic-beasts.com/">Mythic Beasts</a><a
+href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Antenna supports creating many types of websites.
+Examples include <a
+href="https://en.wikipedia.org/wiki/Microblogging">microblogs</a>, <a
+href="https://en.wikipedia.org/wiki/Blog">blogs</a>, <a
+href="https://en.wikipedia.org/wiki/Linklog">linkblogs</a>, <a
+href="https://en.wikipedia.org/wiki/Wiki">wikis</a> and hybrids of
+these. Pretty much what you need to be social on the web without
+resorting to the silos of Big Corp.<a href="#fnref3"
 class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>

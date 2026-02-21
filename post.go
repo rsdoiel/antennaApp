@@ -20,8 +20,10 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	// 3rd Party
 	_ "github.com/glebarez/go-sqlite"
@@ -62,6 +64,61 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 		cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
 	}
 	return cfg.Post(cName, fName)
+}
+
+// BlogIt is a variation of Post. It will take a filepath, copy the Markdown
+// document into a blog path structure for the given root path. It then
+// calls the Post method to finish adding the new blog entry. NOTE this command
+// assumes that the blog prefix is called "blog" and this will become the first
+// element in the post's path followed by a date directory structure.
+func (app *AntennaApp) BlogIt(cfgName string, args[]string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("expected a Markdown filename or filename post date")
+	}
+	var err error
+	postDay := time.Now()
+	cName, fName := "pages.md", ""
+	if len(args) == 1 {
+		fName = strings.TrimSpace(args[0])
+	} else if len(args) == 2 && strings.Contains(args[1], "-") {
+		fName = strings.TrimSpace(args[0])
+		postDay, err = time.Parse("2006-01-02", args[1])
+		if  err != nil {
+			return fmt.Errorf("failed to parse %q as post date, %s", args[1], err)
+		}
+	} else if len(args) == 2 && ! strings.Contains(args[1], "-") {
+		cName = strings.TrimSpace(args[0])
+		fName = strings.TrimSpace(args[1])
+	} else if len(args) == 3 && strings.Contains(args[2], "-") {
+		cName = strings.TrimSpace(args[0])
+		fName = strings.TrimSpace(args[1])
+		postDay, err = time.Parse("2006-01-02", args[2])
+		if  err != nil {
+			return fmt.Errorf("failed to parse %q as post date, %s", args[1], err)
+		}
+	} else {
+		cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+		postDay, err = time.Parse("2006-01-02", args[2])
+		if  err != nil {
+			return fmt.Errorf("failed to parse %q as post date, %s", args[1], err)
+		}
+	}
+	bName := filepath.Base(fName)
+	postDir := filepath.Join("blog", postDay.Format("2006/01/02"))
+	if _, err := os.Stat(postDir); err != nil {
+		if err := os.MkdirAll(postDir, 0777); err != nil {
+			return fmt.Errorf("failed to create %q, %s", postDir, err)
+		}
+	}
+	src, err := os.ReadFile(fName)
+	if err != nil {
+		return err
+	} 
+	postPath := filepath.Join(postDir, bName)
+	if err := os.WriteFile(postPath, src, 0666); err != nil {
+		return err
+	}
+	return app.Post(cfgName, []string{ cName, postPath})
 }
 
 // This lists published posts
