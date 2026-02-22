@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.22 114df60
+%antenna(1) user manual | version 0.0.22 0378cea
 % R. S. Doiel
 % 2026-02-21
 
