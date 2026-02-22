@@ -47,6 +47,7 @@ import (
  	actionPage
  	actionPosts
  	actionPost
+	actionHelp
  )
 
 var (
@@ -54,28 +55,12 @@ var (
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240"))
 	helpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	appName string
 )
 
 /**
  * Setup BubbleTea for managing the TUI
  */
-
-/*
-// Model, we need an interface to beable to pass specific model adjustments 
-type Model interface {
-    // Init is the first function that will be called. It returns an optional
-    // initial command. To not perform an initial command return nil.
-    Init() tea.Cmd
-
-    // Update is called when a message is received. Use it to inspect messages
-    // and, in response, update the model and/or send a command.
-    Update(tea.Msg) (Model, tea.Cmd)
-
-    // View renders the program's UI, which is just a string. The view is
-    // rendered after every Update.
-    View() string
-}
-*/
 
 type errMsg struct{ err error }
 
@@ -133,16 +118,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case actionItems:
 			return updateItems(msg, m)
 		case actionItem:
-			return updateItem(m)
+			return updateItem(msg, m)
 		case actionPages:
-			return updatePages(m)
+			return updatePages(msg, m)
 		case actionPage:
-			return updatePage(m)
+			return updatePage(msg, m)
 		case actionPosts:
-			return updatePosts(m)
+			return updatePosts(msg, m)
 		case actionPost:
-			return updatePost(m)
+			return updatePost(msg, m)
 		*/
+		case actionHelp:
+			return updateHelp(msg, m)
 	}
 	return m, nil
 }
@@ -170,6 +157,8 @@ func (m model) View() string {
 		case actionPost:
 			return viewPost(m)
 		*/
+		case actionHelp:
+			return viewHelp(m)
 	}
 	return fmt.Sprintf("ERROR view %d not implememet", m.Choice)
 }
@@ -187,6 +176,7 @@ func viewHelp(m model) string {
 	case actionCollections:
 		content = collectionsTUIHelp
 	}
+
 	vp := viewport.New(width, 20)
 	vp.Style = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
@@ -212,29 +202,37 @@ func viewHelp(m model) string {
 		return fmt.Sprintf("%s\n", err)
 	}
 
-	str, err := renderer.Render(content)
+	str, err := renderer.Render(FmtHelp(content, appName, Version, ReleaseDate, ReleaseHash))
 	if err != nil {
 		return fmt.Sprintf("%s\n", err)
 	}
 
 	vp.SetContent(str)
-	return helpStyle.Render(m.viewport.View() + "\n[q]uit ↑/↓: Navigate\n")
+	m.viewport = vp
+	m.Choice = actionCollections
+	//return helpStyle.Render(m.viewport.View() + "\n[q]uit ↑/↓: Navigate\n")
+	return helpStyle.Render(m.viewport.View())
 }
 
 func updateHelp(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		fmt.Printf("DEBUG we're in updateHelp -> %s\r\n", msg.String())
 		switch msg.String() {
 		case "q", "ctrl+c", "esc":
-			return m, tea.Quit
+			m.Choice = actionCollections
+			// FIXME: Need to know which help screen was showing to pick
+			// the right update func.
+			return updateCollections(msg, m)
+		/*
 		default:
 			var cmd tea.Cmd
 			m.viewport, cmd = m.viewport.Update(msg)
 			return m, cmd
+		*/
 		}
-	default:
-		return m, nil
 	}
+	return m, nil
 }
 
 func viewInit(m model) string {
@@ -321,6 +319,7 @@ func updateCollections(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		fmt.Printf("DEBUG %q pressed\r\n", msg.String())
 		switch msg.String() {
 		case "esc":
 			if m.table.Focused() {
@@ -333,19 +332,22 @@ func updateCollections(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "a":
 			// Display add a collection dialog
 			return m, tea.Sequence(
-				tea.Printf("Add a collection goes here"),
+				tea.Printf("Add a collection goes here\n"),
 			)
 		case "d":
 			// Display delete collection dialog
 			return m, tea.Sequence(
-				tea.Printf("Delete collection %s goes here", m.table.SelectedRow()[1]),
+				tea.Printf("Delete collection %+v goes here\n", m.table.SelectedRow()),
 			)
 		case "h":
 			// Display Help screen
+			m.Choice = actionHelp
 			return updateHelp(msg, m)
 		case "enter":
-			return m, tea.Batch(
-				tea.Printf("Curate %s", m.table.SelectedRow()[1]),
+			selectedInfo := m.table.SelectedRow()
+			fmt.Printf("DEBUG selected info -> %+v\n", selectedInfo)
+			return m, tea.Sequence(
+				tea.Printf("DEBUG curate a row -> %v\n", selectedInfo),
 			)
 		}
 	}
@@ -357,6 +359,7 @@ func updateCollections(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 // pages, posts and feed items for publication in your Antenna site.
 func (app *AntennaApp) TUI(cfgName string, args []string) error {
 	// Figure out the initial view to use
+	appName = filepath.Base(os.Args[0])
 	cfg := &AppConfig{}
 	action := actionInitialize
 	if _, err := os.Stat(cfgName); err == nil {
