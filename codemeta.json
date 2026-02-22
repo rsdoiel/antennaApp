@@ -12,8 +12,8 @@
     }
   ],
   "dateCreated": "2025-08-22",
-  "dateModified": "2026-01-04",
-  "datePublished": "2026-01-04",
+  "dateModified": "2026-02-21",
+  "datePublished": "2026-02-21",
   "description": "**antenna** is a tool for building feed oriented websites using Markdown.\nIf you can edit a Markdown list of links you can generate a static site\nRSS Reader with little effort beyond curating your list of links.\nYou can create simple websites make from the content of Markdown pages.\nYou can create blog by posting the Markdown documents to a collection.\nThe goal of **antenna** is to put you in control of the web content\nyou read or write through using Markdown.\n\n**antenna** automates must of the process of creating a site using Markdown\nfiles. It handles the creation of HTML, RSS, OPML and sitemap.xml for you. This\nlet's you focus on the content written in Markdown.\n\n**antenna** supports a simple theme system defined Markdown files used to\ndescribe page elements, a file to define page metadata and CSS files to define\nthe page's layout and presentation. Each collection defined for your site\nmay have it's own theme.\n\nFeatures:\n\n- Makes it easy to generate a website only using Markdown\n- Makes it trivial to generate a blog, link blog or feed reading site using Markdown\n- supports as multiple feed collections per site\n- provides actions to automate most of your site curation leaving you time to focus on Markdown content\n- HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically\n- A preview web server is provided so you can read the curated content on your computer\n- pages nice with other static site tools like  [PageFind](https://pagefind.app \"A browser side search engine\") and\n[FlatLake](https://flatlake.app \"A static JSON API driven by front matter in Markdown documents\")",
   "keywords": [
     "RSS",
@@ -35,10 +35,10 @@
     "Pandoc >= 3.1",
     "Bash or PowerShell"
   ],
-  "version": "0.0.21",
+  "version": "0.0.22",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- added interactive  curation collections and items\n- added interactive curation actions for pages\n- added interactive curation actions for posts\n- refactored app methods to be AppConfig methods so they\n  are shared between interactive text interface and command\n  line interface\n- turned off MathJax support in rendering Markdown to match Glow",
+  "releaseNotes": "- refactored app methods to be AppConfig methods so they\n  are shared between a planned interactive text interface and command\n  line interface\n- turned off MathJax support in rendering Markdown to match Glow\n- added blogit action to copy a Markdown file into a blog path and post it",
   "copyrightYear": 2026,
   "copyrightHolder": "R. S. Doiel"
 }

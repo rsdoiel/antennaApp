@@ -53,6 +53,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Del(cfgName, args)
 	case "post":
 		return app.Post(cfgName, args)
+	case "blogit":
+		return app.BlogIt(cfgName, args)
 	case "posts":
 		return app.Posts(cfgName, args)
 	case "unpost":
