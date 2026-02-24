@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.22 114df60
+%antenna(1) user manual | version 0.0.23-pre 9884ce3
 % R. S. Doiel
 % 2026-02-21
 
@@ -82,6 +82,9 @@ the Front Matter of the Markdown document.
 
 del COLLECTION_FILE
 : Remove a collection from the Antenna configuration.
+
+list
+: List the collections Markdown filenames defined in the "antenna.yaml".
 
 page INPUT_PATH [OUTPUT_PATH]
 : This will create a standalone HTML page in a collection called pages.md. The pages.md

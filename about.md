@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.22
+version: 0.0.23-pre
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -53,13 +53,10 @@ date_released: 2026-02-21
 About this software
 ===================
 
-## antennaApp 0.0.22
+## antennaApp 0.0.23-pre
 
-- refactored app methods to be AppConfig methods so they
-  are shared between a planned interactive text interface and command
-  line interface
-- turned off MathJax support in rendering Markdown to match Glow
-- added blogit action to copy a Markdown file into a blog path and post it
+- implemented simple collections level menu in interactive mode
+- added action, list to list defined collections (for interactive mode but available in cli)
 
 ### Authors
 

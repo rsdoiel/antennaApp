@@ -102,6 +102,9 @@ the Front Matter of the Markdown document.
 del COLLECTION_FILE
 : Remove a collection from the Antenna configuration.
 
+list
+: List the collections Markdown filenames defined in the "{app_name}.yaml".
+
 page INPUT_PATH [OUTPUT_PATH]
 : This will create a standalone HTML page in a collection called pages.md. The pages.md
 is the only collection that has pages (hense the name). It is also the default collection

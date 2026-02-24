@@ -31,6 +31,24 @@ func NewAntennaApp(appName string) *AntennaApp {
 	}
 }
 
+// ListCollectionFiles lists the files to out, one per line
+func  (app *AntennaApp) ListCollectionFiles(out io.Writer, cfgName string, args []string) error {
+        // create a cfg object
+        cfg := &AppConfig{}
+        // Load configuration
+        if err := cfg.LoadConfig(cfgName); err != nil {
+                return err
+        }
+		fNames, err := cfg.ListCollectionFiles(cfgName)
+		if err != nil {
+			return err
+		}
+		for _, fName := range fNames {
+			fmt.Fprintf(out, "%s\n", fName)
+		}
+		return nil
+}
+
 // Run implements the command line functionality of the Antenna App.
 func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName string, action string, args []string) error {
 	switch action {
@@ -61,20 +79,20 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.RssPosts(cfgName, args)
 	case "unpage":
 		return app.Unpage(cfgName, args)
-	case "harvest":
+	case "list":
+		return app.ListCollectionFiles(out, cfgName, args)
+	case "harvest", "fetch":
 		return app.Harvest(out, eout, cfgName, args)
-	case "generate":
+	case "generate", "build":
 		return app.Generate(out, eout, cfgName, args)
 	case "sitemap":
 		return app.Sitemap(cfgName, args)
 	case "preview":
 		return app.Preview(cfgName)
-	case "reply": // FIXME: need to update blog post describing "reply" to use "quote", then remove this
+	case "quote", "reply": 
 		return app.QuoteTextFragment(out, cfgName, args)
-	case "quote":
-		return app.QuoteTextFragment(out, cfgName, args)
-	case "curate":
-		return app.Curate(cfgName, args)
+	case "interactive", "tui":
+		return app.TUI(cfgName, args)
 	default:
 		return fmt.Errorf("%q not supported", action)
 	}

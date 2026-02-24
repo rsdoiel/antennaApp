@@ -184,6 +184,20 @@ func (cfg *AppConfig) DelCollection(cfgName string, cName string) error {
 	return nil
 }
 
+// ListCollectionFiles returns a list of collections defined in the configuration
+func (cfg *AppConfig) ListCollectionFiles(cfgName string) ([]string, error) {
+	if cfg.Collections == nil {
+		return nil, fmt.Errorf("not properly initialized")
+	}
+	names := []string{}
+	for _, col := range cfg.Collections {
+		if col.File != "" {
+			names = append(names, col.File)
+		}
+	}
+	return names, nil
+}
+
 // Collection describes the metadata about a collection of feeds.
 // A collection can also be used to generate an RSS 2.0 feed of items
 // harvested and related to the collection forming an aggregated item view
