@@ -66,7 +66,7 @@ like the posts action.
 : This will generate a set of sitemap files for pages and posts found through the
 {app_name}.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
 
-%sa%spply %s[THEME_PATH [YAML_FILE_PATH]]%s
+%sap%sply %s[THEME_PATH [YAML_FILE_PATH]]%s
 : This will apply the content THEME_PATH and update the YAML generator file described
 by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
 will be replaced by the theme.
@@ -103,7 +103,7 @@ Collections Menu
 
 	%ss%sitemap
 
-	%sa%spply %s[THEME_PATH [YAML_FILE_PATH]]%s
+	%sap%sply %s[THEME_PATH [YAML_FILE_PATH]]%s
 
 	%sp%sreview
 
@@ -159,6 +159,12 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 		}
 		answer = strings.ToLower(answer)
 		switch {
+		case strings.HasPrefix(answer, "ap"):
+			// apply a theme to a collection
+			if err := applyThemeFiles(scanner, options, cfgName, cfg); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
 		case strings.HasPrefix(answer,"a"):
 			// add a collection(s)
 			if err := addCollection(scanner, options, cfgName, cfg); err != nil {
@@ -173,6 +179,9 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 			if err := deleteCollection(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
+			}
+			if err := cfg.LoadConfig(cfgName); err != nil {
+				displayErrorStatus("%s", err)
 			}
 		case strings.HasPrefix(answer, "l"):
 			// list collection names
@@ -237,12 +246,17 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 		for i := curPos; i < tot && i < (curPos+pageSize); i++ {
 			name := names[i]
 			term.ClrToEOL()
-			term.Printf("%4d %s%s%s\n",
+			term.Printf("%4d. %s%s%s\n",
 				i+1, termlib.Bold+termlib.Italic, name, termlib.Reset)
 		}
 		// Display prompt
 		term.ResetStyle()
-		term.Printf("\n(%d/%d, %sq%suit listing): ", curPos + 1,tot, Green+Bold, Reset)
+		term.Printf("\n(%d/%d, %s+N%s, %s-N%s, COLLECTION_NAME, %sh%selp  or %sq%suit): ",
+			curPos + 1, tot,
+			Green+Bold, Reset,
+			Green+Bold, Reset,
+			Green+Bold, Reset,
+			Green+Bold, Reset)
 		term.ClrToEOL()
 		term.Refresh()
 		if !scanner.Scan() {
@@ -410,16 +424,6 @@ func harvestCollection(scanner *bufio.Scanner, options []string, cfgName string,
 	return nil
 }
 
-// generateRSSFiles will generate RSS files for collections all collections
-func generateRSSFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("generateRSSFiles() not implemented yet.")
-}
-
-// generateSitemapFiles will generate Sitemap XML files for all collections
-func generateSitemapFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("generateSitemapFiles() not implemented yet.")
-}
-
 // generateCollection will generate pages and posts
 func generateCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
 	term.Clear()
@@ -462,4 +466,19 @@ func generateCollection(scanner *bufio.Scanner, options []string, cfgName string
 	scanner.Scan()
 	scanner.Text()
 	return nil
+}
+
+// generateRSSFiles will generate RSS files for collections all collections
+func generateRSSFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	return fmt.Errorf("generateRSSFiles() not implemented yet.")
+}
+
+// generateSitemapFiles will generate Sitemap XML files for all collections
+func generateSitemapFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	return fmt.Errorf("generateSitemapFiles() not implemented yet.")
+}
+
+// appleThemeFiles apply a theme directory to a given collection
+func applyThemeFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	return fmt.Errorf("applyThemeFiles() not implemented yet.")
 }

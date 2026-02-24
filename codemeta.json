@@ -35,7 +35,7 @@
     "Pandoc >= 3.1",
     "Bash or PowerShell"
   ],
-  "version": "0.0.23-pre",
+  "version": "0.0.23-dev",
   "developmentStatus": "wip",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
   "releaseNotes": "- implemented simple collections level menu in interactive mode\n- added action, list to list defined collections (for interactive mode but available in cli)",
