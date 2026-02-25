@@ -19,6 +19,8 @@ package antennaApp
 import (
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 )
 
 type AntennaApp struct {
@@ -27,7 +29,7 @@ type AntennaApp struct {
 
 func NewAntennaApp(appName string) *AntennaApp {
 	return &AntennaApp{
-		appName: appName,
+		appName: filepath.Base(os.Args[0]),
 	}
 }
 

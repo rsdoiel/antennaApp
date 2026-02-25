@@ -36,6 +36,9 @@ Collections Menu Help
 
    (optional parameters can be completed using resulting prompts)
 
+%sl%sist
+: List the collections defined in the Antenna configuration.
+
 %sa%sdd %s[COLLECTION_FILE [NAME] [DESCRIPTION]]%s
 : Add the feed collection name by COLLECTION_FILE to your Antenna configuration.
 A COLLECTION_FILE is a Markdown document containing one or more links in a list. You 
@@ -45,14 +48,6 @@ the Front Matter of the Markdown document.
 
 %sd%sel %s[COLLECTION_FILE]%s
 : Remove a collection from the Antenna configuration.
-
-%sl%sist
-: List the collections defined in the Antenna configuration.
-
-%sha%srvest %s[COLLECTION_NAME]%s
-: The harvest retrieves feed content. If COLLECTION_NAME is provided then only the 
-the single collection will be harvested otherwise all collections defined in your
-Antenna YAML configuration are harvested.
 
 %sg%senerate %s[COLLECTION_NAME]%s
 : This process the collections rendering HTML pages and RSS 2.0 feeds for each collection.
@@ -66,14 +61,19 @@ like the posts action.
 : This will generate a set of sitemap files for pages and posts found through the
 {app_name}.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
 
-%sap%sply %s[THEME_PATH [YAML_FILE_PATH]]%s
-: This will apply the content THEME_PATH and update the YAML generator file described
-by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
-will be replaced by the theme.
-
 %sp%sreview
 : Let's your preview the rendered your Antenna instance as a localhost website using
 your favorite web browser.
+
+%sharvest%s %s[COLLECTION_NAME]%s
+: The harvest retrieves feed content. If COLLECTION_NAME is provided then only the 
+the single collection will be harvested otherwise all collections defined in your
+Antenna YAML configuration are harvested.
+
+%sapsply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
+: This will apply the content THEME_PATH and update the YAML generator file described
+by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
+will be replaced by the theme.
 
 `, 
 	Yellow+Bold, Reset, Cyan, Reset,
@@ -89,13 +89,11 @@ your favorite web browser.
 	collectionsMenu = fmt.Sprintf(`
 Collections Menu
 
+	%sl%sist
+
 	%sa%sdd %s[COLLECTION_FILE [NAME] [DESCRIPTION]]%s
 
 	%sd%sel %s[COLLECTION_FILE]%s
-
-	%sl%sist
-
-	%sha%srvest %s[COLLECTION_NAME]%s
 
 	%sg%senerate %s[COLLECTION_NAME]%s
 
@@ -103,20 +101,22 @@ Collections Menu
 
 	%ss%sitemap
 
-	%sap%sply %s[THEME_PATH [YAML_FILE_PATH]]%s
-
 	%sp%sreview
 
+	%sharvest%s %s[COLLECTION_NAME]%s
+
+	%sapply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
+
 `,	
-	Yellow+Bold, Reset, Cyan, Reset,
-	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
+	Yellow+Bold, Reset, Cyan, Reset,
+	Yellow+Bold, Reset,
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
-	Yellow+Bold, Reset)
+	Yellow+Bold, Reset, Cyan, Reset)
 
  )
 
@@ -210,6 +210,12 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 		case strings.HasPrefix(answer, "s"):
 			// Generate sitemaps
 			if err := generateSitemapFiles(scanner, options, cfgName, cfg); err != nil {
+				displayErrorStatus("%s", err)
+				continue
+			}
+		case strings.HasPrefix(answer, "p"):
+			// Run web server until "q" pressed
+			if err := runPreview(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
@@ -481,4 +487,9 @@ func generateSitemapFiles(scanner *bufio.Scanner, options []string, cfgName stri
 // appleThemeFiles apply a theme directory to a given collection
 func applyThemeFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
 	return fmt.Errorf("applyThemeFiles() not implemented yet.")
+}
+
+// runPreview will run the web server on localhost so you can preview your site in the web browser
+func runPreview(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	return fmt.Errorf("runPreview() not implemented yet.")
 }

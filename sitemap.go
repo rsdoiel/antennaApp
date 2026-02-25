@@ -141,7 +141,7 @@ func sitemap(cfg *AppConfig, dbName string) ([]string, error) {
 	}
 
 	if len(urls) == 0 {
-		fmt.Fprintf(os.Stderr, "No pages or posts found in %s database", dbName)
+		fmt.Fprintf(os.Stderr, "No pages or posts found in %s database\n", dbName)
 		return nil, nil
 	}
 
@@ -162,7 +162,7 @@ func sitemap(cfg *AppConfig, dbName string) ([]string, error) {
 		// Marshal to XML
 		xmlData, err := xml.MarshalIndent(urlSet, "", "  ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to marshal XML for chunk %d: %v", i/cfg.ChunkSize+1, err)
+			fmt.Fprintf(os.Stderr, "Failed to marshal XML for chunk %d: %v\n", i/cfg.ChunkSize+1, err)
 			continue
 		}
 		xmlData = []byte(xml.Header + string(xmlData))
@@ -170,7 +170,7 @@ func sitemap(cfg *AppConfig, dbName string) ([]string, error) {
 		// Write to file
 		filename := fmt.Sprintf("sitemap_%d.xml", i/cfg.ChunkSize+1)
 		if err := os.WriteFile(filename, xmlData, 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to write sitemap file %s: %v", filename, err)
+			fmt.Fprintf(os.Stderr, "Failed to write sitemap file %s: %v\n", filename, err)
 			continue
 		}
 		sitemapFiles = append(sitemapFiles, filename)
@@ -192,7 +192,7 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 		var outputPath string
 		var updated time.Time
 		if err := rows.Scan(&outputPath, &updated); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to scan row (%s): %s", dbName, err)
+			fmt.Fprintf(os.Stderr, "failed to scan row (%s): %s\n", dbName, err)
 			continue
 		}
 
