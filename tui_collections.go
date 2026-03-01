@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	// My packages
@@ -282,18 +283,29 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 		switch {
 		case answer == "":
 			curPos = normalizePos(curPos+pageSize, pageSize, tot)
+		case answer == "+":
+			// Page forward
+			curPos = normalizePos(curPos+pageSize, pageSize, tot)
+		case answer == "-":
+			// Page back
+			curPos = normalizePos(curPos-pageSize, pageSize, tot)
 		case strings.HasPrefix(answer, "+"):
+			// Page forward to +N
 			curPos, err = pageTo(answer, curPos, pageSize, tot)
 			if err != nil { 
 				displayErrorStatus("%s", err)
 				continue
 			}
 		case strings.HasPrefix(answer, "-"):
+			// Page back to +N
 			curPos, err = pageTo(answer, curPos, pageSize, tot)
 			if err != nil { 
 				displayErrorStatus("%s", err)
 				continue
 			}
+		case strings.HasPrefix(answer, "h"):
+			displayErrorStatus("%s not implemented yet")
+			continue
 		case strings.HasPrefix(answer, "q"):
 			quit = true
 		default:
@@ -306,7 +318,27 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 				continue
 			}
 			*/
-			displayErrorStatus("curate %q, not implemented", answer)
+			// FIXME: Check it collection name or number was typed
+			if val, err := extractInt(answer); err == nil {
+				val -= 1
+				if val >= 0 && val < len(names) {
+					answer = names[val]
+				} else {
+					displayErrorStatus("%q does not match a collection name", answer)
+					continue
+				}
+			}
+			if slices.Contains(names, answer) {
+			// FIXME: Open curate collection name provided
+				if err := curateCollection(scanner, answer, cfgName, cfg); err != nil {
+					displayErrorStatus("%s, failed to open collection", err)
+					continue
+				}
+			} else {
+					displayErrorStatus("%q does not match a collection name", answer)
+					continue
+			}
+			displayErrorStatus("%q is not a known action", answer)
 			continue
 		}
 		term.Clear()
