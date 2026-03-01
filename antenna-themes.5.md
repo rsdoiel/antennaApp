@@ -1,4 +1,4 @@
-%antenna(5) user manual | version 0.0.23-dev d972040
+%antenna(5) user manual | version 0.0.23-dev b1f702d
 % R. S. Doiel
 % 2026-02-21
 

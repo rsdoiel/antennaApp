@@ -38,12 +38,21 @@ Collection Menu Help
 %spages%s
 : List pages in collection (this menu will let you add and delete posts)
 
-With in each of these menu actions you can add, remove or curate the items.
+The above menu choice will let you curate the choosen type collection
+elements.
+
+%sblogit%s %s[PATH_TO_MARKDOWN_FILE]%s
+: Blogit will bring in an Markdown to use as a post and set it up in a 
+blog style path with in this collection. Example PATH_TO_MARKDOWN_FILE
+"~/Documents/on_the_march.md" and this would be copied into
+"blog/2026/03/01/on_the_march.md" if it is March first of 2026. Then
+when you choose the posts actions you should find it included.
 
 `, 
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset,
-	Yellow+Bold, Reset)
+	Yellow+Bold, Reset,
+	Yellow+Bold, Reset, Cyan, Reset)
 
 	collectionMenu = fmt.Sprintf(`
 Collection Menu - %%s
@@ -57,10 +66,13 @@ Collection Menu - %%s
     %spages%s
         (list collection pages)
 
+    %sblogit%s %s[PATH_TO_MARKDOWN_FILE]%s
 `,	
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset,
-	Yellow+Bold, Reset)
+	Yellow+Bold, Reset,
+	Yellow+Bold, Reset,
+	Cyan, Reset)
 
  )
 
@@ -100,6 +112,7 @@ func curateCollection(scanner *bufio.Scanner, cName string, cfgName string, cfg 
 		answer, _, err := parseAnswer(scanner.Text())
 		if err != nil {
 			displayErrorStatus("%s", err)
+			continue
 		}
 		answer = strings.ToLower(answer)
 		switch {
@@ -111,6 +124,9 @@ func curateCollection(scanner *bufio.Scanner, cName string, cfgName string, cfg 
 			displayErrorStatus("%q menu not implemented", answer)
 			continue
 		case strings.HasPrefix(answer,"pa"):
+			displayErrorStatus("%q menu not implemented", answer)
+			continue
+		case strings.HasPrefix(answer,"b"):
 			displayErrorStatus("%q menu not implemented", answer)
 			continue
 		case strings.HasPrefix(answer, "h"):

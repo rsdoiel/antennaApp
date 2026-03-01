@@ -80,6 +80,8 @@ func parseAnswer(s string) (string, []string, error) {
 	return s, []string{}, nil
 }
 
+// extractInt gets collections the digits in a string and returns
+// just the digits before converting them with strconv.Atoi.
 func extractInt(s string) (int, error) {
 	var numStr string
 	for _, r := range s {

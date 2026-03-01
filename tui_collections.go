@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 
 	// My packages
@@ -267,7 +268,7 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 		}
 		// Display prompt
 		term.ResetStyle()
-		term.Printf("\n(%d/%d, %s+N%s, %s-N%s, COLLECTION_NAME, %sh%selp  or %sq%suit): ",
+		term.Printf("\n(%d/%d, %s+N%s, %s-N%s, COLLECTION_NAME_OR_NUMBER, %sh%selp  or %sq%suit): ",
 			curPos + 1, tot,
 			Green+Bold, Reset,
 			Green+Bold, Reset,
@@ -309,17 +310,9 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 		case strings.HasPrefix(answer, "q"):
 			quit = true
 		default:
-			/*
-			// If the answer is a number, go to item number
-			if val, err := extractInt(answer); err == nil {
-				curPos = normalizePos(val-1, pageSize, tot)
-			} else {
-				displayErrorStatus("%q, unknown command", answer)
-				continue
-			}
-			*/
-			// FIXME: Check it collection name or number was typed
-			if val, err := extractInt(answer); err == nil {
+			// Check it collection name or number was typed and
+			// reconcile
+			if val, err := strconv.Atoi(answer); err == nil {
 				val -= 1
 				if val >= 0 && val < len(names) {
 					answer = names[val]
