@@ -5,28 +5,36 @@ Ideas, not quite a roadmap
 
 ## Bugs
 
+- [ ] opml files should only be generated if there are feeds to aggregate
 - [ ] The RSS I'm producing isn't always valid for aggregated items
-  - [X] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
   - [ ] Seem to have some XML entity errors still, example see columns's RSS feed in Antenna
+    - look at converting item content into Markdown and using that to build the feed item
+  - [X] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
 - [X] The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
-- [ ] generate is not generating everything for the collection
+- [ ] generate should generate should generate all HTML (agg pages, post and pages), RSS, sitemaps and OPML
+  - [ ] generate is not generating everything for the collection
   - [ ] re-rendering post lists correctly
   - [ ] pages are not being rendered for pages collection
 
 ## Up Next
 
-- [ ] add/del pages
-- [ ] add/del posts
-- [ ] add/del items
-- [ ] blogit like feature needs to be integrated into post, the blog function needs a blog prefix path, then the published date will be used to form the blog path and the Markdown document will be copied into the newly created location
-  - [ ] a means for creating a "podcast" post/item in the feed easily
+- [ ] Add TUI that re-enforces the key concepts
+  - the TUI should be educational to the cli use
+  - the TUI should be recordable to generate a list of commands to be re-used
+- [ ] list collections
+- [ ] list posts and items
+- [ ] list pages
+- [X] add/del pages
+- [X] add/del posts
+- [X] add/del items
+- [X] blogit like feature needs to be integrated into post, the blog function needs a blog prefix path, then the published date will be used to form the blog path and the Markdown document will be copied into the newly created location
+- [ ] There needs to be a means for creating a "podcast" post/item in a feed easily
 - [ ] There should be a means of applying the filter SQL statements on a collection's items without running harvest or generate
-- [ ] I need to port blogit from TypeScript to Go an integrate into antennaApp, it should populate the front matter in posts appropriately.
-- [ ] The interactive terminal interface lead the user to compose the commands available directly form the command line to re-enforce what the program will actually do for them.
+  - [ ] Add a "filter" action
   - [ ] Filter is often a feature that causes confusion, the interactive terminal interface should provide human friendly guidence for forming a filter and provide an option of saving it as the default filter to apply for a specific feed or executing the filter as a one off. This guidence should be reproducible in the command line interface too as well as show SQL implementation as needed
+- [X] I need to port blogit from TypeScript to Go an integrate into antennaApp, it should populate the front matter in posts appropriately.
 - [ ] Need a way to current items in a collection and set their publication status easily
   - [ ] A terminal based CUI
-  - [ ] A localhost WUI
 - [X] I need to be able to render RSS feeds based on posts (e.g. RSS for all posts, recent posts or date ranges of posts)
 - [X] add options for limiting posts actions to recent by count and date ranges
 - [X] should the "reply" action have a different name? While my intension was to work with text fragment URLs, it could also be extended to format any URL as a Markdown output. If so it might make more sense to call it "link"

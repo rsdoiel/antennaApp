@@ -1,6 +1,6 @@
 module github.com/rsdoiel/AntennaApp
 
-go 1.25.4
+go 1.26.0
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
@@ -10,6 +10,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/rsdoiel/opml v0.0.10
+	github.com/rsdoiel/termlib v0.0.4
 	github.com/stefanfritsch/goldmark-fences v1.0.0
 	github.com/yuin/goldmark v1.7.13
 	github.com/yuin/goldmark-emoji v1.0.6
@@ -28,7 +29,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/rsdoiel/termlib v0.0.4 // indirect
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/term v0.38.0 // indirect

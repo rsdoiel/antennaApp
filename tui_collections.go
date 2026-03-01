@@ -37,17 +37,17 @@ Collections Menu Help
    (optional parameters can be completed using resulting prompts)
 
 %sl%sist
-: List the collections defined in the Antenna configuration.
+: List the collections defined in the configuration.
 
 %sa%sdd %s[COLLECTION_FILE [NAME] [DESCRIPTION]]%s
-: Add the feed collection name by COLLECTION_FILE to your Antenna configuration.
+: Add the feed collection name by COLLECTION_FILE to your configuration.
 A COLLECTION_FILE is a Markdown document containing one or more links in a list. You 
 can include a short name that will be displayed when the HTML was generated. You may
 also supply a DESCRIPTION associated with the collection. These can also be set in
 the Front Matter of the Markdown document.
 
 %sd%sel %s[COLLECTION_FILE]%s
-: Remove a collection from the Antenna configuration.
+: Remove a collection from the configuration.
 
 %sg%senerate %s[COLLECTION_NAME]%s
 : This process the collections rendering HTML pages and RSS 2.0 feeds for each collection.
@@ -62,7 +62,7 @@ like the posts action.
 {app_name}.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
 
 %sp%sreview
-: Let's your preview the rendered your Antenna instance as a localhost website using
+: Let's your preview the rendered your instance as a localhost website using
 your favorite web browser.
 
 %sharvest%s %s[COLLECTION_NAME]%s
@@ -70,7 +70,7 @@ your favorite web browser.
 the single collection will be harvested otherwise all collections defined in your
 Antenna YAML configuration are harvested.
 
-%sapsply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
+%sapply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
 : This will apply the content THEME_PATH and update the YAML generator file described
 by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
 will be replaced by the theme.
@@ -89,23 +89,32 @@ will be replaced by the theme.
 	collectionsMenu = fmt.Sprintf(`
 Collections Menu
 
-	%sl%sist
+    %sl%sist
+        (list collections)
 
-	%sa%sdd %s[COLLECTION_FILE [NAME] [DESCRIPTION]]%s
+    %sa%sdd %s[COLLECTION_FILE [NAME] [DESCRIPTION]]%s
+        (add a collection)
 
-	%sd%sel %s[COLLECTION_FILE]%s
+    %sd%sel %s[COLLECTION_FILE]%s
+        (delete a collection)
 
-	%sg%senerate %s[COLLECTION_NAME]%s
+    %sg%senerate %s[COLLECTION_NAME]%s
+        (generate html)
 
-	%sr%sss %s[COLLECTION_NAME [RSS_FILENAME] [COUNT | FROM_DATE TO_DATE]]%s
+    %sr%sss %s[COLLECTION_NAME [RSS_FILENAME] [COUNT | FROM_DATE TO_DATE]]%s
+        (generate RSS file)
 
-	%ss%sitemap
+    %ss%sitemap
+        (generate site maps)
 
-	%sp%sreview
+    %sp%sreview
+        (preview website)
 
-	%sharvest%s %s[COLLECTION_NAME]%s
+    %sharvest%s %s[COLLECTION_NAME]%s
+        (retrieve feeds)
 
-	%sapply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
+    %sapply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
+        (apply theme)
 
 `,	
 	Yellow+Bold, Reset,
@@ -247,7 +256,7 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 	for quit := false; !quit; {
 		term.Move(1, 1)
 		term.ClrToEOL()
-		term.Printf("Collections\n\n")
+		term.Printf("Enter a collection name to curate\n\n")
 		tot := len(names)
 		for i := curPos; i < tot && i < (curPos+pageSize); i++ {
 			name := names[i]
@@ -288,6 +297,7 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 		case strings.HasPrefix(answer, "q"):
 			quit = true
 		default:
+			/*
 			// If the answer is a number, go to item number
 			if val, err := extractInt(answer); err == nil {
 				curPos = normalizePos(val-1, pageSize, tot)
@@ -295,6 +305,9 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 				displayErrorStatus("%q, unknown command", answer)
 				continue
 			}
+			*/
+			displayErrorStatus("curate %q, not implemented", answer)
+			continue
 		}
 		term.Clear()
 	}

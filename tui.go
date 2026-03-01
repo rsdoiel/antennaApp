@@ -26,7 +26,6 @@ import (
 
 	// My packages
 	"github.com/rsdoiel/termlib"
-
 	// 3rd Party
 	//_ "github.com/glebarez/go-sqlite"
 )
@@ -36,30 +35,30 @@ import (
  */
 
 const (
-	Reset = termlib.Reset
-	Bold = termlib.Bold
-	Italic = termlib.Italic
-	Black = termlib.Black
-	Red        = termlib.Red
-	Green      = termlib.Green
-	Yellow     = termlib.Yellow
-	Blue       = termlib.Blue
-	Magenta    = termlib.Magenta
-	Cyan       = termlib.Cyan
-	White      = termlib.White
-	BlackBg    = termlib.BlackBg
-	RedBg      = termlib.RedBg
-	GreenBg    = termlib.GreenBg
-	YellowBg   = termlib.YellowBg
-	BlueBg     = termlib.BlueBg
-	MagentaBg  = termlib.MagentaBg
-	CyanBg     = termlib.CyanBg
-	WhiteBg    = termlib.WhiteBg
+	Reset     = termlib.Reset
+	Bold      = termlib.Bold
+	Italic    = termlib.Italic
+	Black     = termlib.Black
+	Red       = termlib.Red
+	Green     = termlib.Green
+	Yellow    = termlib.Yellow
+	Blue      = termlib.Blue
+	Magenta   = termlib.Magenta
+	Cyan      = termlib.Cyan
+	White     = termlib.White
+	BlackBg   = termlib.BlackBg
+	RedBg     = termlib.RedBg
+	GreenBg   = termlib.GreenBg
+	YellowBg  = termlib.YellowBg
+	BlueBg    = termlib.BlueBg
+	MagentaBg = termlib.MagentaBg
+	CyanBg    = termlib.CyanBg
+	WhiteBg   = termlib.WhiteBg
 )
 
 var (
- 	// term holds the TUI object
- 	term = termlib.New(os.Stdout) 
+	// term holds the TUI object
+	term = termlib.New(os.Stdout)
 )
 
 // getString retrieves a string by the map's key, returns
@@ -74,7 +73,7 @@ func getString(m map[string]string, key string) string {
 // parseAnswer takes a string, parses it into args using
 // flag package.
 func parseAnswer(s string) (string, []string, error) {
-	options := strings.Fields(s)	
+	options := strings.Fields(s)
 	if len(options) > 1 {
 		return options[0], options[1:], nil
 	}
@@ -93,18 +92,17 @@ func extractInt(s string) (int, error) {
 
 // constrainText
 func constrainText(s string, length int) string {
-    if len(s) < length {
-    	return s
-    }
-    runes := []rune(s)
-    if len(runes) > length {
-    	// There needs to be an visual indicator the constrained
-    	// text is incomplete.
-    	return string(runes[:length]) + "[...]"
-    }
-    return s
+	if len(s) < length {
+		return s
+	}
+	runes := []rune(s)
+	if len(runes) > length {
+		// There needs to be an visual indicator the constrained
+		// text is incomplete.
+		return string(runes[:length]) + "[...]"
+	}
+	return s
 }
-
 
 // Set the new cursor position within bounds of page size and
 // total number of things to list.
@@ -114,7 +112,7 @@ func normalizePos(curPos int, pageSize int, tot int) int {
 	}
 	if curPos < 0 {
 		curPos = 0
-	}	
+	}
 	return curPos
 }
 
@@ -122,9 +120,9 @@ func normalizePos(curPos int, pageSize int, tot int) int {
 // the current position, pagesize and total items. If an error occurs
 // the current position is returned along with the error. If no error then
 // the new position is returned along with a nil error value.
-func pageTo(s string, curPos int, pageSize int, tot int) (int, error)  {
+func pageTo(s string, curPos int, pageSize int, tot int) (int, error) {
 	val, err := extractInt(s)
-	if  err != nil {
+	if err != nil {
 		return curPos, err
 	}
 	switch {
@@ -163,14 +161,14 @@ func displayErrorStatus(format string, options ...interface{}) {
  * Action method
  */
 
-// TUI provides a simple terminal interface to curating collections and 
+// TUI provides a simple terminal interface to curating collections and
 // feed items for publication in your Antenna site.
 func (app *AntennaApp) TUI(cfgName string, args []string) error {
 	scanner := bufio.NewScanner(os.Stdin)
 	if _, err := os.Stat(cfgName); os.IsNotExist(err) {
 		term.Clear()
 		term.Printf(`
-	%s does not exist. Create it? %syes%s/no `, cfgName, termlib.Bold + termlib.Italic, termlib.Reset)
+	%s does not exist. Create it? %syes%s/no `, cfgName, termlib.Bold+termlib.Italic, termlib.Reset)
 		scanner.Scan()
 		answer, _, _ := parseAnswer(scanner.Text())
 		if answer == "y" || answer == "yes" {
@@ -193,4 +191,3 @@ func (app *AntennaApp) TUI(cfgName string, args []string) error {
 	}
 	return nil
 }
-
