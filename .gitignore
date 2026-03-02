@@ -14,5 +14,8 @@ myblog/
 posts/
 demo/*.html
 demo/*.xml
+demo/*.opml
 demo/*.db
 demo/*.bash
+demo/blog/
+blog_demo/
