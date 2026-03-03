@@ -867,3 +867,55 @@ func (cfg *AppConfig) Pages() error {
 	}
 	return nil
 }
+
+// RssPosts creates an RSS file from posts to a collection
+func (cfg *AppConfig) RssPosts(cName string, rssFeed string, count int, fromDate string, toDate string) error {
+	appName := filepath.Base(os.Args[0])
+	if cName == "" {
+		return fmt.Errorf("missing collection to use for RSS feed")
+	}
+	if rssFeed == "" {
+		return fmt.Errorf("missing RSS filename to generate")
+	}
+	feedLink := fmt.Sprintf("%s/%s", cfg.BaseURL, rssFeed)
+	out, err := os.Create(rssFeed)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return fmt.Errorf("%s, %s", cName, err)
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// NOTES: posts action supports three different SQL statements
+	var (
+		sqlStmt string
+	)
+
+	gen, err := NewGenerator(appName, cfg.BaseURL)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	case fromDate != "" && toDate != "":
+		sqlStmt = fmt.Sprintf(SQLRssDateRangePosts, fromDate, toDate)
+	case count > 0:
+		sqlStmt = fmt.Sprintf(SQLRssRecentPosts, count)
+		if err != nil {
+			return fmt.Errorf("%s\n%s, %s", SQLRssRecentPosts, dsn, err)
+		}
+	default:
+		sqlStmt = SQLRssPosts
+	}
+	return gen.WriteCustomRSS(out, db, sqlStmt, feedLink, appName, collection)
+}
+

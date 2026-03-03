@@ -17,7 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -165,49 +164,20 @@ func (app *AntennaApp) RssPosts(cfgName string, args []string) error {
 	} else {
 		return fmt.Errorf("missing RSS filename to generate")
 	}
-	feedLink := fmt.Sprintf("%s/%s", cfg.BaseURL, rssFeed)
-	out, err := os.Create(rssFeed)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	collection, err := cfg.GetCollection(cName)
-	if err != nil {
-		return fmt.Errorf("%s, %s", cName, err)
-	}
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	// NOTES: posts action supports three different SQL statements
 	var (
-		sqlStmt string
+		fromDate string
+		toDate string
+		count int
+		err error
 	)
-
-	gen, err := NewGenerator(app.appName, cfg.BaseURL)
-	if err != nil {
-		return err
-	}
-
 	switch {
 	case len(args) == 4:
-		fromDate, toDate := args[2], args[3]
-		sqlStmt = fmt.Sprintf(SQLRssDateRangePosts, fromDate, toDate)
+		fromDate, toDate = args[2], args[3]
 	case len(args) == 3:
-		count, err := strconv.Atoi(args[2])
+		count, err = strconv.Atoi(args[2])
 		if err != nil {
 			return fmt.Errorf("%q, %s", args[2], err)
 		}
-		sqlStmt = fmt.Sprintf(SQLRssRecentPosts, count)
-		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLRssRecentPosts, dsn, err)
-		}
-	default:
-		sqlStmt = SQLRssPosts
 	}
-	return gen.WriteCustomRSS(out, db, sqlStmt, feedLink, app.appName, collection)
+	return cfg.RssPosts(cName, rssFeed, count, fromDate, toDate)
 }

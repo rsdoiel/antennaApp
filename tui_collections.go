@@ -214,7 +214,7 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 			}
 		case strings.HasPrefix(answer, "r"):
 			// Generate RSS files
-			if err := generateRSSFiles(scanner, options, cfgName, cfg); err != nil {
+			if err := generateRssFiles(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
@@ -512,14 +512,65 @@ func generateCollection(scanner *bufio.Scanner, options []string, cfgName string
 	return nil
 }
 
-// generateRSSFiles will generate RSS files for collections all collections
-func generateRSSFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("generateRSSFiles() not implemented yet.")
+// generateRssFiles will generate RSS files for collections all collections
+func generateRssFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	var (
+		cName = "pages.md"
+		rssFeed string
+		fromDate string
+		toDate string
+		count int
+		err error
+	)
+	if len(options) < 1 {
+		term.Printf("Enter a collection name: ")
+		scanner.Scan()
+		cName = scanner.Text()
+	} else {
+		cName = options[0]
+	}
+	if len(options) < 2 {
+		term.Printf("Enter a RSS filename: ")
+		scanner.Scan()
+		rssFeed = scanner.Text()
+	}  else {
+		rssFeed = strings.TrimSpace(options[1])
+	}
+	// count cases of passing from/to dates or count
+	switch {
+		case len(options) == 4:
+			fromDate, toDate = options[2], options[3]
+		case len(options) == 3:
+			count, err = strconv.Atoi(options[2])
+			if err != nil {
+				return fmt.Errorf("%q, %s", options[2], err)
+			}
+	}
+	if fromDate == ""  {
+		term.Printf("Enter from date (YYYY-MM-DD or \"\"): ")
+		scanner.Scan()
+		fromDate = scanner.Text()
+	}
+	if toDate == "" {
+		term.Printf("Enter to date (YYYY-MM-DD or \"\"): ")
+		scanner.Scan()
+		toDate = scanner.Text()
+	}
+	if (fromDate == "" && toDate == "") {
+		term.Printf("Enter item count for feed (example \"10\")): ")
+		scanner.Scan()
+		txt := scanner.Text()
+		count, err = strconv.Atoi(txt)
+		if err != nil {
+			return fmt.Errorf("%q, %s", options[2], err)
+		}
+	}
+	return cfg.RssPosts(cName, rssFeed, count, fromDate, toDate)
 }
 
 // generateSitemapFiles will generate Sitemap XML files for all collections
 func generateSitemapFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("generateSitemapFiles() not implemented yet.")
+	return fmt.Errorf("generateoSitemapFiles() not implemented yet.")
 }
 
 // appleThemeFiles apply a theme directory to a given collection
