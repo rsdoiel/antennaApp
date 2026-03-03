@@ -61,6 +61,21 @@ func (app *AntennaApp) Sitemap(cfgName string, args []string) error {
 	return generateSitemaps(cfg)
 }
 
+// Sitemap implements the antenna sitemap action for TUI.
+func (cfg *AppConfig) Sitemap() error {
+	if cfg.BaseURL == "" {
+		if cfg.Port != 0 {
+			cfg.BaseURL = fmt.Sprintf("http://%s:%d", cfg.Host, cfg.Port)
+		} else {
+			cfg.BaseURL = fmt.Sprintf("http://%s", cfg.Host)
+		}
+	}
+
+	// Setup some sain defaults.
+	cfg.ChunkSize = 100
+	return generateSitemaps(cfg)
+}
+
 // generateSitemaps iterates over all the collections pages and posts and
 // generates the needed sitemaps
 func generateSitemaps(cfg *AppConfig) error {
@@ -75,6 +90,9 @@ func generateSitemaps(cfg *AppConfig) error {
 			fmt.Fprintf(os.Stderr, "%q (%q) sitemap error, %s\n", col.File, col.DbName, err)
 		}
 		sitemapFiles = append(sitemapFiles, l...)
+	}
+	if len(sitemapFiles) == 0 {
+		return fmt.Errorf("no posts or pages found in any collection")
 	}
 
 	// Create the sitemap index

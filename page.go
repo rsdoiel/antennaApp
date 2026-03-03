@@ -17,9 +17,13 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -103,6 +107,7 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if len(args) == 2 {
 		oName = strings.TrimSpace(args[1])
 	}
+	fmt.Fprintf(os.Stderr, "DEBGUG app.Page() oName -> %q\n", oName)
 	return cfg.Page(fName, oName)
 }
 
@@ -127,5 +132,190 @@ func (app *AntennaApp) Pages(cfgName string, args []string) error {
 		return err
 	}
 	return cfg.Pages()
+}
+
+
+// Unpage delete a page from the pages table (does not remove files from disk)
+// The deletion will happen for pages with either an inputPath or outputPath matching
+// the fName parameter.
+func (cfg *AppConfig) Unpage(fName string) error {
+	// NOTE: remove the page from pages table.
+	collection, err := cfg.GetCollection("pages.md")
+	if err != nil {
+		return err
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return fmt.Errorf("failed to open %s, %s", dsn, err)
+	}
+	defer db.Close()
+
+	if _, err := db.Exec(SQLDeletePageByPath, fName, fName); err != nil {
+		return fmt.Errorf("%s, %s", dsn, err)
+	}
+	return nil
+}
+
+func (cfg *AppConfig) Page(fName string, oName string) error {
+	src, err := os.ReadFile(fName)
+	if err != nil {
+		return err
+	}
+	doc := &CommonMark{}
+	if err := doc.Parse(src); err != nil {
+		return err
+	}
+	// NOTE: This is trusted content so I can support commonMarkDoc
+	// processor extensions safely.
+	if strings.Contains(doc.Text, "@include-text-block ") {
+		doc.Text = IncludeTextBlock(doc.Text)
+	}
+	if strings.Contains(doc.Text, "@include-code-block ") {
+		doc.Text = IncludeCodeBlock(doc.Text)
+	}
+
+	// Convert our document text to HTML
+	// NOTE: Pages are allowed to have "unsafe" embedded HTML because they are
+	// not reading from a feed, they are being read from your file system.
+	innerHTML, err := doc.ToUnsafeHTML()
+	if err != nil {
+		return err
+	}
+	postPath := doc.GetAttributeString("postPath", fName)
+	htmlName := filepath.Join(cfg.Htdocs, postPath)
+	if oName != "" {
+		htmlName = filepath.Join(cfg.Htdocs, oName)
+	} else if postPath != "" {
+		oName = strings.TrimSuffix(postPath, ".md") + ".html"
+	} else {
+		oName = strings.TrimSuffix(fName, ".md") + ".html"
+	}
+
+	// Double check to make sure the HTML filename isn't using the Markdown file extension
+	if strings.HasSuffix(htmlName, ".md") {
+		htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
+	}
+	dName := filepath.Dir(htmlName)
+	if _, err := os.Stat(dName); err != nil {
+		if err := os.MkdirAll(dName, 0775); err != nil {
+			return err
+		}
+	}
+	gen, err := NewGenerator(path.Base(os.Args[0]), cfg.BaseURL)
+	if err != nil {
+		return err
+	}
+	if err := gen.LoadConfig(cfg.Generator); err != nil {
+		return err
+	}
+	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
+		return err
+	}
+	// NOTE: I need to add the page to pages.db
+	// NOTE: remove the page from pages table.
+	// NOTE: remove the page from pages table.
+	collection, err := cfg.GetCollection("pages.md")
+	if err != nil {
+		return err
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return fmt.Errorf("failed to open %s, %s", dsn, err)
+	}
+	defer db.Close()
+	timestamp := time.Now().Format(time.RFC3339)
+	if _, err := db.Exec(SQLUpdatePage, fName, oName, timestamp); err != nil {
+		return fmt.Errorf("%s, %s", dsn, err)
+	}
+	return nil
+}
+
+// GetPages returns a list of page maps for a collection
+func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
+	collection, err := cfg.GetCollection("pages.md")
+	if err != nil {
+		return nil, err
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	var (
+		rows *sql.Rows
+	)
+	rows, err = db.Query(SQLListPages)
+	if err != nil {
+		return nil, fmt.Errorf("%s\n%s, %s", SQLListItems, dsn, err)
+	}
+	if rows != nil {
+		defer rows.Close()
+	}
+
+	i := 0
+	pages := []map[string]string{}
+	for rows.Next() {
+		var (
+			inputPath  string
+			outputPath string
+			updated    string
+		)
+		if err = rows.Scan(&inputPath, &outputPath, &updated); err != nil {
+			displayErrorStatus("failed to read row (%d), %s\n", i, err)
+			continue
+		}
+		if i == 0 {
+			i++
+		}
+		page := map[string]string{
+			"inputPath":  inputPath,
+			"outputPath": outputPath,
+			"updated":    updated,
+		}
+		pages = append(pages, page)
+	}
+	if i == 0 {
+		return nil, fmt.Errorf("no pages found")
+	}
+	return pages, nil
+}
+
+// Pages diplays a page information to standard output
+func (cfg *AppConfig) Pages() error {
+	// NOTE: remove the page from pages table.
+	collection, err := cfg.GetCollection("pages.md")
+	if err != nil {
+		return err
+	}
+	dsn := collection.DbName
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return fmt.Errorf("failed to open %s, %s", dsn, err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(SQLDisplayPage)
+	if err != nil {
+		return fmt.Errorf("%s, %s", dsn, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			iName   string
+			oName   string
+			updated string
+		)
+		if err := rows.Scan(&iName, &oName, &updated); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			continue
+		}
+		fmt.Printf("%s\t%s\t%s\n", iName, oName, updated)
+	}
+	return nil
 }
 

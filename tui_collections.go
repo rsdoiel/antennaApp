@@ -570,7 +570,7 @@ func generateRssFiles(scanner *bufio.Scanner, options []string, cfgName string, 
 
 // generateSitemapFiles will generate Sitemap XML files for all collections
 func generateSitemapFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("generateoSitemapFiles() not implemented yet.")
+	return cfg.Sitemap() 
 }
 
 // appleThemeFiles apply a theme directory to a given collection
