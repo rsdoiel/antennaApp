@@ -67,6 +67,7 @@ Collection Menu - %%s
         (list collection pages)
 
     %sblogit%s %s[PATH_TO_MARKDOWN_FILE]%s
+        (copy a file into a blog directory tree and post it)
 `,	
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset,
@@ -118,16 +119,16 @@ func curateCollection(scanner *bufio.Scanner, cName string, cfgName string, cfg 
 		switch {
 		case strings.HasPrefix(answer, "i"):
 			// curate an item
-			displayErrorStatus("%q menu not implemented", answer)
+			displayErrorStatus("%q (items) menu not implemented", answer)
 			continue
 		case strings.HasPrefix(answer,"po"):
-			displayErrorStatus("%q menu not implemented", answer)
+			displayErrorStatus("%q (posts) menu not implemented", answer)
 			continue
 		case strings.HasPrefix(answer,"pa"):
-			displayErrorStatus("%q menu not implemented", answer)
+			displayErrorStatus("%q (pages) menu not implemented", answer)
 			continue
 		case strings.HasPrefix(answer,"b"):
-			displayErrorStatus("%q menu not implemented", answer)
+			displayErrorStatus("%q (blogit) menu not implemented", answer)
 			continue
 		case strings.HasPrefix(answer, "h"):
 			helpCurateCollection(scanner)

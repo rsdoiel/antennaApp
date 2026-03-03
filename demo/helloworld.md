@@ -1,11 +1,13 @@
 ---
-title: "Hello World"
-description: "Hi There"
+dateModified: "2026-01-04"
+datePublished: "2025-10-20"
+postPath: helloworld.md
+title: Hello World!
+
 ---
 
-# Hello World
 
-Hi There
+# Hello World!
 
-(enter any feeds you want to aggregate here as a Markdown list of links)
+This is a helloworld document.
 
