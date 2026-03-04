@@ -9,7 +9,7 @@ const (
     Version = "0.0.23-dev"
 
     // ReleaseDate, the date version.go was generated
-    ReleaseDate = "2026-02-21"
+    ReleaseDate = "2026-03-03"
 
     // ReleaseHash, the Git hash when version.go was generated
     ReleaseHash = "614ab2c"
