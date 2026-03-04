@@ -47,7 +47,7 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-02-21
+date_released: 2026-03-03
 ---
 
 About this software
@@ -57,6 +57,7 @@ About this software
 
 - implemented simple collections level menu in interactive mode
 - added action, list to list defined collections (for interactive mode but available in cli)
+= fix bug in sitemap generation for handling Markdown files without an explicit HTML filename
 
 ### Authors
 
