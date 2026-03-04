@@ -107,7 +107,6 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if len(args) == 2 {
 		oName = strings.TrimSpace(args[1])
 	}
-	fmt.Fprintf(os.Stderr, "DEBGUG app.Page() oName -> %q\n", oName)
 	return cfg.Page(fName, oName)
 }
 
