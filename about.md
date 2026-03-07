@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.23-dev
+version: 0.0.23
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -53,12 +53,12 @@ date_released: 2026-03-07
 About this software
 ===================
 
-## antennaApp 0.0.23-dev
+## antennaApp 0.0.23
 
 - implemented simple collections level menu in interactive mode
 - added action, list to list defined collections (for interactive mode but available in cli)
 - fix bug in sitemap generation for handling Markdown files without an explicit HTML filename
-- implement a themes action to list the themes available relative to the htdocs directories
+- added implement  themes action to cli
 
 ### Authors
 

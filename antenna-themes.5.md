@@ -1,4 +1,4 @@
-%antenna(5) user manual | version 0.0.23-dev ccfd061
+%antenna(5) user manual | version 0.0.23 60d5370
 % R. S. Doiel
 % 2026-03-07
 
