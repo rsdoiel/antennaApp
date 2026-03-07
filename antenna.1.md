@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.23-dev d55f1a4
+%antenna(1) user manual | version 0.0.23-dev ccfd061
 % R. S. Doiel
-% 2026-03-03
+% 2026-03-07
 
 # NAME
 
