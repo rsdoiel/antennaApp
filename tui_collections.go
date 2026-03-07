@@ -63,10 +63,6 @@ like the posts action.
 : This will generate a set of sitemap files for pages and posts found through the
 {app_name}.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
 
-%sp%sreview
-: Let's your preview the rendered your instance as a localhost website using
-your favorite web browser.
-
 %sharvest%s %s[COLLECTION_NAME]%s
 : The harvest retrieves feed content. If COLLECTION_NAME is provided then only the 
 the single collection will be harvested otherwise all collections defined in your
@@ -77,14 +73,18 @@ Antenna YAML configuration are harvested.
 by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
 will be replaced by the theme.
 
+%sp%sreview
+: Let's your preview the rendered your instance as a localhost website using
+your favorite web browser.
+
 `, 
-	Yellow+Bold, Reset, Cyan, Reset,
-	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
+	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset,
+	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset)
 
@@ -109,14 +109,14 @@ Collections Menu
     %ss%sitemap
         (generate site maps)
 
-    %sp%sreview
-        (preview website)
-
     %sharvest%s %s[COLLECTION_NAME]%s
         (retrieve feeds)
 
     %sapply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
         (apply theme)
+
+    %sp%sreview
+        (preview website)
 
 `,	
 	Yellow+Bold, Reset,
@@ -125,9 +125,9 @@ Collections Menu
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset,
-	Yellow+Bold, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
-	Yellow+Bold, Reset, Cyan, Reset)
+	Yellow+Bold, Reset, Cyan, Reset,
+	Yellow+Bold, Reset)
 
  )
 
