@@ -21,9 +21,12 @@ Ideas, not quite a roadmap
 - [ ] Add TUI that re-enforces the key concepts
   - the TUI should be educational to the cli use
   - the TUI should be recordable to generate a list of commands to be re-used
-- [ ] list collections
+- [X] list collections
 - [ ] list posts and items
 - [ ] list pages
+- [ ] list themes
+- [ ] generate default theme structure (new theme)
+- [ ] apply theme
 - [X] add/del pages
 - [X] add/del posts
 - [X] add/del items

@@ -68,10 +68,8 @@ like the posts action.
 the single collection will be harvested otherwise all collections defined in your
 Antenna YAML configuration are harvested.
 
-%sapply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
-: This will apply the content THEME_PATH and update the YAML generator file described
-by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
-will be replaced by the theme.
+%sthemes%s
+: This will list the themes an allow you to apply them
 
 %sp%sreview
 : Let's your preview the rendered your instance as a localhost website using
@@ -85,7 +83,7 @@ your favorite web browser.
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
-	Yellow+Bold, Reset, Cyan, Reset,
+	Yellow+Bold, Reset,
 	Yellow+Bold, Reset)
 
 	collectionsMenu = fmt.Sprintf(`
@@ -112,8 +110,8 @@ Collections Menu
     %sharvest%s %s[COLLECTION_NAME]%s
         (retrieve feeds)
 
-    %sapply%s %s[THEME_PATH [YAML_FILE_PATH]]%s
-        (apply theme)
+    %sthemes%s
+        (list themes)
 
     %sp%sreview
         (preview website)
@@ -126,9 +124,27 @@ Collections Menu
 	Yellow+Bold, Reset, Cyan, Reset,
 	Yellow+Bold, Reset,
 	Yellow+Bold, Reset, Cyan, Reset,
-	Yellow+Bold, Reset, Cyan, Reset,
+	Yellow+Bold, Reset, 
 	Yellow+Bold, Reset)
 
+
+ 	listCollectionNamesHelpMenu = `
+List Collections menu
+
++N, -N
+: Move N forward or backward in list (setting the Nth item to the
+top of the window
+
+N, COLLECTION_NAME
+: Open a collection by number or name
+
+h
+: Display this help page
+
+q
+: Quit this menu
+
+`
  )
 
 
@@ -170,9 +186,9 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 		}
 		answer = strings.ToLower(answer)
 		switch {
-		case strings.HasPrefix(answer, "ap"):
+		case strings.HasPrefix(answer, "themes"):
 			// apply a theme to a collection
-			if err := applyThemeFiles(scanner, options, cfgName, cfg); err != nil {
+			if err := listThemes(scanner, options, cfgName, cfg); err != nil {
 				displayErrorStatus("%s", err)
 				continue
 			}
@@ -241,6 +257,17 @@ func curateCollections(scanner *bufio.Scanner, cfgName string, cfg *AppConfig) e
 	return nil
 }
 
+// helpListCollectionNames explains the options in the collection names menu
+func helpListCollectionNames(scanner *bufio.Scanner) {
+	term.Clear()
+	defer term.Clear()
+	term.ResetStyle()
+	term.Printf(listCollectionNamesHelpMenu)
+	term.Printf("\n(%sq%suit, to exit help): ", Green, Reset)
+	term.Refresh()
+	scanner.Scan()
+}
+
 // listCollectionNames will output a list of collection names
 func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
 	// Clear the screen
@@ -305,7 +332,8 @@ func listCollectionNames(scanner *bufio.Scanner, options []string, cfgName strin
 				continue
 			}
 		case strings.HasPrefix(answer, "h"):
-			displayErrorStatus("%s not implemented yet")
+			helpListCollectionNames(scanner)
+			displayErrorStatus("%s not implemented yet", answer)
 			continue
 		case strings.HasPrefix(answer, "q"):
 			quit = true
@@ -573,9 +601,9 @@ func generateSitemapFiles(scanner *bufio.Scanner, options []string, cfgName stri
 	return cfg.Sitemap() 
 }
 
-// appleThemeFiles apply a theme directory to a given collection
-func applyThemeFiles(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("applyThemeFiles() not implemented yet.")
+// appleThemes list themes available in the project
+func listThemes(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
+	return fmt.Errorf("listThemes() not implemented yet.")
 }
 
 // runPreview will run the web server on localhost so you can preview your site in the web browser
