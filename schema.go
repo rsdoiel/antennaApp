@@ -20,6 +20,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -182,6 +183,24 @@ func (cfg *AppConfig) DelCollection(cfgName string, cName string) error {
 		return err
 	}
 	return nil
+}
+
+// ListCollectionFiles lists the files to out, one per line
+func  (app *AntennaApp) ListCollectionFiles(out io.Writer, cfgName string, args []string) error {
+        // create a cfg object
+        cfg := &AppConfig{}
+        // Load configuration
+        if err := cfg.LoadConfig(cfgName); err != nil {
+                return err
+        }
+		fNames, err := cfg.ListCollectionFiles(cfgName)
+		if err != nil {
+			return err
+		}
+		for _, fName := range fNames {
+			fmt.Fprintf(out, "%s\n", fName)
+		}
+		return nil
 }
 
 // ListCollectionFiles returns a list of collections defined in the configuration

@@ -18,15 +18,100 @@ package antennaApp
 
 import (
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
+
 	// 3rd Party packages
 	"gopkg.in/yaml.v3"
 )
 
+// ListThemes finds the themes sub-directories and lists them
+func (app *AntennaApp) ListThemes(out io.Writer, cfgName string, args []string) error {
+       // create a cfg object
+        cfg := &AppConfig{}
+        // Load configuration
+        if err := cfg.LoadConfig(cfgName); err != nil {
+                return err
+        }
+		fNames, err := cfg.ListThemes()
+		if err != nil {
+			return err
+		}
+		for _, fName := range fNames {
+			fmt.Fprintf(out, "%s\n", fName)
+		}
+		return nil
+
+}
+
+// ListThemes finds the theme sub-directories and returns a list of them an error
+func (cfg *AppConfig) ListThemes() ([]string, error) {
+	// The theme directory should be at the same level as 
+	// htdocs directory or in the current working directory.
+	curDir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	// Handle the case where the htdocs directory is located else where.
+	// The theme directories need to be in relationship to that location
+	if strings.HasPrefix(cfg.Htdocs, "/") {
+		curDir = filepath.Dir(curDir)
+	}
+	return findDirectoriesWithTargetFiles(curDir)
+}
+
+// isTargetFile checks if the filename is one of the target files.
+func isTargetFile(name string) bool {
+	targets := map[string]bool{
+		"header.md":      true,
+		"footer.md":      true,
+		"nav.md":         true,
+		"top_content.md": true,
+		"bottom_content.md": true,
+	}
+	if targets[name] {
+		return true
+	}
+	return strings.HasSuffix(name, ".css")
+}
+
+// findDirectoriesWithTargetFiles lists directories containing target files.
+func findDirectoriesWithTargetFiles(root string) ([]string, error) {
+	var result []string
+	seen := make(map[string]bool)
+
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && isTargetFile(d.Name()) {
+			dir := filepath.Dir(path)
+			if !seen[dir] {
+				relDir, err := filepath.Rel(root, dir)
+				if err != nil {
+					return err
+				}
+				seen[dir] = true
+				result = append(result, relDir)
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+
 // ApplyTheme takes a theme directory and an optional generator YAML filename
 // and applies the theme to that generator YAML name saving the result.
-func (app AntennaApp) ApplyTheme(cfgName string, args []string) error {
+func (app *AntennaApp) ApplyTheme(cfgName string, args []string) error {
 	themeName := ""
 	generatorName := ""
 	if len(args) == 0 {
