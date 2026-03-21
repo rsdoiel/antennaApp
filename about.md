@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.23
+version: 0.0.23b
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -53,7 +53,7 @@ date_released: 2026-03-07
 About this software
 ===================
 
-## antennaApp 0.0.23
+## antennaApp 0.0.23b
 
 - implemented simple collections level menu in interactive mode
 - added action, list to list defined collections (for interactive mode but available in cli)
