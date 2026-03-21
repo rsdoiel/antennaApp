@@ -167,6 +167,7 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 	if err != err {
 		return nil, err
 	}
+	defer res.Body.Close()
 	src = bytes.ReplaceAll(src, []byte(``), []byte(``))
 	buf := bytes.NewBuffer(src)
 
