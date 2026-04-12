@@ -157,12 +157,8 @@ func (cfg *AppConfig) Unpage(fName string) error {
 }
 
 func (cfg *AppConfig) Page(fName string, oName string) error {
-	src, err := os.ReadFile(fName)
+	doc, err := LoadCommonMark(fName)
 	if err != nil {
-		return err
-	}
-	doc := &CommonMark{}
-	if err := doc.Parse(src); err != nil {
 		return err
 	}
 	// NOTE: This is trusted content so I can support commonMarkDoc
@@ -186,15 +182,13 @@ func (cfg *AppConfig) Page(fName string, oName string) error {
 	if oName != "" {
 		htmlName = filepath.Join(cfg.Htdocs, oName)
 	} else if postPath != "" {
-		oName = strings.TrimSuffix(postPath, ".md") + ".html"
+		oName = normalizeToHTMLExt(postPath)
 	} else {
-		oName = strings.TrimSuffix(fName, ".md") + ".html"
+		oName = normalizeToHTMLExt(fName)
 	}
 
-	// Double check to make sure the HTML filename isn't using the Markdown file extension
-	if strings.HasSuffix(htmlName, ".md") {
-		htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
-	}
+	// Normalize the HTML filename, replacing any source document extension with .html
+	htmlName = normalizeToHTMLExt(htmlName)
 	dName := filepath.Dir(htmlName)
 	if _, err := os.Stat(dName); err != nil {
 		if err := os.MkdirAll(dName, 0775); err != nil {

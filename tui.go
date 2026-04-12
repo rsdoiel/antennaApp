@@ -17,7 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strconv"

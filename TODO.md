@@ -18,6 +18,7 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] 
 - [X] Add TUI that re-enforces the key concepts
   - [X] the TUI should be educational to the cli use
   - [X] the TUI should be recordable to generate a list of commands to be re-used

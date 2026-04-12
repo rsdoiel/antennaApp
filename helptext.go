@@ -93,29 +93,35 @@ and a pages.db SQLite3 file to hold the default collection. Collections hold pos
 Posts will be be included in RSS feed output while pages will be excluded from feed output.
 
 add COLLECTION_FILE [NAME DESCRIPTION]
-: Add the feed collection name by COLLECTION_FILE to your Antenna configuration.
-A COLLECTION_FILE is a Markdown document containing one or more links in a list. You 
-can include a short name that will be displayed when the HTML was generated. You may
-also supply a DESCRIPTION associated with the collection. These can also be set in
-the Front Matter of the Markdown document.
+: Add the feed collection defined by COLLECTION_FILE to your Antenna configuration.
+COLLECTION_FILE may be a Markdown document (.md) or a LibreOffice Writer document
+(.odt, .ott). For Markdown files, the document body should contain a list of hyperlinks
+to RSS/Atom feeds. For ODT/OTT files, the document properties are used as collection
+metadata and any hyperlinks in the document body are used as the feed list. You can
+supply an optional NAME and DESCRIPTION, or define them in front matter (Markdown) or
+document properties (ODT/OTT).
 
 del COLLECTION_FILE
-: Remove a collection from the Antenna configuration.
+: Remove a collection from the Antenna configuration. COLLECTION_FILE may be a
+Markdown (.md) or LibreOffice Writer (.odt, .ott) filename as registered with the
+add action.
 
 list
-: List the collections Markdown filenames defined in the "{app_name}.yaml".
+: List the collection filenames defined in the "{app_name}.yaml".
 
 page INPUT_PATH [OUTPUT_PATH]
 : This will create a standalone HTML page in a collection called pages.md. The pages.md
-is the only collection that has pages (hense the name). It is also the default collection
+is the only collection that has pages (hence the name). It is also the default collection
 (created by the init action). It uses the default page generator defined in the
-{app_name}.yaml if one is not specifically set for the pages.db collection. The pages
-command reads in the Markdown document from INPUT_PATH and writes it an HTML file
-using the  same basename. If OUTPUT_PATH is set it uses that name for the HTML file
-generated. (NOTE: the pages are not shown in the RSS feed. The page action is useful for
-pages like an about page, home page, and search page. __The Markdown processed via page
-action will allow "unsafe" HTML to pass through. Only use page if you trust the
-Markdown document!!!__)
+{app_name}.yaml if one is not specifically set for the pages.db collection. INPUT_PATH
+may be a Markdown document (.md) or a LibreOffice Writer document (.odt, .ott). For
+ODT/OTT files the document properties (title, author, subject, keywords, etc.) are
+extracted and used as front matter. The resulting HTML file uses the same basename with
+a .html extension. If OUTPUT_PATH is set it uses that name for the HTML file generated.
+(NOTE: pages are not shown in the RSS feed. The page action is useful for pages like an
+about page, home page, and search page. __The Markdown processed via the page action
+will allow "unsafe" HTML to pass through. Only use page with files you trust
+completely!!!__)
 
 unpage INPUT_PATH
 : This will will remove a page's from a collection based in the input filepath provided.
@@ -128,21 +134,26 @@ descending updated timestamp.
 
 
 post [COLLECTION_NAME] FILEPATH
-: Add a Markdown document to a feed collection (default is pages.md). The front matter is
-used to specify things like the link to the post, guid, description, etc. If these are not
-provided then the post will display and error and not write the content to the
-post directory location or add it to the collections. Required front matter
-**title** or **description**, see RSS 2.0 defined at
-<https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt>. To include a the file in
+: Add a document to a feed collection (default is pages.md). FILEPATH may be a Markdown
+document (.md) or a LibreOffice Writer document (.odt, .ott). For ODT/OTT files the
+document properties (title, author, subject, keywords, rights, etc.) are extracted and
+used as front matter automatically. The front matter is used to specify things like the
+link to the post, guid, description, etc. If these are not provided then the post action
+will display an error and not write the content to the post directory location or add it
+to the collection. Required front matter: **title** or **description**, see RSS 2.0 at
+<https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt>. To include the file in
 the posts directory tree you need to provide a **postPath**. In that case it is also
 recommended you provide a value for **link** that reflects the public URL to where the
-post can be viewed. Post like page will allow unsafe HTML to be used in the Markdown
-document unlike aggregated content.
+post can be viewed. Like the page action, unsafe HTML in Markdown files passes through
+unchanged; only use post with files you trust completely.
 
 blogit [COLLECTION_NAME] FILEPATH [POST_DATE]
-: This is a varation of post where the FILEPATH is used as the source Markdown text
-to be posted in a blog style directory path. After calculating the target path and
-copying the file to the target location it uses post to finish the additiona.
+: This is a variation of post where FILEPATH is used as the source document to be
+placed in a blog-style date directory path (e.g. blog/2026/04/12/my-post.odt).
+FILEPATH may be a Markdown document (.md) or a LibreOffice Writer document (.odt, .ott).
+For ODT/OTT files the document properties are extracted and used as front matter. After
+calculating the target path and copying the file there it uses post to finish adding it
+to the collection.
 
 unpost COLLECTION_NAME URL | POST_PATH
 : Remove an item from a collection using the URL associated with the item. You can
