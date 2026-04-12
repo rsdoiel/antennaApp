@@ -18,9 +18,9 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
-- [ ] Add TUI that re-enforces the key concepts
-  - the TUI should be educational to the cli use
-  - the TUI should be recordable to generate a list of commands to be re-used
+- [X] Add TUI that re-enforces the key concepts
+  - [X] the TUI should be educational to the cli use
+  - [X] the TUI should be recordable to generate a list of commands to be re-used
 - [X] list collections
 - [ ] list posts and items
 - [ ] list pages
@@ -76,6 +76,7 @@ Ideas, not quite a roadmap
 
 ## Thinking about
 
+- [ ] Experiment with using ODT files like I've initially used Markdown files for managing content and aggregation 
 - [ ] add an API action to generate posts and pages data to a JSON API
 - [ ] consider adding a server option that has a read/write API and used to host an antenna site (this would give us both static site capability AND dynamic interactive capability)
   - The service would function on localhost

@@ -86,7 +86,7 @@ func InitPageGenerator(pageName string) error {
 	} else {
 		// NOTE: Create a default page pagefooter Generator
 		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0664); err != nil {
-			fmt.Errorf("failed to create %q, %s", pageName, err)
+			return fmt.Errorf("failed to create %q, %s", pageName, err)
 		}
 	}
 	return nil

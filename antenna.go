@@ -78,7 +78,9 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 	case "quote", "reply": 
 		return app.QuoteTextFragment(out, cfgName, args)
 	case "interactive", "tui":
-		return app.TUI(cfgName, args)
+		return app.Interactive(cfgName, args)
+	case "stylefrom":
+		return app.ExtractStyles(out, args)
 	default:
 		return fmt.Errorf("%q not supported", action)
 	}

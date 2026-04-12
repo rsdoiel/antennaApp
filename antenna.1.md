@@ -1,6 +1,6 @@
-%antenna(1) user manual | version 0.0.23b 27544ea
+%antenna(1) user manual | version 0.0.23c ce2c85a
 % R. S. Doiel
-% 2026-03-07
+% 2026-04-12
 
 # NAME
 
@@ -169,6 +169,19 @@ apply THEME_PATH [YAML_FILE_PATH]
 : This will apply the content THEME_PATH and update the YAML generator file described
 by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
 will be replaced by the theme.
+
+interactive [ACTION [PARAMETERS]]
+: Start a guided conversation that walks you through any antenna action step by
+step. Each parameter is explained and pre-filled from arguments already on the
+command line. The complete command is shown before it runs, making this a useful
+way to learn the antenna command syntax. If ACTION is omitted you are presented
+with a menu of all available actions to choose from.
+
+stylefrom INPUT_FILE [OUTPUT_PATH]
+: Extract CSS from a LibreOffice Writer HTML export (.html, .htm) or ODF document
+(.odt, .ott) and write it to OUTPUT_PATH. OUTPUT_PATH defaults to "theme/style.css"
+when omitted. The directory is created if it does not exist. This makes it easy to
+seed a theme stylesheet directly from a styled LibreOffice Writer document.
 
 # CONFIGURATION
 

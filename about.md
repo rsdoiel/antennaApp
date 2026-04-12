@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.23b
+version: 0.0.23c
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -47,18 +47,20 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-03-07
+date_released: 2026-04-12
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.23b
+## antennaApp 0.0.23c
 
 - implemented simple collections level menu in interactive mode
 - added action, list to list defined collections (for interactive mode but available in cli)
 - fix bug in sitemap generation for handling Markdown files without an explicit HTML filename
 - added implement  themes action to cli
+- added experimental interactive mode
+- added the ability to extract CSS from a LibreOffice Writer ODT or OTT file
 
 ### Authors
 

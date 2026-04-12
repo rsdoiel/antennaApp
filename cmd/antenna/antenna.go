@@ -64,9 +64,10 @@ func main() {
 		fmt.Fprintf(out, "%s\n", licenseText)
 		os.Exit(0)
 	}
-	// NOTE: no parameters provided then startup in curate mode
+	// No action provided — enter interactive mode, which will offer to
+	// create antenna.yaml if it does not exist.
 	if len(args) == 0 {
-		args = append(args,  "tui")
+		args = append(args, "interactive")
 	}
 
 	action, args := args[0], args[1:]
