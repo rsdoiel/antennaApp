@@ -404,7 +404,7 @@ https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script
 
 style
 : (optional, used when present) A string holding CSS to be injected as the last
-element of the head when rendering HTML.
+element of the head when rendering HTML. If you have styled a LibreOffice Writer document you can the {app_name} stylefrom action to extract that into a stylesheet.
 
 Here is an example "head.yaml"
 
