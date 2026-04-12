@@ -7,9 +7,9 @@
 Antenna App's Features:
 
 - An interactive text and scriptable command line interfaces
-- Pages and posts are written using Markdown
+- Pages and posts are written using Markdown or LibreOffice Writer ODT files
 - Posts are automatically included in an RSS feed for your site
-- Aggregations of feeds can be included by providing Markdown list of links to RSS, Atom and JSON feeds
+- Aggregations of feeds can be included by providing Markdown or ODT file with a list of links to RSS, Atom and JSON feeds
 - Pages, posts and aggregations __can include__ metadata expressed as YAML front matter[^1]
 - Local posts can be added to curated feed collection (introducing a distributed option for __opt in__ conversations)
 - You can have multiple collections of feeds
@@ -25,7 +25,7 @@ Antenna App's Features:
   - Each collection can have it's own page generator and theme
 - Antenna App plays well with other static website tools (e.g. PageFind)
 
-[^1]: YAML is a simple notation describing structed data. Front matter is a block of text hodling metadata about the document. Using YAML Front Matter is a common practice in the Markdown community. I first encountered it in the data science community and other scholarly science communities.
+[^1]: YAML is a simple notation describing structured data. Front matter is a block of text hodling metadata about the document. Using YAML Front Matter is a common practice in the Markdown community. I first encountered it in the data science community and other scholarly science communities.
 
 [^2]: A YAML file called head.yaml is used to describe custom meta, link and script elements in the page. There is a style.css file that can be included in a theme to be included in the head element of rendered HTML.
 
@@ -35,8 +35,7 @@ I believe Antenna App is well suited for creating local community sites where ea
 
 ### Authors
 
-- Doiel, R. S. DoielHelpful if you are developing the Antenna App.
-
+- Doiel, R. S.
 
 ## Software Requirements
 
@@ -44,13 +43,13 @@ To run Antenna App you just need to [install](INSTALL.md) it on a Raspberry Pi, 
 
 Requirements top compile the Antenna App from source code.
 
-- Go >= 1.25.3
-- CMTools >= 0.0.40
+- Go >= 1.26.2
 
 ### Software Suggestions
 
 The following are helpful if you want to develop or customize the Antenna App software.
 
+- CMTools >= 0.0.40
 - GNU Make >= 3.4
 - Pandoc >= 3.1
 - Bash or Powershell

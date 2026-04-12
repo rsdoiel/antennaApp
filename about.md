@@ -35,7 +35,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.23c
+version: 0.0.24-rc1
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -53,14 +53,18 @@ date_released: 2026-04-12
 About this software
 ===================
 
-## antennaApp 0.0.23c
+## antennaApp 0.0.24-rc1
 
 - implemented simple collections level menu in interactive mode
 - added action, list to list defined collections (for interactive mode but available in cli)
 - fix bug in sitemap generation for handling Markdown files without an explicit HTML filename
-- added implement  themes action to cli
+- added implementatopm of themes action to cli
 - added experimental interactive mode
 - added the ability to extract CSS from a LibreOffice Writer ODT or OTT file
+- added ODT/OTT document support: page, post, and blogit now accept LibreOffice Writer files in addition to Markdown; document properties (title, author, subject, keywords, rights, source, type, user-defined fields) are mapped to YAML front matter automatically
+- added ODT/OTT collection support: add and harvest now accept LibreOffice Writer files as collection definition files; document properties become collection metadata and hyperlinks in the document body become the feed list
+- added LoadCommonMark helper that dispatches by file extension, centralising Markdown and ODT loading across the codebase
+- updated interactive mode prompts and help text for page, post, blogit, add, del, and list to document ODT/OTT support
 
 ### Authors
 
