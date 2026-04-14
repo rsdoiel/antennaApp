@@ -18,6 +18,7 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] Re-read, <https://nathangathright.com/podcastings-missing-link/>, then think about folding that into the generated content and RSS feeds to support podcasts
 - [ ] Add TUI that re-enforces the key concepts
   - the TUI should be educational to the cli use
   - the TUI should be recordable to generate a list of commands to be re-used
