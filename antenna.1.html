@@ -104,31 +104,41 @@ while pages will be excluded from feed output.
 </dd>
 <dt>add COLLECTION_FILE [NAME DESCRIPTION]</dt>
 <dd>
-Add the feed collection name by COLLECTION_FILE to your Antenna
-configuration. A COLLECTION_FILE is a Markdown document containing one
-or more links in a list. You can include a short name that will be
-displayed when the HTML was generated. You may also supply a DESCRIPTION
-associated with the collection. These can also be set in the Front
-Matter of the Markdown document.
+Add the feed collection defined by COLLECTION_FILE to your Antenna
+configuration. COLLECTION_FILE may be a Markdown document (.md) or a
+LibreOffice Writer document (.odt, .ott). For Markdown files, the
+document body should contain a list of hyperlinks to RSS/Atom feeds. For
+ODT/OTT files, the document properties are used as collection metadata
+and any hyperlinks in the document body are used as the feed list. You
+can supply an optional NAME and DESCRIPTION, or define them in front
+matter (Markdown) or document properties (ODT/OTT).
 </dd>
 <dt>del COLLECTION_FILE</dt>
 <dd>
-Remove a collection from the Antenna configuration.
+Remove a collection from the Antenna configuration. COLLECTION_FILE may
+be a Markdown (.md) or LibreOffice Writer (.odt, .ott) filename as
+registered with the add action.
+</dd>
+<dt>list</dt>
+<dd>
+List the collection filenames defined in the “antenna.yaml”.
 </dd>
 <dt>page INPUT_PATH [OUTPUT_PATH]</dt>
 <dd>
 This will create a standalone HTML page in a collection called pages.md.
-The pages.md is the only collection that has pages (hense the name). It
+The pages.md is the only collection that has pages (hence the name). It
 is also the default collection (created by the init action). It uses the
 default page generator defined in the antenna.yaml if one is not
-specifically set for the pages.db collection. The pages command reads in
-the Markdown document from INPUT_PATH and writes it an HTML file using
-the same basename. If OUTPUT_PATH is set it uses that name for the HTML
-file generated. (NOTE: the pages are not shown in the RSS feed. The page
-action is useful for pages like an about page, home page, and search
-page. <strong>The Markdown processed via page action will allow “unsafe”
-HTML to pass through. Only use page if you trust the Markdown
-document!!!</strong>)
+specifically set for the pages.db collection. INPUT_PATH may be a
+Markdown document (.md) or a LibreOffice Writer document (.odt, .ott).
+For ODT/OTT files the document properties (title, author, subject,
+keywords, etc.) are extracted and used as front matter. The resulting
+HTML file uses the same basename with a .html extension. If OUTPUT_PATH
+is set it uses that name for the HTML file generated. (NOTE: pages are
+not shown in the RSS feed. The page action is useful for pages like an
+about page, home page, and search page. <strong>The Markdown processed
+via the page action will allow “unsafe” HTML to pass through. Only use
+page with files you trust completely!!!</strong>)
 </dd>
 <dt>unpage INPUT_PATH</dt>
 <dd>
@@ -144,26 +154,33 @@ descending updated timestamp.
 </dd>
 <dt>post [COLLECTION_NAME] FILEPATH</dt>
 <dd>
-Add a Markdown document to a feed collection (default is pages.md). The
-front matter is used to specify things like the link to the post, guid,
-description, etc. If these are not provided then the post will display
-and error and not write the content to the post directory location or
-add it to the collections. Required front matter <strong>title</strong>
-or <strong>description</strong>, see RSS 2.0 defined at <a
-href="https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt"
+Add a document to a feed collection (default is pages.md). FILEPATH may
+be a Markdown document (.md) or a LibreOffice Writer document (.odt,
+.ott). For ODT/OTT files the document properties (title, author,
+subject, keywords, rights, etc.) are extracted and used as front matter
+automatically. The front matter is used to specify things like the link
+to the post, guid, description, etc. If these are not provided then the
+post action will display an error and not write the content to the post
+directory location or add it to the collection. Required front matter:
+<strong>title</strong> or <strong>description</strong>, see RSS 2.0 at
+<a href="https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt"
 class="uri">https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt</a>.
-To include a the file in the posts directory tree you need to provide a
+To include the file in the posts directory tree you need to provide a
 <strong>postPath</strong>. In that case it is also recommended you
 provide a value for <strong>link</strong> that reflects the public URL
-to where the post can be viewed. Post like page will allow unsafe HTML
-to be used in the Markdown document unlike aggregated content.
+to where the post can be viewed. Like the page action, unsafe HTML in
+Markdown files passes through unchanged; only use post with files you
+trust completely.
 </dd>
 <dt>blogit [COLLECTION_NAME] FILEPATH [POST_DATE]</dt>
 <dd>
-This is a varation of post where the FILEPATH is used as the source
-Markdown text to be posted in a blog style directory path. After
-calculating the target path and copying the file to the target location
-it uses post to finish the additiona.
+This is a variation of post where FILEPATH is used as the source
+document to be placed in a blog-style date directory path
+(e.g. blog/2026/04/12/my-post.odt). FILEPATH may be a Markdown document
+(.md) or a LibreOffice Writer document (.odt, .ott). For ODT/OTT files
+the document properties are extracted and used as front matter. After
+calculating the target path and copying the file there it uses post to
+finish adding it to the collection.
 </dd>
 <dt>unpost COLLECTION_NAME URL | POST_PATH</dt>
 <dd>
@@ -225,6 +242,23 @@ website using your favorite web browser.
 This will apply the content THEME_PATH and update the YAML generator
 file described by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then
 that YAML generator file will be replaced by the theme.
+</dd>
+<dt>interactive [ACTION [PARAMETERS]]</dt>
+<dd>
+Start a guided conversation that walks you through any antenna action
+step by step. Each parameter is explained and pre-filled from arguments
+already on the command line. The complete command is shown before it
+runs, making this a useful way to learn the antenna command syntax. If
+ACTION is omitted you are presented with a menu of all available actions
+to choose from.
+</dd>
+<dt>stylefrom INPUT_FILE [OUTPUT_PATH]</dt>
+<dd>
+Extract CSS from a LibreOffice Writer HTML export (.html, .htm) or ODF
+document (.odt, .ott) and write it to OUTPUT_PATH. OUTPUT_PATH defaults
+to “theme/style.css” when omitted. The directory is created if it does
+not exist. This makes it easy to seed a theme stylesheet directly from a
+styled LibreOffice Writer document.
 </dd>
 </dl>
 <h1 id="configuration">CONFIGURATION</h1>

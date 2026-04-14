@@ -56,12 +56,9 @@ func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, arg
 }
 
 func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent string) error {
-	src, err := os.ReadFile(collection.File)
+	// LoadCommonMark accepts Markdown (.md) or ODT/OTT collection files.
+	doc, err := LoadCommonMark(collection.File)
 	if err != nil {
-		return err
-	}
-	doc := &CommonMark{}
-	if err := doc.Parse(src); err != nil {
 		return err
 	}
 	links, err := doc.GetLinks()
@@ -167,6 +164,7 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 	if err != err {
 		return nil, err
 	}
+	defer res.Body.Close()
 	src = bytes.ReplaceAll(src, []byte(``), []byte(``))
 	buf := bytes.NewBuffer(src)
 

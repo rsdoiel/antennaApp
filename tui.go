@@ -17,7 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strconv"
@@ -159,37 +158,3 @@ func displayErrorStatus(format string, options ...interface{}) {
 	displayStatus(newFormat, options...)
 }
 
-/**
- * Action method
- */
-
-// TUI provides a simple terminal interface to curating collections and
-// feed items for publication in your Antenna site.
-func (app *AntennaApp) TUI(cfgName string, args []string) error {
-	scanner := bufio.NewScanner(os.Stdin)
-	if _, err := os.Stat(cfgName); os.IsNotExist(err) {
-		term.Clear()
-		term.Printf(`
-	%s does not exist. Create it? %syes%s/no `, cfgName, termlib.Bold+termlib.Italic, termlib.Reset)
-		scanner.Scan()
-		answer, _, _ := parseAnswer(scanner.Text())
-		if answer == "y" || answer == "yes" {
-			if err := app.Init(cfgName, []string{}); err != nil {
-				return err
-			}
-		}
-	}
-	cfg := &AppConfig{}
-	if err := cfg.LoadConfig(cfgName); err != nil {
-		return err
-	}
-	if cfg.Collections == nil || len(cfg.Collections) == 0 {
-		// NOTE: shouldn't see this unless you have a partially
-		// initialized project
-		return fmt.Errorf("no collections found in %s", cfgName)
-	}
-	if err := curateCollections(scanner, cfgName, cfg); err != nil {
-		return err
-	}
-	return nil
-}

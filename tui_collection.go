@@ -87,7 +87,7 @@ func helpCurateCollection(scanner *bufio.Scanner) {
 	term.Clear()
 	defer term.Clear()
 	term.ResetStyle()
-	term.Printf(collectionMenuHelp)
+	term.Printf("%s", collectionMenuHelp)
 	term.Printf("\n(%sq%suit, to exit help): ", Green, Reset)
 	term.Refresh()
 	scanner.Scan()

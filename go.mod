@@ -10,6 +10,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/rsdoiel/opml v0.0.10
+	github.com/rsdoiel/stylefrom v0.0.2
 	github.com/rsdoiel/termlib v0.0.4
 	github.com/stefanfritsch/goldmark-fences v1.0.0
 	github.com/yuin/goldmark v1.7.13

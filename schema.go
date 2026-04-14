@@ -94,17 +94,14 @@ func setupDatabase(cName string, dbName string) error {
 
 // AddCollection adds and saves a new collection to AppConfig
 func (cfg *AppConfig) AddCollection(cfgName string, cName string) error {
-	src, err := os.ReadFile(cName)
+	// Load the collection definition — accepts Markdown (.md) or ODT/OTT files.
+	// For ODT/OTT files document properties become front matter and hyperlinks
+	// in the document body become the feed link list.
+	doc, err := LoadCommonMark(cName)
 	if err != nil {
 		return err
 	}
-	// Parse the Markdown collection of links and make sure it
-	// makes sense.
-	doc := &CommonMark{}
-	if err := doc.Parse(src); err != nil {
-		return err
-	}
-	// Now process the Markdown and pull out the list of links and label and description.
+	// Validate that links can be extracted from the document body.
 	if _, err := doc.GetLinks(); err != nil {
 		return err
 	}
@@ -546,13 +543,9 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 		return err
 	}
 
-	src, err := os.ReadFile(fName)
+	doc, err := LoadCommonMark(fName)
 	if err != nil {
-		return fmt.Errorf("failed to read %q, %s", fName, err)
-	}
-	doc := &CommonMark{}
-	if err := doc.Parse(src); err != nil {
-		return fmt.Errorf("failed to parse %q, %s", fName, err)
+		return fmt.Errorf("failed to load %q, %s", fName, err)
 	}
 	updateMarkdownDoc := false
 	if doc.FrontMatter == nil {
@@ -570,7 +563,8 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 		doc.FrontMatter["dateModified"] = today
 		updateMarkdownDoc = true
 	}
-	if updateMarkdownDoc {
+	// ODT files are not written back — their metadata is read-only from the archive.
+	if updateMarkdownDoc && !isODTFile(fName) {
 		if err = saveMarkdown(fName, doc); err != nil {
 			return fmt.Errorf("unable to save %s, %s", fName, err)
 		}
@@ -628,20 +622,13 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 	if postPath != "" {
 		if link == "" {
 			if cfg.BaseURL != "" {
-				if strings.HasSuffix(postPath, ".md") {
-					link = cfg.BaseURL + "/" + strings.TrimSuffix(postPath, ".md") + ".html"
-				} else {
-					link = cfg.BaseURL + "/" + postPath
-				}
+				link = cfg.BaseURL + "/" + normalizeToHTMLExt(postPath)
 			} else {
 				return fmt.Errorf("missing base_url in antenna YAML, could not form link using postPath %q", postPath)
 			}
 		}
-		// Write out an HTML page to the postPath, if Markdown doc, normalize .html
-		htmlName := filepath.Join(cfg.Htdocs, postPath)
-		if strings.HasSuffix(htmlName, ".md") {
-			htmlName = strings.TrimSuffix(htmlName, ".md") + ".html"
-		}
+		// Write out an HTML page to the postPath, normalizing source extension to .html
+		htmlName := normalizeToHTMLExt(filepath.Join(cfg.Htdocs, postPath))
 		gen, err := NewGenerator(path.Base(os.Args[0]), cfg.BaseURL)
 		if err != nil {
 			return err
