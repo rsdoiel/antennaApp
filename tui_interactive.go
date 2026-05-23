@@ -472,12 +472,9 @@ func (s *iSession) guideAdd(args []string) error {
 	fmt.Printf(`
 %sadd%s — Register a feed collection
 
-A collection is defined by a Markdown (.md) or LibreOffice Writer (.odt, .ott)
-file whose content lists RSS/Atom feed URLs. For Markdown files the body should
-contain a Markdown link list. For ODT/OTT files the document properties supply
-the collection metadata and the hyperlinks in the document become the feed list.
-Registering it adds the collection to your antenna configuration so it can be
-harvested and its content generated into HTML.
+A collection is defined by a Markdown (.md) file whose body contains a list of
+RSS/Atom feed URLs as Markdown links. Registering it adds the collection to your
+antenna configuration so it can be harvested and its content generated into HTML.
 `, Bold+Yellow, Reset)
 
 	preFile, preName, preDesc := "", "", ""
@@ -486,7 +483,7 @@ harvested and its content generated into HTML.
 	if len(args) > 2 { preDesc = args[2] }
 
 	collectionFile, err := iStep(s.scanner, "COLLECTION_FILE",
-		"Path to the file that defines this collection of feeds (.md, .odt, or .ott).",
+		"Path to the Markdown file that defines this collection of feeds (.md).",
 		preFile, "my-feeds.md")
 	if err != nil { return err }
 	if collectionFile == "" {
@@ -519,14 +516,14 @@ func (s *iSession) guideDel(args []string) error {
 %sdel%s — Remove a feed collection
 
 Unregisters the collection from your antenna configuration. The collection
-file (.md, .odt, or .ott) and its SQLite3 database are left on disk untouched.
+file (.md) and its SQLite3 database are left on disk untouched.
 `, Bold+Yellow, Reset)
 
 	pre := ""
 	if len(args) > 0 { pre = args[0] }
 
 	collectionFile, err := iStep(s.scanner, "COLLECTION_FILE",
-		"Path to the collection file (.md, .odt, or .ott) you want to remove.",
+		"Path to the collection file (.md) you want to remove.",
 		pre, "")
 	if err != nil { return err }
 	if collectionFile == "" {
@@ -541,8 +538,7 @@ func (s *iSession) guideList(args []string) error {
 %slist%s — List registered collections
 
 Prints the filename of every collection currently registered in your antenna
-configuration. Collections may be Markdown (.md) or LibreOffice Writer
-(.odt, .ott) files. No additional parameters are needed.
+configuration. No additional parameters are needed.
 `, Bold+Yellow, Reset)
 
 	return s.confirmAndRun("list", []string{})
@@ -556,9 +552,7 @@ func (s *iSession) guidePost(args []string) error {
 	fmt.Printf(`
 %spost%s — Add a document as a post
 
-Adds a Markdown (.md) or LibreOffice Writer (.odt, .ott) file to a collection
-so it appears in RSS output. For ODT/OTT files the document properties
-(title, author, subject, keywords, etc.) are used as front matter.
+Adds a Markdown (.md) file to a collection so it appears in RSS output.
 The file's front matter should supply at minimum a 'title' or 'description'.
 Include a 'postPath' in front matter to set the published path; pair it with
 a 'link' pointing to the public URL.
@@ -574,7 +568,7 @@ a 'link' pointing to the public URL.
 	if err != nil { return err }
 
 	filePath, err := iStep(s.scanner, "FILEPATH",
-		"Path to the document to add as a post (.md, .odt, or .ott).",
+		"Path to the Markdown document to add as a post (.md).",
 		preFile, "")
 	if err != nil { return err }
 	if filePath == "" {
@@ -594,10 +588,8 @@ func (s *iSession) guideBlogit(args []string) error {
 	fmt.Printf(`
 %sblogit%s — Copy a file into a blog directory tree and post it
 
-Takes a Markdown (.md) or LibreOffice Writer (.odt, .ott) file, copies it
-into a date-based path such as blog/2026/03/01/my-post.odt, then adds it
-to the collection as a post. For ODT/OTT files the document properties are
-used as front matter.
+Takes a Markdown (.md) file, copies it into a date-based path such as
+blog/2026/03/01/my-post.md, then adds it to the collection as a post.
 `, Bold+Yellow, Reset)
 
 	preCollection, preFile, preDate := "", "", ""
@@ -611,7 +603,7 @@ used as front matter.
 	if err != nil { return err }
 
 	filePath, err := iStep(s.scanner, "FILEPATH",
-		"Path to the source document (.md, .odt, or .ott).",
+		"Path to the source Markdown document (.md).",
 		preFile, "")
 	if err != nil { return err }
 	if filePath == "" {
@@ -720,10 +712,9 @@ func (s *iSession) guidePage(args []string) error {
 	fmt.Printf(`
 %spage%s — Add a standalone HTML page
 
-Converts a Markdown (.md) or LibreOffice Writer (.odt, .ott) document to
-HTML and registers it in the pages collection. Use this for an about page,
-home page, search page, and similar non-post content. For ODT/OTT files the
-document properties are used as front matter.
+Converts a Markdown (.md) document to HTML and registers it in the pages
+collection. Use this for an about page, home page, search page, and similar
+non-post content.
 
 %sWarning:%s unsafe HTML in Markdown files passes through unchanged.
 Only use this action with files you trust completely.
@@ -734,7 +725,7 @@ Only use this action with files you trust completely.
 	if len(args) > 1 { preOutput = args[1] }
 
 	inputPath, err := iStep(s.scanner, "INPUT_PATH",
-		"Path to the document to convert to HTML (.md, .odt, or .ott).",
+		"Path to the Markdown document to convert to HTML (.md).",
 		preInput, "")
 	if err != nil { return err }
 	if inputPath == "" {
@@ -1015,9 +1006,9 @@ func (s *iSession) guideStylefrom(args []string) error {
 	fmt.Printf(`
 %sstylefrom%s — Extract CSS from a LibreOffice Writer file
 
-Reads a LibreOffice Writer HTML export (.html, .htm) or document
-(.odt, .ott) and extracts its paragraph and text styles as a CSS file.
-The result is ready to drop into a theme directory as style.css.
+Reads a LibreOffice Writer HTML export (.html, .htm) and extracts its
+paragraph and text styles as a CSS file. The result is ready to drop
+into a theme directory as style.css.
 `, Bold+Yellow, Reset)
 
 	preInput, preOutput := "", ""
@@ -1025,7 +1016,7 @@ The result is ready to drop into a theme directory as style.css.
 	if len(args) > 1 { preOutput = args[1] }
 
 	inputFile, err := iStep(s.scanner, "INPUT_FILE",
-		"Path to the LibreOffice Writer HTML export or ODT/OTT document.",
+		"Path to the LibreOffice Writer HTML export (.html or .htm).",
 		preInput, "")
 	if err != nil { return err }
 	if inputFile == "" {

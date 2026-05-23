@@ -94,17 +94,13 @@ Posts will be be included in RSS feed output while pages will be excluded from f
 
 add COLLECTION_FILE [NAME DESCRIPTION]
 : Add the feed collection defined by COLLECTION_FILE to your Antenna configuration.
-COLLECTION_FILE may be a Markdown document (.md) or a LibreOffice Writer document
-(.odt, .ott). For Markdown files, the document body should contain a list of hyperlinks
-to RSS/Atom feeds. For ODT/OTT files, the document properties are used as collection
-metadata and any hyperlinks in the document body are used as the feed list. You can
-supply an optional NAME and DESCRIPTION, or define them in front matter (Markdown) or
-document properties (ODT/OTT).
+COLLECTION_FILE is a Markdown document (.md) whose body contains a list of hyperlinks
+to RSS/Atom feeds. You can supply an optional NAME and DESCRIPTION, or define them
+in the document's YAML front matter.
 
 del COLLECTION_FILE
-: Remove a collection from the Antenna configuration. COLLECTION_FILE may be a
-Markdown (.md) or LibreOffice Writer (.odt, .ott) filename as registered with the
-add action.
+: Remove a collection from the Antenna configuration. COLLECTION_FILE is the
+Markdown (.md) filename as registered with the add action.
 
 list
 : List the collection filenames defined in the "{app_name}.yaml".
@@ -114,10 +110,8 @@ page INPUT_PATH [OUTPUT_PATH]
 is the only collection that has pages (hence the name). It is also the default collection
 (created by the init action). It uses the default page generator defined in the
 {app_name}.yaml if one is not specifically set for the pages.db collection. INPUT_PATH
-may be a Markdown document (.md) or a LibreOffice Writer document (.odt, .ott). For
-ODT/OTT files the document properties (title, author, subject, keywords, etc.) are
-extracted and used as front matter. The resulting HTML file uses the same basename with
-a .html extension. If OUTPUT_PATH is set it uses that name for the HTML file generated.
+is a Markdown document (.md). The resulting HTML file uses the same basename with a
+.html extension. If OUTPUT_PATH is set it uses that name for the HTML file generated.
 (NOTE: pages are not shown in the RSS feed. The page action is useful for pages like an
 about page, home page, and search page. __The Markdown processed via the page action
 will allow "unsafe" HTML to pass through. Only use page with files you trust
@@ -134,26 +128,22 @@ descending updated timestamp.
 
 
 post [COLLECTION_NAME] FILEPATH
-: Add a document to a feed collection (default is pages.md). FILEPATH may be a Markdown
-document (.md) or a LibreOffice Writer document (.odt, .ott). For ODT/OTT files the
-document properties (title, author, subject, keywords, rights, etc.) are extracted and
-used as front matter automatically. The front matter is used to specify things like the
-link to the post, guid, description, etc. If these are not provided then the post action
-will display an error and not write the content to the post directory location or add it
-to the collection. Required front matter: **title** or **description**, see RSS 2.0 at
+: Add a Markdown document (.md) to a feed collection (default is pages.md). The front
+matter is used to specify things like the link to the post, guid, description, etc. If
+these are not provided then the post action will display an error and not write the
+content to the post directory location or add it to the collection. Required front
+matter: **title** or **description**, see RSS 2.0 at
 <https://cyber.harvard.edu/rss/rss.html#hrelementsOfLtitemgt>. To include the file in
 the posts directory tree you need to provide a **postPath**. In that case it is also
 recommended you provide a value for **link** that reflects the public URL to where the
-post can be viewed. Like the page action, unsafe HTML in Markdown files passes through
-unchanged; only use post with files you trust completely.
+post can be viewed. Like the page action, unsafe HTML passes through unchanged; only
+use post with files you trust completely.
 
 blogit [COLLECTION_NAME] FILEPATH [POST_DATE]
-: This is a variation of post where FILEPATH is used as the source document to be
-placed in a blog-style date directory path (e.g. blog/2026/04/12/my-post.odt).
-FILEPATH may be a Markdown document (.md) or a LibreOffice Writer document (.odt, .ott).
-For ODT/OTT files the document properties are extracted and used as front matter. After
-calculating the target path and copying the file there it uses post to finish adding it
-to the collection.
+: This is a variation of post where FILEPATH is used as the source Markdown document (.md)
+to be placed in a blog-style date directory path (e.g. blog/2026/04/12/my-post.md).
+After calculating the target path and copying the file there it uses post to finish
+adding it to the collection.
 
 unpost COLLECTION_NAME URL | POST_PATH
 : Remove an item from a collection using the URL associated with the item. You can
@@ -208,10 +198,10 @@ way to learn the antenna command syntax. If ACTION is omitted you are presented
 with a menu of all available actions to choose from.
 
 stylefrom INPUT_FILE [OUTPUT_PATH]
-: Extract CSS from a LibreOffice Writer HTML export (.html, .htm) or ODF document
-(.odt, .ott) and write it to OUTPUT_PATH. OUTPUT_PATH defaults to "theme/style.css"
-when omitted. The directory is created if it does not exist. This makes it easy to
-seed a theme stylesheet directly from a styled LibreOffice Writer document.
+: Extract CSS from a LibreOffice Writer HTML export (.html, .htm) and write it to
+OUTPUT_PATH. OUTPUT_PATH defaults to "theme/style.css" when omitted. The directory
+is created if it does not exist. This makes it easy to seed a theme stylesheet
+directly from a styled LibreOffice Writer document.
 
 # CONFIGURATION
 

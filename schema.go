@@ -94,6 +94,10 @@ func setupDatabase(cName string, dbName string) error {
 
 // AddCollection adds and saves a new collection to AppConfig
 func (cfg *AppConfig) AddCollection(cfgName string, cName string) error {
+	// Default to .md when no extension is given (e.g. "sacbee" -> "sacbee.md")
+	if filepath.Ext(cName) == "" {
+		cName = cName + ".md"
+	}
 	// Load the collection definition — accepts Markdown (.md) or ODT/OTT files.
 	// For ODT/OTT files document properties become front matter and hyperlinks
 	// in the document body become the feed link list.
@@ -306,8 +310,11 @@ func (cfg *AppConfig) SaveConfig(cfgName string) error {
 }
 
 func (cfg *AppConfig) CollectionIndex(cName string) int {
+	// Strip extension from the lookup name so "sacbee" and "sacbee.md" both match
+	cBase := strings.TrimSuffix(filepath.Base(cName), filepath.Ext(cName))
 	for i, col := range cfg.Collections {
-		if filepath.Base(col.File) == filepath.Base(cName) {
+		colBase := strings.TrimSuffix(filepath.Base(col.File), filepath.Ext(col.File))
+		if colBase == cBase {
 			return i
 		}
 	}
