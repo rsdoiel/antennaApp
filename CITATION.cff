@@ -3,33 +3,34 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 title: antennaApp
-abstract: "**antenna** is a tool for building feed oriented websites using Markdown.
-If you can edit a Markdown list of links you can generate a static site
-RSS Reader with little effort beyond curating your list of links.
-You can create simple websites make from the content of Markdown pages.
-You can create blog by posting the Markdown documents to a collection.
-The goal of **antenna** is to put you in control of the web content
-you read or write through using Markdown.
+abstract: |-
+  **antenna** is a tool for building feed oriented websites using Markdown.
+  If you can edit a Markdown list of links you can generate a static site
+  RSS Reader with little effort beyond curating your list of links.
+  You can create simple websites make from the content of Markdown pages.
+  You can create blog by posting the Markdown documents to a collection.
+  The goal of **antenna** is to put you in control of the web content
+  you read or write through using Markdown.
 
-**antenna** automates must of the process of creating a site using Markdown
-files. It handles the creation of HTML, RSS, OPML and sitemap.xml for you. This
-let's you focus on the content written in Markdown.
+  **antenna** automates must of the process of creating a site using Markdown
+  files. It handles the creation of HTML, RSS, OPML and sitemap.xml for you. This
+  let's you focus on the content written in Markdown.
 
-**antenna** supports a simple theme system defined Markdown files used to
-describe page elements, a file to define page metadata and CSS files to define
-the page's layout and presentation. Each collection defined for your site
-may have it's own theme.
+  **antenna** supports a simple theme system defined Markdown files used to
+  describe page elements, a file to define page metadata and CSS files to define
+  the page's layout and presentation. Each collection defined for your site
+  may have it's own theme.
 
-Features:
+  Features:
 
-- Makes it easy to generate a website only using Markdown
-- Makes it trivial to generate a blog, link blog or feed reading site using Markdown
-- supports as multiple feed collections per site
-- provides actions to automate most of your site curation leaving you time to focus on Markdown content
-- HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically
-- A preview web server is provided so you can read the curated content on your computer
-- pages nice with other static site tools like  [PageFind](https://pagefind.app "A browser side search engine") and
-[FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents")"
+  - Makes it easy to generate a website only using Markdown
+  - Makes it trivial to generate a blog, link blog or feed reading site using Markdown
+  - supports as multiple feed collections per site
+  - provides actions to automate most of your site curation leaving you time to focus on Markdown content
+  - HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically
+  - A preview web server is provided so you can read the curated content on your computer
+  - pages nice with other static site tools like  [PageFind](https://pagefind.app "A browser side search engine") and
+  [FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents")
 authors:
   - family-names: Doiel
     given-names: R. S. Doiel

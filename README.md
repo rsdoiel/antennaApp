@@ -49,9 +49,9 @@ Requirements top compile the Antenna App from source code.
 
 The following are helpful if you want to develop or customize the Antenna App software.
 
-- CMTools >= 0.0.40
+- CMTools >= 0.0.45b
 - GNU Make >= 3.4
-- Pandoc >= 3.1
+- Pandoc >= 3.9
 - Bash or Powershell
 
 
