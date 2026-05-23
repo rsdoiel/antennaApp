@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.24-rc1 a770ab9
+%antenna(1) user manual | version 0.0.24-rc1 4a1b406
 % R. S. Doiel
 % 2026-04-12
 

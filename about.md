@@ -66,9 +66,9 @@ About this software
 - added LoadCommonMark helper that dispatches by file extension, centralising Markdown and ODT loading across the codebase
 - updated interactive mode prompts and help text for page, post, blogit, add, del, and list to document ODT/OTT support
 
-### Authors
+## Authors
 
-- R. S. Doiel Doiel, <https://orcid.org/0000-0003-0900-6903>
+- [R. S. Doiel Doiel](https://orcid.org/0000-0003-0900-6903)
 
 
 
@@ -103,27 +103,27 @@ Features:
 - pages nice with other static site tools like  [PageFind](https://pagefind.app &quot;A browser side search engine&quot;) and
 [FlatLake](https://flatlake.app &quot;A static JSON API driven by front matter in Markdown documents&quot;)
 
-- License: <https://www.gnu.org/licenses/agpl-3.0.en.html>
-- GitHub: <https://github.com/rsdoiel/antennaApp>
-- Issues: <https://github.com/rsdoiel/antennaApp/issues>
+- [License](https://www.gnu.org/licenses/agpl-3.0.en.html)
+- [Code Repository](https://github.com/rsdoiel/antennaApp)
+  - [Issue Tracker](https://github.com/rsdoiel/antennaApp/issues)
 
-### Programming languages
+## Programming languages
 
 - Go
 
 
 
 
-### Software Requirements
+## Software Requirements
 
 - Go >= 1.25.3
 - CMTools >= 0.0.40
 
 
-### Software Suggestions
+## Software Suggestions
 
-- GNU Make &gt;&#x3D; 3.4
-- Pandoc &gt;&#x3D; 3.1
+- GNU Make >= 3.4
+- Pandoc >= 3.1
 - Bash or PowerShell
 
 

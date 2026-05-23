@@ -254,6 +254,10 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 			return err
 		}
 	}
+	// Use collection title as the HTML page title when the generator yaml has none
+	if gen.Title == "" && collection.Title != "" {
+		gen.Title = collection.Title
+	}
 	if collection.Link != "" {
 		m := map[string]string{
 			"rel":  "alternate",

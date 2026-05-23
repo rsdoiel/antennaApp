@@ -48,11 +48,11 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		}
 	}
 
-	// Setup the Title
+	// Setup the Title — h2 keeps article titles subordinate to the page h1
 	if title == "" {
-		title = fmt.Sprintf("<h1>@%s</h1>\n\n(date: %s)", label, pressTime)
+		title = fmt.Sprintf("<h2>@%s</h2>\n\n(date: %s)", label, pressTime)
 	} else {
-		title = fmt.Sprintf("<h1>%s</h1>\n\n(date: %s)", title, pressTime)
+		title = fmt.Sprintf("<h2>%s</h2>\n\n(date: %s)", title, pressTime)
 	}
 	content := description
 	if sourceMarkdown != "" {
@@ -115,6 +115,12 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 		"content": formattedDate,
 	}
 	fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
+	// Always emit viewport meta for responsive and accessible rendering
+	m = map[string]string{
+		"name":    "viewport",
+		"content": "width=device-width, initial-scale=1.0",
+	}
+	fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
 	if gen.Meta != nil && len(gen.Meta) > 0 {
 		for _, m := range gen.Meta {
 			fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
@@ -175,7 +181,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	}
 	// Setup nav element
 	if gen.Nav != "" {
-		fmt.Fprintf(out, `  <nav>
+		fmt.Fprintf(out, `  <nav aria-label="Site navigation">
     %s
   </nav>
 `, indentText(strings.TrimSpace(gen.Nav), 4))
@@ -185,8 +191,8 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
     %s
 `, indentText(strings.TrimSpace(gen.TopContent), 2))
 	}
-	// Setup section
-	fmt.Fprintln(out, "  <section>")
+	// main landmark wraps the primary feed content
+	fmt.Fprintln(out, `  <main id="main-content">`)
 	stmt := SQLDisplayItems
 	rows, err := db.Query(stmt)
 	if err != nil {
@@ -242,7 +248,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	if err := rows.Err(); err != nil {
 		return err
 	}
-	fmt.Fprintln(out, "  </section>")
+	fmt.Fprintln(out, "  </main>")
 	if gen.BottomContent != "" {
 		fmt.Fprintf(out, `
     %s
@@ -286,7 +292,7 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	}
 	// Setup nav element
 	if gen.Nav != "" {
-		fmt.Fprintf(out, `  <nav>
+		fmt.Fprintf(out, `  <nav aria-label="Site navigation">
     %s
   </nav>
 `, indentText(strings.TrimSpace(gen.Nav), 4))
@@ -301,18 +307,18 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	// Now render our innerHTML
 	if pubDate != "" && link != "" {
 		fmt.Fprintf(out, `
-  <section>
+  <main id="main-content">
     <article data-published=%q data-link=%q>
       %s
     </article>
-  </section>
+  </main>
 `, pubDate, link, indentText(innerHTML, 6))
 
 	} else {
 		fmt.Fprintf(out, `
-  <section>
+  <main id="main-content">
     %s
-  </section>
+  </main>
 `, indentText(innerHTML, 4))
 	}
 

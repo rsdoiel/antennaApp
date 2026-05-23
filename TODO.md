@@ -18,6 +18,14 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] Improve HTML accessibility and ARIA support in generated pages
+  - [X] Emit `<meta name="viewport">` automatically in `writeHeadElement`
+  - [X] Use collection `Title` as the HTML `<title>` when the generator yaml has none
+  - [X] Change article title element from `<h1>` to `<h2>` so heading hierarchy is correct (page `<h1>` is the site title)
+  - [X] Replace `<section>` with `<main id="main-content">` for the primary content landmark
+  - [X] Add `aria-label="Site navigation"` to the `<nav>` element
+  - [ ] Add per-page `<title>` support driven by collection title in `antenna.yaml`
+
 - [ ] Re-read, <https://nathangathright.com/podcastings-missing-link/>, then think about folding that into the generated content and RSS feeds to support podcasts
 - [X] Add TUI that re-enforces the key concepts
   - [X] the TUI should be educational to the cli use

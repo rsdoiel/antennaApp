@@ -1,4 +1,4 @@
-%antenna(5) user manual | version 0.0.24-rc1 a770ab9
+%antenna(5) user manual | version 0.0.24-rc1 4a1b406
 % R. S. Doiel
 % 2026-04-12
 
@@ -95,7 +95,7 @@ https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script
 
 style
 : (optional, used when present) A string holding CSS to be injected as the last
-element of the head when rendering HTML.
+element of the head when rendering HTML. If you have styled a LibreOffice Writer document you can the antenna stylefrom action to extract that into a stylesheet.
 
 Here is an example "head.yaml"
 
