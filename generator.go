@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io"
@@ -328,23 +329,26 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	}
 	out.Close()
 
-	// clear existing page
-	if _, err := os.Stat(opmlName); err == nil {
-		if err := os.Remove(opmlName); err != nil {
-			return nil
+	// Write OPML to a buffer first — only create the file if there are feeds
+	var opmlBuf bytes.Buffer
+	if err := gen.WriteOPML(&opmlBuf, db, appName, collection); err != nil {
+		return err
+	}
+	if opmlBuf.Len() > 0 {
+		if _, err := os.Stat(opmlName); err == nil {
+			if err := os.Remove(opmlName); err != nil {
+				return err
+			}
 		}
+		out, err = os.Create(opmlName)
+		if err != nil {
+			return err
+		}
+		if _, err := opmlBuf.WriteTo(out); err != nil {
+			out.Close()
+			return err
+		}
+		out.Close()
 	}
-
-	// Create the OPML file
-	out, err = os.Create(opmlName)
-	if err != nil {
-		return err
-	}
-
-	// Write out OPML page
-	if err := gen.WriteOPML(out, db, appName, collection); err != nil {
-		return err
-	}
-	defer out.Close()
 	return nil
 }

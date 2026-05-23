@@ -20,34 +20,27 @@
 </nav>
 <section>
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.24-rc1">antennaApp 0.0.24-rc1</h2>
+<h2 id="antennaapp-0.0.24">antennaApp 0.0.24</h2>
 <ul>
-<li>implemented simple collections level menu in interactive mode</li>
-<li>added action, list to list defined collections (for interactive mode
-but available in cli)</li>
-<li>fix bug in sitemap generation for handling Markdown files without an
-explicit HTML filename</li>
-<li>added implementatopm of themes action to cli</li>
-<li>added experimental interactive mode</li>
-<li>added the ability to extract CSS from a LibreOffice Writer ODT or
-OTT file</li>
-<li>added ODT/OTT document support: page, post, and blogit now accept
-LibreOffice Writer files in addition to Markdown; document properties
-(title, author, subject, keywords, rights, source, type, user-defined
-fields) are mapped to YAML front matter automatically</li>
-<li>added ODT/OTT collection support: add and harvest now accept
-LibreOffice Writer files as collection definition files; document
-properties become collection metadata and hyperlinks in the document
-body become the feed list</li>
-<li>added LoadCommonMark helper that dispatches by file extension,
-centralising Markdown and ODT loading across the codebase</li>
-<li>updated interactive mode prompts and help text for page, post,
-blogit, add, del, and list to document ODT/OTT support</li>
+<li>improved generated HTML accessibility: viewport meta emitted
+automatically, article titles use h2 for correct heading hierarchy,
+content area uses main landmark, nav has aria-label, skip-navigation
+link supported, aria-expanded set on collapsible elements</li>
+<li>collection Title from antenna.yaml now used as the HTML page title
+when the generator YAML does not set one</li>
+<li>collection names no longer require the .md extension on the command
+line (e.g. ‘antenna harvest pacific’ works alongside ‘antenna harvest
+pacific.md’)</li>
+<li>OpenDocument Format (.odt/.ott) removed from user-facing help text
+and interactive mode; underlying code remains for future use when a
+dedicated ODF module is ready</li>
+<li>fixed bug: OPML files are now only written when a collection has
+harvested feed content; empty OPML files are no longer created</li>
 </ul>
-<h3 id="authors">Authors</h3>
+<h2 id="authors">Authors</h2>
 <ul>
-<li>R. S. Doiel Doiel, <a href="https://orcid.org/0000-0003-0900-6903"
-class="uri">https://orcid.org/0000-0003-0900-6903</a></li>
+<li><a href="https://orcid.org/0000-0003-0900-6903">R. S. Doiel
+Doiel</a></li>
 </ul>
 <p><strong>antenna</strong> is a tool for building feed oriented
 websites using Markdown. If you can edit a Markdown list of links you
@@ -80,23 +73,25 @@ content on your computer</p></li>
 href="https://pagefind.app%20%22A%20browser%20side%20search%20engine%22">PageFind</a>
 and <a
 href="https://flatlake.app%20%22A%20static%20JSON%20API%20driven%20by%20front%20matter%20in%20Markdown%20documents%22">FlatLake</a></p></li>
-<li><p>License: <a href="https://www.gnu.org/licenses/agpl-3.0.en.html"
-class="uri">https://www.gnu.org/licenses/agpl-3.0.en.html</a></p></li>
-<li><p>GitHub: <a href="https://github.com/rsdoiel/antennaApp"
-class="uri">https://github.com/rsdoiel/antennaApp</a></p></li>
-<li><p>Issues: <a href="https://github.com/rsdoiel/antennaApp/issues"
-class="uri">https://github.com/rsdoiel/antennaApp/issues</a></p></li>
+<li><p><a
+href="https://www.gnu.org/licenses/agpl-3.0.en.html">License</a></p></li>
+<li><p><a href="https://github.com/rsdoiel/antennaApp">Code
+Repository</a></p>
+<ul>
+<li><a href="https://github.com/rsdoiel/antennaApp/issues">Issue
+Tracker</a></li>
+</ul></li>
 </ul>
-<h3 id="programming-languages">Programming languages</h3>
+<h2 id="programming-languages">Programming languages</h2>
 <ul>
 <li>Go</li>
 </ul>
-<h3 id="software-requirements">Software Requirements</h3>
+<h2 id="software-requirements">Software Requirements</h2>
 <ul>
 <li>Go &gt;= 1.25.3</li>
 <li>CMTools &gt;= 0.0.40</li>
 </ul>
-<h3 id="software-suggestions">Software Suggestions</h3>
+<h2 id="software-suggestions">Software Suggestions</h2>
 <ul>
 <li>GNU Make &gt;= 3.4</li>
 <li>Pandoc &gt;= 3.1</li>

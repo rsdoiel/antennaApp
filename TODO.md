@@ -5,16 +5,19 @@ Ideas, not quite a roadmap
 
 ## Bugs
 
+- [ ] generate should generate should generate all HTML defined in the Antenna App YAML, it's not working correctly (explicitly generating the individual pages, posts, etc. works).
+  - [ ] The pages that list posts need to get re-rendered correctly
+  - [ ] pages are not being rendered for pages collection
+  - [ ] Confirm that generate creates all "post" in the collections
+  - [ ] Confirm that generate creates all "page" in the collections
+  - [ ] Confirm that generate creates all the RSS files for all the defined aggregations
+  - [ ] Confirm that generate creates all the OPML files for aggregations that have feed content
 - [ ] opml files should only be generated if there are feeds to aggregate
 - [ ] The RSS I'm producing isn't always valid for aggregated items
   - [ ] Seem to have some XML entity errors still, example see columns's RSS feed in Antenna
     - look at converting item content into Markdown and using that to build the feed item
   - [X] I need to verify RSS feeds with the source:markdown namespace is still valid, the XML render in Firefox gripes about it
 - [X] The link element for RSS feeds isn't showing up in aggregated HTML or post HTML pages
-- [ ] generate should generate should generate all HTML (agg pages, post and pages), RSS, sitemaps and OPML
-  - [ ] generate is not generating everything for the collection
-  - [ ] re-rendering post lists correctly
-  - [ ] pages are not being rendered for pages collection
 
 ## Up Next
 
@@ -25,8 +28,6 @@ Ideas, not quite a roadmap
   - [X] Replace `<section>` with `<main id="main-content">` for the primary content landmark
   - [X] Add `aria-label="Site navigation"` to the `<nav>` element
   - [ ] Add per-page `<title>` support driven by collection title in `antenna.yaml`
-
-- [ ] Re-read, <https://nathangathright.com/podcastings-missing-link/>, then think about folding that into the generated content and RSS feeds to support podcasts
 - [X] Add TUI that re-enforces the key concepts
   - [X] the TUI should be educational to the cli use
   - [X] the TUI should be recordable to generate a list of commands to be re-used
@@ -40,21 +41,40 @@ Ideas, not quite a roadmap
 - [X] add/del posts
 - [X] add/del items
 - [X] blogit like feature needs to be integrated into post, the blog function needs a blog prefix path, then the published date will be used to form the blog path and the Markdown document will be copied into the newly created location
-- [ ] There needs to be a means for creating a "podcast" post/item in a feed easily
-- [ ] There should be a means of applying the filter SQL statements on a collection's items without running harvest or generate
-  - [ ] Add a "filter" action
-  - [ ] Filter is often a feature that causes confusion, the interactive terminal interface should provide human friendly guidence for forming a filter and provide an option of saving it as the default filter to apply for a specific feed or executing the filter as a one off. This guidence should be reproducible in the command line interface too as well as show SQL implementation as needed
 - [X] I need to port blogit from TypeScript to Go an integrate into antennaApp, it should populate the front matter in posts appropriately.
-- [ ] Need a way to current items in a collection and set their publication status easily
-  - [ ] A terminal based CUI
 - [X] I need to be able to render RSS feeds based on posts (e.g. RSS for all posts, recent posts or date ranges of posts)
 - [X] add options for limiting posts actions to recent by count and date ranges
 - [X] should the "reply" action have a different name? While my intension was to work with text fragment URLs, it could also be extended to format any URL as a Markdown output. If so it might make more sense to call it "link"
   - changing action name to "quote"
-- [ ] Look at the pttk bits I am still rely on for producing my personal website, see which make sense to fold into antennaApp
-- [ ] Look at https://www.seanh.cc/oatcake/ a CSS typography style that gives simple plain results, oriented to Markdown content.
-- [ ] tutorials should ordered as simple site (page), blog (post and page), feed reader (feed collection), news site (multiple feed collections)
 - [X] text fragment links as social connections
+- [X] When I pass the collection on the command I should not require the ".md" filename extension
+- [X] init needs to create the default pages.md collection, that way Antenna will be able to manage collections pages and posts.
+- [X] cmarkdoc.go should support @include-text-block and @include-code-block like I implemented in my commonMarkDoc processor, this will let me remove remaining Pandoc requirements from building my website
+- [X] The Markdown document defining the feed should get rendered as a standard OPML file along side the HTML and RSS aggregated feed. This could then be linked shared with other people or systems
+- [X] Double check the ordering of my head element children, make sure the meta element for character encoding comes before title
+- [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
+  - [X] seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
+  - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
+  - [ ] The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page, I need a clean approach that will work for both
+- [ ] Documenting simple to complex integrations
+  - [X] A simple website of "pages"
+  - [ ] A blog example using a collection to host posts
+  - [ ] A link blog with embedded responses (do I need a different action than post?)
+  - [ ] An example should show how to integrated with with Pandoc, PageFind and FlatLake
+
+## Someday, maybe (thinking about these items for future development)
+
+- [ ] Look at https://www.seanh.cc/oatcake/ a CSS typography style that gives simple plain results, oriented to Markdown content.
+- [ ] Fully support using OpenDocument Format documents in Antenna App
+- [ ] Re-read, <https://nathangathright.com/podcastings-missing-link/>, then think about folding that into the generated content and RSS feeds to support podcasts
+- [ ] There needs to be a means for creating a "podcast" post/item in a feed easily
+- [ ] There should be a means of applying the filter SQL statements on a collection's items without running harvest or generate
+  - [ ] Add a "filter" action
+  - [ ] Filter is often a feature that causes confusion, the interactive terminal interface should provide human friendly guidence for forming a filter and provide an option of saving it as the default filter to apply for a specific feed or executing the filter as a one off. This guidence should be reproducible in the command line interface too as well as show SQL implementation as needed
+- [ ] Need a way to current items in a collection and set their publication status easily
+  - [ ] A terminal based CUI
+- [ ] Look at the pttk bits I am still rely on for producing my personal website, see which make sense to fold into antennaApp
+- [ ] tutorials should ordered as simple site (page), blog (post and page), feed reader (feed collection), news site (multiple feed collections)
 - [ ] multiples feeds output from a feed collection
   - [ ] recent (last N posts and items)
   - [ ] archive (all posts, used to export/import purposes)
@@ -64,9 +84,7 @@ Ideas, not quite a roadmap
   - [ ] An archive RSS XML should be generated for all posts
   - [ ] An archive RSS XML should be importable to allow backing up a whole repository without resorting to SQL dumps
 - [ ] There should be options for how the posts are rendered. The minimal setting is title, link and date (or non-titled posts, the post body as link). A by line should be composable from the available front matter, e.g. author, datePublished and a byline prefix (e.g. "by", "from the desk of "). There should be an option as to weather or not to include the description or abstract. Look at citation citeproc description as a means of defining how items are listed
-- [X] When I pass the collection on the command I should not require the ".md" filename extension
 - [ ] Figure out how I want to handle a list of links to posts, e.g. recent posts and archive of posts instead of feed reading posts
-- [X] init needs to create the default pages.md collection, that way Antenna will be able to manage collections pages and posts.
 - [ ] pages always go in the pages collection, this will let me generate a sitemap by taking the pages
       and posts from the pages collection along with the items from other collections and rendering out
       the appropriate sitemap.xml file(s).
@@ -79,12 +97,6 @@ Ideas, not quite a roadmap
   - [ ] There needs to be a command line easy way to set things up or turn them off for pwa support
   - [ ] If a page list is included these could be automatically regenerated from the "generate" action.
 - [ ] Explore a "reply" action, this would take a link or guide, find the markdown translation in a feed, then pop it into an editor as a a quoted Markdown content. The reply link should be tracked some how and displayed in relation to the item in the aggregated feed.  Enough metadata for threading will need to be tracked. Look at prior art to see what is easy to integrate without recreating ActivityPub or AT Proto
-- [X] cmarkdoc.go should support @include-text-block and @include-code-block like I implemented in my commonMarkDoc processor, this will let me remove remaining Pandoc requirements from building my website
-- [X] The Markdown document defining the feed should get rendered as a standard OPML file along side the HTML and RSS aggregated feed. This could then be linked shared with other people or systems
-- [X] Double check the ordering of my head element children, make sure the meta element for character encoding comes before title
-
-## Thinking about
-
 - [ ] Experiment with using ODT files like I've initially used Markdown files for managing content and aggregation 
 - [ ] add an API action to generate posts and pages data to a JSON API
 - [ ] consider adding a server option that has a read/write API and used to host an antenna site (this would give us both static site capability AND dynamic interactive capability)
@@ -93,15 +105,6 @@ Ideas, not quite a roadmap
 - [ ] a variation of server action could be used to pulled together a graphical UI for the content system using Gnome-Web (or other browser)
   - The service would listen on a localhost URL
   - To limit access to the instance on the local machine we could strict using basic auth where a one time password is used along side the open action launching the browser
-- [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
-  - [X] seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
-  - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
-  - [ ] The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page, I need a clean approach that will work for both
-- [ ] Documenting simple to complex integrations
-  - [X] A simple website of "pages"
-  - [ ] A blog example using a collection to host posts
-  - [ ] A link blog with embedded responses (do I need a different action than post?)
-  - [ ] An example should show how to integrated with with Pandoc, PageFind and FlatLake
 - [ ] Should antenna init also generate some sample CSS and JavaScript modules?
   - [ ] Should it setup for integrations with Pandoc, PageFind or FlatLake?
 - [ ] To make Antenna app more interesting  I need to include some sample themes other people would use
@@ -125,7 +128,4 @@ Ideas, not quite a roadmap
 - [ ] Evaluate how to "post" to specific platforms, e.g. BlueSky and Mastodon since they do not handle inbound RSS yet
   - See [github.com/bitesinbyte/ferret](https://github.com/bitesinbyte/ferret) as an example
 - [ ] Do I need a publish action that would present the website using the published base URL?
-
-## Someday, Maybe
-
 - [ ] A Web GUI for managing collections, feeds and items. Could work like preview action, `antenna manage`

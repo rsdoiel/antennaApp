@@ -95,6 +95,10 @@ func (gen *Generator) WriteOPML(out io.Writer, db *sql.DB, appName string, colle
 			o.Body.Outline = append(o.Body.Outline, entry)
 		}
 	}
+	// Nothing to write if no feeds were harvested for this collection
+	if len(o.Body.Outline) == 0 {
+		return nil
+	}
 	// Render the OPML content with the io.Writer
 	src, err := xml.MarshalIndent(o, "", "    ")
 	if err != nil {
