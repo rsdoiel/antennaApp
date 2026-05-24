@@ -36,7 +36,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.24
+version: 0.0.24b
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,13 +54,9 @@ date_released: 2026-05-23
 About this software
 ===================
 
-## antennaApp 0.0.24
+## antennaApp 0.0.24b
 
-- improved generated HTML accessibility: viewport meta emitted automatically, article titles use h2 for correct heading hierarchy, content area uses main landmark, nav has aria-label, skip-navigation link supported, aria-expanded set on collapsible elements
-- collection Title from antenna.yaml now used as the HTML page title when the generator YAML does not set one
-- collection names no longer require the .md extension on the command line (e.g. 'antenna harvest pacific' works alongside 'antenna harvest pacific.md')
-- OpenDocument Format (.odt/.ott) removed from user-facing help text and interactive mode; underlying code remains for future use when a dedicated ODF module is ready
-- fixed bug: OPML files are now only written when a collection has harvested feed content; empty OPML files are no longer created
+- Fixed bug where `antenna generate` did not genenerate the HTML for pages and posts.
 
 ## Authors
 

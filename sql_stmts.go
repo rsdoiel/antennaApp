@@ -331,10 +331,16 @@ WHERE inputPath = ?`
 SET status = ?
 WHERE postPath != ''`
 
-	// SQLFixPubDates in items table. 
+	// SQLFixPubDates in items table.
 	SQLFixPubDates = `UPDATE posts
 SET pubDate = COALESCE(
     NULLIF(pubDate, updated),
     DATE('now'))
 WHERE postPath != "" and (pubDate IS NULL or pubDate = '')`
+
+	// SQLGeneratePosts selects all items with a postPath for HTML regeneration.
+	SQLGeneratePosts = `SELECT link, postPath, ifnull(pubDate, '') as pubDate, ifnull(sourceMarkdown, '') as sourceMarkdown
+FROM items
+WHERE postPath != ''
+ORDER BY pubDate DESC;`
 )

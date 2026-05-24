@@ -1,0 +1,68 @@
+
+## Someday, maybe (thinking about these items for future development)
+
+- [ ] Look at https://www.seanh.cc/oatcake/ a CSS typography style that gives simple plain results, oriented to Markdown content.
+- [ ] Fully support using OpenDocument Format documents in Antenna App
+- [ ] Re-read, <https://nathangathright.com/podcastings-missing-link/>, then think about folding that into the generated content and RSS feeds to support podcasts
+- [ ] There needs to be a means for creating a "podcast" post/item in a feed easily
+- [ ] There should be a means of applying the filter SQL statements on a collection's items without running harvest or generate
+  - [ ] Add a "filter" action
+  - [ ] Filter is often a feature that causes confusion, the interactive terminal interface should provide human friendly guidence for forming a filter and provide an option of saving it as the default filter to apply for a specific feed or executing the filter as a one off. This guidence should be reproducible in the command line interface too as well as show SQL implementation as needed
+- [ ] Need a way to current items in a collection and set their publication status easily
+  - [ ] A terminal based CUI
+- [ ] Look at the pttk bits I am still rely on for producing my personal website, see which make sense to fold into antennaApp
+- [ ] tutorials should ordered as simple site (page), blog (post and page), feed reader (feed collection), news site (multiple feed collections)
+- [ ] multiples feeds output from a feed collection
+  - [ ] recent (last N posts and items)
+  - [ ] archive (all posts, used to export/import purposes)
+  - [ ] commented on (feed of text fragment links by extracting "#:~:" links from posts)
+- [ ] Need to generate archive listings collection
+  - [X] A Markdown list of all posts in a collection
+  - [ ] An archive RSS XML should be generated for all posts
+  - [ ] An archive RSS XML should be importable to allow backing up a whole repository without resorting to SQL dumps
+- [ ] There should be options for how the posts are rendered. The minimal setting is title, link and date (or non-titled posts, the post body as link). A by line should be composable from the available front matter, e.g. author, datePublished and a byline prefix (e.g. "by", "from the desk of "). There should be an option as to weather or not to include the description or abstract. Look at citation citeproc description as a means of defining how items are listed
+- [ ] Figure out how I want to handle a list of links to posts, e.g. recent posts and archive of posts instead of feed reading posts
+- [ ] pages always go in the pages collection, this will let me generate a sitemap by taking the pages
+      and posts from the pages collection along with the items from other collections and rendering out
+      the appropriate sitemap.xml file(s).
+- [ ] pages should be rendered to HTML when you use the generate command without specifying collection
+- [ ] When I have sitemaps debugged the sitemaps should be create/updated whenever generate action is taken
+- [ ] Added PWA generation support. If Antenna app had an option of generating websites as a PWA you could use a Pi Access Point/Website to distribute the "app" and the content would be available "off line" when people are away from the access point
+  - [ ] The "app" name should come from the antenna.yaml file
+  - [ ] The "page" action should track which pages are added to the site, needed when regenerating the cache page list
+  - [ ] The antenna.yaml should have a boolean to indicate if the site should be configured as a pwa
+  - [ ] There needs to be a command line easy way to set things up or turn them off for pwa support
+  - [ ] If a page list is included these could be automatically regenerated from the "generate" action.
+- [ ] Explore a "reply" action, this would take a link or guide, find the markdown translation in a feed, then pop it into an editor as a a quoted Markdown content. The reply link should be tracked some how and displayed in relation to the item in the aggregated feed.  Enough metadata for threading will need to be tracked. Look at prior art to see what is easy to integrate without recreating ActivityPub or AT Proto
+- [ ] Experiment with using ODT files like I've initially used Markdown files for managing content and aggregation 
+- [ ] add an API action to generate posts and pages data to a JSON API
+- [ ] consider adding a server option that has a read/write API and used to host an antenna site (this would give us both static site capability AND dynamic interactive capability)
+  - The service would function on localhost
+  - Be designed to run behind a web server like Apache2 or NginX using reverse proxy
+- [ ] a variation of server action could be used to pulled together a graphical UI for the content system using Gnome-Web (or other browser)
+  - The service would listen on a localhost URL
+  - To limit access to the instance on the local machine we could strict using basic auth where a one time password is used along side the open action launching the browser
+- [ ] Should antenna init also generate some sample CSS and JavaScript modules?
+  - [ ] Should it setup for integrations with Pandoc, PageFind or FlatLake?
+- [ ] To make Antenna app more interesting  I need to include some sample themes other people would use
+  - I could look over the websites for feeds followed in the Antenna website and see if I could recreate similar styles
+  - I could look at the WP theme gallery for ideas and see what could be implemented
+- [ ] In the front matter defining a collection, should the link element require full URL or a partial one?
+  - full is simpler in rendering implementation but makes previewing and proof reading tricky
+  - relative makes previewing and proof reading much easier as the preview becomes functions like published sites
+  - the antenna YAML could make a distriction between preview URL (localhost) and published URL (staged for production)
+- [ ] Should postPath point at Markdown document or HTML?  The link element is pointing at HTML any
+- [ ] Should I allow relative link elements in the post's front matter? this would limit typos of long urls, might handle the preview verus publication issues around full URL versus relative paths.
+- [ ] Shouldn't generate handle all HTML/RSS 2.0 rendering?  The post action renders the HTML in the target path, this feels right in the sense it is immediately visible to proof read but when the YAML page definitions are updated you have to "post" the items again to pickup the changes, so this doesn't make sense as the post wasn't really updated in terms of content.
+  - As the items are processed, items that have `postPath` set could queued be re-rendered as HTML
+- [ ] Think about generator.go and what they are generating, might make sense to split out the HTML and RSS 2.0 generation into separate files and have the wrapping functions or interfaces defined in generator.go
+- [ ] Improve default YAML for rendering colllections
+  - Nav could be autogenerated for the defined collections in the antenna.yaml
+  - header and footer elements could be formed such that customization is easily seen
+  - The head element needs work, I could include an example of a style element with sensible generic CSS for correctly sizing H elements, this could go after the automated stuff like setting character encoding correctly before the title element 
+- [ ] It'd be nice to have full enclusure support so podcasting using antenna's post worked seemlessly. Need to look at existing Go packages to see what has already be implemented or what might suggest the right path forward
+  - [github.com/eduncan911/podcast](https://github.com/eduncan911/podcast)
+- [ ] Evaluate how to "post" to specific platforms, e.g. BlueSky and Mastodon since they do not handle inbound RSS yet
+  - See [github.com/bitesinbyte/ferret](https://github.com/bitesinbyte/ferret) as an example
+- [ ] Do I need a publish action that would present the website using the published base URL?
+- [ ] A Web GUI for managing collections, feeds and items. Could work like preview action, `antenna manage`

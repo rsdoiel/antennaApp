@@ -192,6 +192,24 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	return nil
 }
 
+/** Generate rebuilds the entire website from the collections defined in antenna.yaml.
+ * When called with no args it processes every collection; otherwise only the named
+ * collections are processed.  For each collection it regenerates: the aggregation
+ * page (HTML + RSS + OPML), all individual post HTML pages, and all pages tracked
+ * in the pages table.
+ *
+ * Parameters:
+ *   out    (io.Writer) — progress messages
+ *   eout   (io.Writer) — warning and error messages
+ *   cfgName (string)   — path to antenna.yaml
+ *   args   ([]string)  — optional list of collection filenames to restrict regeneration
+ *
+ * Returns:
+ *   error — first fatal error encountered, or nil on success
+ *
+ * Example:
+ *   err := app.Generate(os.Stdout, os.Stderr, "antenna.yaml", nil)
+ */
 func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, args []string) error {
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
@@ -211,9 +229,143 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 			fmt.Fprintf(eout, "warning could not retrieve %q, skipping\n", cName)
 			continue
 		}
-		// Generate the aggregated page
+		// Regenerate the aggregation page (HTML + RSS + OPML)
 		if err := col.Generate(out, eout, app.appName, cfg); err != nil {
 			fmt.Fprintf(eout, "warning %s: %s\n", col.File, err)
+		}
+		// Regenerate individual post HTML pages stored in this collection
+		if err := col.GeneratePosts(eout, app.appName, cfg); err != nil {
+			fmt.Fprintf(eout, "warning generating posts for %s: %s\n", col.File, err)
+		}
+	}
+	// Regenerate all pages tracked in the pages table
+	if err := cfg.GeneratePages(eout); err != nil {
+		fmt.Fprintf(eout, "warning generating pages: %s\n", err)
+	}
+	return nil
+}
+
+/** GeneratePosts re-renders the HTML file for every post (item with postPath set)
+ * in the collection, using the sourceMarkdown stored in the database.
+ *
+ * Parameters:
+ *   eout    (io.Writer) — warning and error messages
+ *   appName (string)    — name of the running application
+ *   cfg     (*AppConfig) — loaded antenna.yaml configuration
+ *
+ * Returns:
+ *   error — database query error, or nil on success; per-post render errors are
+ *           written to eout and do not stop processing
+ *
+ * Example:
+ *   err := col.GeneratePosts(os.Stderr, "antenna", cfg)
+ */
+func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg *AppConfig) error {
+	if collection.DbName == "" {
+		return nil
+	}
+	db, err := sql.Open("sqlite", collection.DbName)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	gen, err := NewGenerator(appName, cfg.BaseURL)
+	if err != nil {
+		return err
+	}
+	if collection.Generator == "" {
+		collection.Generator = cfg.Generator
+	}
+	if _, err := os.Stat(collection.Generator); err == nil {
+		src, err := os.ReadFile(collection.Generator)
+		if err != nil {
+			return err
+		}
+		if err := yaml.Unmarshal(src, &gen); err != nil {
+			return err
+		}
+	} else {
+		if err := yaml.Unmarshal([]byte(DefaultGeneratorYaml), &gen); err != nil {
+			return err
+		}
+	}
+
+	rows, err := db.Query(SQLGeneratePosts)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			link           string
+			postPath       string
+			pubDate        string
+			sourceMarkdown string
+		)
+		if err := rows.Scan(&link, &postPath, &pubDate, &sourceMarkdown); err != nil {
+			fmt.Fprintf(eout, "warning reading post row: %s\n", err)
+			continue
+		}
+		if sourceMarkdown == "" {
+			continue
+		}
+		doc := &CommonMark{Text: sourceMarkdown}
+		if strings.Contains(doc.Text, "@include-text-block") {
+			doc.Text = IncludeTextBlock(doc.Text)
+		}
+		if strings.Contains(doc.Text, "@include-code-block") {
+			doc.Text = IncludeCodeBlock(doc.Text)
+		}
+		innerHTML, err := doc.ToUnsafeHTML()
+		if err != nil {
+			fmt.Fprintf(eout, "warning rendering markdown for %q: %s\n", postPath, err)
+			continue
+		}
+		htmlName := normalizeToHTMLExt(filepath.Join(cfg.Htdocs, postPath))
+		dName := filepath.Dir(htmlName)
+		if _, err := os.Stat(dName); err != nil {
+			if err := os.MkdirAll(dName, 0775); err != nil {
+				fmt.Fprintf(eout, "warning creating directory %q: %s\n", dName, err)
+				continue
+			}
+		}
+		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML); err != nil {
+			fmt.Fprintf(eout, "warning writing HTML for %q: %s\n", postPath, err)
+		}
+	}
+	return rows.Err()
+}
+
+/** GeneratePages re-renders the HTML file for every page tracked in the pages table.
+ * Pages are read from disk (using their inputPath) so the source Markdown must still
+ * exist.  Render errors for individual pages are written to eout and do not stop
+ * processing.
+ *
+ * Parameters:
+ *   eout (io.Writer) — warning and error messages
+ *
+ * Returns:
+ *   error — always nil; per-page errors are written to eout
+ *
+ * Example:
+ *   err := cfg.GeneratePages(os.Stderr)
+ */
+func (cfg *AppConfig) GeneratePages(eout io.Writer) error {
+	pages, err := cfg.GetPages()
+	if err != nil {
+		// No pages collection or no pages found — not an error during generate
+		return nil
+	}
+	for _, page := range pages {
+		inputPath := page["inputPath"]
+		outputPath := page["outputPath"]
+		if inputPath == "" {
+			continue
+		}
+		if err := cfg.Page(inputPath, outputPath); err != nil {
+			fmt.Fprintf(eout, "warning generating page %q: %s\n", inputPath, err)
 		}
 	}
 	return nil
