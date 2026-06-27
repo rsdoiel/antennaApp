@@ -1,5 +1,5 @@
 #!/bin/bash
-# generated with CMTools 0.0.24 9fbf2fb
+# generated with CMTools 0.0.24c 3889ec2
 
 #
 # Release script for antennaApp on GitHub using gh cli.
@@ -44,11 +44,13 @@ if [ "${YES_NO}" = "y" ]; then
 		-F release_notes.tmp \
 		--generate-notes
 	echo "Uploading distribution files and checksums"
-	echo "  Starting upload: dist/${CHECKSUM_FILE}"
+	echo "Starting upload: dist/${CHECKSUM_FILE}
+	"
 	gh release upload "${RELEASE_TAG}" "dist/${CHECKSUM_FILE}"
 	echo "  Completed upload: dist/${CHECKSUM_FILE}"
 	for FILE in dist/*.zip; do
-		echo "  Starting upload: ${FILE}"
+		echo "Starting upload: ${FILE}
+	"
 		gh release upload "${RELEASE_TAG}" "${FILE}"
 		echo "  Completed upload: ${FILE}"
 	done
