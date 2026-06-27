@@ -249,3 +249,79 @@ represent periodical metadata (series, volume, number) analogous to `keywords` a
 **Why:** These fields are already in active use in the author's post front matter. They carry
 the same public-facing intent as `keywords`. PageFind filter key names: `series` and
 `seriesNumber`.
+
+---
+
+## 2026-06-27 — Improved HTML accessibility and ARIA support
+
+### Context
+
+An accessibility audit of generated HTML identified the following issues across the three page
+types (`WriteHTML` aggregate, `WriteHtmlPage` posts/pages):
+
+- No skip navigation link (WCAG 2.4.1 Level A)
+- `<address>` misused as a wrapper for feed item source links
+- `rel="altenate"` typo on the Markdown alternate link element
+- `lang="en-US"` hardcoded, not configurable
+- Dates inside `<h2>` heading text in `WriteItem`, no `<time>` element
+- No warning when aggregate page has no visible `<h1>`
+
+---
+
+### DEC-016 — Emit a skip navigation link with styling in the default CSS
+
+**Decision:** Both `WriteHTML` and `WriteHtmlPage` emit `<a href="#main-content" class="skip-link">Skip to main content</a>` as the first child of `<body>`, before any `<header>` or `<nav>`. The default CSS Antenna App provides includes a rule that hides the link off-screen until focused (`:focus` makes it visible), so it works without user configuration.
+
+**Why:** WCAG 2.4.1 (Level A) — keyboard users must be able to bypass repeated navigation blocks. The `<main id="main-content">` target was already present; only the link was missing. Bundling the required CSS rule into the default Antenna App CSS guarantees out-of-the-box functionality; authors who use custom CSS must add the rule themselves (documented).
+
+**Alternatives rejected:** Inline style on the `<a>` element — would apply even when the author overrides default CSS, causing visual conflicts.
+
+---
+
+### DEC-017 — Replace `<address>` with `<footer>` inside feed item `<article>` elements
+
+**Decision:** In `WriteItem`, the source link block changes from `<address><a href="…">…</a></address>` to `<footer><a href="…">…</a></footer>`. The `<footer>` is a child of the enclosing `<article>`.
+
+**Why:** HTML5 defines `<address>` as contact information for the author of the document or its nearest sectioning ancestor — not for arbitrary resource links. Screen readers announce `<address>` as author contact information, which is misleading when the content is a feed item URL. `<footer>` inside `<article>` is semantically correct for supplementary information about the article (source, attribution).
+
+**Impact on CSS:** Any CSS rule targeting `article address` in user stylesheets must be updated to `article footer`. This must be noted in the website documentation for the aggregation list feature.
+
+**Alternatives rejected:** `<p class="item-source">` — avoids semantic conflict but provides no landmark semantics. `<cite>` — correct for citing the title of a work but not for a clickable URL block.
+
+---
+
+### DEC-018 — Add configurable `lang` field to the Generator struct
+
+**Decision:** Add `Lang string` to the `Generator` struct, with a default of `"en-US"`. The generator YAML supports a `lang:` key. Both `WriteHTML` and `WriteHtmlPage` write `<html lang="%s">` using `gen.Lang`.
+
+**Why:** `lang="en-US"` is hardcoded in the current generator, which is wrong for multilingual content and for sites written in languages other than US English. Screen readers and translation services use this attribute. The default preserves existing behaviour for sites that do not set the key.
+
+---
+
+### DEC-019 — Move dates out of `<h2>` and use `<time>` element in `WriteItem`
+
+**Decision:** In `WriteItem`, the date is removed from the `<h2>` title string and emitted as a separate `<time datetime="YYYY-MM-DD">YYYY-MM-DD</time>` element (in a `<p>`) immediately below the heading, inside the `<article>` but outside the heading.
+
+**Why:** Including the date in the heading's text makes the accessible name of the article noisy for screen reader users (e.g. "Post Title date 2020-04-11" is announced as the heading). The `<time>` element with a `datetime` attribute is machine-readable and meaningful to search engines and AT. The date is supplementary metadata, not part of the article's title.
+
+**Impact on CSS:** Any CSS rule targeting `article h2` that also styles the date as part of the heading must be updated. This must be noted in documentation. The default CSS will account for the new structure.
+
+---
+
+### DEC-020 — Warn to stderr when aggregate page has no visible `<h1>`
+
+**Decision:** When `WriteHTML` is called and `gen.Header` is empty, emit a warning to stderr: `warning: aggregate page has no <h1>; set a 'header' value in the generator YAML`. No automatic `<h1>` is injected.
+
+**Why:** Injecting an `<h1>` from `gen.Title` would work for well-configured generators but would be surprising for authors who intentionally omit a visible heading. A warning preserves author control while prompting them to explicitly address the issue. WCAG 2.4.6 (Level AA) requires headings to describe content, so the absence deserves visibility.
+
+**Alternatives rejected:** Auto-inject `<h1>gen.Title</h1>` — silently modifies page structure; could duplicate a heading that already appears in `gen.Header` content.
+
+---
+
+### DEC-021 — Fix `rel="altenate"` typo
+
+**Decision:** Fix the typo on the Markdown source alternate link: `"altenate"` → `"alternate"` (html.go, `writeHeadElement`).
+
+**Why:** This is a bug. The `rel` attribute value is not a valid link relationship. Browsers and feed discovery tools silently ignore unknown `rel` values, so the Markdown alternate link is never discoverable.
+
+---
