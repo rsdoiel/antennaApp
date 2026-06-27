@@ -712,3 +712,99 @@ func (cfg *AppConfig) Unpost(cName string, fName string) error {
 	return removePost(db, fName)
 }
 
+// itemsFromDB writes a Markdown-formatted listing of all items in db to out.
+func itemsFromDB(out io.Writer, db *sql.DB) error {
+	rows, err := db.Query(SQLListItems)
+	if err != nil {
+		return fmt.Errorf("%s: %s", SQLListItems, err)
+	}
+	defer rows.Close()
+
+	i := 0
+	for rows.Next() {
+		var (
+			link, title, description, sourceMarkdown string
+			pubDate, postPath, status, channel, label, updated string
+		)
+		if err := rows.Scan(&link, &title, &description, &sourceMarkdown,
+			&pubDate, &postPath, &status, &channel, &label, &updated); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			continue
+		}
+		if len(pubDate) > 10 {
+			pubDate = pubDate[:10]
+		}
+		displayTitle := title
+		if displayTitle == "" {
+			displayTitle = link
+		}
+		if i == 0 {
+			fmt.Fprintln(out, "")
+			i++
+		}
+		if label != "" {
+			fmt.Fprintf(out, "- [%s](%s), %s, %s (%s)\n", displayTitle, link, pubDate, status, label)
+		} else {
+			fmt.Fprintf(out, "- [%s](%s), %s, %s\n", displayTitle, link, pubDate, status)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	if i == 0 {
+		return fmt.Errorf("no items found")
+	}
+	fmt.Fprintln(out, "")
+	return nil
+}
+
+/** Items writes a listing of all harvested items in a collection to out.
+ *
+ * Parameters:
+ *   out   (io.Writer) — destination for the listing
+ *   cName (string)    — collection filename (e.g. "pages.md")
+ *
+ * Returns:
+ *   error — non-nil if the collection is unknown or the query fails
+ *
+ * Example:
+ *   err := cfg.Items(os.Stdout, "pages.md")
+ */
+func (cfg *AppConfig) Items(out io.Writer, cName string) error {
+	collection, err := cfg.GetCollection(cName)
+	if err != nil {
+		return fmt.Errorf("%s, %s", cName, err)
+	}
+	db, err := sql.Open("sqlite", collection.DbName)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	return itemsFromDB(out, db)
+}
+
+/** Items lists harvested items in a collection to out.
+ *
+ * Parameters:
+ *   out     (io.Writer) — destination for the listing
+ *   cfgName (string)    — path to antenna.yaml
+ *   args    ([]string)  — optional: [collection-filename]
+ *
+ * Returns:
+ *   error — non-nil on configuration or query failure
+ *
+ * Example:
+ *   err := app.Items(os.Stdout, "antenna.yaml", []string{"pages.md"})
+ */
+func (app *AntennaApp) Items(out io.Writer, cfgName string, args []string) error {
+	cfg := &AppConfig{}
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
+	}
+	cName := "pages.md"
+	if len(args) > 0 {
+		cName = strings.TrimSpace(args[0])
+	}
+	return cfg.Items(out, cName)
+}
+
