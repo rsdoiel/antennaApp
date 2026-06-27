@@ -36,6 +36,14 @@ type Enclosure struct {
 	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
 }
 
+// sanitizeCDATA escapes the CDATA section terminator sequence "]]>" so that
+// arbitrary content can be safely embedded inside <![CDATA[...]]> without
+// ending the section prematurely. Each "]]>" is split into two adjacent
+// CDATA sections: "]]]]><![CDATA[>".
+func sanitizeCDATA(s string) string {
+	return strings.ReplaceAll(s, "]]>", "]]]]><![CDATA[>")
+}
+
 func toXMLString(input string) string {
 	const (
 		XML_AMP  = "&#38;"
@@ -81,7 +89,7 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 		fmt.Fprintf(out, `      <description>
         <![CDATA[%s]]>
       </description>
-`, indentText(strings.TrimSpace(description), 8))
+`, indentText(sanitizeCDATA(strings.TrimSpace(description)), 8))
 	}
 	if sourceMarkdown != "" {
 		fmt.Fprintf(out, "      <source:markdown>%s</source:markdown>\n", strings.TrimSpace(toXMLString(sourceMarkdown)))
@@ -138,14 +146,11 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 </rss>`)
 	// Channel Metadata
 	if collection.Title != "" {
-		fmt.Fprintf(out, `    <title>%s</title>
-`, collection.Title)
+		fmt.Fprintf(out, "    <title><![CDATA[%s]]></title>\n", sanitizeCDATA(collection.Title))
 	}
 	if collection.Description != "" {
-		fmt.Fprintf(out, `    <description>
-      %s
-    </description>
-`, indentText(strings.TrimSpace(collection.Description), 6))
+		fmt.Fprintf(out, "    <description><![CDATA[%s]]></description>\n",
+			sanitizeCDATA(strings.TrimSpace(collection.Description)))
 	}
 	if feedLink != "" {
 		fmt.Fprintf(out, `    <link>%s</link>
@@ -203,10 +208,12 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 			label          string
 			postPath       string
 			sourceMarkdown string
+			categories     string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
-			&channel, &status, &updated, &label, &postPath, &sourceMarkdown); err != nil {
+			&channel, &status, &updated, &label, &postPath, &sourceMarkdown,
+			&categories); err != nil {
 			return err
 		}
 		if authorsSrc != "" {

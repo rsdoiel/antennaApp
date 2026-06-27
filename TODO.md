@@ -5,9 +5,11 @@ Ideas, not quite a roadmap
 
 ## Bugs
 
-- [ ] The RSS I'm producing isn't always valid for aggregated items
-  - Look at converting item content into Markdown and using that to build the feed item
-  - The problem is happening because the RSS items consumed aren't always strictly valid (often will enclude undefined embedded entities)
+- [X] The RSS I'm producing isn't always valid for aggregated items
+  - Added `sanitizeCDATA()` to escape `]]>` before CDATA-wrapping item descriptions
+  - CDATA-wrapped channel `<title>` and `<description>` which were previously unescaped
+  - Fixed `WriteCustomRSS` missing `categories` column in Scan (was crashing on real feeds)
+  - HTML entities like `&mdash;` inside CDATA sections are legal XML — no further conversion needed
 
 ## Up Next
 
