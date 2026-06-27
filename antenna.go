@@ -65,6 +65,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.RssPosts(cfgName, args)
 	case "unpage":
 		return app.Unpage(cfgName, args)
+	case "css":
+		return app.GenerateCSS(out, cfgName, args)
 	case "items":
 		return app.Items(out, cfgName, args)
 	case "list":
