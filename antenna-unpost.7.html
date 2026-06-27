@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>unpost — remove a post record from a collection</p>
+<p>SYNOPSIS antenna unpost COLLECTION_NAME URL | POST_PATH</p>
+<p>DESCRIPTION Removes an item from COLLECTION_NAME using either the
+public URL associated with the post or the POST_PATH value. The source
+Markdown and generated HTML files on disk are not deleted.</p>
+<p>PARAMETERS COLLECTION_NAME collection Markdown file URL or POST_PATH
+URL or postPath value identifying the item to remove</p>
+<p>EXAMPLE antenna unpost index.md
+https://example.com/blog/2026/04/12/my-post.html antenna unpost index.md
+blog/2026/04/12/my-post.html</p>
+</main>
+</body>
+</html>

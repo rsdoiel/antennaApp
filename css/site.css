@@ -201,7 +201,7 @@ nav ul li {
      padding: 1em;
 }
 
-section {
+main, section, article {
      position: relative;
      display: inline-block;
      width: auto;

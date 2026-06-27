@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>configuration — antenna.yaml and page.yaml settings reference</p>
+<p>ANTENNA.YAML (main configuration)</p>
+<p>port (optional, default: 8000) localhost port for ‘preview’ host
+(optional, default: localhost) host name for ‘preview’ htdocs (optional,
+default: “.”) directory for generated HTML/RSS generator (optional,
+default: page.yaml) default page generator YAML collections (required)
+list of collection objects</p>
+Each collection object: file (required) path to the collection Markdown
+document title (optional, default: filename) display name generator
+(optional) per-collection page generator YAML override mode (optional)
+rendering mode: “aggregate” (default) or “page-index” “aggregate” —
+feed-item cards from the items table (default) “page-index” — simple
+<ul>
+<p>link list from the pages table</p>
+<p>EXAMPLE antenna.yaml:</p>
+<p>htdocs: htdocs port: 8000 collections: - file: index.md # aggregate
+(default) - file: links.md generator: links-page.yaml - file: pages.md
+mode: page-index # renders a simple link list</p>
+<p>PAGE.YAML (page generator)</p>
+lang (optional, default: en-US) lang= attribute on
+<html>
+title (optional) page
+<title>
+override meta (optional) list of
+<meta>
+element attribute maps link (optional) list of <link> element attribute
+maps script (optional) list of
+<script>
+element attribute maps style (optional) inline CSS injected at end of
+<head>
+header (optional) innerHTML of
+<header>
+nav (optional) innerHTML of
+<nav aria-label="Site navigation">
+top_content (optional) content between
+<nav>
+and
+<main>
+bottom_content (optional) content between
+</main>
+and
+<footer>
+footer (optional) innerHTML of
+<footer>
+allowed_meta_fields (optional) allowlist of front matter keys to emit as
+<meta>
+<p>EXAMPLE page.yaml:</p>
+lang: en-US link: - rel: stylesheet type: text/css href: /css/site.css
+header: |
+<h1>
+My Blog
+</h1>
+nav: |
+<ul>
+<li>
+<a href="/">Home</a>
+</li>
+<li>
+<a href="/about.html">About</a>
+</li>
+</ul>
+footer: |
+<p>
+© 2026 Your Name
+</p>
+<p>allowed_meta_fields: - title - author - description - keywords</p>
+<p>SEE ALSO antenna help metadata antenna help accessibility</p>
+</main>
+</body>
+</html>

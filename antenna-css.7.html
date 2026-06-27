@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>css — generate a default CSS stylesheet</p>
+<p>SYNOPSIS antenna css [CSS_PATH]</p>
+<p>DESCRIPTION Writes a comprehensive starter stylesheet to CSS_PATH
+within the htdocs directory configured in antenna.yaml. If CSS_PATH is
+omitted it defaults to css/site.css. Directory levels are created
+automatically.</p>
+<p>If a stylesheet already exists at the target path it is backed up to
+CSS_PATH.bak before being overwritten.</p>
+<p>After writing the CSS, antenna patches the generator YAML (page.yaml)
+to add a <link rel="stylesheet"> entry pointing to the new file. If
+page.yaml already has a link: section, antenna prints instructions for
+adding the entry by hand instead of modifying the file
+automatically.</p>
+<p>The generated stylesheet includes: • CSS custom properties for
+colors, fonts, and layout (easy to override) • Dark-mode overrides via
+<span class="citation" data-cites="media">@media</span>
+(prefers-color-scheme: dark) • Skip-navigation link (WCAG 2.4.1 —
+required by default HTML output) • Navigation bar, article cards,
+standalone pages, and site footer • Typography for headings, code
+blocks, blockquotes, and tables</p>
+<p>PARAMETERS CSS_PATH (optional) path relative to htdocs (default:
+css/site.css)</p>
+<p>EXAMPLE antenna css antenna css css/custom/theme.css</p>
+<p>SEE ALSO antenna help accessibility antenna help themes</p>
+</main>
+</body>
+</html>

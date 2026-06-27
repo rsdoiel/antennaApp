@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>metadata — front matter fields and the allowed_meta_fields
+allowlist</p>
+DESCRIPTION Every YAML front matter field in a Markdown post or page is
+emitted into the generated HTML
+<head>
+as a
+<meta name="KEY" content="VALUE">
+element. The same key-value pair is also written as a
+data-pagefind-filter attribute on the enclosing
+<article>
+<p>element for PageFind faceted search.</p>
+<p>STANDARD FIELDS</p>
+title Sets
+<title>
+in the HTML head (not emitted as
+<meta>
+) description Short summary for search engines and RSS author Author
+name keywords List of tags; each value gets its own
+<meta>
+<p>pair pubDate Publication date — required for posts (YYYY-MM-DD)
+postPath Relative path to the generated HTML file — required for posts
+link Public URL of the post series Series name for multi-part posts
+seriesNumber Position within the series dateCreated Creation date
+dateModified Last-modified date datePublished Publication date (alias
+for pubDate in page context)</p>
+<p>EXAMPLE FRONT MATTER:</p>
+<table>
+<tbody>
+<tr>
+<td>title: “My Post Title”</td>
+</tr>
+<tr>
+<td>description: “A short summary.”</td>
+</tr>
+<tr>
+<td>author: “Your Name”</td>
+</tr>
+<tr>
+<td>keywords:</td>
+</tr>
+<tr>
+<td>- go</td>
+</tr>
+<tr>
+<td>- web</td>
+</tr>
+<tr>
+<td>pubDate: “2026-06-27”</td>
+</tr>
+<tr>
+<td>postPath: “blog/2026/06/27/my-post.html”</td>
+</tr>
+<tr>
+<td>series: “Building with Antenna”</td>
+</tr>
+<tr>
+<td>seriesNumber: 3</td>
+</tr>
+</tbody>
+</table>
+<p>CONTROLLING WHICH FIELDS ARE PUBLISHED (allowed_meta_fields)</p>
+By default all front matter keys are emitted as
+<meta>
+<p>elements. To restrict which keys are published, set
+allowed_meta_fields in page.yaml:</p>
+<pre><code>allowed_meta_fields:
+  - title
+  - author
+  - description
+  - keywords
+  - series
+  - seriesNumber</code></pre>
+<p>When this list is set, only the listed keys appear in generated HTML.
+Internal workflow fields (build flags, notes) are silently omitted.</p>
+<p>SEE ALSO antenna help configuration antenna help post</p>
+</main>
+</body>
+</html>

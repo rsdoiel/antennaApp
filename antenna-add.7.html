@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>add — add a feed collection</p>
+<p>SYNOPSIS antenna add COLLECTION_FILE [NAME DESCRIPTION]</p>
+<p>DESCRIPTION Registers a feed collection with antenna. COLLECTION_FILE
+is a Markdown document (.md) whose body lists RSS/Atom feed URLs as
+hyperlinks. NAME and DESCRIPTION are optional; if omitted, antenna reads
+them from the document’s YAML front matter.</p>
+<p>antenna creates a matching SQLite3 database (same basename, .db
+extension) and records the collection in antenna.yaml.</p>
+<p>PARAMETERS COLLECTION_FILE path to the Markdown document defining the
+collection NAME (optional) override the collection name DESCRIPTION
+(optional) override the collection description</p>
+<p>EXAMPLE antenna add feeds/tech.md antenna add feeds/tech.md “Tech
+Feeds” “My technology reading list”</p>
+</main>
+</body>
+</html>

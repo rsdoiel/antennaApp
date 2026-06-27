@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.24c f983e40
+%antenna(1) user manual | version 0.0.24c 35aee2e
 % R. S. Doiel
 % 2026-06-27
 
@@ -309,6 +309,6 @@ so you can read your static site with your favorite web browser.
 
 # Also 
 
-- [antenna-themes (5)](antenna-themes.5.md)
+- [antenna-themes (7)](antenna-themes.7.md)
 
 

@@ -5,33 +5,11 @@ Ideas, not quite a roadmap
 
 ## Bugs
 
-- [X] The RSS I'm producing isn't always valid for aggregated items
-  - Added `sanitizeCDATA()` to escape `]]>` before CDATA-wrapping item descriptions
-  - CDATA-wrapped channel `<title>` and `<description>` which were previously unescaped
-  - Fixed `WriteCustomRSS` missing `categories` column in Scan (was crashing on real feeds)
-  - HTML entities like `&mdash;` inside CDATA sections are legal XML — no further conversion needed
+- [ ] helptext.go should hold all the help constants needed for topic guides an man pages, currently many topics are hard coded into help_dispatch.go, these need to be migrated to helptext.go
+- [ ] help topics are help guides, they need to start with the Markdown manpage header used for chapter seven man pages, example ```%{app_name}(7) user manual | version {version} {release_hash}
+% R. S. Doiel
+% {release_date}```
+- [ ] Man page text that is themes chapter 5 should be merged into the themes for chapter 7
 
 ## Up Next
 
-- [X] Improve metadata in head of HTML pages by incorporating the front matter of the collections or blog posts
-- [X] Improve HTML accessibility and ARIA support in generated pages
-  - [X] Add per-page `<title>` support driven by front matter title
-  - [X] Skip navigation link (WCAG 2.4.1)
-  - [X] Fix `<address>` misuse in feed item cards → `<footer>`
-  - [X] `<time>` element for dates in feed item cards
-  - [X] Configurable `lang` attribute on `<html>`
-  - [X] Warn when aggregate page has no `<h1>`
-- [X] list posts and items (`antenna posts`, `antenna items`)
-- [X] list pages (`antenna pages`)
-- [X] list themes (`antenna themes`)
-- [X] generate default theme structure (`antenna themes new [NAME]`)
-- [X] apply theme (`antenna apply THEME_PATH [YAML_FILE_PATH]`)
-- [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
-  - [X] seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
-  - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
-  - [X] The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page — fixed via `mode: page-index` on collection in antenna.yaml
-- [X] generate a configurable, sensible default CSS for working with Markdown content (`antenna css`)
-- [ ] Documenting simple to complex integrations
-  - [X] A simple website of "pages"
-  - [X] A blog example using a collection to host posts
-  - [X] A link blog with embedded responses — `post` works fine; `quote` generates the blockquote stub

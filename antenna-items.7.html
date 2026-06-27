@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>items — list all items in a collection database</p>
+<p>SYNOPSIS antenna items [COLLECTION_NAME]</p>
+<p>DESCRIPTION Prints a Markdown list of all items stored in the named
+collection’s SQLite3 database. Items include blog posts added via ‘post’
+or ‘blogit’, and feed entries harvested via ‘harvest’. The list is in
+descending publication-date order.</p>
+<p>Each line shows: - <a href="link">Title</a>, YYYY-MM-DD, status
+(label)</p>
+<p>If COLLECTION_NAME is omitted it defaults to pages.md.</p>
+<p>See ‘posts’ for a list restricted to blog posts (items with a
+postPath), and ‘pages’ for a list of static page entries.</p>
+<p>PARAMETERS COLLECTION_NAME (optional) collection Markdown file
+(default: pages.md)</p>
+<p>EXAMPLE antenna items antenna items index.md</p>
+</main>
+</body>
+</html>

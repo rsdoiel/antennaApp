@@ -1,4 +1,4 @@
-%antenna(5) user manual | version 0.0.24c f983e40
+%antenna(7) user manual | version 0.0.24c 35aee2e
 % R. S. Doiel
 % 2026-06-27
 
@@ -65,7 +65,7 @@ The head element's content may also be included in a theme. It is expressed as a
 YAML file called "head.yaml". YAML is used because there 
 is not a direct relationship between the element attributes and how they could be expressed
 using Markdown. Most of the time the head.yaml isn't necessary in the theme because 
-antenna generates most of the head elements' content automatically.  There are times when
+antenna generates most of the head elements' content automatically. There are times when
 my wish to enhance the generated content (e.g. include link elements pointing to files or
 include script elements JavaScript). The head element's innerHTML is populated in the order of
 meta elements, link elements and script elements if they are defined in the YAML as the 
@@ -89,13 +89,13 @@ and values that are defined in a link element. See
 
 script
 : (optional, used when present) A list of objects expressing a sequence of script 
-HTML elements attributes.  Each item in the list is formed from the attribute names
+HTML elements attributes. Each item in the list is formed from the attribute names
 and values that are defined in a script element. See
 https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script
 
 style
 : (optional, used when present) A string holding CSS to be injected as the last
-element of the head when rendering HTML. If you have styled a LibreOffice Writer document you can the antenna stylefrom action to extract that into a stylesheet.
+element of the head when rendering HTML. If you have styled a LibreOffice Writer document you can use the antenna stylefrom action to extract that into a stylesheet.
 
 Here is an example "head.yaml"
 

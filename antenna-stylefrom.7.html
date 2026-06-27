@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>stylefrom — extract CSS from a LibreOffice HTML export</p>
+<p>SYNOPSIS antenna stylefrom INPUT_FILE [OUTPUT_PATH]</p>
+<p>DESCRIPTION Extracts the embedded CSS from a LibreOffice Writer HTML
+export (INPUT_FILE, .html or .htm) and writes it to OUTPUT_PATH.
+OUTPUT_PATH defaults to theme/style.css; the directory is created if
+needed.</p>
+<p>Use this action to seed a theme stylesheet from a styled Writer
+document.</p>
+<p>PARAMETERS INPUT_FILE path to the LibreOffice-exported HTML file
+OUTPUT_PATH (optional) output CSS path (default: theme/style.css)</p>
+<p>EXAMPLE antenna stylefrom my-doc.html antenna stylefrom my-doc.html
+css/libreoffice.css</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>posts — list posts in a collection</p>
+<p>SYNOPSIS antenna posts COLLECTION_NAME [COUNT | FROM_DATE
+TO_DATE]</p>
+<p>DESCRIPTION Prints a Markdown list of blog posts in COLLECTION_NAME
+in descending pubDate order. Items must have both a pubDate and a
+postPath to appear.</p>
+<p>Optional parameters constrain the list: COUNT integer — return only
+the N most recent posts FROM_DATE YYYY-MM-DD start of a date range
+TO_DATE YYYY-MM-DD end of a date range</p>
+<p>PARAMETERS COLLECTION_NAME collection Markdown file COUNT (optional)
+maximum number of posts to list FROM_DATE (optional) start date
+(requires TO_DATE) TO_DATE (optional) end date (requires FROM_DATE)</p>
+<p>EXAMPLE antenna posts index.md antenna posts index.md 10 antenna
+posts index.md 2026-01-01 2026-06-30</p>
+</main>
+</body>
+</html>

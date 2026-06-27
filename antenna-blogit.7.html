@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>blogit — add a post using a date-based directory path</p>
+<p>SYNOPSIS antenna blogit [COLLECTION_NAME] FILEPATH [POST_DATE]</p>
+<p>DESCRIPTION A variation of ‘post’ that places the source Markdown
+document in a blog-style date directory tree
+(e.g. blog/2026/04/12/my-post.md) before adding it to the collection. If
+POST_DATE is omitted, the current date is used. The collection defaults
+to pages.md when COLLECTION_NAME is omitted.</p>
+<p>PARAMETERS COLLECTION_NAME (optional) path to the collection Markdown
+file FILEPATH source Markdown document POST_DATE (optional) date in
+YYYY-MM-DD format</p>
+<p>EXAMPLE antenna blogit index.md notes/my-idea.md antenna blogit
+index.md notes/my-idea.md 2026-04-01</p>
+</main>
+</body>
+</html>
