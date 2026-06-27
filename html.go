@@ -119,12 +119,32 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		filters = append(filters, "channel:"+channel)
 	}
 
-	// Setup the Title — h2 keeps article titles subordinate to the page h1
+	// Build heading — h2 keeps article titles subordinate to the page h1
+	var headingHTML string
 	if title == "" {
-		title = fmt.Sprintf("<h2>@%s</h2>\n\n(date: %s)", label, pressTime)
+		headingHTML = fmt.Sprintf("<h2>@%s</h2>", label)
 	} else {
-		title = fmt.Sprintf("<h2>%s</h2>\n\n(date: %s)", title, pressTime)
+		headingHTML = fmt.Sprintf("<h2>%s</h2>", title)
 	}
+
+	// Build date using <time> elements so the date is machine-readable and
+	// not mixed into the heading's accessible name.
+	pubShort := pubDate
+	if len(pubShort) > 10 {
+		pubShort = pubShort[0:10]
+	}
+	updShort := updated
+	if len(updShort) > 10 {
+		updShort = updShort[0:10]
+	}
+	var dateHTML string
+	if pubShort != "" {
+		dateHTML = fmt.Sprintf(`<time datetime=%q>%s</time>`, pubShort, pubShort)
+		if updShort != "" && updShort != pubShort {
+			dateHTML += fmt.Sprintf(`, updated: <time datetime=%q>%s</time>`, updShort, updShort)
+		}
+	}
+
 	content := description
 	if sourceMarkdown != "" {
 		doc := &CommonMark{
@@ -139,24 +159,24 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		fmt.Fprintf(out, `
     <article data-published=%q data-link=%q data-pagefind-filter=%q>
       %s
-      <p>
-      %s
-      <address>
+      <p>%s</p>
+      <p>%s</p>
+      <footer>
         <a href=%q>%s</a>
-      </address>
+      </footer>
     </article>
-`, pubDate, link, strings.Join(filters, ", "), title, content, link, link)
+`, pubDate, link, strings.Join(filters, ", "), headingHTML, dateHTML, content, link, link)
 	} else {
 		fmt.Fprintf(out, `
     <article data-published=%q data-link=%q>
       %s
-      <p>
-      %s
-      <address>
+      <p>%s</p>
+      <p>%s</p>
+      <footer>
         <a href=%q>%s</a>
-      </address>
+      </footer>
     </article>
-`, pubDate, link, title, content, link, link)
+`, pubDate, link, headingHTML, dateHTML, content, link, link)
 	}
 	return nil
 }
@@ -225,7 +245,7 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 		postLink := filepath.Base(postPath)
 		m = map[string]string{
 			"title": pageTitle,
-			"rel":   "altenate",
+			"rel":   "alternate",
 			"type":  "text/markdown",
 			"href":  postLink,
 		}
@@ -282,17 +302,20 @@ func indentText(src string, spaces int) string {
 // WriteHTML writes aggregated items into an HTML page from the contents of the database
 func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, collection *Collection) error {
 	// Create the outer elements of a page.
-	fmt.Fprintln(out, `<!doctype html>
-<html lang="en-US">`)
+	fmt.Fprintf(out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
 	defer fmt.Fprintln(out, "</html>")
 	// Setup the metadata in the head element
 	gen.writeHeadElement(out, "", nil)
 	// Setup body element
 	fmt.Fprintln(out, "<body>")
 	defer fmt.Fprintln(out, "</body>")
+	// Skip navigation link — WCAG 2.4.1: keyboard users bypass repeated nav blocks
+	fmt.Fprintln(out, `  <a href="#main-content" class="skip-link">Skip to main content</a>`)
 	// Setup header element
 	if gen.Header != "" {
 		fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
+	} else {
+		fmt.Fprintln(gen.eout, "warning: aggregate page has no <h1>; set a 'header' value in the generator YAML")
 	}
 	// Setup nav element
 	if gen.Nav != "" {
@@ -395,14 +418,15 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	defer out.Close()
 
 	// Create the outer elements of a page.
-	fmt.Fprintln(out, `<!doctype html>
-<html lang="en-US">`)
+	fmt.Fprintf(out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
 	defer fmt.Fprintln(out, "</html>")
 	// Setup the metadata in the head element
 	gen.writeHeadElement(out, postPath, frontMatter)
 	// Setup body element
 	fmt.Fprintln(out, "<body>")
 	defer fmt.Fprintln(out, "</body>")
+	// Skip navigation link — WCAG 2.4.1: keyboard users bypass repeated nav blocks
+	fmt.Fprintln(out, `  <a href="#main-content" class="skip-link">Skip to main content</a>`)
 	// Setup header element
 	if gen.Header != "" {
 		fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))

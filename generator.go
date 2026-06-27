@@ -94,6 +94,10 @@ type Generator struct {
 	// are emitted (default).
 	AllowedMetaFields []string `json:"allowed_meta_fields,omitempty" yaml:"allowed_meta_fields,omitempty"`
 
+	// Lang is the BCP 47 language tag written into <html lang="...">.
+	// Defaults to "en-US" when not set via YAML.
+	Lang string `json:"lang,omitempty" yaml:"lang,omitempty"`
+
 	out  io.Writer
 	eout io.Writer
 }
@@ -104,6 +108,7 @@ func NewGenerator(appName string, BaseURL string) (*Generator, error) {
 	gen.AppName = appName
 	gen.Version = Version
 	gen.BaseURL = BaseURL
+	gen.Lang = "en-US"
 	gen.out = os.Stdout
 	gen.eout = os.Stderr
 	return gen, nil
@@ -193,6 +198,12 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 		gen.Footer = obj.Footer
 	} else {
 		gen.Footer = ""
+	}
+	if obj.Lang != "" {
+		gen.Lang = obj.Lang
+	}
+	if obj.AllowedMetaFields != nil {
+		gen.AllowedMetaFields = obj.AllowedMetaFields[:]
 	}
 	return nil
 }
