@@ -126,9 +126,10 @@ ORDER BY pubDate DESC, updated DESC;`
 	SQLRssPosts = `SELECT link, title, description, authors,
   enclosures, guid, pubDate, dcExt,
   channel, status, updated, label,
-  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
+  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown,
+  ifnull(categories, '') as categories
 FROM items
-WHERE (pubDate IS NOT NULL) AND 
+WHERE (pubDate IS NOT NULL) AND
    (pubDate != "") AND
    (postPath != "")
 ORDER BY pubDate DESC;`
@@ -137,9 +138,10 @@ ORDER BY pubDate DESC;`
 	SQLRssRecentPosts = `SELECT link, title, description, authors,
   enclosures, guid, pubDate, dcExt,
   channel, status, updated, label,
-  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
+  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown,
+  ifnull(categories, '') as categories
 FROM items
-WHERE (pubDate IS NOT NULL) AND 
+WHERE (pubDate IS NOT NULL) AND
    (pubDate != '') AND
    (postPath != '')
 ORDER BY pubDate DESC
@@ -149,9 +151,10 @@ LIMIT %d;`
 	SQLRssDateRangePosts = `SELECT link, title, description, authors,
   enclosures, guid, pubDate, dcExt,
   channel, status, updated, label,
-  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown
+  postPath, ifnull(sourceMarkdown, '') as sourceMarkdown,
+  ifnull(categories, '') as categories
 FROM items
-WHERE (pubDate IS NOT NULL) AND 
+WHERE (pubDate IS NOT NULL) AND
    (postPath != '') AND
    (pubDate >= '%s') AND
    (pubDate <= '%s')
