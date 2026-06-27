@@ -62,8 +62,29 @@ class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#c
 <div class="sourceCode" id="cb2"><pre
 class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- add column to table</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> items <span class="kw">ADD</span> <span class="kw">COLUMN</span> sourceMarkdown TEXT;</span></code></pre></div>
-<p>The ugprade process should support adding the postPath and
-sourceMarkdown columns in the iterms table.</p>
+<p>The upgrade process should support adding the postPath and
+sourceMarkdown columns in the items table.</p>
+<h3 id="migration-add-categories-column-2026-06-27">Migration: add
+<code>categories</code> column (2026-06-27)</h3>
+<p>The <code>items</code> table gained a
+<code>categories JSON DEFAULT ''</code> column to store RSS/Atom
+<code>&lt;category&gt;</code> values harvested from feed items.</p>
+<p>New databases created after this change have the column
+automatically. Existing databases must be migrated once using the
+provided scripts:</p>
+<ul>
+<li><strong>Linux/macOS:</strong>
+<code>migrate_categories.bash PATH_TO_DATABASE.db</code></li>
+<li><strong>Windows:</strong>
+<code>.\migrate_categories.ps1 -DB PATH_TO_DATABASE.db</code></li>
+</ul>
+<p>Both scripts are idempotent — safe to run multiple times. The guard
+query is:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">FROM</span> pragma_table_info(<span class="st">&#39;items&#39;</span>) <span class="kw">WHERE</span> name<span class="op">=</span><span class="st">&#39;categories&#39;</span>;</span></code></pre></div>
+<p>If zero, the following migration is applied:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> items <span class="kw">ADD</span> <span class="kw">COLUMN</span> categories JSON <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>;</span></code></pre></div>
 <h2 id="namespace-in-rss">Namespace in RSS</h2>
 <p>Since I am using RSS 2.0 as the guide to how I’m implementing the
 items schema I need to think more about how I want to integrate

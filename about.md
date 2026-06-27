@@ -36,7 +36,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.24b
+version: 0.0.24c
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -48,15 +48,21 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-05-23
+date_released: 2026-06-27
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.24b
+## antennaApp 0.0.24c
 
-- Fixed bug where `antenna generate` did not genenerate the HTML for pages and posts.
+- fixed RSS rendering for aggregated feeds
+- Improved metadata in head of HTML pages by incorporating the front matter of the collections or blog posts
+- Improved HTML accessibility and ARIA support in generated pages
+- Improved listing of posts, items, themes and pages
+- Added a default theme structure
+- Improved metadata handling for pages, posts and feed items
+- Added configurable CSS support
 
 ## Authors
 

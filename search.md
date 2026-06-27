@@ -1,30 +1,38 @@
+---
+title : "Search"
+---
 
+<noscript>JavaScript must be enabled for search to work</noscript>
 
-# antennaApp
+# Search Robert's blog posts and selected projects
 
-<link href="./pagefind/pagefind-ui.css" rel="stylesheet">
-<script src="./pagefind/pagefind-ui.js" type="text/javascript"></script>
-<div id="search"></div>
-<script>
-const u = URL.parse(window.location.href);
-const basePath = u.pathname.replace(/search.html$/g, '');
+<link href="/pagefind/pagefind-component-ui.css" rel="stylesheet">
+<script src="/pagefind/pagefind-component-ui.js" type="module"></script>
 
-// Function to extract query parameters from the URL
-function getQueryParam(name) {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(name);
-}
+<pagefind-input placeholder="Search…"></pagefind-input>
+<pagefind-summary></pagefind-summary>
+<pagefind-results></pagefind-results>
 
-// Extract the query parameter
-const searchQuery = getQueryParam('q');
+<script type="module">
+  // Wait for the pagefind web components to register before using the API
+  await customElements.whenDefined('pagefind-input');
 
-window.addEventListener('DOMContentLoaded', (event) => {
-    const searchUI = new PagefindUI({ 
-            element: "#search",
-            baseUrl: basePath
-    });
-    if (searchQuery) {
-        searchUI.triggerSearch(searchQuery);
+  const instance = window.PagefindComponents.getInstanceManager().getInstance('default');
+
+  // Pre-populate from URL query parameter (supports osd.xml OpenSearch integration)
+  const q = new URLSearchParams(location.search).get('q');
+  if (q) {
+    instance.triggerSearch(q);
+  }
+
+  // Keep URL in sync with the current search term so results are bookmarkable/shareable
+  instance.on('search', (term) => {
+    const url = new URL(location.href);
+    if (term) {
+      url.searchParams.set('q', term);
+    } else {
+      url.searchParams.delete('q');
     }
-});
+    history.replaceState(null, '', url.toString());
+  });
 </script>

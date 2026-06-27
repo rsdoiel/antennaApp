@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1
+id="antenna-app-implementation-plan-html-accessibility-and-aria">Antenna
+App — Implementation Plan: HTML Accessibility and ARIA</h1>
+<p>Design: <code>design_accessibility.md</code> Decisions:
+DEC-016–DEC-021 in <code>decisions.md</code></p>
+<p>TDD pattern: write failing tests first, confirm red, implement to
+green.</p>
+<hr />
+<h2 id="dependency-order">Dependency order</h2>
+<pre><code>Phase 1: Fix rel typo (isolated, no dependencies)
+Phase 2: Lang field (Generator struct + LoadConfig + WriteHTML/WriteHtmlPage)
+Phase 3: Skip navigation link (WriteHTML + WriteHtmlPage)
+Phase 4: WriteItem restructure (date/time + address→footer)
+Phase 5: No-header warning (WriteHTML)
+Phase 6: Smoke test</code></pre>
+<hr />
+<h2 id="phase-1-fix-relaltenate-typo-dec-021">Phase 1 — Fix
+<code>rel="altenate"</code> typo (DEC-021)</h2>
+<p><strong>Files:</strong> <code>html.go</code>,
+<code>html_test.go</code></p>
+<h3 id="write-test">1.1 — Write test</h3>
+<p>In <code>html_test.go</code>, add a test in the
+<code>TestWriteHeadElement</code> group verifying that the Markdown
+alternate link contains <code>rel="alternate"</code> and does NOT
+contain <code>rel="altenate"</code>.</p>
+<p>Confirm: <code>go test -run TestWriteHeadElement</code> → red (or
+existing tests pass but new case catches typo).</p>
+<h3 id="fix-typo">1.2 — Fix typo</h3>
+<p>In <code>html.go</code> <code>writeHeadElement</code>, change
+<code>"altenate"</code> → <code>"alternate"</code>.</p>
+<p>Confirm: <code>go test -run TestWriteHeadElement</code> → green.</p>
+<hr />
+<h2 id="phase-2-configurable-lang-attribute-dec-018">Phase 2 —
+Configurable <code>lang</code> attribute (DEC-018)</h2>
+<p><strong>Files:</strong> <code>generator.go</code>,
+<code>html.go</code>, <code>html_test.go</code></p>
+<h3 id="write-tests">2.1 — Write tests</h3>
+<p>Add tests verifying: - Default generator produces
+<code>&lt;html lang="en-US"&gt;</code>. - Generator with
+<code>Lang = "fr-FR"</code> produces
+<code>&lt;html lang="fr-FR"&gt;</code>.</p>
+<p>Tests use <code>WriteHTML</code> and <code>WriteHtmlPage</code> with
+a <code>bytes.Buffer</code>.</p>
+<h3 id="add-lang-to-generator-struct">2.2 — Add <code>Lang</code> to
+<code>Generator</code> struct</h3>
+<p>In <code>generator.go</code>: - Add <code>Lang string</code> field to
+<code>Generator</code>. - In <code>NewGenerator</code>, set
+<code>gen.Lang = "en-US"</code>. - In <code>LoadConfig</code>, read
+optional <code>lang:</code> key; if non-empty, set
+<code>gen.Lang</code>.</p>
+<h3 id="use-gen.lang-in-html-output">2.3 — Use <code>gen.Lang</code> in
+HTML output</h3>
+<p>In <code>html.go</code>: - <code>WriteHTML</code>: change
+<code>&lt;html lang="en-US"&gt;</code> →
+<code>fmt.Sprintf("&lt;html lang=%q&gt;", gen.Lang)</code>. -
+<code>WriteHtmlPage</code>: same change.</p>
+<p>Confirm: <code>go test -run TestLang</code> → green.</p>
+<hr />
+<h2 id="phase-3-skip-navigation-link-dec-016">Phase 3 — Skip navigation
+link (DEC-016)</h2>
+<p><strong>Files:</strong> <code>html.go</code>,
+<code>html_test.go</code></p>
+<h3 id="write-tests-1">3.1 — Write tests</h3>
+<p>Add tests verifying that <code>WriteHTML</code> and
+<code>WriteHtmlPage</code> output contains: -
+<code>&lt;a href="#main-content" class="skip-link"&gt;Skip to main content&lt;/a&gt;</code>
+- The skip link appears before <code>&lt;nav</code> in the output.</p>
+<h3 id="emit-skip-link">3.2 — Emit skip link</h3>
+<p>In <code>html.go</code>, immediately after <code>&lt;body&gt;</code>
+is written in both <code>WriteHTML</code> and
+<code>WriteHtmlPage</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fmt<span class="op">.</span>Fprintln<span class="op">(</span>out<span class="op">,</span> <span class="st">`  &lt;a href=&quot;#main-content&quot; class=&quot;skip-link&quot;&gt;Skip to main content&lt;/a&gt;`</span><span class="op">)</span></span></code></pre></div>
+<p>Confirm: <code>go test -run TestSkipLink</code> → green.</p>
+<hr />
+<h2 id="phase-4-writeitem-restructure-dec-017-dec-019">Phase 4 —
+<code>WriteItem</code> restructure (DEC-017, DEC-019)</h2>
+<p><strong>Files:</strong> <code>html.go</code>,
+<code>html_test.go</code></p>
+<h3 id="write-tests-2">4.1 — Write tests</h3>
+<p>Update existing <code>TestWriteItem</code> tests to assert: - No
+<code>&lt;address&gt;</code> in output. - <code>&lt;footer&gt;</code>
+present inside <code>&lt;article&gt;</code>. -
+<code>&lt;time datetime="YYYY-MM-DD"&gt;</code> present for pubDate. -
+When <code>updated</code> differs from pubDate, two
+<code>&lt;time&gt;</code> elements present. - Date text not inside
+<code>&lt;h2&gt;</code>. - <code>&lt;h2&gt;</code> contains only the
+title (not date).</p>
+<p>Confirm: <code>go test -run TestWriteItem</code> → red.</p>
+<h3 id="rewrite-writeitem-output-block">4.2 — Rewrite
+<code>WriteItem</code> output block</h3>
+<p>In <code>html.go</code> <code>WriteItem</code>:</p>
+<ol type="1">
+<li><p>Build <code>titleStr</code> as just the title text (no date
+appended).</p></li>
+<li><p>Build <code>dateStr</code> as
+<code>&lt;time datetime="%s"&gt;%s&lt;/time&gt;</code> for
+<code>pressTime</code> (10-char truncated pubDate). If
+<code>updated</code> differs, append
+<code>, updated: &lt;time datetime="%s"&gt;%s&lt;/time&gt;</code>.</p></li>
+<li><p>Emit article structure:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> </span><span class="er">…</span><span class="dt">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">h2</span><span class="dt">&gt;</span>TITLE<span class="dt">&lt;/</span><span class="kw">h2</span><span class="dt">&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;&lt;</span><span class="kw">time</span><span class="ot"> datetime</span><span class="op">=</span><span class="st">&quot;DATE&quot;</span><span class="dt">&gt;</span>DATE<span class="dt">&lt;/</span><span class="kw">time</span><span class="dt">&gt;&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>DESCRIPTION<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;LINK&quot;</span><span class="dt">&gt;</span>LINK<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">article</span><span class="dt">&gt;</span></span></code></pre></div></li>
+<li><p>The two template strings (with and without
+<code>data-pagefind-filter</code>) must both be updated.</p></li>
+</ol>
+<p>Confirm: <code>go test -run TestWriteItem</code> → green. Confirm:
+<code>go test ./...</code> → all green.</p>
+<hr />
+<h2 id="phase-5-no-header-warning-dec-020">Phase 5 — No-header warning
+(DEC-020)</h2>
+<p><strong>Files:</strong> <code>html.go</code>,
+<code>html_test.go</code></p>
+<h3 id="write-test-1">5.1 — Write test</h3>
+<p>Add a test for <code>WriteHTML</code> with empty
+<code>gen.Header</code> that captures stderr and verifies it contains
+<code>"warning: aggregate page has no &lt;h1&gt;"</code>.</p>
+<h3 id="emit-warning">5.2 — Emit warning</h3>
+<p>In <code>html.go</code> <code>WriteHTML</code>, after the header
+conditional block:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> gen<span class="op">.</span>Header <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Fprintln<span class="op">(</span>os<span class="op">.</span>Stderr<span class="op">,</span> <span class="st">&quot;warning: aggregate page has no &lt;h1&gt;; set a &#39;header&#39; value in the generator YAML&quot;</span><span class="op">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Confirm: <code>go test -run TestNoHeaderWarning</code> → green.
+Confirm: <code>go test ./...</code> → all green.</p>
+<hr />
+<h2 id="phase-6-smoke-test">Phase 6 — Smoke test</h2>
+<p>Using the blog at <code>~/Laboratory/rsdoiel.github.io</code>:</p>
+<h3 id="build">6.1 — Build</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Laboratory/antennaApp <span class="kw">&amp;&amp;</span> <span class="ex">go</span> build <span class="at">-o</span> bin/antenna cmd/antenna/<span class="pp">*</span>.go</span></code></pre></div>
+<h3 id="regenerate-posts">6.2 — Regenerate posts</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/Laboratory/rsdoiel.github.io <span class="kw">&amp;&amp;</span> <span class="ex">~/Laboratory/antennaApp/bin/antenna</span> generate pages.md</span></code></pre></div>
+<p>Verify in
+<code>blog/2026/04/15/fountain_and_recording_agents.html</code>: -
+<code>&lt;a href="#main-content" class="skip-link"&gt;Skip to main content&lt;/a&gt;</code>
+present before <code>&lt;nav</code>. -
+<code>&lt;html lang="en-US"&gt;</code> (unchanged default). -
+<code>rel="alternate"</code> on the Markdown link (no typo). - No
+regression in metadata <code>&lt;meta&gt;</code> elements.</p>
+<h3 id="verify-writeitem-output">6.3 — Verify <code>WriteItem</code>
+output</h3>
+<p>If a harvested feed DB is available, run
+<code>antenna generate</code> on a collection and inspect an aggregate
+HTML page for <code>&lt;footer&gt;</code> and <code>&lt;time&gt;</code>
+elements, absence of <code>&lt;address&gt;</code>.</p>
+<p>If no feed DB is available, rely on unit tests from Phase 4.</p>
+<h3 id="test-custom-lang">6.4 — Test custom <code>lang</code></h3>
+<p>Temporarily add <code>lang: fr-FR</code> to <code>page.yaml</code>,
+regenerate one page, verify <code>&lt;html lang="fr-FR"&gt;</code>,
+revert.</p>
+<hr />
+<h2 id="summary-table">Summary table</h2>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 26%" />
+<col style="width: 16%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Decisions</th>
+<th>Tests</th>
+<th>Production code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>DEC-021</td>
+<td><code>TestWriteHeadElement</code> update</td>
+<td><code>html.go</code> typo fix</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DEC-018</td>
+<td><code>TestLang</code> new</td>
+<td><code>generator.go</code> Lang field; <code>html.go</code>
+fmt.Sprintf</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DEC-016</td>
+<td><code>TestSkipLink</code> new</td>
+<td><code>html.go</code> skip link in both paths</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DEC-017, DEC-019</td>
+<td><code>TestWriteItem</code> updates</td>
+<td><code>html.go</code> WriteItem rewrite</td>
+</tr>
+<tr>
+<td>5</td>
+<td>DEC-020</td>
+<td><code>TestNoHeaderWarning</code> new</td>
+<td><code>html.go</code> stderr warning</td>
+</tr>
+<tr>
+<td>6</td>
+<td>—</td>
+<td>smoke test</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</section>
+</body>
+</html>

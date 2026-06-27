@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="build-a-link-blog-with-antenna">Build a Link Blog with
+Antenna</h1>
+<p>By R. S. Doiel, 2026-06-27</p>
+<p>A link blog is a website where you share links to things you find
+interesting on the web — and optionally respond to them with commentary
+of your own. This tutorial shows how to build one with Antenna:
+subscribing to feeds, harvesting their content, and writing responses
+that appear alongside the harvested items.</p>
+<p>For a simpler starting point, see <a
+href="Build_a_Blog_with_Antenna_App.html">Build a Blog with Antenna</a>,
+which covers posting your own content without feed subscriptions.</p>
+<h2 id="setting-up">Setting up</h2>
+<p>Create a directory for the site and change into it.</p>
+<pre class="shell"><code>mkdir mylinkblog
+cd mylinkblog</code></pre>
+<h2 id="initializing">Initializing</h2>
+<pre class="shell"><code>antenna init
+antenna css</code></pre>
+<p><code>init</code> creates <code>antenna.yaml</code> and
+<code>page.yaml</code>. <code>css</code> writes
+<code>css/site.css</code> and links it in <code>page.yaml</code>.</p>
+<h2 id="defining-your-reading-list">Defining your reading list</h2>
+<p>A link blog is built around a <em>collection</em> — a Markdown file
+whose body lists the RSS/Atom feeds you want to follow. The collection’s
+name determines the output filenames: <code>links.md</code> produces
+<code>links.html</code> (the aggregated reading page) and
+<code>links.xml</code> (your own RSS feed).</p>
+<p>Create <code>links.md</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> My Link Blog</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> Links and commentary from around the web.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu"># My Link Blog</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>Reading list below. Posts appear in reverse chronological order.</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">Dave Winer&#39;s Scripting News</span><span class="co">](http://scripting.com/rss.xml)</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="co">[</span><span class="ot">R. S. Doiel&#39;s blog</span><span class="co">](https://rsdoiel.github.io/rss.xml)</span></span></code></pre></div>
+<p>The list in the body is the subscription list. You can add or remove
+feeds by editing this file at any time.</p>
+<p>Register the collection with Antenna:</p>
+<pre class="shell"><code>antenna add links.md</code></pre>
+<p>This creates <code>links.db</code> (the SQLite3 database for the
+collection) and adds it to <code>antenna.yaml</code>.</p>
+<h2 id="harvesting-content">Harvesting content</h2>
+<p>Pull content from all subscribed feeds into
+<code>links.db</code>:</p>
+<pre class="shell"><code>antenna harvest</code></pre>
+<p>Antenna fetches each feed in the list and stores the items locally.
+On a slow connection or with many feeds, the first harvest may take a
+moment. Subsequent harvests are incremental.</p>
+<p>Now render the HTML page and RSS feed:</p>
+<pre class="shell"><code>antenna generate
+antenna preview</code></pre>
+<p>Open <code>http://localhost:8000/links.html</code> to see the
+aggregated content. Each item shows the title, publication date,
+excerpt, and a link back to the original source.</p>
+<h2 id="reviewing-what-was-harvested">Reviewing what was harvested</h2>
+<p>Check what is in the collection at any time:</p>
+<pre class="shell"><code>antenna items links.md</code></pre>
+<p>This prints a Markdown list of every item in <code>links.db</code> —
+harvested feed entries and any posts you have added — in descending date
+order.</p>
+<h2 id="writing-a-response">Writing a response</h2>
+<p>The most distinctive feature of a link blog is the ability to respond
+to something you read. Antenna’s <code>quote</code> action converts a <a
+href="https://web.dev/text-fragments/">text-fragment URL</a> into a
+Markdown blockquote with source attribution, which you can use as the
+start of a response post.</p>
+<h3 id="getting-a-text-fragment-url">Getting a text-fragment URL</h3>
+<p>In a modern browser, select the passage you want to quote,
+right-click it, and choose <strong>Copy link to highlight</strong>
+(Chrome/Edge) or equivalent. This copies a URL ending in
+<code>#:~:text=the+selected+text</code>.</p>
+<h3 id="generating-the-blockquote">Generating the blockquote</h3>
+<pre class="shell"><code>antenna quote &quot;https://scripting.com/2026/06/27/example.html#:~:text=the+selected+passage&quot; &gt; response.md</code></pre>
+<p><code>antenna quote</code> writes the blockquote and attribution to
+standard output. Redirecting to <code>response.md</code> gives you a
+file to edit.</p>
+<p>The generated content looks like:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; the selected passage</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>(<span class="co">[</span><span class="ot">scripting.com</span><span class="co">](https://scripting.com/2026/06/27/example.html#:~:text=the+selected+passage)</span>, accessed 2026-06-27)</span></code></pre></div>
+<h3 id="adding-your-commentary">Adding your commentary</h3>
+<p>Open <code>response.md</code> in your editor and add a YAML front
+matter block and your own text:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> Thoughts on Dave&#39;s point about RSS</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> My take on Dave Winer&#39;s argument for RSS as social infrastructure.</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="an">author:</span><span class="co"> Your Name</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="an">keywords:</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">  - RSS</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">  - social web</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="an">link:</span><span class="co"> https://scripting.com/2026/06/27/example.html</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="an">pubDate:</span><span class="co"> &quot;2026-06-27&quot;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="an">postPath:</span><span class="co"> &quot;blog/2026/06/27/thoughts-on-dave.html&quot;</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu"># Thoughts on Dave&#39;s point about RSS</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; the selected passage</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>(<span class="co">[</span><span class="ot">scripting.com</span><span class="co">](https://scripting.com/2026/06/27/example.html#:~:text=the+selected+passage)</span>, accessed 2026-06-27)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>My commentary goes here. I agree with Dave that...</span></code></pre></div>
+<p>The <code>link</code> field in the front matter points to the
+original article. The <code>postPath</code> determines where Antenna
+writes the rendered HTML.</p>
+<p>Create the output directory and post the response to the
+<code>links.md</code> collection:</p>
+<pre class="shell"><code>mkdir -p blog/2026/06/27
+antenna post links.md response.md</code></pre>
+<p>Antenna renders <code>blog/2026/06/27/thoughts-on-dave.html</code>
+and records the post in <code>links.db</code>. Regenerate and
+preview:</p>
+<pre class="shell"><code>antenna generate
+antenna preview</code></pre>
+<p>Your response now appears in <code>links.html</code> alongside the
+harvested items, with the <code>link</code> field providing a connection
+back to the original article.</p>
+<h2 id="listing-your-responses">Listing your responses</h2>
+<p>To see only posts you have written (items with a
+<code>postPath</code>), use:</p>
+<pre class="shell"><code>antenna posts links.md</code></pre>
+<p>To see everything in the collection — harvested items and your own
+posts:</p>
+<pre class="shell"><code>antenna items links.md</code></pre>
+<h2 id="the-daily-update-cycle">The daily update cycle</h2>
+<p>A link blog stays current by re-harvesting regularly. The typical
+cycle is:</p>
+<pre class="shell"><code>antenna harvest
+antenna generate
+antenna preview</code></pre>
+<p>Run this whenever you want to pull in new content. You can automate
+it with a cron job or a task scheduler:</p>
+<pre class="shell"><code># Example cron entry — harvest and generate every hour
+0 * * * * cd /path/to/mylinkblog &amp;&amp; antenna harvest &amp;&amp; antenna generate</code></pre>
+<h2 id="customizing-the-page">Customizing the page</h2>
+<p>Open <code>page.yaml</code> to personalise the HTML shell. A fuller
+example for a link blog:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lang</span><span class="kw">:</span><span class="at"> en-US</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">rel</span><span class="kw">:</span><span class="at"> stylesheet</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> text/css</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">href</span><span class="kw">:</span><span class="at"> /css/site.css</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">rel</span><span class="kw">:</span><span class="at"> alternate</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">type</span><span class="kw">:</span><span class="at"> application/rss+xml</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">title</span><span class="kw">:</span><span class="at"> My Link Blog RSS</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">href</span><span class="kw">:</span><span class="at"> /links.xml</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">header</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  &lt;h1&gt;My Link Blog&lt;/h1&gt;</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="fu">nav</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  &lt;ul&gt;</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/links.html&quot;&gt;Links&lt;/a&gt;&lt;/li&gt;</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/about.html&quot;&gt;About&lt;/a&gt;&lt;/li&gt;</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  &lt;/ul&gt;</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">footer</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>  &lt;p&gt;© 2026 Your Name — &lt;a href=&quot;/links.xml&quot;&gt;RSS&lt;/a&gt;&lt;/p&gt;</span></code></pre></div>
+<p>The <code>link</code> element pointing to <code>/links.xml</code>
+adds an autodiscovery tag so feed readers can find your RSS feed
+automatically.</p>
+<h3 id="adding-an-about-page">Adding an About page</h3>
+<pre class="shell"><code>antenna page about.md</code></pre>
+<p>See <a href="Build_a_Blog_with_Antenna_App.html">Build a Blog with
+Antenna</a> for front matter metadata fields and the
+<code>allowed_meta_fields</code> allowlist.</p>
+<h2 id="publishing">Publishing</h2>
+<p>When the site looks right locally:</p>
+<pre class="shell"><code>git add -A
+git commit -m &quot;Initial link blog&quot;
+git push origin main</code></pre>
+<p>After publishing, share your feed URL
+(<code>https://yourdomain.example/links.xml</code>) so others can
+subscribe to your link blog.</p>
+</section>
+</body>
+</html>

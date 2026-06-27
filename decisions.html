@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="antenna-app-decision-record">Antenna App — Decision Record</h1>
+<p>Decisions made during design exploration sessions, recorded before
+implementation begins. Each entry states what was decided, why, and any
+alternatives that were considered and rejected.</p>
+<hr />
+<h2
+id="enhanced-metadata-processing-for-posts-pages-and-feed-items">2026-06-27
+— Enhanced metadata processing for posts, pages, and feed items</h2>
+<h3 id="context">Context</h3>
+<p>The feature request
+<code>enhanced_front_matter_processing_feature_request.md</code>
+identified two bugs and several improvements:</p>
+<ol type="1">
+<li><code>GeneratePosts</code> renders YAML front matter as visible body
+text (a bug).</li>
+<li>Front matter fields are not emitted as HTML
+<code>&lt;meta&gt;</code> elements.</li>
+<li>PageFind 1.5+ faceted search attributes are not emitted.</li>
+</ol>
+<p>During exploration the scope was widened to treat posts, pages, and
+harvested feed items consistently, and to add feed item metadata that
+was being silently dropped on harvest.</p>
+<hr />
+<h3
+id="dec-001-fix-generateposts-to-parse-front-matter-before-rendering">DEC-001
+— Fix <code>GeneratePosts</code> to parse front matter before
+rendering</h3>
+<p><strong>Decision:</strong> Replace
+<code>doc := &amp;CommonMark{Text: sourceMarkdown}</code> in
+<code>GeneratePosts</code> (<code>generator.go</code> ~line 314) with a
+proper <code>doc.Parse()</code> call. On parse error, fall back to
+treating the entire source as body text.</p>
+<p><strong>Why:</strong> The bare struct literal leaves raw YAML front
+matter in <code>doc.Text</code>. Goldmark converts the <code>---</code>
+delimiters to <code>&lt;hr&gt;</code> elements and the YAML content to a
+visible paragraph. The <code>Page()</code> path already calls
+<code>LoadCommonMark</code> which runs <code>Parse()</code> correctly;
+<code>GeneratePosts</code> must match that behaviour.</p>
+<p><strong>Alternatives rejected:</strong> Pre-stripping front matter
+with a regex before rendering — fragile and duplicates logic already in
+<code>SplitFrontMatter</code>.</p>
+<hr />
+<h3 id="dec-002-add-categories-json-column-to-the-items-table">DEC-002 —
+Add <code>categories JSON</code> column to the <code>items</code>
+table</h3>
+<p><strong>Decision:</strong> Add a
+<code>categories JSON DEFAULT ''</code> column to the <code>items</code>
+table to store <code>item.Categories []string</code> from harvested
+feeds (RSS <code>&lt;category&gt;</code>, Atom
+<code>&lt;category term=""&gt;</code>).</p>
+<p><strong>Why:</strong> <code>gofeed.Item.Categories</code> is
+populated during harvest but currently discarded in
+<code>saveItem</code>. Categories are the primary subject/topic
+vocabulary in RSS and Atom feeds and are essential for faceted search.
+The <code>channels</code> table already has a <code>categories</code>
+column for channel-level categories; the <code>items</code> table must
+match for consistent querying.</p>
+<p><strong>Alternatives rejected:</strong> Deriving categories from
+<code>dcExt.Subject</code> at render time — DC Subject and RSS Category
+are separate vocabularies and must not be merged (see DEC-009).</p>
+<hr />
+<h3
+id="dec-003-schema-migration-via-sqlite3-cli-scripts-not-auto-migration">DEC-003
+— Schema migration via sqlite3 CLI scripts, not auto-migration</h3>
+<p><strong>Decision:</strong> Provide
+<code>migrate_categories.bash</code> and
+<code>migrate_categories.ps1</code> scripts that operators run once
+against existing databases. Document the migration on the Antenna App
+website. The application itself will not attempt auto-migration.</p>
+<p><strong>Why:</strong> Auto-migration on startup adds startup latency,
+requires the running process to have DDL permissions, and can mask
+errors. Explicit operator-run scripts are auditable and reversible. The
+existing <code>setupDatabase</code> function only creates tables for new
+databases; extending it with migration logic would conflate two
+concerns.</p>
+<p><strong>Migration statement:</strong></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> items <span class="kw">ADD</span> <span class="kw">COLUMN</span> categories JSON <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>;</span></code></pre></div>
+<hr />
+<h3
+id="dec-004-dublin-core-extension-fields-are-unmarshalled-and-rendered-explicitly">DEC-004
+— Dublin Core extension fields are unmarshalled and rendered
+explicitly</h3>
+<p><strong>Decision:</strong> When rendering feed items (in
+<code>WriteItem</code>), unmarshal the stored <code>dcExt</code> JSON
+blob into <code>ext.DublinCoreExtension</code> and surface each
+non-empty field as a PageFind filter attribute on the
+<code>&lt;article&gt;</code> element.</p>
+<p><strong>Why:</strong> <code>dcExt</code> is stored as an opaque JSON
+blob. It is a well-known, stable struct
+(<code>DublinCoreExtension</code> in <code>gofeed/extensions</code>).
+Unmarshalling it is straightforward and gives access to all 16 DC
+fields. The library and archival community relies on Dublin Core;
+rendering it into searchable HTML metadata is a stated goal.</p>
+<p><strong>DC fields available</strong> (all <code>[]string</code>):
+Title, Creator, Author, Subject, Description, Publisher, Contributor,
+Date, Type, Format, Identifier, Source, Language, Relation, Coverage,
+Rights.</p>
+<hr />
+<h3
+id="dec-005-dublin-core-pagefind-filter-key-naming-uses-dc_-prefix-with-underscores">DEC-005
+— Dublin Core PageFind filter key naming uses <code>dc_</code> prefix
+with underscores</h3>
+<p><strong>Decision:</strong> Dublin Core fields are exposed as PageFind
+filter keys using the pattern <code>dc_fieldname</code> (lowercase,
+underscore separator): <code>dc_creator</code>, <code>dc_subject</code>,
+<code>dc_date</code>, etc.</p>
+<p><strong>Why:</strong> PageFind’s inline filter syntax uses
+<code>:</code> as the key–value separator
+(<code>data-pagefind-filter="key:value"</code>). A key of
+<code>dc:subject</code> would be parsed as filter key <code>dc</code>
+with value <code>subject:value</code> — incorrect. Underscores are
+unambiguous. The <code>dc_</code> prefix distinguishes DC fields from
+native feed fields (<code>author</code>, <code>category</code>) without
+a crosswalk.</p>
+<p><strong>Alternatives rejected:</strong> Flat names without prefix
+(<code>subject</code>, <code>creator</code>) — ambiguous when both DC
+and native fields carry the same concept, and the user explicitly wants
+separate facets per vocabulary.</p>
+<hr />
+<h3 id="dec-006-no-crosswalk-between-metadata-vocabularies">DEC-006 — No
+crosswalk between metadata vocabularies</h3>
+<p><strong>Decision:</strong> RSS/Atom <code>category</code>, post front
+matter <code>keywords</code>, <code>series</code>, and DC
+<code>dc_subject</code> are rendered as separate PageFind filter keys.
+No automatic mapping between them.</p>
+<p><strong>Why:</strong> Merging heterogeneous vocabularies is a defined
+crosswalk process that belongs in a separate programme or processing
+step, not in the renderer. Conflating <code>category</code> and
+<code>keywords</code> would produce incorrect faceted search results.
+This is a well-understood problem in the library and archival
+community.</p>
+<hr />
+<h3
+id="dec-007-feed-label-and-channel-are-included-as-pagefind-filters-on-feed-items">DEC-007
+— Feed label and channel are included as PageFind filters on feed
+items</h3>
+<p><strong>Decision:</strong> Each feed item rendered in an aggregate
+page (<code>WriteItem</code>) emits both
+<code>data-pagefind-filter="label:VALUE"</code> (human-readable feed
+name) and <code>data-pagefind-filter="channel:VALUE"</code> (feed URL)
+on its <code>&lt;article&gt;</code> element.</p>
+<p><strong>Why:</strong> Label and channel let readers filter an
+aggregate page by source feed — “show me only items from source X.” Both
+are already available as parameters to <code>WriteItem</code> at render
+time. Label is the more user-friendly value; channel is the canonical
+identifier. Both are useful and the cost of including them is
+negligible.</p>
+<hr />
+<h3
+id="dec-008-two-rendering-paths-head-meta-for-postspages-article-attributes-for-feed-items">DEC-008
+— Two rendering paths: <code>&lt;head&gt;</code> meta for posts/pages,
+<code>&lt;article&gt;</code> attributes for feed items</h3>
+<p><strong>Decision:</strong></p>
+<ul>
+<li><strong>Posts and pages</strong> (one HTML file = one document):
+front matter fields are emitted as
+<code>&lt;meta name="key" content="value"&gt;</code> and
+<code>&lt;meta data-pagefind-filter="key[content]" content="value"&gt;</code>
+elements in <code>&lt;head&gt;</code>.</li>
+<li><strong>Aggregate feed pages</strong> (one HTML file = many items):
+each item’s metadata is emitted as
+<code>data-pagefind-filter="key:value"</code> inline attribute values on
+its <code>&lt;article&gt;</code> element.</li>
+</ul>
+<p><strong>Why:</strong> PageFind indexes a page as one document.
+<code>&lt;head&gt;</code> metadata applies to the whole page, making it
+correct for single-post pages. For aggregate pages, per-item faceting
+requires attributes on each <code>&lt;article&gt;</code> element. Head
+meta also serves standard HTML purposes (SEO, social sharing, browser
+tooling) on post pages.</p>
+<hr />
+<h3
+id="dec-009-default-expose-all-front-matter-fields-as-html-metadata">DEC-009
+— Default: expose all front matter fields as HTML metadata</h3>
+<p><strong>Decision:</strong> When no <code>allowed_meta_fields</code>
+list is configured, every key in a document’s front matter is emitted as
+HTML metadata — including internal fields like <code>postPath</code>,
+<code>guid</code>, and <code>dateModified</code>.</p>
+<p><strong>Why:</strong> Front matter in published Markdown posts is
+already public. Defaulting to all fields avoids silent omissions. Fields
+like <code>postPath</code> and <code>guid</code> are useful to
+downstream tooling. Users who need to suppress specific fields can
+provide <code>allowed_meta_fields</code>.</p>
+<hr />
+<h3
+id="dec-010-allowed_meta_fields-in-generator-yaml-constrains-postpage-metadata-output">DEC-010
+— <code>allowed_meta_fields</code> in Generator YAML constrains
+post/page metadata output</h3>
+<p><strong>Decision:</strong> The <code>Generator</code> struct gains an
+<code>AllowedMetaFields []string</code> field
+(<code>allowed_meta_fields</code> in YAML). When the list is non-empty,
+only the named keys are emitted as HTML metadata for posts and
+pages.</p>
+<p><strong>Why:</strong> Some workflows require that only certain front
+matter fields are public-facing (e.g., a collection that uses private
+<code>internal_review</code> flags in front matter). An explicit
+allowlist respects that without changing the default-all behaviour.</p>
+<p><strong>This constraint applies to posts and pages only.</strong>
+Feed item metadata from harvested feeds is always rendered in full — it
+is already public data.</p>
+<hr />
+<h3
+id="dec-011-front-matter-title-replaces-gen.title-in-the-html-title-element">DEC-011
+— Front matter <code>title</code> replaces <code>gen.Title</code> in the
+HTML <code>&lt;title&gt;</code> element</h3>
+<p><strong>Decision:</strong> When a post or page has a
+<code>title</code> key in its front matter, that value is written to the
+<code>&lt;title&gt;</code> element instead of <code>gen.Title</code>.
+<code>gen.Title</code> is used only when no front matter title is
+present.</p>
+<p><strong>Why:</strong> <code>gen.Title</code> is the collection-level
+title (e.g., “My Blog”). A post titled “Mostly Oberon” should produce
+<code>&lt;title&gt;Mostly Oberon&lt;/title&gt;</code>, not
+<code>&lt;title&gt;My Blog&lt;/title&gt;</code>. The feature request
+states this intent; it also improves SEO and social-sharing
+previews.</p>
+<p><strong>Implementation note:</strong> The title decision must be made
+before writing <code>&lt;head&gt;</code> to avoid emitting two
+<code>&lt;title&gt;</code> elements.</p>
+<hr />
+<h3
+id="dec-012-multi-value-front-matter-fields-each-emit-a-separate-meta-element">DEC-012
+— Multi-value front matter fields each emit a separate
+<code>&lt;meta&gt;</code> element</h3>
+<p><strong>Decision:</strong> For front matter fields whose value is a
+YAML sequence (e.g., <code>keywords</code>, <code>series</code>), each
+value produces its own <code>&lt;meta&gt;</code> element rather than a
+joined string.</p>
+<p><strong>Why:</strong> PageFind’s attribute-extraction filter syntax
+(<code>data-pagefind-filter="keywords[content]"</code>) reads a single
+<code>content</code> attribute value as one filter value. To register
+multiple filter values for the same key, multiple
+<code>&lt;meta&gt;</code> elements are needed. This also keeps
+individual values unambiguous (no comma-splitting needed).</p>
+<p><strong>Implementation:</strong> New helper
+<code>GetAttributeStringSlice(key string) []string</code> in
+<code>cmarkdoc.go</code>, handling both <code>string</code> and
+<code>[]interface{}</code> YAML types.</p>
+<hr />
+<h3
+id="dec-013-writehtmlpage-gains-a-frontmatter-parameter-all-call-sites-updated">DEC-013
+— <code>WriteHtmlPage</code> gains a <code>frontMatter</code> parameter;
+all call sites updated</h3>
+<p><strong>Decision:</strong> <code>WriteHtmlPage</code> signature
+changes from:</p>
+<pre><code>func (gen *Generator) WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML string) error</code></pre>
+<p>to:</p>
+<pre><code>func (gen *Generator) WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML string, frontMatter map[string]interface{}) error</code></pre>
+<p>Call sites that must be updated:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Location</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>generator.go</code> — <code>GeneratePosts</code></td>
+<td>Also fix the <code>Parse()</code> bug (DEC-001)</td>
+</tr>
+<tr>
+<td><code>schema.go</code> — <code>Post()</code></td>
+<td><code>doc.FrontMatter</code> already available after
+<code>LoadCommonMark</code></td>
+</tr>
+<tr>
+<td><code>page.go</code> — <code>Page()</code></td>
+<td><code>doc.FrontMatter</code> already available; no Parse bug
+here</td>
+</tr>
+</tbody>
+</table>
+<p><code>GeneratePages</code> delegates to <code>Page()</code> and
+requires no separate change.</p>
+<p><code>WriteHTML</code> (aggregate collection page) passes
+<code>nil</code> as front matter — collection-level pages have no
+single-post front matter.</p>
+<hr />
+<h3
+id="dec-014-pages-are-treated-identically-to-posts-for-metadata-rendering">DEC-014
+— Pages are treated identically to posts for metadata rendering</h3>
+<p><strong>Decision:</strong> The <code>antenna page</code> command and
+the <code>GeneratePages</code> regeneration path expose front matter
+fields the same way as <code>antenna post</code>: all fields by default,
+constrained by <code>allowed_meta_fields</code> when set, with
+DC-prefixed keys and multi-value slice support.</p>
+<p><strong>Why:</strong> Pages are authored Markdown documents with
+front matter, just like posts. Inconsistent metadata rendering between
+pages and posts would surprise authors and break site-wide faceted
+search.</p>
+<hr />
+<h3
+id="dec-015-series-and-seriesnumber-are-valid-public-metadata-fields">DEC-015
+— <code>series</code> and <code>seriesNumber</code> are valid public
+metadata fields</h3>
+<p><strong>Decision:</strong> <code>series</code> and
+<code>seriesNumber</code> front matter fields are treated as public
+metadata, rendered into HTML <code>&lt;head&gt;</code> as
+<code>&lt;meta&gt;</code> and <code>data-pagefind-filter</code> elements
+by default. They represent periodical metadata (series, volume, number)
+analogous to <code>keywords</code> and <code>subject</code>.</p>
+<p><strong>Why:</strong> These fields are already in active use in the
+author’s post front matter. They carry the same public-facing intent as
+<code>keywords</code>. PageFind filter key names: <code>series</code>
+and <code>seriesNumber</code>.</p>
+<hr />
+<h2 id="improved-html-accessibility-and-aria-support">2026-06-27 —
+Improved HTML accessibility and ARIA support</h2>
+<h3 id="context-1">Context</h3>
+<p>An accessibility audit of generated HTML identified the following
+issues across the three page types (<code>WriteHTML</code> aggregate,
+<code>WriteHtmlPage</code> posts/pages):</p>
+<ul>
+<li>No skip navigation link (WCAG 2.4.1 Level A)</li>
+<li><code>&lt;address&gt;</code> misused as a wrapper for feed item
+source links</li>
+<li><code>rel="altenate"</code> typo on the Markdown alternate link
+element</li>
+<li><code>lang="en-US"</code> hardcoded, not configurable</li>
+<li>Dates inside <code>&lt;h2&gt;</code> heading text in
+<code>WriteItem</code>, no <code>&lt;time&gt;</code> element</li>
+<li>No warning when aggregate page has no visible
+<code>&lt;h1&gt;</code></li>
+</ul>
+<hr />
+<h3
+id="dec-016-emit-a-skip-navigation-link-with-styling-in-the-default-css">DEC-016
+— Emit a skip navigation link with styling in the default CSS</h3>
+<p><strong>Decision:</strong> Both <code>WriteHTML</code> and
+<code>WriteHtmlPage</code> emit
+<code>&lt;a href="#main-content" class="skip-link"&gt;Skip to main content&lt;/a&gt;</code>
+as the first child of <code>&lt;body&gt;</code>, before any
+<code>&lt;header&gt;</code> or <code>&lt;nav&gt;</code>. The default CSS
+Antenna App provides includes a rule that hides the link off-screen
+until focused (<code>:focus</code> makes it visible), so it works
+without user configuration.</p>
+<p><strong>Why:</strong> WCAG 2.4.1 (Level A) — keyboard users must be
+able to bypass repeated navigation blocks. The
+<code>&lt;main id="main-content"&gt;</code> target was already present;
+only the link was missing. Bundling the required CSS rule into the
+default Antenna App CSS guarantees out-of-the-box functionality; authors
+who use custom CSS must add the rule themselves (documented).</p>
+<p><strong>Alternatives rejected:</strong> Inline style on the
+<code>&lt;a&gt;</code> element — would apply even when the author
+overrides default CSS, causing visual conflicts.</p>
+<hr />
+<h3
+id="dec-017-replace-address-with-footer-inside-feed-item-article-elements">DEC-017
+— Replace <code>&lt;address&gt;</code> with <code>&lt;footer&gt;</code>
+inside feed item <code>&lt;article&gt;</code> elements</h3>
+<p><strong>Decision:</strong> In <code>WriteItem</code>, the source link
+block changes from
+<code>&lt;address&gt;&lt;a href="…"&gt;…&lt;/a&gt;&lt;/address&gt;</code>
+to
+<code>&lt;footer&gt;&lt;a href="…"&gt;…&lt;/a&gt;&lt;/footer&gt;</code>.
+The <code>&lt;footer&gt;</code> is a child of the enclosing
+<code>&lt;article&gt;</code>.</p>
+<p><strong>Why:</strong> HTML5 defines <code>&lt;address&gt;</code> as
+contact information for the author of the document or its nearest
+sectioning ancestor — not for arbitrary resource links. Screen readers
+announce <code>&lt;address&gt;</code> as author contact information,
+which is misleading when the content is a feed item URL.
+<code>&lt;footer&gt;</code> inside <code>&lt;article&gt;</code> is
+semantically correct for supplementary information about the article
+(source, attribution).</p>
+<p><strong>Impact on CSS:</strong> Any CSS rule targeting
+<code>article address</code> in user stylesheets must be updated to
+<code>article footer</code>. This must be noted in the website
+documentation for the aggregation list feature.</p>
+<p><strong>Alternatives rejected:</strong>
+<code>&lt;p class="item-source"&gt;</code> — avoids semantic conflict
+but provides no landmark semantics. <code>&lt;cite&gt;</code> — correct
+for citing the title of a work but not for a clickable URL block.</p>
+<hr />
+<h3
+id="dec-018-add-configurable-lang-field-to-the-generator-struct">DEC-018
+— Add configurable <code>lang</code> field to the Generator struct</h3>
+<p><strong>Decision:</strong> Add <code>Lang string</code> to the
+<code>Generator</code> struct, with a default of <code>"en-US"</code>.
+The generator YAML supports a <code>lang:</code> key. Both
+<code>WriteHTML</code> and <code>WriteHtmlPage</code> write
+<code>&lt;html lang="%s"&gt;</code> using <code>gen.Lang</code>.</p>
+<p><strong>Why:</strong> <code>lang="en-US"</code> is hardcoded in the
+current generator, which is wrong for multilingual content and for sites
+written in languages other than US English. Screen readers and
+translation services use this attribute. The default preserves existing
+behaviour for sites that do not set the key.</p>
+<hr />
+<h3
+id="dec-019-move-dates-out-of-h2-and-use-time-element-in-writeitem">DEC-019
+— Move dates out of <code>&lt;h2&gt;</code> and use
+<code>&lt;time&gt;</code> element in <code>WriteItem</code></h3>
+<p><strong>Decision:</strong> In <code>WriteItem</code>, the date is
+removed from the <code>&lt;h2&gt;</code> title string and emitted as a
+separate
+<code>&lt;time datetime="YYYY-MM-DD"&gt;YYYY-MM-DD&lt;/time&gt;</code>
+element (in a <code>&lt;p&gt;</code>) immediately below the heading,
+inside the <code>&lt;article&gt;</code> but outside the heading.</p>
+<p><strong>Why:</strong> Including the date in the heading’s text makes
+the accessible name of the article noisy for screen reader users
+(e.g. “Post Title date 2020-04-11” is announced as the heading). The
+<code>&lt;time&gt;</code> element with a <code>datetime</code> attribute
+is machine-readable and meaningful to search engines and AT. The date is
+supplementary metadata, not part of the article’s title.</p>
+<p><strong>Impact on CSS:</strong> Any CSS rule targeting
+<code>article h2</code> that also styles the date as part of the heading
+must be updated. This must be noted in documentation. The default CSS
+will account for the new structure.</p>
+<hr />
+<h3
+id="dec-020-warn-to-stderr-when-aggregate-page-has-no-visible-h1">DEC-020
+— Warn to stderr when aggregate page has no visible
+<code>&lt;h1&gt;</code></h3>
+<p><strong>Decision:</strong> When <code>WriteHTML</code> is called and
+<code>gen.Header</code> is empty, emit a warning to stderr:
+<code>warning: aggregate page has no &lt;h1&gt;; set a 'header' value in the generator YAML</code>.
+No automatic <code>&lt;h1&gt;</code> is injected.</p>
+<p><strong>Why:</strong> Injecting an <code>&lt;h1&gt;</code> from
+<code>gen.Title</code> would work for well-configured generators but
+would be surprising for authors who intentionally omit a visible
+heading. A warning preserves author control while prompting them to
+explicitly address the issue. WCAG 2.4.6 (Level AA) requires headings to
+describe content, so the absence deserves visibility.</p>
+<p><strong>Alternatives rejected:</strong> Auto-inject
+<code>&lt;h1&gt;gen.Title&lt;/h1&gt;</code> — silently modifies page
+structure; could duplicate a heading that already appears in
+<code>gen.Header</code> content.</p>
+<hr />
+<h3 id="dec-021-fix-relaltenate-typo">DEC-021 — Fix
+<code>rel="altenate"</code> typo</h3>
+<p><strong>Decision:</strong> Fix the typo on the Markdown source
+alternate link: <code>"altenate"</code> → <code>"alternate"</code>
+(html.go, <code>writeHeadElement</code>).</p>
+<p><strong>Why:</strong> This is a bug. The <code>rel</code> attribute
+value is not a valid link relationship. Browsers and feed discovery
+tools silently ignore unknown <code>rel</code> values, so the Markdown
+alternate link is never discoverable.</p>
+<hr />
+</section>
+</body>
+</html>

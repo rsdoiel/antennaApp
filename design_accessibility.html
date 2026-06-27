@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1
+id="antenna-app-design-html-accessibility-and-aria-improvements">Antenna
+App — Design: HTML Accessibility and ARIA Improvements</h1>
+<h2 id="goal">Goal</h2>
+<p>Bring generated HTML into conformance with WCAG 2.1 Level A (and
+selected Level AA) for the three page types <code>WriteHTML</code>
+(aggregate collection), <code>WriteHtmlPage</code> (posts and standalone
+pages), and the <code>WriteItem</code> helper that builds individual
+feed article cards.</p>
+<p>Decisions: DEC-016 through DEC-021 in <code>decisions.md</code>.</p>
+<hr />
+<h2 id="changes-by-component">Changes by component</h2>
+<h3 id="generator-struct-new-lang-field">1. <code>Generator</code>
+struct — new <code>Lang</code> field</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Generator <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... existing fields ...</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    Lang <span class="dt">string</span>  <span class="co">// html lang attribute, default &quot;en-US&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>NewGenerator</code> sets <code>Lang = "en-US"</code>.
+<code>LoadConfig</code> reads an optional <code>lang:</code> key from
+the generator YAML. Both <code>WriteHTML</code> and
+<code>WriteHtmlPage</code> write <code>&lt;html lang="%s"&gt;</code>
+with <code>gen.Lang</code>.</p>
+<hr />
+<h3 id="skip-navigation-link-both-page-types">2. Skip navigation link —
+both page types</h3>
+<p>Inserted as the first element of <code>&lt;body&gt;</code>, before
+any <code>&lt;header&gt;</code> or <code>&lt;nav&gt;</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;#main-content&quot;</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;skip-link&quot;</span><span class="dt">&gt;</span>Skip to main content<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>The target <code>&lt;main id="main-content"&gt;</code> already exists
+in both <code>WriteHTML</code> and <code>WriteHtmlPage</code>.</p>
+<p>CSS rule required in the default Antenna App stylesheet:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode css"><code class="sourceCode css"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.skip-link</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">position</span><span class="ch">:</span> <span class="dv">absolute</span><span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">top</span><span class="ch">:</span> <span class="dv">-999</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">left</span><span class="ch">:</span> <span class="dv">-999</span><span class="dt">px</span><span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">.skip-link</span><span class="in">:focus</span> {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">position</span><span class="ch">:</span> <span class="dv">static</span><span class="op">;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">top</span><span class="ch">:</span> <span class="bu">auto</span><span class="op">;</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">left</span><span class="ch">:</span> <span class="bu">auto</span><span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>This hides the link off-screen for mouse users and makes it visible
+on keyboard focus.</p>
+<hr />
+<h3 id="feed-item-article-structure-writeitem">3. Feed item article
+structure — <code>WriteItem</code></h3>
+<p><strong>Before:</strong></p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> data-published</span><span class="op">=</span><span class="st">&quot;DATE&quot;</span><span class="ot"> data-link</span><span class="op">=</span><span class="st">&quot;URL&quot;</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;…&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">h2</span><span class="dt">&gt;</span>Post Title</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>(date: 2020-04-11)<span class="dt">&lt;/</span><span class="kw">h2</span><span class="dt">&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>Description text.<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">address</span><span class="dt">&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;URL&quot;</span><span class="dt">&gt;</span>URL<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">address</span><span class="dt">&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">article</span><span class="dt">&gt;</span></span></code></pre></div>
+<p><strong>After:</strong></p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> data-published</span><span class="op">=</span><span class="st">&quot;DATE&quot;</span><span class="ot"> data-link</span><span class="op">=</span><span class="st">&quot;URL&quot;</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;…&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">h2</span><span class="dt">&gt;</span>Post Title<span class="dt">&lt;/</span><span class="kw">h2</span><span class="dt">&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;&lt;</span><span class="kw">time</span><span class="ot"> datetime</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="dt">&gt;</span>2020-04-11<span class="dt">&lt;/</span><span class="kw">time</span><span class="dt">&gt;&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>Description text.<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;URL&quot;</span><span class="dt">&gt;</span>URL<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">article</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Changes: - <code>(date: DATE)</code> removed from heading string;
+heading carries only the title text. - Date emitted as
+<code>&lt;p&gt;&lt;time datetime="YYYY-MM-DD"&gt;YYYY-MM-DD&lt;/time&gt;&lt;/p&gt;</code>
+below the heading. If <code>updated</code> differs from
+<code>pubDate</code>, both are shown:
+<code>&lt;time datetime="PUB"&gt;PUB&lt;/time&gt;, updated: &lt;time datetime="UPD"&gt;UPD&lt;/time&gt;</code>.
+- <code>&lt;address&gt;</code> replaced with
+<code>&lt;footer&gt;</code>.</p>
+<p>When <code>title</code> is empty the heading still exists with a
+label-only heading (e.g., <code>@channel</code>), and the
+<code>&lt;time&gt;</code> element is still emitted.</p>
+<hr />
+<h3 id="relaltenate-typo-fix-writeheadelement">4.
+<code>rel="altenate"</code> typo fix —
+<code>writeHeadElement</code></h3>
+<p>In <code>writeHeadElement</code>, the Markdown source alternate link
+changes:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Before</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;rel&quot;</span><span class="op">:</span>   <span class="st">&quot;altenate&quot;</span><span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// After</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;rel&quot;</span><span class="op">:</span>   <span class="st">&quot;alternate&quot;</span><span class="op">,</span></span></code></pre></div>
+<hr />
+<h3 id="no-header-warning-writehtml">5. No-header warning —
+<code>WriteHTML</code></h3>
+<p>When <code>gen.Header == ""</code>, <code>WriteHTML</code> prints to
+stderr:</p>
+<pre><code>warning: aggregate page has no &lt;h1&gt;; set a &#39;header&#39; value in the generator YAML</code></pre>
+<p>This is printed once per <code>WriteHTML</code> call, not per
+item.</p>
+<hr />
+<h2 id="css-impact-summary">CSS impact summary</h2>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>Change</th>
+<th>CSS impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skip link</td>
+<td>New <code>.skip-link</code> / <code>.skip-link:focus</code> rules
+needed in default CSS</td>
+</tr>
+<tr>
+<td><code>&lt;address&gt;</code> → <code>&lt;footer&gt;</code></td>
+<td><code>article address</code> selectors must become
+<code>article footer</code></td>
+</tr>
+<tr>
+<td>Date below heading</td>
+<td><code>article h2</code> selectors may need adjustment if they styled
+inline date text</td>
+</tr>
+<tr>
+<td><code>&lt;time&gt;</code> element</td>
+<td>New <code>article footer time</code> or <code>article p time</code>
+selectors for date styling</td>
+</tr>
+</tbody>
+</table>
+<p>These impacts must be noted in the aggregation list documentation
+page on the website.</p>
+<hr />
+<h2 id="files-modified">Files modified</h2>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>html.go</code></td>
+<td>All changes: <code>Generator.Lang</code>, skip link,
+<code>WriteItem</code> structure, typo fix, warning</td>
+</tr>
+<tr>
+<td><code>generator.go</code></td>
+<td><code>NewGenerator</code> sets <code>Lang = "en-US"</code>;
+<code>LoadConfig</code> reads <code>lang:</code> key</td>
+</tr>
+<tr>
+<td><code>html_test.go</code></td>
+<td>New and updated tests for all changed behaviours</td>
+</tr>
+<tr>
+<td><code>website/</code></td>
+<td>Document CSS impact for aggregation lists</td>
+</tr>
+</tbody>
+</table>
+<p>No schema changes. No migration scripts required.</p>
+<hr />
+<h2 id="html-examples">HTML examples</h2>
+<h3 id="post-page-body-opening-after">Post page
+<code>&lt;body&gt;</code> opening (after):</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;#main-content&quot;</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;skip-link&quot;</span><span class="dt">&gt;</span>Skip to main content<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">nav</span><span class="ot"> aria-label</span><span class="op">=</span><span class="st">&quot;Site navigation&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    …</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">nav</span><span class="dt">&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">main</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;main-content&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> data-published</span><span class="op">=</span><span class="st">&quot;2026-04-15&quot;</span><span class="ot"> data-link</span><span class="op">=</span><span class="st">&quot;…&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&lt;</span><span class="kw">h1</span><span class="dt">&gt;</span>Post Title<span class="dt">&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>By Author, <span class="dt">&lt;</span><span class="kw">time</span><span class="ot"> datetime</span><span class="op">=</span><span class="st">&quot;2026-04-15&quot;</span><span class="dt">&gt;</span>2026-04-15<span class="dt">&lt;/</span><span class="kw">time</span><span class="dt">&gt;&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>      …</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">article</span><span class="dt">&gt;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">main</span><span class="dt">&gt;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Note: the “By Author, DATE” line on post pages is part of the
+rendered Markdown body, not generated by the HTML template. The
+<code>&lt;time&gt;</code> element in post body text is not in scope for
+this change — that comes from the author’s Markdown.</p>
+<h3 id="aggregate-collection-page-single-item-card-after">Aggregate
+collection page — single item card (after):</h3>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> data-published</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="ot"> data-link</span><span class="op">=</span><span class="st">&quot;https://example.com/post&quot;</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;…&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">h2</span><span class="dt">&gt;</span>Post Title<span class="dt">&lt;/</span><span class="kw">h2</span><span class="dt">&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;&lt;</span><span class="kw">time</span><span class="ot"> datetime</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="dt">&gt;</span>2020-04-11<span class="dt">&lt;/</span><span class="kw">time</span><span class="dt">&gt;&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>Short description of the post.<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;https://example.com/post&quot;</span><span class="dt">&gt;</span>https://example.com/post<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">article</span><span class="dt">&gt;</span></span></code></pre></div>
+</section>
+</body>
+</html>

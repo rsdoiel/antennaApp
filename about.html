@@ -20,22 +20,16 @@
 </nav>
 <section>
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.24">antennaApp 0.0.24</h2>
+<h2 id="antennaapp-0.0.24c">antennaApp 0.0.24c</h2>
 <ul>
-<li>improved generated HTML accessibility: viewport meta emitted
-automatically, article titles use h2 for correct heading hierarchy,
-content area uses main landmark, nav has aria-label, skip-navigation
-link supported, aria-expanded set on collapsible elements</li>
-<li>collection Title from antenna.yaml now used as the HTML page title
-when the generator YAML does not set one</li>
-<li>collection names no longer require the .md extension on the command
-line (e.g. ‘antenna harvest pacific’ works alongside ‘antenna harvest
-pacific.md’)</li>
-<li>OpenDocument Format (.odt/.ott) removed from user-facing help text
-and interactive mode; underlying code remains for future use when a
-dedicated ODF module is ready</li>
-<li>fixed bug: OPML files are now only written when a collection has
-harvested feed content; empty OPML files are no longer created</li>
+<li>fixed RSS rendering for aggregated feeds</li>
+<li>Improved metadata in head of HTML pages by incorporating the front
+matter of the collections or blog posts</li>
+<li>Improved HTML accessibility and ARIA support in generated pages</li>
+<li>Improved listing of posts, items, themes and pages</li>
+<li>Added a default theme structure</li>
+<li>Improved metadata handling for pages, posts and feed items</li>
+<li>Added configurable CSS support</li>
 </ul>
 <h2 id="authors">Authors</h2>
 <ul>

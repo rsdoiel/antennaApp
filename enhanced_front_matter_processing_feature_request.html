@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="enhanced-front-matter-processing-feature-request">Enhanced Front
+Matter Processing Feature Request</h1>
+<h2 id="summary">Summary</h2>
+<p>Two related improvements to front matter handling in Antenna App:</p>
+<ol type="1">
+<li><strong>Proper front matter stripping in
+<code>GeneratePosts</code></strong> — the current path renders YAML
+front matter as visible body text, which is a bug.</li>
+<li><strong>Front matter → standard HTML metadata and PageFind filter
+attributes</strong> — emit <code>&lt;meta&gt;</code> elements in
+<code>&lt;head&gt;</code> from front matter fields, and
+<code>data-pagefind-filter</code> meta elements to enable faceted search
+in PageFind 1.5+.</li>
+</ol>
+<p>These changes make Antenna App a turnkey CMS that works with PageFind
+out of the box, without requiring any post-processing step.</p>
+<hr />
+<h2 id="background">Background</h2>
+<h3 id="the-generateposts-bug-generator.go314">The
+<code>GeneratePosts</code> bug (generator.go:314)</h3>
+<p><code>GeneratePosts</code> stores raw Markdown (including YAML front
+matter) in the database and later creates a <code>CommonMark</code>
+struct without parsing it:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// current — wrong</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{</span>Text<span class="op">:</span> sourceMarkdown<span class="op">}</span></span></code></pre></div>
+<p>Because <code>doc.Parse()</code> is never called,
+<code>doc.FrontMatter</code> is empty and <code>doc.Text</code> contains
+the full source including the <code>---</code> delimiters. When goldmark
+converts that to HTML, the <code>---</code> delimiters become
+<code>&lt;hr&gt;</code> elements and the YAML becomes a visible
+paragraph in the page body.</p>
+<p>The <code>antenna page</code> path (page.go:160) uses
+<code>LoadCommonMark</code>, which correctly calls
+<code>doc.Parse()</code>, so pages work as expected. Posts do not.</p>
+<h3 id="standard-html-metadata">Standard HTML metadata</h3>
+<p>Common front matter fields (<code>title</code>,
+<code>description</code>/<code>abstract</code>, <code>author</code>,
+<code>keywords</code>, <code>datePublished</code>) should be reflected
+as standard <code>&lt;meta&gt;</code> elements in the
+<code>&lt;head&gt;</code>. This improves SEO, social sharing, and
+accessibility tooling. Currently none of these are emitted from front
+matter.</p>
+<h3 id="pagefind-faceted-search">PageFind faceted search</h3>
+<p>PageFind 1.5+ supports faceted/filter search via
+<code>data-pagefind-filter</code> attributes in the page HTML, captured
+at index time. Without these attributes the
+<code>&lt;pagefind-filter-pane&gt;</code> and
+<code>&lt;pagefind-filter-dropdown&gt;</code> components remain empty.
+The fields most useful for filtering a blog are <code>keywords</code>,
+<code>series</code>, <code>author</code>, and
+<code>datePublished</code>.</p>
+<p>PageFind filters work with <code>&lt;meta&gt;</code> elements in
+<code>&lt;head&gt;</code>, even outside <code>&lt;body&gt;</code>,
+making head meta the cleanest place to put per-page filter values.</p>
+<hr />
+<h2 id="proposed-changes">Proposed Changes</h2>
+<h3 id="cmarkdoc.go-add-a-slice-helper">1. <code>cmarkdoc.go</code> —
+add a slice helper</h3>
+<p>Add a helper method next to the existing
+<code>GetAttributeString</code> and <code>GetAttributeBool</code>:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// GetAttributeStringSlice returns a []string for a front matter key whose</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// value is either a YAML sequence or a plain string. Returns nil if absent.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>doc <span class="op">*</span>CommonMark<span class="op">)</span> GetAttributeStringSlice<span class="op">(</span>key <span class="dt">string</span><span class="op">)</span> <span class="op">[]</span><span class="dt">string</span> <span class="op">{</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    val<span class="op">,</span> ok <span class="op">:=</span> doc<span class="op">.</span>FrontMatter<span class="op">[</span>key<span class="op">]</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>ok <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> v <span class="op">:=</span> val<span class="op">.(</span><span class="kw">type</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="dt">string</span><span class="op">:</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> v <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span>v<span class="op">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="op">[]</span><span class="kw">interface</span><span class="op">{}:</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        out <span class="op">:=</span> <span class="bu">make</span><span class="op">([]</span><span class="dt">string</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="bu">len</span><span class="op">(</span>v<span class="op">))</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> item <span class="op">:=</span> <span class="kw">range</span> v <span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> s<span class="op">,</span> ok <span class="op">:=</span> item<span class="op">.(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> s <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>                out <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>out<span class="op">,</span> s<span class="op">)</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> out</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="generator.go-fix-generateposts-around-line-314">2.
+<code>generator.go</code> — fix <code>GeneratePosts</code> (around line
+314)</h3>
+<p>Replace the bare struct literal with a proper parse, preserving the
+existing fallback behaviour:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{</span>Text<span class="op">:</span> sourceMarkdown<span class="op">}</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> doc<span class="op">.</span>Parse<span class="op">([]</span><span class="dt">byte</span><span class="op">(</span>sourceMarkdown<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// malformed front matter — treat entire source as body text</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    doc<span class="op">.</span>Text <span class="op">=</span> sourceMarkdown</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Also update the <code>WriteHtmlPage</code> call (line 334) to pass
+the front matter:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">,</span> doc<span class="op">.</span>FrontMatter<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span></code></pre></div>
+<h3 id="html.go-extend-writeheadelement">3. <code>html.go</code> —
+extend <code>writeHeadElement</code></h3>
+<p>Change the signature to accept front matter:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> writeHeadElement<span class="op">(</span>out io<span class="op">.</span>Writer<span class="op">,</span> postPath <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> writeHeadElement<span class="op">(</span>out io<span class="op">.</span>Writer<span class="op">,</span> postPath <span class="dt">string</span><span class="op">,</span> frontMatter <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span></span></code></pre></div>
+<p>After the existing <code>&lt;meta&gt;</code> and
+<code>&lt;link&gt;</code> blocks, emit front matter–derived metadata.
+The <code>&lt;title&gt;</code> should prefer the front matter
+<code>title</code> over <code>gen.Title</code> when present:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Standard HTML metadata from front matter</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> frontMatter <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Override page title with post-specific title when present</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> t<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;title&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> t <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;title&gt;%s&lt;/title&gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> t<span class="op">)</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// description — prefer &quot;abstract&quot; then &quot;description&quot;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    desc <span class="op">:=</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;abstract&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> v <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        desc <span class="op">=</span> v</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> v<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;description&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> v <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        desc <span class="op">=</span> v</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> desc <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;meta name=</span><span class="ch">\&quot;</span><span class="st">description</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> desc<span class="op">)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// author</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;author&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> v <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;meta name=</span><span class="ch">\&quot;</span><span class="st">author</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> v<span class="op">)</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// datePublished</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;datePublished&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> v <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;meta name=</span><span class="ch">\&quot;</span><span class="st">datePublished</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> v<span class="op">)</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">// keywords — emit one combined &lt;meta name=&quot;keywords&quot;&gt; and one</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// data-pagefind-filter meta per keyword for PageFind faceted search</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{</span>FrontMatter<span class="op">:</span> frontMatter<span class="op">}</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    keywords <span class="op">:=</span> doc<span class="op">.</span>GetAttributeStringSlice<span class="op">(</span><span class="st">&quot;keywords&quot;</span><span class="op">)</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>keywords<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;meta name=</span><span class="ch">\&quot;</span><span class="st">keywords</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>            strings<span class="op">.</span>Join<span class="op">(</span>keywords<span class="op">,</span> <span class="st">&quot;, &quot;</span><span class="op">))</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> kw <span class="op">:=</span> <span class="kw">range</span> keywords <span class="op">{</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>            fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;  &lt;meta data-pagefind-filter=</span><span class="ch">\&quot;</span><span class="st">keywords[content]</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> kw<span class="op">)</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">// series — one data-pagefind-filter meta per entry</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    series <span class="op">:=</span> doc<span class="op">.</span>GetAttributeStringSlice<span class="op">(</span><span class="st">&quot;series&quot;</span><span class="op">)</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> s <span class="op">:=</span> <span class="kw">range</span> series <span class="op">{</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;  &lt;meta data-pagefind-filter=</span><span class="ch">\&quot;</span><span class="st">series[content]</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> s<span class="op">)</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    <span class="co">// author as a pagefind filter (single value)</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;author&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> v <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;  &lt;meta data-pagefind-filter=</span><span class="ch">\&quot;</span><span class="st">author[content]</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> v<span class="op">)</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    <span class="co">// datePublished as a pagefind filter</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;datePublished&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> v <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;  &lt;meta data-pagefind-filter=</span><span class="ch">\&quot;</span><span class="st">datePublished[content]</span><span class="ch">\&quot;</span><span class="st"> content=%q &gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> v<span class="op">)</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Update the two internal callers of <code>writeHeadElement</code>:</p>
+<ul>
+<li><code>WriteHTML</code> (line 174):
+<code>gen.writeHeadElement(out, "", nil)</code> — collection aggregate
+pages have no single-post front matter.</li>
+<li><code>WriteHtmlPage</code> (line 285):
+<code>gen.writeHeadElement(out, postPath, frontMatter)</code>.</li>
+</ul>
+<h3 id="html.go-extend-writehtmlpage">4. <code>html.go</code> — extend
+<code>WriteHtmlPage</code></h3>
+<p>Add <code>frontMatter map[string]interface{}</code> as the last
+parameter:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> WriteHtmlPage<span class="op">(</span>htmlName <span class="dt">string</span><span class="op">,</span> link <span class="dt">string</span><span class="op">,</span> postPath<span class="op">,</span> pubDate <span class="dt">string</span><span class="op">,</span> innerHTML <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> WriteHtmlPage<span class="op">(</span>htmlName <span class="dt">string</span><span class="op">,</span> link <span class="dt">string</span><span class="op">,</span> postPath<span class="op">,</span> pubDate <span class="dt">string</span><span class="op">,</span> innerHTML <span class="dt">string</span><span class="op">,</span> frontMatter <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span></span></code></pre></div>
+<p>Pass it through to <code>writeHeadElement</code> (change described
+above).</p>
+<p>No change is needed to the <code>&lt;article&gt;</code> element
+itself: <code>datePublished</code> is already surfaced via
+<code>data-published</code> and will be captured by the
+<code>data-pagefind-filter</code> meta element in
+<code>&lt;head&gt;</code>.</p>
+<h3 id="page.go-pass-front-matter-from-page-line-205">5.
+<code>page.go</code> — pass front matter from <code>Page</code> (line
+205)</h3>
+<p><code>Page</code> already has <code>doc.FrontMatter</code> available
+after <code>LoadCommonMark</code>. Update the call:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> postPath<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> innerHTML<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> postPath<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> innerHTML<span class="op">,</span> doc<span class="op">.</span>FrontMatter<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span></code></pre></div>
+<hr />
+<h2 id="resulting-html-example">Resulting HTML (example)</h2>
+<p>For a blog post with this front matter:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> Mostly Oberon</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">author</span><span class="kw">:</span><span class="at"> R. S. Doiel</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">datePublished</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;2020-04-11&#39;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">keywords</span><span class="kw">:</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> Oberon</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> programming</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">series</span><span class="kw">:</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> mostly-oberon</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">abstract</span><span class="kw">:</span><span class="at"> An introduction to the Oberon programming language.</span></span></code></pre></div>
+<p>The generated <code>&lt;head&gt;</code> would include:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>Mostly Oberon<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;description&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;An introduction to the Oberon programming language.&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;author&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;R. S. Doiel&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;datePublished&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;keywords&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;Oberon, programming&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;keywords[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;Oberon&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;keywords[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;programming&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;series[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;mostly-oberon&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;author[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;R. S. Doiel&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;datePublished[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="ot"> </span><span class="dt">&gt;</span></span></code></pre></div>
+<p>And the post body would contain only the post content — no rendered
+YAML.</p>
+<hr />
+<h2 id="search-page-integration">Search Page Integration</h2>
+<p>Once these changes are built, the <code>search.md</code> on the
+website can be updated to use PageFind’s faceted search components:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">pagefind-config</span><span class="ot"> faceted preload</span><span class="dt">&gt;&lt;/</span><span class="kw">pagefind-config</span><span class="dt">&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">pagefind-input</span><span class="ot"> placeholder</span><span class="op">=</span><span class="st">&quot;Search…&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">pagefind-input</span><span class="dt">&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">pagefind-filter-pane</span><span class="dt">&gt;&lt;/</span><span class="kw">pagefind-filter-pane</span><span class="dt">&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">pagefind-summary</span><span class="dt">&gt;&lt;/</span><span class="kw">pagefind-summary</span><span class="dt">&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">pagefind-results</span><span class="dt">&gt;&lt;/</span><span class="kw">pagefind-results</span><span class="dt">&gt;</span></span></code></pre></div>
+<p><code>&lt;pagefind-filter-pane&gt;</code> auto-discovers all indexed
+filter keys (<code>keywords</code>, <code>series</code>,
+<code>author</code>, <code>datePublished</code>) and renders collapsible
+groups for each. The <code>faceted</code> flag makes an empty search
+return all results so readers can browse by filter alone. The
+<code>preload</code> flag loads the index immediately on page load.</p>
+<hr />
+<h2 id="files-changed">Files Changed</h2>
+<table>
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 57%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cmarkdoc.go</code></td>
+<td>Add <code>GetAttributeStringSlice</code> helper</td>
+</tr>
+<tr>
+<td><code>generator.go</code></td>
+<td>Fix <code>GeneratePosts</code> to call <code>doc.Parse()</code>;
+update <code>WriteHtmlPage</code> call signature</td>
+</tr>
+<tr>
+<td><code>html.go</code></td>
+<td>Add <code>frontMatter</code> param to <code>writeHeadElement</code>
+and <code>WriteHtmlPage</code>; emit standard and pagefind meta
+elements</td>
+</tr>
+<tr>
+<td><code>page.go</code></td>
+<td>Pass <code>doc.FrontMatter</code> to <code>WriteHtmlPage</code></td>
+</tr>
+</tbody>
+</table>
+<p>No database schema changes are required. No new dependencies are
+needed.</p>
+</section>
+</body>
+</html>

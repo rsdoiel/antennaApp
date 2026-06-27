@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="design-enhanced-metadata-processing">Design: Enhanced Metadata
+Processing</h1>
+<p>Covers the implementation of decisions DEC-001 through DEC-015 from
+<code>decisions.md</code>. See also:
+<code>enhanced_front_matter_processing_feature_request.md</code>
+(original request).</p>
+<hr />
+<h2 id="scope">Scope</h2>
+<p>Three related improvements implemented together:</p>
+<ol type="1">
+<li><strong>Bug fix</strong> — <code>GeneratePosts</code> renders YAML
+front matter as visible body text. Fix by calling
+<code>doc.Parse()</code> before converting to HTML (DEC-001).</li>
+<li><strong>Schema extension</strong> — add <code>categories</code>
+column to <code>items</code> to preserve feed item category data that is
+currently discarded on harvest (DEC-002).</li>
+<li><strong>Metadata rendering</strong> — emit front matter and feed
+item metadata as standard HTML <code>&lt;meta&gt;</code> elements and
+PageFind 1.5+ filter attributes (DEC-008 through DEC-015).</li>
+</ol>
+<hr />
+<h2 id="two-rendering-paths">Two rendering paths</h2>
+<p>The choice of rendering path is determined by the HTML output type
+(DEC-008):</p>
+<pre><code>Source document
+  │
+  ├─ Post or Page (one HTML file = one document)
+  │     Front matter fields → &lt;meta&gt; elements in &lt;head&gt;
+  │     data-pagefind-filter on each &lt;meta&gt; element
+  │
+  └─ Aggregate feed page (one HTML file = many items)
+        Per-item metadata → data-pagefind-filter on each &lt;article&gt; element
+        (head metadata applies to the whole page, not individual items)</code></pre>
+<hr />
+<h2 id="schema-changes">Schema changes</h2>
+<h3 id="items-table-new-categories-column"><code>items</code> table —
+new <code>categories</code> column</h3>
+<p>Add to <code>SQLCreateTables</code> in <code>sql_stmts.go</code>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> items (</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">link</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    postPath TEXT <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    title TEXT,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    description TEXT,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    authors JSON,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    enclosures JSON <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    guid TEXT,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    pubDate DATETIME,</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    dcExt JSON,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    channel TEXT,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    sourceMarkdown TEXT <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    status TEXT <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">label</span> TEXT <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    updated DATETIME,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    categories JSON <span class="kw">DEFAULT</span> <span class="st">&#39;&#39;</span>        <span class="co">-- NEW</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>Update <code>SQLUpdateItem</code> to include <code>categories</code>
+in both INSERT and ON CONFLICT UPDATE.</p>
+<p>Update <code>SQLDisplayItems</code> to SELECT <code>categories</code>
+so <code>WriteHTML</code> can pass it to <code>WriteItem</code>.</p>
+<p>Note: the broader schema upgrade strategy
+(<code>sql_upgrade.go</code>, <code>antenna upgrade</code> command) is
+tracked in <code>development_notes.md</code>. The migration for this
+column follows the same pattern using <code>pragma_table_info</code> to
+guard the ALTER statement.</p>
+<hr />
+<h2 id="new-component-getattributestringslice-in-cmarkdoc.go">New
+component: <code>GetAttributeStringSlice</code> in
+<code>cmarkdoc.go</code></h2>
+<p>A helper alongside the existing <code>GetAttributeString</code> and
+<code>GetAttributeBool</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>doc <span class="op">*</span>CommonMark<span class="op">)</span> GetAttributeStringSlice<span class="op">(</span>key <span class="dt">string</span><span class="op">)</span> <span class="op">[]</span><span class="dt">string</span></span></code></pre></div>
+<p>Behaviour: - Key absent → return nil - Value is a <code>string</code>
+→ return <code>[]string{value}</code> (or nil if empty) - Value is
+<code>[]interface{}</code> → return each element cast to string,
+skipping empty values - Any other type → return nil</p>
+<p>Used by <code>writeHeadElement</code> to iterate multi-value front
+matter fields such as <code>keywords</code>, <code>series</code>, and
+<code>categories</code>.</p>
+<hr />
+<h2 id="generator-struct-addition">Generator struct addition</h2>
+<p>In <code>generator.go</code>, add to the <code>Generator</code>
+struct (DEC-010):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// AllowedMetaFields, when non-empty, limits which front matter keys are</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">// emitted as HTML metadata for posts and pages. When empty, all keys</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">// are emitted (default).</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>AllowedMetaFields <span class="op">[]</span><span class="dt">string</span> <span class="st">`json:&quot;allowed_meta_fields,omitempty&quot; yaml:&quot;allowed_meta_fields,omitempty&quot;`</span></span></code></pre></div>
+<p>Example in a generator YAML file:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">allowed_meta_fields</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> title</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> author</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> keywords</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> series</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> seriesNumber</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> datePublished</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> abstract</span></span></code></pre></div>
+<p>When this list is absent or empty every front matter key is emitted,
+including <code>postPath</code>, <code>guid</code>,
+<code>dateModified</code>, and any custom fields (DEC-009).</p>
+<hr />
+<h2 id="modified-writeheadelement-in-html.go">Modified:
+<code>writeHeadElement</code> in <code>html.go</code></h2>
+<h3 id="signature-change">Signature change</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> writeHeadElement<span class="op">(</span>out io<span class="op">.</span>Writer<span class="op">,</span> postPath <span class="dt">string</span><span class="op">)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> writeHeadElement<span class="op">(</span>out io<span class="op">.</span>Writer<span class="op">,</span> postPath <span class="dt">string</span><span class="op">,</span> frontMatter <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span></span></code></pre></div>
+<h3 id="title-logic-dec-011">Title logic (DEC-011)</h3>
+<p>The <code>&lt;title&gt;</code> element is written once. Priority:</p>
+<ol type="1">
+<li><code>frontMatter["title"]</code> (string, non-empty) — use
+this.</li>
+<li><code>gen.Title</code> (non-empty) — use this.</li>
+<li>Neither set — no <code>&lt;title&gt;</code> element emitted.</li>
+</ol>
+<p>This replaces the current unconditional <code>gen.Title</code>
+write.</p>
+<h3 id="front-matter-metadata-block">Front matter metadata block</h3>
+<p>After all existing <code>&lt;meta&gt;</code>,
+<code>&lt;link&gt;</code>, and <code>&lt;script&gt;</code> elements,
+emit front matter metadata when <code>frontMatter</code> is non-nil:</p>
+<pre><code>for each key in frontMatter:
+    if AllowedMetaFields is non-empty and key not in AllowedMetaFields → skip
+    if key == &quot;title&quot; → skip (already handled in &lt;title&gt; above)
+
+    values = GetAttributeStringSlice(key)
+    if values is nil:
+        values = [string representation of value] if value is a non-empty string
+    if values is empty → skip
+
+    for each value in values:
+        emit: &lt;meta name=&quot;KEY&quot; content=&quot;VALUE&quot;&gt;
+              &lt;meta data-pagefind-filter=&quot;KEY[content]&quot; content=&quot;VALUE&quot;&gt;</code></pre>
+<p>Both <code>&lt;meta&gt;</code> elements share the same
+<code>content</code> attribute value; the
+<code>data-pagefind-filter</code> attribute instructs PageFind to read
+from <code>content</code> as the filter value.</p>
+<h3 id="callers-after-change">Callers after change</h3>
+<table>
+<thead>
+<tr>
+<th>Caller</th>
+<th>Argument passed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WriteHTML</code> — aggregate page</td>
+<td><code>nil</code> — no single-post front matter</td>
+</tr>
+<tr>
+<td><code>WriteHtmlPage</code></td>
+<td><code>frontMatter</code> parameter (forwarded from caller)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="modified-writehtmlpage-in-html.go">Modified:
+<code>WriteHtmlPage</code> in <code>html.go</code></h2>
+<h3 id="signature-change-1">Signature change</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    frontMatter <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span></span></code></pre></div>
+<p><code>frontMatter</code> is forwarded to
+<code>writeHeadElement</code>. No other change to the function body.</p>
+<h3 id="call-sites">Call sites</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Function</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>generator.go</code></td>
+<td><code>GeneratePosts</code></td>
+<td>Fix <code>doc.Parse()</code> bug; pass
+<code>doc.FrontMatter</code></td>
+</tr>
+<tr>
+<td><code>schema.go</code></td>
+<td><code>Post()</code></td>
+<td>Pass <code>doc.FrontMatter</code> (already available)</td>
+</tr>
+<tr>
+<td><code>page.go</code></td>
+<td><code>Page()</code></td>
+<td>Pass <code>doc.FrontMatter</code> (already available; no Parse
+bug)</td>
+</tr>
+</tbody>
+</table>
+<p><code>GeneratePages</code> delegates to <code>Page()</code> — covered
+automatically.</p>
+<hr />
+<h2 id="modified-generateposts-in-generator.go">Modified:
+<code>GeneratePosts</code> in <code>generator.go</code></h2>
+<p>Replace the bare struct literal (DEC-001):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{</span>Text<span class="op">:</span> sourceMarkdown<span class="op">}</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> doc<span class="op">.</span>Parse<span class="op">([]</span><span class="dt">byte</span><span class="op">(</span>sourceMarkdown<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// malformed front matter — treat entire source as body text</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    doc<span class="op">.</span>Text <span class="op">=</span> sourceMarkdown</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Then update the <code>WriteHtmlPage</code> call to pass
+<code>doc.FrontMatter</code>:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">,</span> doc<span class="op">.</span>FrontMatter<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span></code></pre></div>
+<hr />
+<h2 id="modified-saveitem-in-harvest.go">Modified: <code>saveItem</code>
+in <code>harvest.go</code></h2>
+<p>Marshal <code>item.Categories</code> and pass to the updated
+<code>updateItem</code>:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> categories <span class="op">[]</span><span class="dt">byte</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> item<span class="op">.</span>Categories <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">,</span> err <span class="op">=</span> json<span class="op">.</span>Marshal<span class="op">(</span>item<span class="op">.</span>Categories<span class="op">)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;failed to marshal item.Categories, %s&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Pass <code>string(categories)</code> as the new argument to
+<code>updateItem</code>.</p>
+<hr />
+<h2 id="modified-updateitem-in-schema.go">Modified:
+<code>updateItem</code> in <code>schema.go</code></h2>
+<p>Add <code>categories string</code> parameter. Pass it through to
+<code>SQLUpdateItem</code>.</p>
+<p>The <code>Post()</code> caller extracts categories from front
+matter:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In Post(), after doc.Parse():</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> categoriesSrc <span class="op">[]</span><span class="dt">byte</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> cats <span class="op">:=</span> doc<span class="op">.</span>GetAttributeStringSlice<span class="op">(</span><span class="st">&quot;categories&quot;</span><span class="op">);</span> <span class="bu">len</span><span class="op">(</span>cats<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    categoriesSrc<span class="op">,</span> _ <span class="op">=</span> json<span class="op">.</span>Marshal<span class="op">(</span>cats<span class="op">)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">// pass string(categoriesSrc) to updateItem</span></span></code></pre></div>
+<hr />
+<h2 id="modified-writeitem-in-html.go">Modified: <code>WriteItem</code>
+in <code>html.go</code></h2>
+<h3 id="signature-change-2">Signature change</h3>
+<p>Add <code>categories string</code> parameter (JSON-encoded
+<code>[]string</code>):</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> WriteItem<span class="op">(</span>out io<span class="op">.</span>Writer<span class="op">,</span> link<span class="op">,</span> title<span class="op">,</span> description <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    authors <span class="op">[]*</span>gofeed<span class="op">.</span>Person<span class="op">,</span> sourceMarkdown <span class="dt">string</span><span class="op">,</span> enclosures <span class="op">[]*</span>Enclosure<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    guid<span class="op">,</span> pubDate<span class="op">,</span> dcExtSrc<span class="op">,</span> channel<span class="op">,</span> status<span class="op">,</span> updated<span class="op">,</span> label <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    categories <span class="dt">string</span><span class="op">)</span> <span class="dt">error</span>   <span class="co">// NEW parameter</span></span></code></pre></div>
+<p><code>dcExtSrc</code> is already passed but currently unused for
+filter rendering. Both <code>dcExtSrc</code> and <code>categories</code>
+are now used to build the <code>data-pagefind-filter</code> attribute
+value.</p>
+<h3 id="filter-attribute-construction">Filter attribute
+construction</h3>
+<p>Build a <code>[]string</code> of <code>"key:value"</code> entries,
+then join with <code>", "</code> as the attribute value:</p>
+<pre><code>filters = []
+
+// Categories (RSS/Atom &lt;category&gt;)
+unmarshal categories JSON → []string
+for each cat: append &quot;category:CAT&quot;
+
+// Dublin Core fields (DEC-004, DEC-005)
+unmarshal dcExtSrc JSON → ext.DublinCoreExtension
+for each non-empty DC field and each value in that field&#39;s []string:
+    append &quot;dc_FIELDNAME:VALUE&quot;
+    (field name lowercased: dc_creator, dc_subject, dc_date, etc.)
+
+// Authors (native feed authors)
+for each author in authors where author.Name != &quot;&quot;:
+    append &quot;author:NAME&quot;
+
+// Publication date
+if pubDate != &quot;&quot;: append &quot;datePublished:PUBDATE&quot;
+
+// Feed provenance (DEC-007)
+if label != &quot;&quot;: append &quot;label:LABEL&quot;
+if channel != &quot;&quot;: append &quot;channel:CHANNEL&quot;</code></pre>
+<p>Emit on <code>&lt;article&gt;</code> only when <code>filters</code>
+is non-empty:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- with filters --&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> data-published</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="ot"> data-link</span><span class="op">=</span><span class="st">&quot;https://…&quot;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ot">         data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;category:Oberon, dc_subject:Programming Languages, author:R. S. Doiel, datePublished:2020-04-11, label:My Feed, channel:https://example.com/feed.xml&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">&lt;!-- without filters (no change from current output) --&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> data-published</span><span class="op">=</span><span class="st">&quot;&quot;</span><span class="ot"> data-link</span><span class="op">=</span><span class="st">&quot;https://…&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+<h3 id="caller-update-in-writehtml">Caller update in
+<code>WriteHTML</code></h3>
+<p><code>WriteHTML</code> scans <code>SQLDisplayItems</code> which now
+includes <code>categories</code>. The scan and <code>WriteItem</code>
+call gain the <code>categories</code> column value.</p>
+<hr />
+<h2 id="html-output-examples">HTML output examples</h2>
+<h3 id="standalone-post-page-head-section">Standalone post page —
+<code>&lt;head&gt;</code> section</h3>
+<p>Front matter:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> Mostly Oberon</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">author</span><span class="kw">:</span><span class="at"> R. S. Doiel</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">datePublished</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;2020-04-11&#39;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">keywords</span><span class="kw">:</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> Oberon</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> programming</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">series</span><span class="kw">:</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> mostly-oberon</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">seriesNumber</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="fu">abstract</span><span class="kw">:</span><span class="at"> An introduction to the Oberon programming language.</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="fu">postPath</span><span class="kw">:</span><span class="at"> posts/2020/04/11/mostly-oberon.md</span></span></code></pre></div>
+<p>Generated <code>&lt;head&gt;</code> (excerpt — existing
+charset/viewport/generator meta omitted):</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>Mostly Oberon<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;author&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;R. S. Doiel&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;author[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;R. S. Doiel&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;datePublished&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;datePublished[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;keywords&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;Oberon&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;keywords[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;Oberon&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;keywords&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;programming&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;keywords[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;programming&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;series&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;mostly-oberon&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;series[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;mostly-oberon&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;seriesNumber&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;seriesNumber[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;abstract&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;An introduction to the Oberon programming language.&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;abstract[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;An introduction to the Oberon programming language.&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;postPath&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;posts/2020/04/11/mostly-oberon.md&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;postPath[content]&quot;</span><span class="ot"> content</span><span class="op">=</span><span class="st">&quot;posts/2020/04/11/mostly-oberon.md&quot;</span><span class="dt">&gt;</span></span></code></pre></div>
+<h3 id="aggregate-page-article-element">Aggregate page —
+<code>&lt;article&gt;</code> element</h3>
+<p>Feed item with categories, DC extension, and authors:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">article</span><span class="ot"> data-published</span><span class="op">=</span><span class="st">&quot;2020-04-11&quot;</span><span class="ot"> data-link</span><span class="op">=</span><span class="st">&quot;https://example.com/item&quot;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ot">         data-pagefind-filter</span><span class="op">=</span><span class="st">&quot;category:Oberon, category:programming, dc_creator:R. S. Doiel, dc_subject:Programming Languages, author:R. S. Doiel, datePublished:2020-04-11, label:My Feed, channel:https://example.com/feed.xml&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">h2</span><span class="dt">&gt;</span>Mostly Oberon<span class="dt">&lt;/</span><span class="kw">h2</span><span class="dt">&gt;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  …</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">article</span><span class="dt">&gt;</span></span></code></pre></div>
+<hr />
+<h2 id="migration-scripts">Migration scripts</h2>
+<p>Two scripts to add the <code>categories</code> column to existing
+databases. Both guard against re-running on an already-migrated
+database.</p>
+<h3
+id="migrate_categories.bash"><code>migrate_categories.bash</code></h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Adds the categories column to the items table in an Antenna App database.</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Usage: migrate_categories.bash PATH_TO_DATABASE.db</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="va">DB</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${1</span><span class="op">:?</span>usage: <span class="va">$0</span> PATH_TO_DATABASE.db<span class="va">}</span><span class="st">&quot;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="va">EXISTS</span><span class="op">=</span><span class="va">$(</span><span class="ex">sqlite3</span> <span class="st">&quot;</span><span class="va">$DB</span><span class="st">&quot;</span> <span class="dt">\</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;SELECT COUNT(*) FROM pragma_table_info(&#39;items&#39;) WHERE name=&#39;categories&#39;;&quot;</span><span class="va">)</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">&quot;</span><span class="va">$EXISTS</span><span class="st">&quot;</span> <span class="ot">-eq</span> <span class="st">&quot;0&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="ex">sqlite3</span> <span class="st">&quot;</span><span class="va">$DB</span><span class="st">&quot;</span> <span class="st">&quot;ALTER TABLE items ADD COLUMN categories JSON DEFAULT &#39;&#39;;&quot;</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;Migrated: </span><span class="va">$DB</span><span class="st">&quot;</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;Already migrated: </span><span class="va">$DB</span><span class="st">&quot;</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div>
+<h3 id="migrate_categories.ps1"><code>migrate_categories.ps1</code></h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Adds the categories column to the items table in an Antenna App database.</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Usage: .\migrate_categories.ps1 -DB PATH_TO_DATABASE.db</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">param</span><span class="op">([</span>Parameter<span class="op">(</span>Mandatory<span class="op">)][</span><span class="dt">string</span><span class="op">]</span><span class="va">$DB</span><span class="op">)</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="va">$exists</span> <span class="op">=</span> sqlite3 <span class="va">$DB</span> `</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;SELECT COUNT(*) FROM pragma_table_info(&#39;items&#39;) WHERE name=&#39;categories&#39;;&quot;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span><span class="va">$exists</span> <span class="op">-eq</span> <span class="st">&quot;0&quot;</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    sqlite3 <span class="va">$DB</span> <span class="st">&quot;ALTER TABLE items ADD COLUMN categories JSON DEFAULT &#39;&#39;;&quot;</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Write-Host</span> <span class="st">&quot;Migrated: </span><span class="va">$DB</span><span class="st">&quot;</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">Write-Host</span> <span class="st">&quot;Already migrated: </span><span class="va">$DB</span><span class="st">&quot;</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Both scripts must be documented in the Antenna App website under a
+“Schema upgrades” section, alongside the existing
+<code>sourceMarkdown</code> / <code>postPath</code> migration notes in
+<code>development_notes.md</code>.</p>
+<hr />
+<h2 id="files-changed-summary">Files changed summary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Nature of change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sql_stmts.go</code></td>
+<td>Add <code>categories</code> to <code>SQLCreateTables</code>,
+<code>SQLUpdateItem</code>, <code>SQLDisplayItems</code></td>
+</tr>
+<tr>
+<td><code>harvest.go</code></td>
+<td>Marshal <code>item.Categories</code>; pass to <code>saveItem</code>
+/ <code>updateItem</code></td>
+</tr>
+<tr>
+<td><code>schema.go</code></td>
+<td>Add <code>categories</code> param to <code>updateItem</code>;
+extract from front matter in <code>Post()</code>; update
+<code>WriteHtmlPage</code> call</td>
+</tr>
+<tr>
+<td><code>generator.go</code></td>
+<td>Add <code>AllowedMetaFields</code> to <code>Generator</code> struct;
+fix <code>GeneratePosts</code> Parse bug; update
+<code>WriteHtmlPage</code> call</td>
+</tr>
+<tr>
+<td><code>cmarkdoc.go</code></td>
+<td>Add <code>GetAttributeStringSlice</code></td>
+</tr>
+<tr>
+<td><code>html.go</code></td>
+<td>Update <code>writeHeadElement</code> signature and body; update
+<code>WriteHtmlPage</code> signature; update <code>WriteItem</code>
+signature and body; update <code>WriteHTML</code> scan and call</td>
+</tr>
+<tr>
+<td><code>page.go</code></td>
+<td>Update <code>WriteHtmlPage</code> call to pass
+<code>doc.FrontMatter</code></td>
+</tr>
+<tr>
+<td><code>migrate_categories.bash</code></td>
+<td>New — migration script for Linux/macOS</td>
+</tr>
+<tr>
+<td><code>migrate_categories.ps1</code></td>
+<td>New — migration script for Windows</td>
+</tr>
+</tbody>
+</table>
+</section>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script type="module" src="/modules/copyToClipboard.js"></script>
+</head>
+<body>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">GitHub</a></li>
+</ul>
+</nav>
+<section>
+<h1 id="implementation-plan-enhanced-metadata-processing">Implementation
+Plan: Enhanced Metadata Processing</h1>
+<p>Implements the design in <code>design_enhanced_metadata.md</code>.
+Decisions referenced throughout are in <code>decisions.md</code>.</p>
+<p>Tests are written before implementation in every phase (TDD). Each
+task is independent enough to commit separately. Tasks within a phase
+may be done in parallel; phases must be done in order.</p>
+<hr />
+<h2 id="phase-1-foundation-no-breaking-changes">Phase 1 — Foundation (no
+breaking changes)</h2>
+<p>These tasks touch only new code or additive struct fields. Nothing
+breaks until Phase 4 wires the new signatures into callers.</p>
+<h3 id="task-1.1-test-getattributestringslice-new-file">Task 1.1 — Test
+<code>GetAttributeStringSlice</code> (new file)</h3>
+<p>Create <code>cmarkdoc_test.go</code>. Write
+<code>TestGetAttributeStringSlice</code> covering:</p>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>Input</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Key absent</td>
+<td><code>FrontMatter{}</code></td>
+<td><code>nil</code></td>
+</tr>
+<tr>
+<td>Empty string value</td>
+<td><code>{"k": ""}</code></td>
+<td><code>nil</code></td>
+</tr>
+<tr>
+<td>Non-empty string</td>
+<td><code>{"k": "Oberon"}</code></td>
+<td><code>["Oberon"]</code></td>
+</tr>
+<tr>
+<td>Sequence of strings</td>
+<td><code>{"k": ["a","b"]}</code></td>
+<td><code>["a","b"]</code></td>
+</tr>
+<tr>
+<td>Sequence with empty entries</td>
+<td><code>{"k": ["a","","b"]}</code></td>
+<td><code>["a","b"]</code></td>
+</tr>
+<tr>
+<td>Non-string/non-slice type</td>
+<td><code>{"k": 42}</code></td>
+<td><code>nil</code></td>
+</tr>
+</tbody>
+</table>
+<p>Verify tests fail before implementation (red).</p>
+<h3 id="task-1.2-implement-getattributestringslice-in-cmarkdoc.go">Task
+1.2 — Implement <code>GetAttributeStringSlice</code> in
+<code>cmarkdoc.go</code></h3>
+<p>Add after <code>GetAttributeBool</code>. Signature:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>doc <span class="op">*</span>CommonMark<span class="op">)</span> GetAttributeStringSlice<span class="op">(</span>key <span class="dt">string</span><span class="op">)</span> <span class="op">[]</span><span class="dt">string</span></span></code></pre></div>
+<p>Run <code>go test -run TestGetAttributeStringSlice</code> — must pass
+(green).</p>
+<h3
+id="task-1.3-add-allowedmetafields-to-generator-struct-in-generator.go">Task
+1.3 — Add <code>AllowedMetaFields</code> to <code>Generator</code>
+struct in <code>generator.go</code></h3>
+<p>Add field after existing struct fields:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>AllowedMetaFields <span class="op">[]</span><span class="dt">string</span> <span class="st">`json:&quot;allowed_meta_fields,omitempty&quot; yaml:&quot;allowed_meta_fields,omitempty&quot;`</span></span></code></pre></div>
+<p>Run <code>go build ./...</code> — must compile cleanly.</p>
+<hr />
+<h2 id="phase-2-sql-layer">Phase 2 — SQL layer</h2>
+<p>Additive SQL changes. Existing databases are unaffected until the
+migration scripts are run. New databases created after this phase will
+have the <code>categories</code> column from the start.</p>
+<h3 id="task-2.1-add-categories-to-sqlcreatetables-in-sql_stmts.go">Task
+2.1 — Add <code>categories</code> to <code>SQLCreateTables</code> in
+<code>sql_stmts.go</code></h3>
+<p>Append <code>categories JSON DEFAULT ''</code> as the last column in
+the <code>items</code> table definition.</p>
+<h3 id="task-2.2-update-sqlupdateitem-in-sql_stmts.go">Task 2.2 — Update
+<code>SQLUpdateItem</code> in <code>sql_stmts.go</code></h3>
+<p>Add <code>categories</code> as parameter <code>?15</code> in both the
+INSERT column list and the ON CONFLICT UPDATE SET clause.</p>
+<h3 id="task-2.3-update-sqldisplayitems-in-sql_stmts.go">Task 2.3 —
+Update <code>SQLDisplayItems</code> in <code>sql_stmts.go</code></h3>
+<p>Add <code>ifnull(categories, '') as categories</code> to the SELECT
+column list. This is the query used by <code>WriteHTML</code> to feed
+<code>WriteItem</code>.</p>
+<p>Run <code>go build ./...</code> after all three SQL tasks — must
+compile cleanly (no callers updated yet; string constant changes
+only).</p>
+<hr />
+<h2 id="phase-3-data-layer">Phase 3 — Data layer</h2>
+<p>Updates <code>updateItem</code> and its callers to carry the new
+<code>categories</code> value through to the database. Depends on Phase
+2.</p>
+<h3 id="task-3.1-update-updateitem-signature-in-schema.go">Task 3.1 —
+Update <code>updateItem</code> signature in <code>schema.go</code></h3>
+<p>Add <code>categories string</code> as the last parameter. Pass it as
+<code>?15</code> in the <code>db.Exec</code> call.</p>
+<h3 id="task-3.2-update-saveitem-in-harvest.go">Task 3.2 — Update
+<code>saveItem</code> in <code>harvest.go</code></h3>
+<p>Marshal <code>item.Categories</code> to JSON and pass to
+<code>updateItem</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> categories <span class="op">[]</span><span class="dt">byte</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> item<span class="op">.</span>Categories <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    categories<span class="op">,</span> err <span class="op">=</span> json<span class="op">.</span>Marshal<span class="op">(</span>item<span class="op">.</span>Categories<span class="op">)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;failed to marshal item.Categories, %s&quot;</span><span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">// ... existing code ...</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">// add string(categories) as final arg to updateItem call</span></span></code></pre></div>
+<h3
+id="task-3.3-update-post-in-schema.go-to-extract-front-matter-categories">Task
+3.3 — Update <code>Post()</code> in <code>schema.go</code> to extract
+front matter categories</h3>
+<p>After <code>doc.Parse()</code>, extract <code>categories</code> from
+front matter for posts that carry them:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> categoriesSrc <span class="op">[]</span><span class="dt">byte</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> cats <span class="op">:=</span> doc<span class="op">.</span>GetAttributeStringSlice<span class="op">(</span><span class="st">&quot;categories&quot;</span><span class="op">);</span> <span class="bu">len</span><span class="op">(</span>cats<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    categoriesSrc<span class="op">,</span> _ <span class="op">=</span> json<span class="op">.</span>Marshal<span class="op">(</span>cats<span class="op">)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Pass <code>string(categoriesSrc)</code> as the
+<code>categories</code> argument to <code>updateItem</code>.</p>
+<p>Run <code>go build ./...</code> — must compile cleanly.</p>
+<hr />
+<h2 id="phase-4-html-rendering">Phase 4 — HTML rendering</h2>
+<p>The two rendering paths. Depends on Phase 1 (for
+<code>GetAttributeStringSlice</code> and <code>AllowedMetaFields</code>)
+but is independent of Phases 2 and 3.</p>
+<h3 id="task-4.1-test-writeheadelement-metadata-output-new-file">Task
+4.1 — Test <code>writeHeadElement</code> metadata output (new file)</h3>
+<p>Create <code>html_test.go</code>. Write
+<code>TestWriteHeadElement</code> using a <code>bytes.Buffer</code> to
+capture output.</p>
+<p>Cover:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Setup</th>
+<th>Must contain</th>
+<th>Must not contain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nil frontMatter</td>
+<td><code>frontMatter = nil</code></td>
+<td>existing charset/viewport meta</td>
+<td>any <code>data-pagefind-filter</code></td>
+</tr>
+<tr>
+<td>String field</td>
+<td><code>{"author": "R. S. Doiel"}</code></td>
+<td><code>&lt;meta name="author"</code>,
+<code>data-pagefind-filter="author[content]"</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>Slice field</td>
+<td><code>{"keywords": ["a","b"]}</code></td>
+<td>two <code>name="keywords"</code> elements, two
+<code>data-pagefind-filter</code> elements</td>
+<td>joined string</td>
+</tr>
+<tr>
+<td>Title override</td>
+<td><code>{"title": "My Post"}</code>,
+<code>gen.Title = "Site"</code></td>
+<td><code>&lt;title&gt;My Post&lt;/title&gt;</code></td>
+<td><code>&lt;title&gt;Site&lt;/title&gt;</code></td>
+</tr>
+<tr>
+<td>Title fallback</td>
+<td><code>gen.Title = "Site"</code>, no frontMatter title</td>
+<td><code>&lt;title&gt;Site&lt;/title&gt;</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>AllowedMetaFields set</td>
+<td><code>{"author":…,"postPath":…}</code>,
+allowed=<code>["author"]</code></td>
+<td><code>name="author"</code></td>
+<td><code>name="postPath"</code></td>
+</tr>
+<tr>
+<td>Title key excluded from meta</td>
+<td><code>{"title": "X"}</code></td>
+<td><code>&lt;title&gt;X&lt;/title&gt;</code></td>
+<td><code>&lt;meta name="title"</code></td>
+</tr>
+</tbody>
+</table>
+<p>Verify tests fail (red).</p>
+<h3 id="task-4.2-update-writeheadelement-in-html.go">Task 4.2 — Update
+<code>writeHeadElement</code> in <code>html.go</code></h3>
+<p>Change signature:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> writeHeadElement<span class="op">(</span>out io<span class="op">.</span>Writer<span class="op">,</span> postPath <span class="dt">string</span><span class="op">,</span> frontMatter <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span></span></code></pre></div>
+<p><strong>Title logic</strong> — replace the existing unconditional
+<code>gen.Title</code> write:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pageTitle <span class="op">:=</span> gen<span class="op">.</span>Title</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> frontMatter <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> t<span class="op">,</span> ok <span class="op">:=</span> frontMatter<span class="op">[</span><span class="st">&quot;title&quot;</span><span class="op">].(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> t <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        pageTitle <span class="op">=</span> t</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> pageTitle <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;title&gt;%s&lt;/title&gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> pageTitle<span class="op">)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Front matter metadata block</strong> — after all existing
+<code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code>,
+<code>&lt;script&gt;</code>, <code>&lt;style&gt;</code> elements,
+add:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> frontMatter <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    allowed <span class="op">:=</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="dt">bool</span><span class="op">{}</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _<span class="op">,</span> k <span class="op">:=</span> <span class="kw">range</span> gen<span class="op">.</span>AllowedMetaFields <span class="op">{</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        allowed<span class="op">[</span>k<span class="op">]</span> <span class="op">=</span> <span class="ot">true</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> key<span class="op">,</span> val <span class="op">:=</span> <span class="kw">range</span> frontMatter <span class="op">{</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> key <span class="op">==</span> <span class="st">&quot;title&quot;</span> <span class="op">{</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span>  <span class="co">// already handled in &lt;title&gt;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>allowed<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> <span class="op">!</span>allowed<span class="op">[</span>key<span class="op">]</span> <span class="op">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Build a []string of values for this key</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{</span>FrontMatter<span class="op">:</span> <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{}{</span>key<span class="op">:</span> val<span class="op">}}</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        values <span class="op">:=</span> doc<span class="op">.</span>GetAttributeStringSlice<span class="op">(</span>key<span class="op">)</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>values<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> s<span class="op">,</span> ok <span class="op">:=</span> val<span class="op">.(</span><span class="dt">string</span><span class="op">);</span> ok <span class="op">&amp;&amp;</span> s <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>                values <span class="op">=</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span>s<span class="op">}</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> v <span class="op">:=</span> <span class="kw">range</span> values <span class="op">{</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>            fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;meta name=%q content=%q&gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span> key<span class="op">,</span> v<span class="op">)</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">&quot;  &lt;meta data-pagefind-filter=%q content=%q&gt;</span><span class="ch">\n</span><span class="st">&quot;</span><span class="op">,</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                key<span class="op">+</span><span class="st">&quot;[content]&quot;</span><span class="op">,</span> v<span class="op">)</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Update the two existing internal callers immediately (required to
+compile): - <code>WriteHTML</code>:
+<code>gen.writeHeadElement(out, "", nil)</code> -
+<code>WriteHtmlPage</code>:
+<code>gen.writeHeadElement(out, postPath, frontMatter)</code> — also
+requires Task 4.3 first.</p>
+<p>Run <code>TestWriteHeadElement</code> — must pass (green).</p>
+<h3 id="task-4.3-test-writeitem-filter-attribute-output">Task 4.3 — Test
+<code>WriteItem</code> filter attribute output</h3>
+<p>Add <code>TestWriteItem</code> to <code>html_test.go</code>. Capture
+<code>&lt;article&gt;</code> output with a
+<code>bytes.Buffer</code>.</p>
+<p>Cover:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Input</th>
+<th><code>data-pagefind-filter</code> must contain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No metadata</td>
+<td>empty categories, nil dcExt, no authors</td>
+<td>attribute absent</td>
+</tr>
+<tr>
+<td>Single category</td>
+<td><code>categories=["Oberon"]</code></td>
+<td><code>category:Oberon</code></td>
+</tr>
+<tr>
+<td>Multiple categories</td>
+<td><code>categories=["a","b"]</code></td>
+<td><code>category:a</code> and <code>category:b</code></td>
+</tr>
+<tr>
+<td>DC subject</td>
+<td><code>dcExt</code> with <code>Subject: ["S"]</code></td>
+<td><code>dc_subject:S</code></td>
+</tr>
+<tr>
+<td>DC creator</td>
+<td><code>dcExt</code> with <code>Creator: ["C"]</code></td>
+<td><code>dc_creator:C</code></td>
+</tr>
+<tr>
+<td>Author</td>
+<td><code>authors=[{Name:"Alice"}]</code></td>
+<td><code>author:Alice</code></td>
+</tr>
+<tr>
+<td>Label and channel</td>
+<td><code>label="Feed"</code>, <code>channel="https://…"</code></td>
+<td><code>label:Feed</code>, <code>channel:https://…</code></td>
+</tr>
+<tr>
+<td>pubDate</td>
+<td><code>pubDate="2020-01-01"</code></td>
+<td><code>datePublished:2020-01-01</code></td>
+</tr>
+<tr>
+<td>All combined</td>
+<td>all of the above</td>
+<td>all entries present, comma-separated</td>
+</tr>
+</tbody>
+</table>
+<p>Verify tests fail (red).</p>
+<h3 id="task-4.4-update-writeitem-signature-in-html.go">Task 4.4 —
+Update <code>WriteItem</code> signature in <code>html.go</code></h3>
+<p>Add <code>categories string</code> as the final parameter.</p>
+<h3
+id="task-4.5-implement-filter-attribute-construction-in-writeitem">Task
+4.5 — Implement filter attribute construction in
+<code>WriteItem</code></h3>
+<p>Build the filter string inside <code>WriteItem</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> filters <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Categories</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">var</span> cats <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> categories <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=</span> json<span class="op">.</span>Unmarshal<span class="op">([]</span><span class="dt">byte</span><span class="op">(</span>categories<span class="op">),</span> <span class="op">&amp;</span>cats<span class="op">)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> c <span class="op">:=</span> <span class="kw">range</span> cats <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> c <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>        filters <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>filters<span class="op">,</span> <span class="st">&quot;category:&quot;</span><span class="op">+</span>c<span class="op">)</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Dublin Core</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> dcExtSrc <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> dc ext<span class="op">.</span>DublinCoreExtension</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> json<span class="op">.</span>Unmarshal<span class="op">([]</span><span class="dt">byte</span><span class="op">(</span>dcExtSrc<span class="op">),</span> <span class="op">&amp;</span>dc<span class="op">);</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        dcFields <span class="op">:=</span> <span class="op">[]</span><span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>            key    <span class="dt">string</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>            values <span class="op">[]</span><span class="dt">string</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>        <span class="op">}{</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_title&quot;</span><span class="op">,</span> dc<span class="op">.</span>Title<span class="op">},</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_creator&quot;</span><span class="op">,</span> dc<span class="op">.</span>Creator<span class="op">},</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_author&quot;</span><span class="op">,</span> dc<span class="op">.</span>Author<span class="op">},</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_subject&quot;</span><span class="op">,</span> dc<span class="op">.</span>Subject<span class="op">},</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_description&quot;</span><span class="op">,</span> dc<span class="op">.</span>Description<span class="op">},</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_publisher&quot;</span><span class="op">,</span> dc<span class="op">.</span>Publisher<span class="op">},</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_contributor&quot;</span><span class="op">,</span> dc<span class="op">.</span>Contributor<span class="op">},</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_date&quot;</span><span class="op">,</span> dc<span class="op">.</span>Date<span class="op">},</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_type&quot;</span><span class="op">,</span> dc<span class="op">.</span>Type<span class="op">},</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_format&quot;</span><span class="op">,</span> dc<span class="op">.</span>Format<span class="op">},</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_identifier&quot;</span><span class="op">,</span> dc<span class="op">.</span>Identifier<span class="op">},</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_source&quot;</span><span class="op">,</span> dc<span class="op">.</span>Source<span class="op">},</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_language&quot;</span><span class="op">,</span> dc<span class="op">.</span>Language<span class="op">},</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_relation&quot;</span><span class="op">,</span> dc<span class="op">.</span>Relation<span class="op">},</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_coverage&quot;</span><span class="op">,</span> dc<span class="op">.</span>Coverage<span class="op">},</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>            <span class="op">{</span><span class="st">&quot;dc_rights&quot;</span><span class="op">,</span> dc<span class="op">.</span>Rights<span class="op">},</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _<span class="op">,</span> f <span class="op">:=</span> <span class="kw">range</span> dcFields <span class="op">{</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> _<span class="op">,</span> v <span class="op">:=</span> <span class="kw">range</span> f<span class="op">.</span>values <span class="op">{</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> v <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>                    filters <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>filters<span class="op">,</span> f<span class="op">.</span>key<span class="op">+</span><span class="st">&quot;:&quot;</span><span class="op">+</span>v<span class="op">)</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="co">// Authors</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _<span class="op">,</span> a <span class="op">:=</span> <span class="kw">range</span> authors <span class="op">{</span></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> a <span class="op">!=</span> <span class="ot">nil</span> <span class="op">&amp;&amp;</span> a<span class="op">.</span>Name <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>        filters <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>filters<span class="op">,</span> <span class="st">&quot;author:&quot;</span><span class="op">+</span>a<span class="op">.</span>Name<span class="op">)</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="co">// Publication date</span></span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> pubDate <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>    filters <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>filters<span class="op">,</span> <span class="st">&quot;datePublished:&quot;</span><span class="op">+</span>pubDate<span class="op">)</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a><span class="co">// Feed provenance</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> label <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>    filters <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>filters<span class="op">,</span> <span class="st">&quot;label:&quot;</span><span class="op">+</span>label<span class="op">)</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> channel <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>    filters <span class="op">=</span> <span class="bu">append</span><span class="op">(</span>filters<span class="op">,</span> <span class="st">&quot;channel:&quot;</span><span class="op">+</span>channel<span class="op">)</span></span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Emit on <code>&lt;article&gt;</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>filters<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">`</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;article data-published=%q data-link=%q data-pagefind-filter=%q&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">`</span><span class="op">,</span> pubDate<span class="op">,</span> link<span class="op">,</span> strings<span class="op">.</span>Join<span class="op">(</span>filters<span class="op">,</span> <span class="st">&quot;, &quot;</span><span class="op">))</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    fmt<span class="op">.</span>Fprintf<span class="op">(</span>out<span class="op">,</span> <span class="st">`</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="st">    &lt;article data-published=%q data-link=%q&gt;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="st">`</span><span class="op">,</span> pubDate<span class="op">,</span> link<span class="op">)</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Run <code>TestWriteItem</code> — must pass (green).</p>
+<h3 id="task-4.6-update-writehtmlpage-signature-in-html.go">Task 4.6 —
+Update <code>WriteHtmlPage</code> signature in <code>html.go</code></h3>
+<p>Add <code>frontMatter map[string]interface{}</code> as the final
+parameter. Forward to <code>writeHeadElement</code>:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">)</span> WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML <span class="dt">string</span><span class="op">,</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    frontMatter <span class="kw">map</span><span class="op">[</span><span class="dt">string</span><span class="op">]</span><span class="kw">interface</span><span class="op">{})</span> <span class="dt">error</span></span></code></pre></div>
+<h3 id="task-4.7-update-writehtml-scan-in-html.go">Task 4.7 — Update
+<code>WriteHTML</code> scan in <code>html.go</code></h3>
+<p>Add <code>categories</code> variable to the scan block to match the
+updated <code>SQLDisplayItems</code>. Pass it as the final argument to
+<code>WriteItem</code>.</p>
+<p>Run <code>go build ./...</code> — Phase 4 must compile cleanly before
+proceeding.</p>
+<hr />
+<h2 id="phase-5-call-site-updates">Phase 5 — Call site updates</h2>
+<p>Wires Phases 1–4 into the three action paths. Depends on Phase 4
+completing cleanly.</p>
+<h3 id="task-5.1-fix-generateposts-in-generator.go">Task 5.1 — Fix
+<code>GeneratePosts</code> in <code>generator.go</code></h3>
+<p>Replace the bare struct literal with a proper parse (DEC-001):</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{</span>Text<span class="op">:</span> sourceMarkdown<span class="op">}</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> doc<span class="op">.</span>Parse<span class="op">([]</span><span class="dt">byte</span><span class="op">(</span>sourceMarkdown<span class="op">));</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    doc<span class="op">.</span>Text <span class="op">=</span> sourceMarkdown</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Update the <code>WriteHtmlPage</code> call:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">,</span> doc<span class="op">.</span>FrontMatter<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span></code></pre></div>
+<h3 id="task-5.2-update-post-call-in-schema.go">Task 5.2 — Update
+<code>Post()</code> call in <code>schema.go</code></h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> link<span class="op">,</span> postPath<span class="op">,</span> pubDate<span class="op">,</span> innerHTML<span class="op">,</span> doc<span class="op">.</span>FrontMatter<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span></code></pre></div>
+<p><code>doc.FrontMatter</code> is already available from the
+<code>LoadCommonMark</code> call earlier in <code>Post()</code>.</p>
+<h3 id="task-5.3-update-page-call-in-page.go">Task 5.3 — Update
+<code>Page()</code> call in <code>page.go</code></h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">// before</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> postPath<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> innerHTML<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">// after</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> err <span class="op">:=</span> gen<span class="op">.</span>WriteHtmlPage<span class="op">(</span>htmlName<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> postPath<span class="op">,</span> <span class="st">&quot;&quot;</span><span class="op">,</span> innerHTML<span class="op">,</span> doc<span class="op">.</span>FrontMatter<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span></code></pre></div>
+<p><code>doc.FrontMatter</code> is already available from the
+<code>LoadCommonMark</code> call earlier in <code>Page()</code>.</p>
+<p>Run <code>go build ./...</code> — must compile cleanly with zero
+errors. Run <code>go test ./...</code> — all tests must pass.</p>
+<hr />
+<h2 id="phase-6-migration-scripts">Phase 6 — Migration scripts</h2>
+<p>Independent of all code phases. Can be written at any time.</p>
+<h3 id="task-6.1-write-migrate_categories.bash">Task 6.1 — Write
+<code>migrate_categories.bash</code></h3>
+<p>Create in <code>antennaApp/</code> root. Content per
+<code>design_enhanced_metadata.md</code> — guard with
+<code>pragma_table_info</code> check before executing the
+<code>ALTER TABLE</code>.</p>
+<p>Mark executable: <code>chmod +x migrate_categories.bash</code>.</p>
+<h3 id="task-6.2-write-migrate_categories.ps1">Task 6.2 — Write
+<code>migrate_categories.ps1</code></h3>
+<p>Create in <code>antennaApp/</code> root. Same guard logic using
+sqlite3 CLI.</p>
+<h3 id="task-6.3-update-development_notes.md">Task 6.3 — Update
+<code>development_notes.md</code></h3>
+<p>Add a new section under “Upgrading schema” documenting the categories
+migration, consistent with the existing <code>sourceMarkdown</code> /
+<code>postPath</code> notes already there.</p>
+<hr />
+<h2 id="phase-7-final-verification">Phase 7 — Final verification</h2>
+<h3 id="task-7.1-full-test-run">Task 7.1 — Full test run</h3>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> antennaApp <span class="kw">&amp;&amp;</span> <span class="ex">go</span> test ./...</span></code></pre></div>
+<p>All tests must pass. Address any failures before proceeding.</p>
+<h3 id="task-7.2-build-all-programs">Task 7.2 — Build all programs</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> antennaApp <span class="kw">&amp;&amp;</span> <span class="fu">make</span> build</span></code></pre></div>
+<p>All binaries must build cleanly.</p>
+<h3 id="task-7.3-smoke-test-post-with-front-matter">Task 7.3 — Smoke
+test: post with front matter</h3>
+<p>Using a local Antenna App workspace:</p>
+<ol type="1">
+<li>Create a Markdown post with front matter including
+<code>title</code>, <code>author</code>, <code>keywords</code> (list),
+<code>series</code>, and <code>abstract</code>.</li>
+<li>Run <code>antenna post</code>.</li>
+<li>Inspect the generated HTML — verify:
+<ul>
+<li>No <code>---</code> delimiters or YAML visible in the body.</li>
+<li><code>&lt;title&gt;</code> matches the front matter
+<code>title</code>, not the collection title.</li>
+<li>Each keyword produces its own
+<code>&lt;meta name="keywords"&gt;</code> and
+<code>&lt;meta data-pagefind-filter&gt;</code>.</li>
+<li><code>series</code> and <code>abstract</code> appear as
+<code>&lt;meta&gt;</code> elements.</li>
+</ul></li>
+</ol>
+<h3 id="task-7.4-smoke-test-harvest-and-generate">Task 7.4 — Smoke test:
+harvest and generate</h3>
+<ol type="1">
+<li>Run <code>antenna harvest</code> on a collection that uses feeds
+with <code>&lt;category&gt;</code> elements.</li>
+<li>Run <code>antenna generate</code>.</li>
+<li>Inspect the aggregate HTML page — verify:
+<ul>
+<li>Each <code>&lt;article&gt;</code> with categories has a
+<code>data-pagefind-filter</code> attribute.</li>
+<li>Filter values include <code>category:VALUE</code> entries.</li>
+<li><code>label:</code> and <code>channel:</code> entries are
+present.</li>
+<li>Items without categories have no <code>data-pagefind-filter</code>
+attribute.</li>
+</ul></li>
+</ol>
+<h3 id="task-7.5-smoke-test-page-with-front-matter">Task 7.5 — Smoke
+test: page with front matter</h3>
+<ol type="1">
+<li>Create a Markdown page with front matter.</li>
+<li>Run <code>antenna page</code>.</li>
+<li>Inspect generated HTML — same metadata checks as Task 7.3.</li>
+</ol>
+<h3 id="task-7.6-smoke-test-allowed_meta_fields">Task 7.6 — Smoke test:
+<code>allowed_meta_fields</code></h3>
+<ol type="1">
+<li>Add <code>allowed_meta_fields: [title, author, keywords]</code> to a
+generator YAML.</li>
+<li>Regenerate a post with additional front matter fields (e.g.,
+<code>postPath</code>, <code>guid</code>).</li>
+<li>Verify that only <code>title</code>, <code>author</code>, and
+<code>keywords</code> appear as <code>&lt;meta&gt;</code> elements;
+<code>postPath</code> and <code>guid</code> are absent.</li>
+</ol>
+<hr />
+<h2 id="task-dependency-summary">Task dependency summary</h2>
+<pre><code>Phase 1 (1.1–1.3)
+    │
+    ├─── Phase 2 (2.1–2.3) ──── Phase 3 (3.1–3.3)
+    │                                   │
+    └─── Phase 4 (4.1–4.7) ────────────┴──── Phase 5 (5.1–5.3) ──── Phase 7
+                                                                          │
+Phase 6 (6.1–6.3) ────────────────────────────────────────────────────────┘</code></pre>
+<p>Phase 6 (migration scripts) is independent and can be written any
+time before Phase 7.</p>
+</section>
+</body>
+</html>
