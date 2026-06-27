@@ -467,7 +467,8 @@ func (cfg *AppConfig) Posts(cName string, options []string) error {
 // updateItem will perform an "upsert" to insert or update the row
 func updateItem(db *sql.DB, link string, title string, description string, authors string,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt *ext.DublinCoreExtension,
-	channel, status string, updated string, label string, postPath string, sourceMarkdown string) error {
+	channel, status string, updated string, label string, postPath string, sourceMarkdown string,
+	categories string) error {
 	enclosuresSrc, err := json.Marshal(enclosures)
 	if err != nil {
 		return nil
@@ -478,7 +479,8 @@ func updateItem(db *sql.DB, link string, title string, description string, autho
 	}
 	_, err = db.Exec(SQLUpdateItem, link, title, description, authors,
 		enclosuresSrc, guid, pubDate, dcExtSrc,
-		channel, status, updated, label, postPath, sourceMarkdown)
+		channel, status, updated, label, postPath, sourceMarkdown,
+		categories)
 	if err != nil {
 		return err
 	}
@@ -643,7 +645,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 		if err := gen.LoadConfig(collection.Generator); err != nil {
 			return err
 		}
-		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML); err != nil {
+		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.FrontMatter); err != nil {
 			return err
 		}
 	}
@@ -670,13 +672,20 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 			return fmt.Errorf("failed to marshal author, %s", err)
 		}
 	}
+	var categoriesSrc []byte
+	if cats := doc.GetAttributeStringSlice("categories"); len(cats) > 0 {
+		categoriesSrc, err = json.Marshal(cats)
+		if err != nil {
+			return fmt.Errorf("failed to marshal categories, %s", err)
+		}
+	}
 	dsn := collection.DbName
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-	return updateItem(db, link, title, description, fmt.Sprintf("%s", authorsSrc), enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath, sourceMarkdown)
+	return updateItem(db, link, title, description, fmt.Sprintf("%s", authorsSrc), enclosures, guid, pubDate, dcExt, channel, status, updated, label, postPath, sourceMarkdown, string(categoriesSrc))
 }
 
 // removePost removes an item from the items table using postPath

@@ -202,7 +202,7 @@ func (cfg *AppConfig) Page(fName string, oName string) error {
 	if err := gen.LoadConfig(cfg.Generator); err != nil {
 		return err
 	}
-	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML); err != nil {
+	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML, doc.FrontMatter); err != nil {
 		return err
 	}
 	// NOTE: I need to add the page to pages.db

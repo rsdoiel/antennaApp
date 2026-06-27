@@ -36,7 +36,30 @@ ALTER TABLE items ADD COLUMN sourceMarkdown TEXT;
 
 ~~~
 
-The ugprade process should support adding the postPath and sourceMarkdown columns in the iterms table.
+The upgrade process should support adding the postPath and sourceMarkdown columns in the items table.
+
+### Migration: add `categories` column (2026-06-27)
+
+The `items` table gained a `categories JSON DEFAULT ''` column to store RSS/Atom
+`<category>` values harvested from feed items.
+
+New databases created after this change have the column automatically. Existing databases
+must be migrated once using the provided scripts:
+
+- **Linux/macOS:** `migrate_categories.bash PATH_TO_DATABASE.db`
+- **Windows:** `.\migrate_categories.ps1 -DB PATH_TO_DATABASE.db`
+
+Both scripts are idempotent — safe to run multiple times. The guard query is:
+
+~~~sql
+SELECT COUNT(*) FROM pragma_table_info('items') WHERE name='categories';
+~~~
+
+If zero, the following migration is applied:
+
+~~~sql
+ALTER TABLE items ADD COLUMN categories JSON DEFAULT '';
+~~~
 
 ## Namespace in RSS 
 

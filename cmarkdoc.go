@@ -260,6 +260,47 @@ func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person
 	return nil, nil
 }
 
+/** GetAttributeStringSlice returns a []string for a front matter key whose
+ * value is either a YAML sequence or a plain string. Returns nil if absent,
+ * empty, or an unsupported type.
+ *
+ * Parameters:
+ *   key (string) — the front matter key to look up
+ *
+ * Returns:
+ *   []string — the values, or nil
+ *
+ * Example:
+ *   // front matter: keywords: [Oberon, programming]
+ *   kw := doc.GetAttributeStringSlice("keywords")
+ *   // kw == []string{"Oberon", "programming"}
+ */
+func (doc *CommonMark) GetAttributeStringSlice(key string) []string {
+	val, ok := doc.FrontMatter[key]
+	if !ok {
+		return nil
+	}
+	switch v := val.(type) {
+	case string:
+		if v == "" {
+			return nil
+		}
+		return []string{v}
+	case []interface{}:
+		out := make([]string, 0, len(v))
+		for _, item := range v {
+			if s, ok := item.(string); ok && s != "" {
+				out = append(out, s)
+			}
+		}
+		if len(out) == 0 {
+			return nil
+		}
+		return out
+	}
+	return nil
+}
+
 // GetAttributeBool returns a boolean attribute from
 // the front matter the document
 func (doc *CommonMark) GetAttributeBool(key string, defaultValue bool) bool {

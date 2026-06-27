@@ -28,12 +28,13 @@ import (
 
 	// 3rd Party Packages
 	"github.com/mmcdole/gofeed"
+	ext "github.com/mmcdole/gofeed/extensions"
 )
 
 // Write HTML for an item
 func (gen *Generator) WriteItem(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
-	sourceMarkdown string, enclosures []*Enclosure, guid string, pubDate string, dcExt string,
-	channel string, status string, updated string, label string) error {
+	sourceMarkdown string, enclosures []*Enclosure, guid string, pubDate string, dcExtSrc string,
+	channel string, status string, updated string, label string, categories string) error {
 	// Setup expressing update time.
 	pressTime := pubDate
 	if len(pressTime) > 10 {
@@ -46,6 +47,76 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		if pressTime != updated {
 			pressTime += ", updated: " + updated
 		}
+	}
+
+	// Build PageFind filter attribute values
+	var filters []string
+
+	// RSS/Atom categories
+	if categories != "" {
+		var cats []string
+		if err := json.Unmarshal([]byte(categories), &cats); err == nil {
+			for _, c := range cats {
+				if c != "" {
+					filters = append(filters, "category:"+c)
+				}
+			}
+		}
+	}
+
+	// Dublin Core extension fields
+	if dcExtSrc != "" {
+		var dc ext.DublinCoreExtension
+		if err := json.Unmarshal([]byte(dcExtSrc), &dc); err == nil {
+			dcFields := []struct {
+				key    string
+				values []string
+			}{
+				{"dc_title", dc.Title},
+				{"dc_creator", dc.Creator},
+				{"dc_author", dc.Author},
+				{"dc_subject", dc.Subject},
+				{"dc_description", dc.Description},
+				{"dc_publisher", dc.Publisher},
+				{"dc_contributor", dc.Contributor},
+				{"dc_date", dc.Date},
+				{"dc_type", dc.Type},
+				{"dc_format", dc.Format},
+				{"dc_identifier", dc.Identifier},
+				{"dc_source", dc.Source},
+				{"dc_language", dc.Language},
+				{"dc_relation", dc.Relation},
+				{"dc_coverage", dc.Coverage},
+				{"dc_rights", dc.Rights},
+			}
+			for _, f := range dcFields {
+				for _, v := range f.values {
+					if v != "" {
+						filters = append(filters, f.key+":"+v)
+					}
+				}
+			}
+		}
+	}
+
+	// Native authors
+	for _, a := range authors {
+		if a != nil && a.Name != "" {
+			filters = append(filters, "author:"+a.Name)
+		}
+	}
+
+	// Publication date
+	if pubDate != "" {
+		filters = append(filters, "datePublished:"+pubDate)
+	}
+
+	// Feed provenance
+	if label != "" {
+		filters = append(filters, "label:"+label)
+	}
+	if channel != "" {
+		filters = append(filters, "channel:"+channel)
 	}
 
 	// Setup the Title — h2 keeps article titles subordinate to the page h1
@@ -62,10 +133,21 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		if src, err := doc.ToHTML(); err == nil {
 			content = src
 		}
-
 	}
 
-	fmt.Fprintf(out, `
+	if len(filters) > 0 {
+		fmt.Fprintf(out, `
+    <article data-published=%q data-link=%q data-pagefind-filter=%q>
+      %s
+      <p>
+      %s
+      <address>
+        <a href=%q>%s</a>
+      </address>
+    </article>
+`, pubDate, link, strings.Join(filters, ", "), title, content, link, link)
+	} else {
+		fmt.Fprintf(out, `
     <article data-published=%q data-link=%q>
       %s
       <p>
@@ -75,6 +157,7 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
       </address>
     </article>
 `, pubDate, link, title, content, link, link)
+	}
 	return nil
 }
 
@@ -94,7 +177,7 @@ func elementFromMap(element string, m map[string]string) string {
 }
 
 // writeHeadElement, writes the head element of the HTML page.
-func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
+func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatter map[string]interface{}) {
 	fmt.Fprintln(out, "<head>")
 	defer fmt.Fprintln(out, "</head>")
 	var m map[string]string
@@ -126,16 +209,22 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 			fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
 		}
 	}
-	// Write title (NOTE: title must come after the charset since it may have encoded characters)
-	if gen.Title != "" {
-		fmt.Fprintf(out, "  <title>%s</title>\n", gen.Title)
+	// Write title — front matter title takes precedence over gen.Title
+	pageTitle := gen.Title
+	if frontMatter != nil {
+		if t, ok := frontMatter["title"].(string); ok && t != "" {
+			pageTitle = t
+		}
+	}
+	if pageTitle != "" {
+		fmt.Fprintf(out, "  <title>%s</title>\n", pageTitle)
 	}
 	// Write out RSS alt link for Markdown if postPath is not empty string
 	if postPath != "" && strings.HasSuffix(postPath, ".md") {
 		// NOTE: Posts are written next to the HTML page so the link to the Markdown can be relative
 		postLink := filepath.Base(postPath)
 		m = map[string]string{
-			"title": gen.Title,
+			"title": pageTitle,
 			"rel":   "altenate",
 			"type":  "text/markdown",
 			"href":  postLink,
@@ -155,6 +244,32 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string) {
 	if gen.Style != "" {
 		fmt.Fprintf(out, "  <style>\n%s\n</style>\n", indentText(strings.TrimSpace(gen.Style), 4))
 	}
+	// Emit front matter fields as standard HTML meta and PageFind filter attributes
+	if frontMatter != nil {
+		allowed := map[string]bool{}
+		for _, k := range gen.AllowedMetaFields {
+			allowed[k] = true
+		}
+		doc := &CommonMark{FrontMatter: frontMatter}
+		for key, val := range frontMatter {
+			if key == "title" {
+				continue // already handled in <title>
+			}
+			if len(allowed) > 0 && !allowed[key] {
+				continue
+			}
+			values := doc.GetAttributeStringSlice(key)
+			if len(values) == 0 {
+				if s, ok := val.(string); ok && s != "" {
+					values = []string{s}
+				}
+			}
+			for _, v := range values {
+				fmt.Fprintf(out, "  <meta name=%q content=%q>\n", key, v)
+				fmt.Fprintf(out, "  <meta data-pagefind-filter=%q content=%q>\n", key+"[content]", v)
+			}
+		}
+	}
 }
 
 // indentText splits  the string into lines, then prefixes the number of
@@ -171,7 +286,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 <html lang="en-US">`)
 	defer fmt.Fprintln(out, "</html>")
 	// Setup the metadata in the head element
-	gen.writeHeadElement(out, "")
+	gen.writeHeadElement(out, "", nil)
 	// Setup body element
 	fmt.Fprintln(out, "<body>")
 	defer fmt.Fprintln(out, "</body>")
@@ -218,10 +333,12 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			label          string
 			postPath       string
 			sourceMarkdown string
+			categories     string
 		)
 		if err := rows.Scan(&link, &title, &description, &authorsSrc,
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
-			&channel, &status, &updated, &label, &postPath, &sourceMarkdown); err != nil {
+			&channel, &status, &updated, &label, &postPath, &sourceMarkdown,
+			&categories); err != nil {
 			fmt.Fprintf(gen.eout, "error (%s): %s\n", stmt, err)
 			continue
 		}
@@ -241,7 +358,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 		}
 		if err := gen.WriteItem(out, link, title, description, authors,
 			sourceMarkdown, enclosures, guid, pubDate, dcExt,
-			channel, status, updated, label); err != nil {
+			channel, status, updated, label, categories); err != nil {
 			return err
 		}
 	}
@@ -263,7 +380,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 
 // WriteHtmlPage renders a post as an HTML Page using HTML connent and wrapping it based on the
 // generator configuration.
-func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubDate string, innerHTML string) error {
+func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubDate string, innerHTML string, frontMatter map[string]interface{}) error {
 	// clear existing page
 	if _, err := os.Stat(htmlName); err == nil {
 		if err := os.Remove(htmlName); err != nil {
@@ -282,7 +399,7 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 <html lang="en-US">`)
 	defer fmt.Fprintln(out, "</html>")
 	// Setup the metadata in the head element
-	gen.writeHeadElement(out, postPath)
+	gen.writeHeadElement(out, postPath, frontMatter)
 	// Setup body element
 	fmt.Fprintln(out, "<body>")
 	defer fmt.Fprintln(out, "</body>")

@@ -261,6 +261,7 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 		authors    []byte
 		dcExt      []byte
 		enclosures []byte
+		categories []byte
 		err        error
 	)
 	if item.DublinCoreExt != nil {
@@ -279,6 +280,12 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 		authors, err = json.Marshal(item.Authors)
 		if err != nil {
 			return fmt.Errorf("failed to marshal item.Authors, %s", err)
+		}
+	}
+	if item.Categories != nil {
+		categories, err = json.Marshal(item.Categories)
+		if err != nil {
+			return fmt.Errorf("failed to marshal item.Categories, %s", err)
 		}
 	}
 	// FIXME: Need to find a feed that uses the source:markdown name space to verify this is how gofeed
@@ -313,7 +320,8 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 	if _, err := db.Exec(stmt,
 		item.Link, item.Title, item.Description, string(authors),
 		string(enclosures), item.GUID, pubDate, string(dcExt),
-		channel, status, updated, feedLabel, postPath, sourceMarkdown); err != nil {
+		channel, status, updated, feedLabel, postPath, sourceMarkdown,
+		string(categories)); err != nil {
 		return fmt.Errorf("%s\nstmt: %s", err, stmt)
 	}
 	return nil

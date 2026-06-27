@@ -89,6 +89,11 @@ type Generator struct {
 	// Footer holds the HTML markup for the footer
 	Footer string `json:"footer,omitempty" yaml:"footer,omitempty"`
 
+	// AllowedMetaFields, when non-empty, limits which front matter keys are
+	// emitted as HTML metadata for posts and pages. When empty, all keys
+	// are emitted (default).
+	AllowedMetaFields []string `json:"allowed_meta_fields,omitempty" yaml:"allowed_meta_fields,omitempty"`
+
 	out  io.Writer
 	eout io.Writer
 }
@@ -311,7 +316,11 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 		if sourceMarkdown == "" {
 			continue
 		}
-		doc := &CommonMark{Text: sourceMarkdown}
+		doc := &CommonMark{}
+		if err := doc.Parse([]byte(sourceMarkdown)); err != nil {
+			// malformed front matter — treat entire source as body text
+			doc.Text = sourceMarkdown
+		}
 		if strings.Contains(doc.Text, "@include-text-block") {
 			doc.Text = IncludeTextBlock(doc.Text)
 		}
@@ -331,7 +340,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 				continue
 			}
 		}
-		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML); err != nil {
+		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.FrontMatter); err != nil {
 			fmt.Fprintf(eout, "warning writing HTML for %q: %s\n", postPath, err)
 		}
 	}
