@@ -41,7 +41,8 @@ func saveMarkdown(fName string, doc *CommonMark) error {
 		return err
 	}
 	txt := doc.String()
-	if err := os.WriteFile(fName, []byte(txt), 0666); err != nil {
+	// Security: Use 0644 instead of 0666 to prevent world-writable files
+	if err := os.WriteFile(fName, []byte(txt), 0644); err != nil {
 		return err
 	}
 	return nil
@@ -106,7 +107,8 @@ func (app *AntennaApp) BlogIt(cfgName string, args[]string) error {
 	bName := filepath.Base(fName)
 	postDir := filepath.Join("blog", postDay.Format("2006/01/02"))
 	if _, err := os.Stat(postDir); err != nil {
-		if err := os.MkdirAll(postDir, 0777); err != nil {
+		// Security: Use 0755 instead of 0777 for directory permissions
+		if err := os.MkdirAll(postDir, 0755); err != nil {
 			return fmt.Errorf("failed to create %q, %s", postDir, err)
 		}
 	}
@@ -115,7 +117,8 @@ func (app *AntennaApp) BlogIt(cfgName string, args[]string) error {
 		return err
 	} 
 	postPath := filepath.Join(postDir, bName)
-	if err := os.WriteFile(postPath, src, 0666); err != nil {
+	// Security: Use 0644 instead of 0666 to prevent world-writable files
+	if err := os.WriteFile(postPath, src, 0644); err != nil {
 		return err
 	}
 	return app.Post(cfgName, []string{ cName, postPath})

@@ -55,13 +55,10 @@ func IsDotPath(p string) bool {
 // or prevent serving a dot file path
 func StaticRouter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if origin := r.Header.Get("Origin"); origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			//w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("Access-Control-Allow-Methods", "GET")
-			w.Header().Set("Access-Control-Allow-Headers",
-				"Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		}
+		// Note: CORS headers should be set by the CORSPolicy.Handler middleware
+		// to avoid security issues with origin reflection.
+		// This router no longer sets CORS headers directly.
+		
 		// Stop here if its Preflighted OPTIONS request
 		if r.Method == "OPTIONS" {
 			return
@@ -234,7 +231,12 @@ func (r *RedirectService) RedirectRouter(next http.Handler) http.Handler {
 // CORSPolicy defines the policy elements for our CORS settings.
 type CORSPolicy struct {
 	// Origin usually would be set the hostname of the service.
+	// Deprecated: Use AllowedOrigins instead for security
 	Origin string `json:"origin,omitempty" yaml:"origin,omitempty"`
+	// AllowedOrigins is a list of permitted origins for CORS requests.
+	// If empty, CORS headers will not be set. If set, only origins in this list
+	// will be allowed in the Access-Control-Allow-Origin header.
+	AllowedOrigins []string `json:"allowed_origins,omitempty" yaml:"allowed_origins,omitempty"`
 	// Options to include in the policy (e.g. GET, POST)
 	Options []string `json:"options,omitempty" yaml:"options,omitempty"`
 	// Headers to include in the policy
@@ -256,8 +258,28 @@ func (cors *CORSPolicy) Handler(next http.Handler) http.Handler {
 		})
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if cors.Origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", cors.Origin)
+		// Check if the requesting origin is in the allowed origins list
+		requestOrigin := r.Header.Get("Origin")
+		allowedOrigin := ""
+		
+		// Prefer AllowedOrigins over the deprecated Origin field
+		if len(cors.AllowedOrigins) > 0 {
+			for _, origin := range cors.AllowedOrigins {
+				if origin == requestOrigin {
+					allowedOrigin = origin
+					break
+				}
+			}
+		} else if cors.Origin != "" && cors.Origin == requestOrigin {
+			// Fallback to deprecated Origin field for backward compatibility
+			allowedOrigin = cors.Origin
+		}
+		
+		if allowedOrigin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
+			if cors.AllowCredentials == true {
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+			}
 		}
 		if len(cors.Options) > 0 {
 			w.Header().Set("Access-Control-Allow-Methods", strings.Join(cors.Options, ","))
@@ -267,9 +289,6 @@ func (cors *CORSPolicy) Handler(next http.Handler) http.Handler {
 		}
 		if len(cors.ExposedHeaders) > 0 {
 			w.Header().Set("Access-Control-Expose-Headers", strings.Join(cors.ExposedHeaders, ","))
-		}
-		if cors.AllowCredentials == true {
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
 		}
 		// Bailout if we ahve an OPTIONS preflight request
 		if r.Method == "OPTIONS" {

@@ -19,7 +19,10 @@ package antennaApp
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 // IncludeCodeBlock takes a text string and replaces the code blocks
@@ -63,9 +66,28 @@ func replaceCodeBlock(fullMatch string) string {
 		language = matches[2]
 	}
 
-	fileContent, err := ioutil.ReadFile(filePath)
+	// Security: Prevent path traversal attacks
+	// Clean the path and ensure it's relative and safe
+	cleanPath := filepath.Clean(filePath)
+	if filepath.IsAbs(cleanPath) || strings.HasPrefix(cleanPath, "..") {
+		fmt.Printf("Error: include-code-block path '%s' attempts directory traversal, using original text\n", filePath)
+		return fullMatch
+	}
+
+	// Check if file exists and is a regular file (not directory or symlink)
+	fileInfo, err := os.Stat(cleanPath)
 	if err != nil {
-		fmt.Printf("Error inserting code block from %s: %v\n", filePath, err)
+		fmt.Printf("Error inserting code block from %s: %v\n", cleanPath, err)
+		return fullMatch
+	}
+	if fileInfo.IsDir() {
+		fmt.Printf("Error: include-code-block path '%s' is a directory, not a file\n", cleanPath)
+		return fullMatch
+	}
+
+	fileContent, err := ioutil.ReadFile(cleanPath)
+	if err != nil {
+		fmt.Printf("Error reading code block from %s: %v\n", cleanPath, err)
 		return fullMatch
 	}
 

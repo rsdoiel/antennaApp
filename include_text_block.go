@@ -19,7 +19,10 @@ package antennaApp
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 // IncludeTextBlock takes a text string and replaces the text blocks
@@ -53,13 +56,32 @@ func replaceTextBlock(fullMatch string) string {
 	// Extract filePath from the matched string
 	matches := regexp.MustCompile(`\s+@include-text-block\s+([^\s]+)(?:\s+(\w+))?`).FindStringSubmatch(fullMatch)
 	if len(matches) < 2 {
-		return fullMatch // retur(src); errn original if no match
+		return fullMatch // return original if no match
 	}
 	filePath := matches[1]
 
-	src, err := ioutil.ReadFile(filePath)
+	// Security: Prevent path traversal attacks
+	// Clean the path and ensure it's relative and safe
+	cleanPath := filepath.Clean(filePath)
+	if filepath.IsAbs(cleanPath) || strings.HasPrefix(cleanPath, "..") {
+		fmt.Printf("Error: include-text-block path '%s' attempts directory traversal, using original text\n", filePath)
+		return fullMatch
+	}
+
+	// Check if file exists and is a regular file (not directory or symlink)
+	fileInfo, err := os.Stat(cleanPath)
 	if err != nil {
-		fmt.Printf("Error inserting text block from %s: %v\n", filePath, err)
+		fmt.Printf("Error inserting text block from %s: %v\n", cleanPath, err)
+		return fullMatch
+	}
+	if fileInfo.IsDir() {
+		fmt.Printf("Error: include-text-block path '%s' is a directory, not a file\n", cleanPath)
+		return fullMatch
+	}
+
+	src, err := ioutil.ReadFile(cleanPath)
+	if err != nil {
+		fmt.Printf("Error reading text block from %s: %v\n", cleanPath, err)
 		return fullMatch
 	}
 	var fileContent string
