@@ -33,7 +33,6 @@ func main() {
 	appName := filepath.Base(os.Args[0])
 	cfgName := strings.TrimSuffix(appName, ".exe") + ".yaml"
 	helpText, fmtHelp := antennaApp.HelpText, antennaApp.FmtHelp
-	themeHelpText := antennaApp.ThemeHelpText
 	version, releaseDate, releaseHash, licenseText := antennaApp.Version, antennaApp.ReleaseDate, antennaApp.ReleaseHash, antennaApp.LicenseText
 	showHelp, showLicense, showVersion := false, false, false
 	// Standard Options
@@ -49,8 +48,11 @@ func main() {
 	eout := os.Stderr
 
 	if showHelp {
-		if len(args) > 0 && strings.HasPrefix(args[0], "theme") {
-			fmt.Fprintf(out, "%s\n", fmtHelp(themeHelpText, appName, version, releaseDate, releaseHash))
+		if len(args) > 0 {
+			if !antennaApp.PrintHelpTopic(out, args[0], appName, version, releaseDate, releaseHash) {
+				fmt.Fprintf(eout, "unknown help topic %q — try 'antenna help topics'\n", args[0])
+				os.Exit(1)
+			}
 		} else {
 			fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		}

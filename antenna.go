@@ -37,7 +37,13 @@ func NewAntennaApp(appName string) *AntennaApp {
 func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName string, action string, args []string) error {
 	switch action {
 	case "help":
-		fmt.Fprintf(out, "%s\n", FmtHelp(HelpText, app.appName, Version, ReleaseDate, ReleaseHash))
+		if len(args) == 0 {
+			fmt.Fprintf(out, "%s\n", FmtHelp(HelpText, app.appName, Version, ReleaseDate, ReleaseHash))
+			return nil
+		}
+		if !PrintHelpTopic(out, args[0], app.appName, Version, ReleaseDate, ReleaseHash) {
+			return fmt.Errorf("unknown help topic %q — try 'antenna help topics'", args[0])
+		}
 		return nil
 	case "init":
 		return app.Init(cfgName, args)
