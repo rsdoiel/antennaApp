@@ -275,6 +275,93 @@ func updateBodyElements(gen *Generator, themeName string) (bool, error) {
 	return changed, nil
 }
 
+// defaultThemeFiles returns the skeleton filename → content map for a new theme.
+func defaultThemeFiles() map[string]string {
+	return map[string]string{
+		"header.md": "# Site Title\n",
+		"nav.md": `- [Home](/)
+- [About](/about.html)
+`,
+		"footer.md": "© 2026 Your Name\n",
+		"head.yaml": `meta:
+  - charset: utf-8
+  - name: viewport
+    content: width=device-width, initial-scale=1
+link:
+  - rel: stylesheet
+    type: text/css
+    href: /css/site.css
+`,
+	}
+}
+
+/** NewTheme creates a skeleton theme directory under the htdocs tree.
+ *
+ * Parameters:
+ *   out       (io.Writer) — progress messages
+ *   themeName (string)    — directory name for the theme; defaults to "theme"
+ *
+ * Returns:
+ *   error — non-nil on I/O failure
+ *
+ * Example:
+ *   err := cfg.NewTheme(os.Stdout, "my-theme")
+ */
+func (cfg *AppConfig) NewTheme(out io.Writer, themeName string) error {
+	if themeName == "" {
+		themeName = "theme"
+	}
+	themeDir := themeName
+	if cfg.Htdocs != "" {
+		themeDir = filepath.Join(cfg.Htdocs, themeName)
+	}
+	if err := os.MkdirAll(themeDir, 0775); err != nil {
+		return fmt.Errorf("cannot create %s: %s", themeDir, err)
+	}
+	skipped := false
+	for name, content := range defaultThemeFiles() {
+		dest := filepath.Join(themeDir, name)
+		if _, err := os.Stat(dest); err == nil {
+			fmt.Fprintf(out, "exists, skipped: %s\n", dest)
+			skipped = true
+			continue
+		}
+		if err := os.WriteFile(dest, []byte(content), 0664); err != nil {
+			return fmt.Errorf("cannot write %s: %s", dest, err)
+		}
+		fmt.Fprintf(out, "created: %s\n", dest)
+	}
+	if !skipped {
+		fmt.Fprintf(out, "theme %s created — edit the files then run: antenna apply %s\n", themeName, themeName)
+	}
+	return nil
+}
+
+/** NewTheme implements the "themes new" action.
+ *
+ * Parameters:
+ *   out     (io.Writer) — progress messages
+ *   cfgName (string)    — path to antenna.yaml
+ *   args    ([]string)  — optional: [theme-name] (default: "theme")
+ *
+ * Returns:
+ *   error — non-nil on configuration or I/O failure
+ *
+ * Example:
+ *   err := app.NewTheme(os.Stdout, "antenna.yaml", []string{"my-theme"})
+ */
+func (app *AntennaApp) NewTheme(out io.Writer, cfgName string, args []string) error {
+	cfg := &AppConfig{}
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
+	}
+	themeName := ""
+	if len(args) > 0 {
+		themeName = strings.TrimSpace(args[0])
+	}
+	return cfg.NewTheme(out, themeName)
+}
+
 func saveGenerator(fName string, gen *Generator) error {
 	src, err := yaml.Marshal(gen)
 	if err != nil {

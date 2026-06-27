@@ -22,8 +22,8 @@ Ideas, not quite a roadmap
 - [X] list posts and items (`antenna posts`, `antenna items`)
 - [X] list pages (`antenna pages`)
 - [X] list themes (`antenna themes`)
-- [ ] generate default theme structure (new theme)
-- [ ] apply theme
+- [X] generate default theme structure (`antenna themes new [NAME]`)
+- [X] apply theme (`antenna apply THEME_PATH [YAML_FILE_PATH]`)
 - [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
   - [X] seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
   - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
@@ -32,4 +32,4 @@ Ideas, not quite a roadmap
 - [ ] Documenting simple to complex integrations
   - [X] A simple website of "pages"
   - [X] A blog example using a collection to host posts
-  - [ ] A link blog with embedded responses (do I need a different action than post?)
+  - [X] A link blog with embedded responses — `post` works fine; `quote` generates the blockquote stub

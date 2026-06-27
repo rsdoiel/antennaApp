@@ -50,6 +50,9 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 	case "add":
 		return app.Add(cfgName, args)
 	case "themes":
+		if len(args) > 0 && args[0] == "new" {
+			return app.NewTheme(out, cfgName, args[1:])
+		}
 		return app.ListThemes(out, cfgName, args)
 	case "apply":
 		return app.ApplyTheme(cfgName, args)

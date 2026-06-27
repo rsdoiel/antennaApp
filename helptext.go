@@ -187,6 +187,12 @@ preview
 : Let's your preview the rendered your Antenna instance as a localhost website using
 your favorite web browser.
 
+themes [new [THEME_NAME]]
+: Without arguments, lists the theme directories detected in the project. With "new",
+creates a skeleton theme directory named THEME_NAME (default: "theme") containing
+header.md, nav.md, footer.md, and head.yaml stub files. Existing files are never
+overwritten. After editing the skeleton files, apply the theme with the "apply" action.
+
 apply THEME_PATH [YAML_FILE_PATH]
 : This will apply the content THEME_PATH and update the YAML generator file described
 by YAML_FILE_PATH. If YAML_FILE_PATH is not provided then that YAML generator file
