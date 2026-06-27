@@ -267,6 +267,13 @@ generator
 : (optional) The YAML configuration filename to used to render the collection
 as HTML.
 
+mode
+: (optional, default: "aggregate") Controls how the collection is rendered as HTML.
+"aggregate" renders feed-item cards from the items table (the default behaviour for
+link blogs and feed aggregators). "page-index" renders a simple link list from the
+pages table, suitable for collections like pages.md that track static HTML pages
+rather than harvested feed items.
+
 # EXAMPLES
 
 Here's an example of using **{app_name}** to create a single collection static site.

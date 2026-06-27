@@ -330,6 +330,12 @@ inputPath, outputPath, updated
 FROM pages
 WHERE inputPath = ?`
 
+	// SQLPageIndexItems returns inputPath and outputPath for all pages, ordered
+	// by inputPath. Used by WritePageIndex to render a simple link list.
+	SQLPageIndexItems = `SELECT inputPath, outputPath
+FROM pages
+ORDER BY inputPath`
+
 	// SQLSetAllPostToStatus sets all items with postPath set to a given
 	// status value.
 	SQLSetAllPostToStatus = `UPDATE posts

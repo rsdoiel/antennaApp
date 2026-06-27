@@ -476,9 +476,41 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		return err
 	}
 
-	// Write out HTML page
-	if err := gen.WriteHTML(out, db, appName, collection); err != nil {
-		return err
+	// Write out HTML page — mode: page-index renders a simple link list from
+	// the pages table; the default "aggregate" mode renders feed item cards.
+	if collection.Mode == "page-index" {
+		// Wrap the link list in a full HTML shell using the same header/nav/footer
+		// as the aggregate mode, but replace <main> content with WritePageIndex.
+		fmt.Fprintf(out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
+		gen.writeHeadElement(out, "", nil)
+		fmt.Fprintln(out, "<body>")
+		fmt.Fprintln(out, `  <a href="#main-content" class="skip-link">Skip to main content</a>`)
+		if gen.Header != "" {
+			fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
+		}
+		if gen.Nav != "" {
+			fmt.Fprintf(out, "  <nav aria-label=\"Site navigation\">\n    %s\n  </nav>\n", indentText(strings.TrimSpace(gen.Nav), 4))
+		}
+		if gen.TopContent != "" {
+			fmt.Fprintf(out, "\n    %s\n", indentText(strings.TrimSpace(gen.TopContent), 2))
+		}
+		if err := gen.WritePageIndex(out, db); err != nil {
+			out.Close()
+			return err
+		}
+		if gen.BottomContent != "" {
+			fmt.Fprintf(out, "\n    %s\n", indentText(strings.TrimSpace(gen.BottomContent), 2))
+		}
+		if gen.Footer != "" {
+			fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
+		}
+		fmt.Fprintln(out, "</body>")
+		fmt.Fprintln(out, "</html>")
+	} else {
+		if err := gen.WriteHTML(out, db, appName, collection); err != nil {
+			out.Close()
+			return err
+		}
 	}
 	out.Close()
 

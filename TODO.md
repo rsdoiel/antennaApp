@@ -27,7 +27,7 @@ Ideas, not quite a roadmap
 - [X] Consider a page action, it would make sure that the metadata is valid like post would be just render the HTML page next to the Markdown document, this could minimize the need to rely on Pandoc
   - [X] seems weird to reference a collection that will never hold anything but I need to find a YAML expression to build the page
   - [X] the YAML expression should allow full customization (or leaving out) the section, head, header, footer, etc.
-  - [ ] The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page, I need a clean approach that will work for both
+  - [X] The default rendering of the aggregation page doesn't make sense for an ad-hoc HTML page — fixed via `mode: page-index` on collection in antenna.yaml
 - [X] generate a configurable, sensible default CSS for working with Markdown content (`antenna css`)
 - [ ] Documenting simple to complex integrations
   - [X] A simple website of "pages"

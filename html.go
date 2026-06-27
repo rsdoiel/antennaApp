@@ -401,6 +401,50 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	return nil
 }
 
+// pageDisplayName derives a human-readable label from a Markdown input path.
+// "about.md" → "About", "my-page.md" → "My Page".
+func pageDisplayName(inputPath string) string {
+	base := filepath.Base(inputPath)
+	name := strings.TrimSuffix(base, filepath.Ext(base))
+	name = strings.ReplaceAll(name, "-", " ")
+	name = strings.ReplaceAll(name, "_", " ")
+	if len(name) > 0 {
+		name = strings.ToUpper(name[:1]) + name[1:]
+	}
+	return name
+}
+
+// WritePageIndex renders a simple `<ul>` link list from the pages table of db.
+// It is used when a collection has mode: page-index. Each row from the pages
+// table becomes one `<li><a href="outputPath">displayName</a></li>` entry.
+func (gen *Generator) WritePageIndex(out io.Writer, db *sql.DB) error {
+	rows, err := db.Query(SQLPageIndexItems)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	fmt.Fprintln(out, `  <main id="main-content">`)
+	fmt.Fprintln(out, "    <ul>")
+	for rows.Next() {
+		var inputPath, outputPath string
+		if err := rows.Scan(&inputPath, &outputPath); err != nil {
+			fmt.Fprintf(gen.eout, "error (page-index row): %s\n", err)
+			continue
+		}
+		// Normalise outputPath: ensure it starts with / for web-root linking
+		href := "/" + strings.TrimLeft(filepath.ToSlash(outputPath), "/")
+		label := pageDisplayName(inputPath)
+		fmt.Fprintf(out, "      <li><a href=%q>%s</a></li>\n", href, label)
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	fmt.Fprintln(out, "    </ul>")
+	fmt.Fprintln(out, "  </main>")
+	return nil
+}
+
 // WriteHtmlPage renders a post as an HTML Page using HTML connent and wrapping it based on the
 // generator configuration.
 func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubDate string, innerHTML string, frontMatter map[string]interface{}) error {

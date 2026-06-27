@@ -270,6 +270,11 @@ type Collection struct {
 
 	// DbName holds the SQLite3 database filename
 	DbName string `json:"dbName,omitempty" yaml:"dbName,omitempty"`
+
+	// Mode controls the HTML rendering strategy for this collection.
+	// "aggregate" (default) renders feed-item cards from the items table.
+	// "page-index" renders a simple link list from the pages table.
+	Mode string `json:"mode,omitempty" yaml:"mode,omitempty"`
 }
 
 // Name returns the collection basename used for the collection
