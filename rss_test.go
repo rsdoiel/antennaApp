@@ -78,7 +78,7 @@ func TestWriteItemRSS_ValidXMLWithHTMLEntities(t *testing.T) {
 	buf.WriteString(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>`)
 	err := gen.WriteItemRSS(&buf, "http://example.com/", "Title &mdash; Subtitle",
 		"<p>A post&mdash;with entities &amp; more &nbsp; content</p>",
-		nil, nil, "guid-1", "2026-06-27", "", "", "published", "", "", "")
+		nil, nil, "guid-1", "2026-06-27", "", "", "published", "", "", "", "")
 	if err != nil {
 		t.Fatalf("WriteItemRSS: %s", err)
 	}
@@ -95,7 +95,7 @@ func TestWriteItemRSS_ValidXMLWithCDATATerminatorInDescription(t *testing.T) {
 	buf.WriteString(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>`)
 	err := gen.WriteItemRSS(&buf, "http://example.com/", "JS Example",
 		"Use <![CDATA[ ]]> in scripts to embed data",
-		nil, nil, "guid-2", "2026-06-27", "", "", "published", "", "", "")
+		nil, nil, "guid-2", "2026-06-27", "", "", "published", "", "", "", "")
 	if err != nil {
 		t.Fatalf("WriteItemRSS: %s", err)
 	}

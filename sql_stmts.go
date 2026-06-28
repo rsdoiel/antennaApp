@@ -145,7 +145,7 @@ WHERE (pubDate IS NOT NULL) AND
    (pubDate != '') AND
    (postPath != '')
 ORDER BY pubDate DESC
-LIMIT %d;`
+LIMIT ?;`
 
 	// SQLRssDateRangePosts generate an RSS feed for recent posts
 	SQLRssDateRangePosts = `SELECT link, title, description, authors,
@@ -156,8 +156,8 @@ LIMIT %d;`
 FROM items
 WHERE (pubDate IS NOT NULL) AND
    (postPath != '') AND
-   (pubDate >= '%s') AND
-   (pubDate <= '%s')
+   (pubDate >= ?) AND
+   (pubDate <= ?)
 ORDER BY pubDate DESC;`
 
 	// SQLListPosts will list all published posts with a postPath by their descending pubDate

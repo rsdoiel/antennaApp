@@ -214,11 +214,6 @@ func (cfg *AppConfig) RssPosts(cName string, rssFeed string, count int, fromDate
 	}
 	defer db.Close()
 
-	// NOTES: posts action supports three different SQL statements
-	var (
-		sqlStmt string
-	)
-
 	gen, err := NewGenerator(appName, cfg.BaseURL)
 	if err != nil {
 		return err
@@ -226,15 +221,11 @@ func (cfg *AppConfig) RssPosts(cName string, rssFeed string, count int, fromDate
 
 	switch {
 	case fromDate != "" && toDate != "":
-		sqlStmt = fmt.Sprintf(SQLRssDateRangePosts, fromDate, toDate)
+		return gen.WriteCustomRSS(out, db, SQLRssDateRangePosts, feedLink, appName, collection, fromDate, toDate)
 	case count > 0:
-		sqlStmt = fmt.Sprintf(SQLRssRecentPosts, count)
-		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLRssRecentPosts, dsn, err)
-		}
+		return gen.WriteCustomRSS(out, db, SQLRssRecentPosts, feedLink, appName, collection, count)
 	default:
-		sqlStmt = SQLRssPosts
+		return gen.WriteCustomRSS(out, db, SQLRssPosts, feedLink, appName, collection)
 	}
-	return gen.WriteCustomRSS(out, db, sqlStmt, feedLink, appName, collection)
 }
 

@@ -22,11 +22,11 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"crypto/sha512"
+	"crypto/subtle"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -356,7 +356,7 @@ func LoadAccess(fName string) (*Access, error) {
 // and returns an Access struct and error.
 func loadAccessYAML(accessYAML string) (*Access, error) {
 	auth := new(Access)
-	src, err := ioutil.ReadFile(accessYAML)
+	src, err := os.ReadFile(accessYAML)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +370,7 @@ func loadAccessYAML(accessYAML string) (*Access, error) {
 // and returns an Access struct and error.
 func loadAccessJSON(accessJSON string) (*Access, error) {
 	auth := new(Access)
-	src, err := ioutil.ReadFile(accessJSON)
+	src, err := os.ReadFile(accessJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +399,7 @@ func (a *Access) dumpAccessYAML(accessYAML string) error {
 	if err := yamlEncoder.Encode(a); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(accessYAML, buf.Bytes(), 0600)
+	return os.WriteFile(accessYAML, buf.Bytes(), 0600)
 }
 
 // dumpAccessJSON writes an access.yaml file.
@@ -408,7 +408,7 @@ func (a *Access) dumpAccessJSON(accessJSON string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(accessJSON, src, 0600)
+	return os.WriteFile(accessJSON, src, 0600)
 }
 
 // UpdateAccess uses an *Access and username, password
@@ -505,7 +505,7 @@ func (a *Access) Login(username string, password string) bool {
 		// so we fail to authenticate.
 		return false
 	}
-	if bytes.Compare(secret.Key, u.Key) == 0 {
+	if subtle.ConstantTimeCompare(secret.Key, u.Key) == 1 {
 		return true
 	}
 	return false
@@ -884,7 +884,7 @@ func LoadWebService(setup string) (*WebService, error) {
 
 // loadWebServiceYAML loads a *WebService from a YAML file.
 func loadWebServiceYAML(setup string) (*WebService, error) {
-	src, err := ioutil.ReadFile(setup)
+	src, err := os.ReadFile(setup)
 	if err != nil {
 		return nil, err
 	}
@@ -906,7 +906,7 @@ func loadWebServiceYAML(setup string) (*WebService, error) {
 
 // loadWebServiceJSON loads a *WebService from a JSON file.
 func loadWebServiceJSON(setup string) (*WebService, error) {
-	src, err := ioutil.ReadFile(setup)
+	src, err := os.ReadFile(setup)
 	if err != nil {
 		return nil, err
 	}
@@ -957,7 +957,7 @@ func (ws *WebService) dumpWebServiceYAML(fName string) error {
 	if err := yamlEncoder.Encode(ws); err != nil {
 		return err
 	}
-	return ioutil.WriteFile(fName, buf.Bytes(), 0600)
+	return os.WriteFile(fName, buf.Bytes(), 0600)
 }
 
 // dumpWebServiceJSON writes a JSON file.
@@ -966,7 +966,7 @@ func (ws *WebService) dumpWebServiceJSON(fName string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(fName, src, 0600)
+	return os.WriteFile(fName, src, 0600)
 }
 
 // Run() starts a web service(s) described in the *WebService struct.

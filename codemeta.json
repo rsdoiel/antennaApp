@@ -35,10 +35,10 @@
     "Pandoc >= 3.9",
     "Bash or PowerShell"
   ],
-  "version": "0.0.24c",
+  "version": "0.0.25",
   "developmentStatus": "active",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- fixed RSS rendering for aggregated feeds\n- Improved metadata in head of HTML pages by incorporating the front matter of the collections or blog posts\n- Improved HTML accessibility and ARIA support in generated pages\n- Improved listing of posts, items, themes and pages\n- Added a default theme structure\n- Improved metadata handling for pages, posts and feed items\n- Added configurable CSS support",
+  "releaseNotes": "- fixed RSS rendering for aggregated feeds\n- Improved metadata in head of HTML pages by incorporating the front matter of the collections or blog posts\n- Improved HTML accessibility and ARIA support in generated pages\n- Improved listing of posts, items, themes and pages\n- Added a default theme structure\n- Improved metadata handling for pages, posts and feed items\n- Added configurable CSS support\n- Fixed missing categories column in RSS SQL queries causing scan failures\n- RSS feeds now emit category elements from harvested feed data\n- Replaced string-interpolated SQL date-range queries with parameterized queries\n- Replaced deprecated ioutil with os package for file I/O\n- Use constant-time comparison for password hash validation",
   "copyrightYear": 2026,
   "copyrightHolder": "R. S. Doiel"
 }

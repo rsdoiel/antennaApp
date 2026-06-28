@@ -62,7 +62,7 @@ func toXMLString(input string) string {
 
 func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
-	channel string, status string, updated string, label string, sourceMarkdown string) error {
+	channel string, status string, updated string, label string, sourceMarkdown string, categories string) error {
 	// Setup expressing update time.
 	pressTime := pubDate
 	if len(pressTime) > 10 {
@@ -110,6 +110,16 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 	if guid != "" {
 		fmt.Fprintf(out, "      <guid>cid://%s</guid>\n", strings.TrimSpace(toXMLString(guid)))
 	}
+	if categories != "" {
+		var cats []string
+		if err := json.Unmarshal([]byte(categories), &cats); err == nil {
+			for _, cat := range cats {
+				if cat != "" {
+					fmt.Fprintf(out, "      <category>%s</category>\n", strings.TrimSpace(toXMLString(cat)))
+				}
+			}
+		}
+	}
 	if pubDate != "" {
 		d, err := time.Parse("2006-01-02", pubDate)
 		if err == nil {
@@ -135,7 +145,7 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 }
 
 // WriteCustomRSS generates a custom RSS feed given a SQL statement
-func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, feedLink string, appName string, collection *Collection) error {
+func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, feedLink string, appName string, collection *Collection, args ...any) error {
 	fmt.Fprintf(out, `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:source="https://source.scripting.com/">
   <atom:link href=%q rel="self" type="application/rss+xml" />
@@ -184,7 +194,7 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 	// Setup  items
 	//stmt := SQLDisplayItems
 	//rows, err := db.Query(stmt)
-	rows, err := db.Query(sqlStmt)
+	rows, err := db.Query(sqlStmt, args...)
 	if err != nil {
 		return err
 	}
@@ -259,7 +269,7 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 		}
 		if err := gen.WriteItemRSS(out, link, title, description, authors,
 			enclosures, guid, pubDate, dcExt,
-			channel, status, updated, label, sourceMarkdown); err != nil {
+			channel, status, updated, label, sourceMarkdown, categories); err != nil {
 			return err
 		}
 	}
