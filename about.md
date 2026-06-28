@@ -36,7 +36,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.24c
+version: 0.0.25
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,7 +54,7 @@ date_released: 2026-06-27
 About this software
 ===================
 
-## antennaApp 0.0.24c
+## antennaApp 0.0.25
 
 - fixed RSS rendering for aggregated feeds
 - Improved metadata in head of HTML pages by incorporating the front matter of the collections or blog posts
@@ -63,6 +63,11 @@ About this software
 - Added a default theme structure
 - Improved metadata handling for pages, posts and feed items
 - Added configurable CSS support
+- Fixed missing categories column in RSS SQL queries causing scan failures
+- RSS feeds now emit category elements from harvested feed data
+- Replaced string-interpolated SQL date-range queries with parameterized queries
+- Replaced deprecated ioutil with os package for file I/O
+- Use constant-time comparison for password hash validation
 
 ## Authors
 

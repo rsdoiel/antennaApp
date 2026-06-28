@@ -20,7 +20,7 @@
 </nav>
 <main id="main-content">
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.24c">antennaApp 0.0.24c</h2>
+<h2 id="antennaapp-0.0.25">antennaApp 0.0.25</h2>
 <ul>
 <li>fixed RSS rendering for aggregated feeds</li>
 <li>Improved metadata in head of HTML pages by incorporating the front
@@ -30,6 +30,13 @@ matter of the collections or blog posts</li>
 <li>Added a default theme structure</li>
 <li>Improved metadata handling for pages, posts and feed items</li>
 <li>Added configurable CSS support</li>
+<li>Fixed missing categories column in RSS SQL queries causing scan
+failures</li>
+<li>RSS feeds now emit category elements from harvested feed data</li>
+<li>Replaced string-interpolated SQL date-range queries with
+parameterized queries</li>
+<li>Replaced deprecated ioutil with os package for file I/O</li>
+<li>Use constant-time comparison for password hash validation</li>
 </ul>
 <h2 id="authors">Authors</h2>
 <ul>
