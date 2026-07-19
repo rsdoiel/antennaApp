@@ -20,9 +20,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -31,22 +33,34 @@ import (
 	ext "github.com/mmcdole/gofeed/extensions"
 )
 
-// Write HTML for an item
+// Write HTML for an item. cfg controls body-content rendering per the
+// items: block in page.yaml (DEC-022–031); it does not affect the
+// data-pagefind-filter metadata built below (DEC-025). The returned bool
+// is true when the item was omitted entirely (items.link.missing: omit —
+// DEC-027) and no output was written for it.
 func (gen *Generator) WriteItem(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
 	sourceMarkdown string, enclosures []*Enclosure, guid string, pubDate string, dcExtSrc string,
-	channel string, status string, updated string, label string, categories string) error {
-	// Setup expressing update time.
-	pressTime := pubDate
-	if len(pressTime) > 10 {
-		pressTime = pressTime[0:10]
+	channel string, status string, updated string, label string, categories string, cfg ItemsConfig) (bool, error) {
+	cfg.applyDefaults()
+
+	linkRes, err := resolveItemLink(link, title, channel, cfg.Link)
+	if err != nil {
+		return false, err
 	}
-	if updated != "" {
-		if len(updated) > 10 {
-			updated = updated[0:10]
+	if linkRes.Omit {
+		return true, nil
+	}
+
+	showField := func(name string) bool {
+		if len(cfg.Fields) == 0 {
+			return true
 		}
-		if pressTime != updated {
-			pressTime += ", updated: " + updated
+		for _, f := range cfg.Fields {
+			if f == name {
+				return true
+			}
 		}
+		return false
 	}
 
 	// Build PageFind filter attribute values
@@ -121,64 +135,254 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 
 	// Build heading — h2 keeps article titles subordinate to the page h1
 	var headingHTML string
-	if title == "" {
-		headingHTML = fmt.Sprintf("<h2>@%s</h2>", label)
-	} else {
-		headingHTML = fmt.Sprintf("<h2>%s</h2>", title)
+	if showField("title") {
+		if title == "" {
+			headingHTML = fmt.Sprintf("<h2>@%s</h2>", label)
+		} else {
+			headingHTML = fmt.Sprintf("<h2>%s</h2>", title)
+		}
 	}
 
 	// Build date using <time> elements so the date is machine-readable and
-	// not mixed into the heading's accessible name.
-	pubShort := pubDate
-	if len(pubShort) > 10 {
-		pubShort = pubShort[0:10]
-	}
-	updShort := updated
-	if len(updShort) > 10 {
-		updShort = updShort[0:10]
-	}
+	// not mixed into the heading's accessible name. The datetime attribute
+	// always uses an ISO-style layout regardless of cfg.DateFormat, since
+	// it is machine-readable metadata, not display text (DEC-028).
 	var dateHTML string
-	if pubShort != "" {
-		dateHTML = fmt.Sprintf(`<time datetime=%q>%s</time>`, pubShort, pubShort)
-		if updShort != "" && updShort != pubShort {
-			dateHTML += fmt.Sprintf(`, updated: <time datetime=%q>%s</time>`, updShort, updShort)
+	if showField("pubDate") {
+		machinePub := formatItemDate(pubDate, "2006-01-02")
+		displayPub := formatItemDate(pubDate, cfg.DateFormat)
+		if machinePub != "" {
+			dateHTML = fmt.Sprintf(`<time datetime=%q>%s</time>`, machinePub, displayPub)
+			if updated != "" {
+				machineUpd := formatItemDate(updated, "2006-01-02")
+				displayUpd := formatItemDate(updated, cfg.DateFormat)
+				if machineUpd != machinePub {
+					dateHTML += fmt.Sprintf(`, updated: <time datetime=%q>%s</time>`, machineUpd, displayUpd)
+				}
+			}
 		}
 	}
 
-	content := description
-	if sourceMarkdown != "" {
-		doc := &CommonMark{
-			Text: sourceMarkdown,
-		}
-		if src, err := doc.ToHTML(); err == nil {
-			content = src
+	var content string
+	if showField("content") {
+		content, err = resolveItemContent(description, sourceMarkdown, cfg)
+		if err != nil {
+			return false, err
 		}
 	}
+
+	// Source attribution line — additive to the existing footer, per the
+	// same "supplementary information about the article" rationale as
+	// DEC-017's <footer> choice.
+	var sourceHTML string
+	if showField("source") && cfg.ShowSource != nil && *cfg.ShowSource && label != "" {
+		sourceHTML = fmt.Sprintf(`<p class="source">via %s</p>`, label)
+	}
+
+	var footerInner string
+	if linkRes.AsPlainText {
+		footerInner = linkRes.Label
+	} else {
+		footerInner = fmt.Sprintf(`<a href=%q>%s</a>`, linkRes.Href, linkRes.Label)
+	}
+	footerHTML := "<footer>\n        " + footerInner
+	if sourceHTML != "" {
+		footerHTML += "\n        " + sourceHTML
+	}
+	footerHTML += "\n      </footer>"
+
+	// Build the body from only the sections cfg.Fields selects, so an
+	// excluded field's wrapper element is omitted entirely rather than
+	// left behind as an empty <p></p> (found via Phase 7 smoke testing).
+	var bodyParts []string
+	if headingHTML != "" {
+		bodyParts = append(bodyParts, headingHTML)
+	}
+	if showField("pubDate") {
+		bodyParts = append(bodyParts, fmt.Sprintf("<p>%s</p>", dateHTML))
+	}
+	if showField("content") {
+		bodyParts = append(bodyParts, fmt.Sprintf("<p>%s</p>", content))
+	}
+	bodyParts = append(bodyParts, footerHTML)
+	bodyHTML := strings.Join(bodyParts, "\n      ")
 
 	if len(filters) > 0 {
 		fmt.Fprintf(out, `
     <article data-published=%q data-link=%q data-pagefind-filter=%q>
       %s
-      <p>%s</p>
-      <p>%s</p>
-      <footer>
-        <a href=%q>%s</a>
-      </footer>
     </article>
-`, pubDate, link, strings.Join(filters, ", "), headingHTML, dateHTML, content, link, link)
+`, pubDate, linkRes.Href, strings.Join(filters, ", "), bodyHTML)
 	} else {
 		fmt.Fprintf(out, `
     <article data-published=%q data-link=%q>
       %s
-      <p>%s</p>
-      <p>%s</p>
-      <footer>
-        <a href=%q>%s</a>
-      </footer>
     </article>
-`, pubDate, link, headingHTML, dateHTML, content, link, link)
+`, pubDate, linkRes.Href, bodyHTML)
 	}
-	return nil
+	return false, nil
+}
+
+// stripTagsPattern matches an HTML tag for stripTags. A deliberate
+// simplification, not a full HTML parser — acceptable because it only ever
+// runs on the raw-description-fallback path (DEC-024), never on the common
+// sourceMarkdown path.
+var stripTagsPattern = regexp.MustCompile(`<[^>]*>`)
+
+// stripTags removes HTML tags from s, returning the remaining text
+// unchanged. Not a full HTML parser: malformed or unclosed tags are
+// removed on a best-effort basis (DEC-024).
+func stripTags(s string) string {
+	return stripTagsPattern.ReplaceAllString(s, "")
+}
+
+// truncateWords truncates s to at most maxLen characters, backing off to
+// the last preceding whitespace boundary so a word is never cut in half
+// (DEC-029). If s is already at or under maxLen, it is returned unchanged.
+// If no whitespace exists at or before maxLen, s is hard-truncated to
+// maxLen (documented limitation, not treated as an error).
+func truncateWords(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	cut := s[:maxLen]
+	if idx := strings.LastIndexAny(cut, " \t\n"); idx >= 0 {
+		return cut[:idx]
+	}
+	return cut
+}
+
+// resolveItemContent resolves a feed item's rendered body content following
+// the content-source precedence declared in DEC-023: sourceMarkdown is
+// preferred when non-empty (rendered via CommonMark, safe or unsafe per
+// cfg.HTML — DEC-024), falling back to the raw feed description (tag-
+// stripped, escaped, or passed through unchanged per cfg.HTML) only when
+// sourceMarkdown is empty. cfg.ContentMaxLength, if set, truncates the
+// resolved pre-render source text on a word boundary before conversion
+// (DEC-029), never the rendered HTML.
+func resolveItemContent(description, sourceMarkdown string, cfg ItemsConfig) (string, error) {
+	source := sourceMarkdown
+	usedMarkdown := true
+	if source == "" {
+		source = description
+		usedMarkdown = false
+	}
+	if cfg.ContentMaxLength > 0 {
+		source = truncateWords(source, cfg.ContentMaxLength)
+	}
+	if usedMarkdown {
+		doc := &CommonMark{Text: source}
+		if cfg.HTML == "unsafe" {
+			return doc.ToUnsafeHTML()
+		}
+		return doc.ToHTML()
+	}
+	switch cfg.HTML {
+	case "escape":
+		return html.EscapeString(source), nil
+	case "unsafe":
+		return source, nil
+	default: // "strip", or unset
+		return stripTags(source), nil
+	}
+}
+
+// LinkResolution is the result of resolving a feed item's anchor per
+// items.link configuration (DEC-026, DEC-027).
+type LinkResolution struct {
+	// Href is the anchor's target URL. Empty when AsPlainText is true.
+	Href string
+	// Label is the anchor's (or plain text's) visible label.
+	Label string
+	// AsPlainText, when true, means render Label as plain text with no
+	// <a> element (Missing == "unlinked", or a source_link fallback with
+	// no channel URL available either).
+	AsPlainText bool
+	// Omit, when true, means exclude the item from output entirely
+	// (Missing == "omit"). Callers must check this before writing any
+	// output for the item.
+	Omit bool
+}
+
+// resolveItemLinkLabel computes the anchor label per cfg.LabelField
+// (DEC-026): the literal sentinel "static" always uses cfg.LabelFallback;
+// otherwise the named field's value is used, falling back to
+// cfg.LabelFallback when that value is empty.
+func resolveItemLinkLabel(link, title string, cfg LinkConfig) string {
+	if cfg.LabelField == "static" {
+		return cfg.LabelFallback
+	}
+	var value string
+	switch cfg.LabelField {
+	case "link":
+		value = link
+	case "title":
+		value = title
+	}
+	if value == "" {
+		return cfg.LabelFallback
+	}
+	return value
+}
+
+// resolveItemLink resolves a feed item's anchor per items.link
+// configuration (DEC-026, DEC-027). channelURL is the parent feed/
+// channel's URL, used only for the "source_link" missing-link fallback.
+func resolveItemLink(link, title, channelURL string, cfg LinkConfig) (LinkResolution, error) {
+	label := resolveItemLinkLabel(link, title, cfg)
+	if link != "" {
+		return LinkResolution{Href: link, Label: label}, nil
+	}
+	if cfg.Required {
+		return LinkResolution{}, fmt.Errorf("item link is required but empty (items.link.required: true)")
+	}
+	switch cfg.Missing {
+	case "omit":
+		return LinkResolution{Omit: true}, nil
+	case "source_link":
+		if channelURL != "" {
+			return LinkResolution{Href: channelURL, Label: label}, nil
+		}
+		// DEC-027 — channel URL also empty; fall back to unlinked rather
+		// than emitting an empty href.
+		return LinkResolution{Label: label, AsPlainText: true}, nil
+	default: // "unlinked", or unset
+		return LinkResolution{Label: label, AsPlainText: true}, nil
+	}
+}
+
+// storedDateLayouts are the Go reference layouts a stored pubDate/updated
+// value may come back as, tried in order. RFC3339 is what the production
+// "sqlite" driver (github.com/glebarez/go-sqlite, a pure-Go SQLite driver)
+// actually returns when scanning a DATETIME-affinity column into a string —
+// confirmed by an end-to-end smoke test (Phase 7) against a real generated
+// site, which showed date_format silently having no effect. The
+// space-separated layout is what saveItem (harvest.go) writes as a bound
+// parameter string and is what the "sqlite3" driver (mattn/go-sqlite3, used
+// by this package's own tests) returns verbatim without reinterpreting it.
+var storedDateLayouts = []string{
+	time.RFC3339,
+	"2006-01-02 15:04:05",
+}
+
+// formatItemDate formats a stored pubDate/updated value per items.date_format
+// (DEC-028). raw is parsed against each of storedDateLayouts in turn and
+// reformatted with layout on the first successful parse. When raw matches
+// neither — the feed's raw, unparsed date string, in a format gofeed
+// couldn't parse — the result falls back to the first 10 characters of raw
+// (or raw unchanged if shorter), exactly matching current WriteItem
+// truncation behavior, rather than returning the full untruncated string or
+// erroring.
+func formatItemDate(raw string, layout string) string {
+	for _, l := range storedDateLayouts {
+		if t, err := time.Parse(l, raw); err == nil {
+			return t.Format(layout)
+		}
+	}
+	if len(raw) > 10 {
+		return raw[:10]
+	}
+	return raw
 }
 
 // elementFromMap, generate an HTML element from a map[string]string
@@ -301,6 +505,13 @@ func indentText(src string, spaces int) string {
 
 // WriteHTML writes aggregated items into an HTML page from the contents of the database
 func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, collection *Collection) error {
+	// Apply items: config defaults and validate enum values once, up
+	// front, so a typo aborts generation instead of silently misrendering
+	// every item (DEC-022–031).
+	gen.Items.applyDefaults()
+	if err := gen.Items.validate(); err != nil {
+		return err
+	}
 	// Create the outer elements of a page.
 	fmt.Fprintf(out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
 	defer fmt.Fprintln(out, "</html>")
@@ -379,9 +590,9 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 				enclosures = nil
 			}
 		}
-		if err := gen.WriteItem(out, link, title, description, authors,
+		if _, err := gen.WriteItem(out, link, title, description, authors,
 			sourceMarkdown, enclosures, guid, pubDate, dcExt,
-			channel, status, updated, label, categories); err != nil {
+			channel, status, updated, label, categories, gen.Items); err != nil {
 			return err
 		}
 	}

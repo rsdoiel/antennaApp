@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -143,5 +144,79 @@ func TestNewTheme_ReportsCreatedFiles(t *testing.T) {
 	out := buf.String()
 	if !strings.Contains(out, "mytheme") {
 		t.Errorf("expected output to mention theme name, got: %q", out)
+	}
+}
+
+// -------------------------------------------------------------------
+// Phase 6 (item formatting): items.yaml theme integration
+// -------------------------------------------------------------------
+
+func TestIsTargetFile_ItemsYAML(t *testing.T) {
+	if !isTargetFile("items.yaml") {
+		t.Error(`isTargetFile("items.yaml") = false, want true`)
+	}
+}
+
+func TestUpdateItemsElement_NoFilePresent(t *testing.T) {
+	tmpDir := t.TempDir()
+	gen := &Generator{}
+	changed, err := updateItemsElement(gen, tmpDir)
+	if err != nil {
+		t.Fatalf("updateItemsElement: %s", err)
+	}
+	if changed {
+		t.Error("expected changed=false when items.yaml is absent")
+	}
+	if !reflect.DeepEqual(gen.Items, ItemsConfig{}) {
+		t.Errorf("gen.Items = %#v, want zero value unchanged", gen.Items)
+	}
+}
+
+func TestUpdateItemsElement_FilePresent(t *testing.T) {
+	tmpDir := t.TempDir()
+	src := `fields:
+  - title
+  - content
+link:
+  label_fallback: "read me"
+date_format: "Jan 2, 2006"
+content_max_length: 320
+show_source: true
+html: strip
+`
+	if err := os.WriteFile(filepath.Join(tmpDir, "items.yaml"), []byte(src), 0664); err != nil {
+		t.Fatalf("write items.yaml: %s", err)
+	}
+	gen := &Generator{}
+	changed, err := updateItemsElement(gen, tmpDir)
+	if err != nil {
+		t.Fatalf("updateItemsElement: %s", err)
+	}
+	if !changed {
+		t.Error("expected changed=true when items.yaml is present")
+	}
+	if len(gen.Items.Fields) != 2 || gen.Items.Fields[0] != "title" || gen.Items.Fields[1] != "content" {
+		t.Errorf("gen.Items.Fields = %#v, want [title content]", gen.Items.Fields)
+	}
+	if gen.Items.Link.LabelFallback != "read me" {
+		t.Errorf("gen.Items.Link.LabelFallback = %q, want %q", gen.Items.Link.LabelFallback, "read me")
+	}
+	if gen.Items.DateFormat != "Jan 2, 2006" {
+		t.Errorf("gen.Items.DateFormat = %q, want %q", gen.Items.DateFormat, "Jan 2, 2006")
+	}
+	if gen.Items.ContentMaxLength != 320 {
+		t.Errorf("gen.Items.ContentMaxLength = %d, want 320", gen.Items.ContentMaxLength)
+	}
+}
+
+func TestUpdateItemsElement_MalformedYAML(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(tmpDir, "items.yaml"), []byte("fields: [unterminated"), 0664); err != nil {
+		t.Fatalf("write items.yaml: %s", err)
+	}
+	gen := &Generator{}
+	_, err := updateItemsElement(gen, tmpDir)
+	if err == nil {
+		t.Error("expected error for malformed items.yaml, got nil")
 	}
 }

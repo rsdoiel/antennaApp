@@ -98,8 +98,111 @@ type Generator struct {
 	// Defaults to "en-US" when not set via YAML.
 	Lang string `json:"lang,omitempty" yaml:"lang,omitempty"`
 
+	// Items, when set, controls how harvested feed items render in
+	// aggregate collection pages. Has no effect on local post/page
+	// rendering (DEC-031).
+	Items ItemsConfig `json:"items,omitempty" yaml:"items,omitempty"`
+
 	out  io.Writer
 	eout io.Writer
+}
+
+// ItemsConfig controls how harvested feed items are rendered into
+// aggregate collection pages (the `items:` block in page.yaml).
+// See antennaApp/design_item_formatting.md and decisions.md DEC-022–031.
+type ItemsConfig struct {
+	// Fields is an ordered allowlist of visible body fields to render.
+	// Known values: "title", "link", "pubDate", "content", "source".
+	// Empty means all fields (default, applied by applyDefaults()).
+	Fields []string `json:"fields,omitempty" yaml:"fields,omitempty"`
+
+	Link LinkConfig `json:"link,omitempty" yaml:"link,omitempty"`
+
+	// DateFormat is a Go reference-layout string applied to pubDate/updated.
+	// Default: "2006-01-02".
+	DateFormat string `json:"date_format,omitempty" yaml:"date_format,omitempty"`
+
+	// ContentMaxLength truncates resolved pre-render source text on a word
+	// boundary. Zero means no truncation (default).
+	ContentMaxLength int `json:"content_max_length,omitempty" yaml:"content_max_length,omitempty"`
+
+	// ShowSource controls whether the originating feed/channel label is
+	// rendered. Default: true. Pointer so an explicit `show_source: false`
+	// can be distinguished from "not set" (Go's bool zero value is false).
+	ShowSource *bool `json:"show_source,omitempty" yaml:"show_source,omitempty"`
+
+	// HTML is one of "strip" (default), "escape", "unsafe" — DEC-024.
+	HTML string `json:"html,omitempty" yaml:"html,omitempty"`
+}
+
+// LinkConfig controls the anchor generated for each feed item.
+type LinkConfig struct {
+	// LabelField names the item field supplying anchor text, or the
+	// literal sentinel "static". Default: "static" — a deliberate
+	// accessibility default (DEC-026): screen readers read a raw URL
+	// character-by-character, which is a poor listening experience. Set
+	// to "link" to restore the pre-existing URL-as-anchor-text behavior,
+	// or "title" to use the item title instead.
+	LabelField string `json:"label_field,omitempty" yaml:"label_field,omitempty"`
+
+	// LabelFallback is used when LabelField names a field whose value is
+	// empty/missing, or unconditionally when LabelField == "static" (the
+	// default). Default: "Continue reading".
+	LabelFallback string `json:"label_fallback,omitempty" yaml:"label_fallback,omitempty"`
+
+	// Required, if true, fails collection generation when an item's link
+	// is empty, instead of applying Missing. Default: false.
+	Required bool `json:"required,omitempty" yaml:"required,omitempty"`
+
+	// Missing is one of "unlinked" (default), "omit", "source_link" — DEC-027.
+	Missing string `json:"missing,omitempty" yaml:"missing,omitempty"`
+}
+
+// applyDefaults fills in zero-valued fields with this feature's documented
+// defaults (DEC-022–031). Called once per ItemsConfig before it is used to
+// render items, so a collection with no `items:` block in page.yaml still
+// renders against a fully-defaulted configuration rather than a bare zero
+// value.
+func (cfg *ItemsConfig) applyDefaults() {
+	if len(cfg.Fields) == 0 {
+		cfg.Fields = []string{"title", "source", "pubDate", "content"}
+	}
+	if cfg.Link.LabelField == "" {
+		cfg.Link.LabelField = "static" // DEC-026 — accessibility default, not "link"
+	}
+	if cfg.Link.LabelFallback == "" {
+		cfg.Link.LabelFallback = "Continue reading"
+	}
+	if cfg.Link.Missing == "" {
+		cfg.Link.Missing = "unlinked"
+	}
+	if cfg.DateFormat == "" {
+		cfg.DateFormat = "2006-01-02"
+	}
+	if cfg.ShowSource == nil {
+		t := true
+		cfg.ShowSource = &t
+	}
+	if cfg.HTML == "" {
+		cfg.HTML = "strip"
+	}
+}
+
+// validate checks enum-valued fields and returns a descriptive error for
+// typos, rather than letting an invalid value silently fall through to a
+// default at render time. Intended to be called at config-load time.
+func (cfg *ItemsConfig) validate() error {
+	switch cfg.HTML {
+	case "", "strip", "escape", "unsafe":
+	default:
+		return fmt.Errorf("items.html: invalid value %q (want strip, escape, or unsafe)", cfg.HTML)
+	}
+	switch cfg.Link.Missing {
+	case "", "unlinked", "omit", "source_link":
+	default:
+		return fmt.Errorf("items.link.missing: invalid value %q (want unlinked, omit, or source_link)", cfg.Link.Missing)
+	}
+	return nil
 }
 
 // NewGenerator initialized a new Generator struct
@@ -205,6 +308,7 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	if obj.AllowedMetaFields != nil {
 		gen.AllowedMetaFields = obj.AllowedMetaFields[:]
 	}
+	gen.Items = obj.Items
 	return nil
 }
 

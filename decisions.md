@@ -325,3 +325,265 @@ types (`WriteHTML` aggregate, `WriteHtmlPage` posts/pages):
 **Why:** This is a bug. The `rel` attribute value is not a valid link relationship. Browsers and feed discovery tools silently ignore unknown `rel` values, so the Markdown alternate link is never discoverable.
 
 ---
+
+## 2026-07-19 — Feed item formatting control (`items:` block)
+
+### Context
+
+`item_formatting_proposal.md` proposed a new `items:` block in `page.yaml` giving
+per-collection control over how harvested feed items render into aggregate pages,
+distinct from `allowed_meta_fields` (posts/pages only, DEC-010). Reading `html.go`,
+`harvest.go`, and `cmarkdoc.go` during design review surfaced that some of the
+proposal's stated goals — preferring Markdown content over raw feed HTML, and a
+safe/unsafe rendering split — are **already implemented** in `WriteItem` and
+`CommonMark`, just undeclared. This session's decisions formalize that existing
+behavior and add the genuinely new configuration surface around it.
+
+---
+
+### DEC-022 — Add `items:` block to `page.yaml`, scoped to feed-item body content only
+
+**Decision:** `page.yaml` gains an `items:` key (`Generator.Items ItemsConfig`)
+controlling the human-visible body of harvested feed items (title, date, content,
+link, source) in aggregate collection pages.
+
+**Why:** No equivalent control exists today; `allowed_meta_fields` only governs
+posts/pages. This proposal's scope is deliberately narrow: it does not touch
+`allowed_meta_fields`, does not touch local post/page rendering (DEC-031), and does
+not touch the PageFind `data-pagefind-filter` attributes already governed by
+DEC-007 through DEC-010 (DEC-025).
+
+---
+
+### DEC-023 — `sourceMarkdown` is preferred over raw `description`, declared explicitly
+
+**Decision:** The existing precedence in `WriteItem` — use `sourceMarkdown` when
+non-empty, else raw `description` — is formalized as `items:`'s foundational,
+documented content-resolution rule rather than left as an undeclared fallback
+inside one `if` statement.
+
+**Why:** Reading `harvest.go` (`saveItem`) confirmed `sourceMarkdown` is already
+auto-populated for nearly every harvested item, by converting the feed's HTML
+`description` via `html2md`, unless a `source:markdown` feed extension is present
+(untested — marked `FIXME` in source) or the conversion fails. This is not new
+behavior; making it explicit lets `items.html` (DEC-024) be specified correctly
+against two distinct pipelines instead of one assumed pipeline.
+
+---
+
+### DEC-024 — `items.html` has dual semantics depending on which content pipeline resolved
+
+**Decision:** `items.html` (`strip` \| `escape` \| `unsafe`, default `strip`) means:
+
+- When `sourceMarkdown` resolved (the common case): `strip`/`escape` keep the
+  existing `CommonMark.ToHTML()` goldmark-safe renderer (no raw HTML passthrough);
+  `unsafe` switches that item's rendering to `CommonMark.ToUnsafeHTML()` — the same
+  renderer already used for local posts — as an explicit, deliberate per-collection
+  opt-in.
+- When raw `description` resolved (fallback only — no `sourceMarkdown` for that
+  item): `strip` (default) strips HTML tags to plain text; `escape` HTML-escapes
+  the raw text; `unsafe` passes it through unchanged.
+
+**Why:** `WriteItem` currently interpolates raw `description` via `fmt.Fprintf`
+with `%s` — no escaping at all — whenever `sourceMarkdown` is empty. That is a
+real, unsanitized-HTML gap. The Markdown-path default is **not** a behavior
+change (goldmark safe mode is already what runs today); only the raw-description-
+fallback default changes existing behavior, and only for the minority of items
+that lack `sourceMarkdown`.
+
+**Alternatives rejected:** A single flat `html` setting applied uniformly
+regardless of which pipeline resolved — rejected because the two pipelines have
+different current trust levels (one already goldmark-safe, one entirely
+unsanitized) and conflating them would either weaken the safe path or fail to fix
+the actually-unsafe path.
+
+---
+
+### DEC-025 — `items.fields` governs body content only, not PageFind filter attributes
+
+**Decision:** `items.fields` (ordered allowlist: `title`, `link`, `pubDate`,
+`content`, `source`) controls only the visible article body built in `WriteItem`.
+It has no effect on the `data-pagefind-filter` attribute values (categories,
+`dc_*` fields, author, label, channel) built separately in `WriteItem`'s `filters`
+slice.
+
+**Why:** DEC-010 already established that feed item metadata is always rendered
+in full for PageFind faceting — it is already public data. `items.fields` is a
+new, separate axis (what's visible in the rendered article) and must not
+silently collapse into or override that earlier decision.
+
+---
+
+### DEC-026 — `items.link.label_field` defaults to `static` with fallback `"Continue reading"` — an accessibility-motivated default change
+
+**Decision:** `items.link.label_field` defaults to `static` (not `link`), and
+`items.link.label_fallback` defaults to `"Continue reading"` (not `"Read
+more"`). A new literal value for `label_field`, `static`, makes
+`label_fallback` the anchor text unconditionally for every item, ignoring
+per-item data entirely. Setting `label_field` to `link` restores the
+pre-existing behavior (anchor text is the item's URL); setting it to `title`
+uses the item title instead. Both are explicit, called-out opt-outs from the
+new default, not the default itself.
+
+**Why:** The current, unconfigured behavior — anchor text is the raw item
+URL (`html.go:164-166`) — is read aloud character-by-character by screen
+readers, a poor listening experience for content meant to be browsed by ear
+as much as by eye. Defaulting to a fixed, human-readable call-to-action label
+instead is consistent with this project's existing accessibility decisions
+(DEC-016 skip-navigation link, DEC-019 `<time>` element instead of a
+heading-embedded date, DEC-020 missing-`<h1>` warning). This is a deliberate,
+visible behavior change to every existing collection's rendered output —
+unlike the narrower `html: strip` fallback-path default (DEC-024), which only
+affects items lacking `sourceMarkdown` — and must be prominently called out
+in release notes, not treated as a minor detail.
+
+A separate, narrower need motivated adding the `static` mechanism in the
+first place: `label_fallback`'s original design ("used when the named field
+is empty") can never fire in practice against the field `link`, since a
+rendered item's link is essentially always present. Sites wanting a fixed
+call-to-action label regardless of item data — the motivating real-world
+case, `rsdoiel.github.io/antenna`, wanting "read me" instead of a URL — need
+a direct way to say that, not a fallback path that never triggers. Making
+`static` the *default* (rather than leaving `link` as default and `static` as
+an opt-in) folds the accessibility fix and this mechanism together: every
+site gets the accessible default for free, and any site wanting a different
+fixed label only needs to set `label_fallback`.
+
+**Alternatives rejected:** Keeping `label_field: link` as the default and
+treating the accessible label as opt-in — rejected because it would leave
+the accessibility problem present by default for every collection that
+doesn't know to configure it, the same objection already settled against for
+DEC-016/DEC-019/DEC-020's opt-out-not-opt-in defaults.
+
+---
+
+### DEC-027 — `items.link.missing` recursively falls back to `unlinked`
+
+**Decision:** `items.link.missing: source_link` uses the parent channel's URL
+when an item's own `link` is empty. If the channel URL is *also* empty, behavior
+falls back to `unlinked` (plain text, no `<a>`) rather than emitting an empty
+`href`.
+
+**Why:** `WriteItem` has no missing-link handling today at all — an empty `link`
+currently renders `<a href="">`. This proposal introduces the first defined
+behavior for that case; the recursive fallback closes an otherwise-undefined
+edge case (source_link's own source being unavailable) rather than leaving it to
+produce broken markup.
+
+---
+
+### DEC-028 — `items.date_format` parses against the known stored layout, falls back to the existing 10-character truncation on failure
+
+**Decision:** `items.date_format` (Go reference layout, default `"2006-01-02"`)
+is applied by parsing the stored `pubDate`/`updated` value against
+`"2006-01-02 15:04:05"` — the layout `saveItem` (`harvest.go`) writes when
+`gofeed` successfully parses the feed's date — then reformatting. When the
+stored value does not match that layout (the feed's raw, unparsed date
+string, format unknown, preserved when `gofeed` failed to parse it), the
+result is truncated to the first 10 characters (or returned as-is if
+shorter) — i.e. exactly what current `WriteItem` code already does
+unconditionally — rather than erroring `generate` or returning the full,
+untruncated raw string.
+
+**Why:** Current code only string-slices the first 10 characters; it never
+parses. A real `date_format` requires `time.Parse`, and there is no
+general-purpose parser for arbitrary feed date formats already in the
+codebase, so a fallback is required for the parse-failure case. An earlier
+version of this decision proposed returning the full raw string unchanged in
+that case; on review this was rejected — it would silently change output
+length for any item whose date `gofeed` couldn't parse, which is exactly the
+kind of unflagged behavior change this design otherwise goes out of its way
+to avoid (contrast DEC-024, DEC-026, which change behavior deliberately and
+say so). Matching the existing truncation exactly means this fallback path
+needs no release-note callout at all — collections without an `items:` block
+get byte-identical date rendering to today, full stop.
+
+---
+
+### DEC-029 — `items.content_max_length` truncates pre-render source text, never rendered HTML
+
+**Decision:** `items.content_max_length` truncates whichever pre-render source
+text resolved (`sourceMarkdown` or raw `description`, per DEC-023), on a word
+boundary, before Markdown/HTML conversion.
+
+**Why:** Truncating already-rendered HTML risks cutting mid-tag and producing
+unbalanced markup. Truncating the source text first, then rendering, avoids that
+class of bug entirely.
+
+---
+
+### DEC-030 — Theme directories may include `items.yaml`, applied like `head.yaml`'s field-copy pattern but wrapped under one `items:` key
+
+**Decision:** A theme directory may include `items.yaml`. `ApplyTheme` gains a
+new `updateItemsElement(gen *Generator, themeName string) (bool, error)`,
+following `updateHeadElements`'s existing read-and-overwrite-if-present pattern
+(unmarshal into a throwaway struct, copy over if present — no deep merge). Unlike
+`head.yaml`, whose own top-level keys (`meta`, `link`, `script`, `style`) copy
+flat onto `Generator`'s top-level fields, `items.yaml`'s entire content is
+unmarshaled into one `ItemsConfig` and assigned to `Generator.Items` as a single
+nested block. `isTargetFile` (`themes.go`) gains `"items.yaml"` so theme
+directories defining only this file are still discovered by
+`findDirectoriesWithTargetFiles`.
+
+**Why:** `items.yaml`'s own `link:` sub-key would collide with `head.yaml`'s
+existing top-level `link:` (the page's `<link>` elements) if flat-merged the same
+way — nesting under one wrapper key avoids that collision, matching the
+`header.md`/`nav.md`/`footer.md` one-file-to-one-key convention instead.
+
+---
+
+### DEC-031 — `items:` configuration has zero effect on local post/page rendering
+
+**Decision:** No part of `items:` configuration reaches `GeneratePosts`,
+`Page()`, `Post()`, or their use of `CommonMark.ToUnsafeHTML()`. Local posts and
+pages render exactly as they do today, unconditionally.
+
+**Why:** Explicitly stated and verified against current call sites
+(`generator.go`, `page.go`, `schema.go`) so implementation does not accidentally
+thread `ItemsConfig` into the unrelated, unsafe-mode post/page rendering path.
+
+---
+
+## 2026-07-19 — Phase 7 smoke-test findings (implementation-time corrections)
+
+Two real defects surfaced only by running the built `antenna` binary end-to-end
+against a live SQLite database, not by unit tests alone. Both are recorded here
+because they correct or extend DEC-028/the general implementation, not because
+they change any documented config surface.
+
+### DEC-032 — `formatItemDate` must also parse RFC3339, not only the space-separated layout
+
+**Decision:** `formatItemDate` (DEC-028) tries `time.RFC3339` before falling
+back to `"2006-01-02 15:04:05"`, then to the legacy 10-character truncation.
+
+**Why:** The production driver used everywhere in `antenna generate`/`harvest`
+(`sql.Open("sqlite", ...)`, backed by `github.com/glebarez/go-sqlite`, a
+pure-Go SQLite driver) auto-converts `DATETIME`-affinity columns to RFC3339
+(`2026-07-19T00:00:00Z`) when scanning into a Go `string` — regardless of the
+space-separated layout `saveItem` (`harvest.go`) originally wrote as a bound
+parameter. DEC-028's original assumption only covered the write-side format
+and was never checked against what the driver actually returns on read. This
+was caught by an end-to-end smoke test (`antenna init` → seed a real
+`pages.db` → `antenna generate` → inspect `pages.html`): `date_format` had
+*zero effect* before this fix, silently. The project's own test suite did not
+catch this because `html_test.go`'s in-memory test databases use a different
+driver (`mattn/go-sqlite3`, registered as `"sqlite3"`), which returns
+whatever string was stored verbatim rather than reinterpreting it — the two
+drivers disagree on this, and only the production one matters here.
+
+### DEC-033 — Excluded `items.fields` sections omit their wrapper element entirely
+
+**Decision:** When `items.fields` excludes `pubDate` or `content`, `WriteItem`
+omits that section's `<p>...</p>` element from the rendered article body
+entirely, rather than emitting an empty `<p></p>`.
+
+**Why:** The original implementation kept a fixed two-slot `<p>%s</p>`
+template and simply left the inner value blank when a field was excluded,
+which produced stray empty paragraph elements — found via the same live
+smoke test (`items: {fields: [title, content]}` against a real generated
+page showed a bare `<p></p>` where the excluded `pubDate` section had been).
+Building the article body from a list of only the present sections, joined
+together, avoids emitting markup for a section the configuration says
+shouldn't appear at all.
+
+---

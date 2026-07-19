@@ -30,26 +30,26 @@ import (
 
 // ListThemes finds the themes sub-directories and lists them
 func (app *AntennaApp) ListThemes(out io.Writer, cfgName string, args []string) error {
-       // create a cfg object
-        cfg := &AppConfig{}
-        // Load configuration
-        if err := cfg.LoadConfig(cfgName); err != nil {
-                return err
-        }
-		fNames, err := cfg.ListThemes()
-		if err != nil {
-			return err
-		}
-		for _, fName := range fNames {
-			fmt.Fprintf(out, "%s\n", fName)
-		}
-		return nil
+	// create a cfg object
+	cfg := &AppConfig{}
+	// Load configuration
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
+	}
+	fNames, err := cfg.ListThemes()
+	if err != nil {
+		return err
+	}
+	for _, fName := range fNames {
+		fmt.Fprintf(out, "%s\n", fName)
+	}
+	return nil
 
 }
 
 // ListThemes finds the theme sub-directories and returns a list of them an error
 func (cfg *AppConfig) ListThemes() ([]string, error) {
-	// The theme directory should be at the same level as 
+	// The theme directory should be at the same level as
 	// htdocs directory or in the current working directory.
 	curDir, err := os.Getwd()
 	if err != nil {
@@ -66,11 +66,12 @@ func (cfg *AppConfig) ListThemes() ([]string, error) {
 // isTargetFile checks if the filename is one of the target files.
 func isTargetFile(name string) bool {
 	targets := map[string]bool{
-		"header.md":      true,
-		"footer.md":      true,
-		"nav.md":         true,
-		"top_content.md": true,
+		"header.md":         true,
+		"footer.md":         true,
+		"nav.md":            true,
+		"top_content.md":    true,
 		"bottom_content.md": true,
+		"items.yaml":        true,
 	}
 	if targets[name] {
 		return true
@@ -107,7 +108,6 @@ func findDirectoriesWithTargetFiles(root string) ([]string, error) {
 
 	return result, nil
 }
-
 
 // ApplyTheme takes a theme directory and an optional generator YAML filename
 // and applies the theme to that generator YAML name saving the result.
@@ -155,6 +155,11 @@ func (app *AntennaApp) ApplyTheme(cfgName string, args []string) error {
 		changed = ok
 	}
 	if ok, err := updateHeadElements(gen, themeName); err != nil {
+		return err
+	} else if ok {
+		changed = ok
+	}
+	if ok, err := updateItemsElement(gen, themeName); err != nil {
 		return err
 	} else if ok {
 		changed = ok
@@ -223,6 +228,31 @@ func updateHeadElements(gen *Generator, themeName string) (bool, error) {
 		}
 	}
 	return changed, nil
+}
+
+// Update a generator's items configuration from a theme items.yaml file
+// (DEC-030). Unlike updateHeadElements, which copies individual sub-fields
+// conditionally, items.yaml's entire content is assigned to gen.Items
+// wholesale when present — there is only one field to copy, so there is no
+// need for per-sub-field-presence checks. It is nested under one items:
+// key rather than flat-merged like head.yaml, because items.yaml's own
+// link: sub-key would otherwise collide with head.yaml's top-level link:
+// (the page's <link> elements).
+func updateItemsElement(gen *Generator, themeName string) (bool, error) {
+	fName := filepath.Join(themeName, "items.yaml")
+	if _, err := os.Stat(fName); err != nil {
+		return false, nil
+	}
+	src, err := os.ReadFile(fName)
+	if err != nil {
+		return false, fmt.Errorf("failed to read %q, %s", fName, err)
+	}
+	var items ItemsConfig
+	if err := yaml.Unmarshal(src, &items); err != nil {
+		return false, fmt.Errorf("failed to parse %q, %s", fName, err)
+	}
+	gen.Items = items
+	return true, nil
 }
 
 // Update a generator's body elements from a theme directory.

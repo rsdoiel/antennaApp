@@ -172,8 +172,8 @@ func TestWriteHeadElement_AllowedMetaFields(t *testing.T) {
 func TestWriteItem_NoMetadata(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "", "", "", "", "", "", "")
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "", "", "", "", "", "", "", ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -186,8 +186,8 @@ func TestWriteItem_NoMetadata(t *testing.T) {
 func TestWriteItem_SingleCategory(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "", "", "", "", "", "", `["Oberon"]`)
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "", "", "", "", "", "", `["Oberon"]`, ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -200,8 +200,8 @@ func TestWriteItem_SingleCategory(t *testing.T) {
 func TestWriteItem_MultipleCategories(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "", "", "", "", "", "", `["a","b"]`)
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "", "", "", "", "", "", `["a","b"]`, ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -215,8 +215,8 @@ func TestWriteItem_DCSubjectAndCreator(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
 	dcExt := `{"subject":["Languages"],"creator":["Alice"]}`
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "", dcExt, "", "", "", "", "")
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "", dcExt, "", "", "", "", "", ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -233,8 +233,8 @@ func TestWriteItem_Author(t *testing.T) {
 	gen := newTestGenerator()
 	authors := []*gofeed.Person{{Name: "R. S. Doiel"}}
 	var buf bytes.Buffer
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		authors, "", nil, "guid1", "", "", "", "", "", "", "")
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		authors, "", nil, "guid1", "", "", "", "", "", "", "", ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -247,8 +247,8 @@ func TestWriteItem_Author(t *testing.T) {
 func TestWriteItem_LabelAndChannel(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "", "", "https://example.com/feed.xml", "", "", "My Feed", "")
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "", "", "https://example.com/feed.xml", "", "", "My Feed", "", ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -264,8 +264,8 @@ func TestWriteItem_LabelAndChannel(t *testing.T) {
 func TestWriteItem_PubDate(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "")
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -280,9 +280,9 @@ func TestWriteItem_AllCombined(t *testing.T) {
 	authors := []*gofeed.Person{{Name: "Alice"}}
 	dcExt := `{"subject":["Science"]}`
 	var buf bytes.Buffer
-	err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+	_, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
 		authors, "", nil, "guid1", "2020-06-01", dcExt,
-		"https://example.com/feed.xml", "", "", "Feed Label", `["tech"]`)
+		"https://example.com/feed.xml", "", "", "Feed Label", `["tech"]`, ItemsConfig{})
 	if err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
@@ -428,8 +428,8 @@ func TestWriteHtmlPage_SkipLink(t *testing.T) {
 func TestWriteItem_NoAddress(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	if err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", ""); err != nil {
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
 	out := buf.String()
@@ -441,8 +441,8 @@ func TestWriteItem_NoAddress(t *testing.T) {
 func TestWriteItem_HasFooter(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	if err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", ""); err != nil {
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
 	out := buf.String()
@@ -454,8 +454,8 @@ func TestWriteItem_HasFooter(t *testing.T) {
 func TestWriteItem_TimeElement(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	if err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "2020-04-11", "", "", "", "", "", ""); err != nil {
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-04-11", "", "", "", "", "", "", ItemsConfig{}); err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
 	out := buf.String()
@@ -467,8 +467,8 @@ func TestWriteItem_TimeElement(t *testing.T) {
 func TestWriteItem_DateNotInHeading(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	if err := gen.WriteItem(&buf, "https://example.com", "My Post", "desc",
-		nil, "", nil, "guid1", "2020-04-11", "", "", "", "", "", ""); err != nil {
+	if _, err := gen.WriteItem(&buf, "https://example.com", "My Post", "desc",
+		nil, "", nil, "guid1", "2020-04-11", "", "", "", "", "", "", ItemsConfig{}); err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
 	out := buf.String()
@@ -487,8 +487,8 @@ func TestWriteItem_DateNotInHeading(t *testing.T) {
 func TestWriteItem_UpdatedTimeElement(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
-	if err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
-		nil, "", nil, "guid1", "2020-04-11", "", "", "", "2020-05-01", "", ""); err != nil {
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-04-11", "", "", "", "2020-05-01", "", "", ItemsConfig{}); err != nil {
 		t.Fatalf("WriteItem: %s", err)
 	}
 	out := buf.String()
@@ -497,6 +497,106 @@ func TestWriteItem_UpdatedTimeElement(t *testing.T) {
 	}
 	if !strings.Contains(out, `datetime="2020-05-01"`) {
 		t.Errorf("expected updated date in <time datetime=\"2020-05-01\">, got:\n%s", out)
+	}
+}
+
+// -------------------------------------------------------------------
+// Phase 5 (item formatting): WriteItem + ItemsConfig integration
+// -------------------------------------------------------------------
+
+func TestWriteItem_FieldsRestrictsSections(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	cfg := ItemsConfig{Fields: []string{"title", "content"}}
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "My Feed", "", cfg); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "<h2>Title</h2>") {
+		t.Errorf("expected title section present, got:\n%s", out)
+	}
+	if strings.Contains(out, "<time ") {
+		t.Errorf("expected pubDate section absent, got:\n%s", out)
+	}
+	if strings.Contains(out, `class="source"`) {
+		t.Errorf("expected source section absent, got:\n%s", out)
+	}
+	if strings.Contains(out, "<p></p>") {
+		t.Errorf("excluded fields must omit their wrapper element, not leave an empty <p></p>, got:\n%s", out)
+	}
+}
+
+func TestWriteItem_ShowSourceFalse(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	f := false
+	cfg := ItemsConfig{ShowSource: &f}
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "My Feed", "", cfg); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, `class="source"`) {
+		t.Errorf("expected source block absent when show_source is false, got:\n%s", out)
+	}
+}
+
+func TestWriteItem_OmittedItemWritesNothing(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	cfg := ItemsConfig{Link: LinkConfig{Missing: "omit"}}
+	omitted, err := gen.WriteItem(&buf, "", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", cfg)
+	if err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	if !omitted {
+		t.Error("expected omitted=true when link is empty and missing:omit")
+	}
+	if buf.Len() != 0 {
+		t.Errorf("expected no output written for an omitted item, got:\n%s", buf.String())
+	}
+}
+
+func TestWriteItem_DefaultLabelIsAccessible(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, `<a href="https://example.com">Continue reading</a>`) {
+		t.Errorf("expected accessible default anchor label, got:\n%s", out)
+	}
+}
+
+func TestWriteItem_LabelFieldLinkOptOut(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	cfg := ItemsConfig{Link: LinkConfig{LabelField: "link"}}
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", cfg); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, `<a href="https://example.com">https://example.com</a>`) {
+		t.Errorf("expected URL-as-label with explicit opt-out, got:\n%s", out)
+	}
+}
+
+func TestWriteItem_CustomStaticLabel(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	cfg := ItemsConfig{Link: LinkConfig{LabelFallback: "read me"}}
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", cfg); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, `<a href="https://example.com">read me</a>`) {
+		t.Errorf("expected custom static label via label_fallback only, got:\n%s", out)
 	}
 }
 
@@ -535,5 +635,281 @@ func TestWriteHTML_NoWarningWhenHeaderSet(t *testing.T) {
 	warn := errBuf.String()
 	if strings.Contains(warn, "warning: aggregate page has no <h1>") {
 		t.Errorf("must not warn when Header is set, got: %q", warn)
+	}
+}
+
+// -------------------------------------------------------------------
+// Phase 2 (item formatting): truncateWords, stripTags, resolveItemContent
+// -------------------------------------------------------------------
+
+func TestTruncateWords(t *testing.T) {
+	cases := []struct {
+		name   string
+		s      string
+		maxLen int
+		want   string
+	}{
+		{"shorter than max", "hello", 10, "hello"},
+		{"exact length", "hello", 5, "hello"},
+		{"mid-word cut avoided", "the quick brown fox", 12, "the quick"},
+		{"no whitespace before limit", "supercalifragilistic", 5, "super"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := truncateWords(tc.s, tc.maxLen)
+			if got != tc.want {
+				t.Errorf("truncateWords(%q, %d) = %q, want %q", tc.s, tc.maxLen, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestStripTags(t *testing.T) {
+	cases := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{"plain text", "hello", "hello"},
+		{"simple tags", "<p>hello</p>", "hello"},
+		{"nested tags", "<div><b>hi</b> there</div>", "hi there"},
+		{"unclosed tag", "<p>hi", "hi"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := stripTags(tc.s)
+			if got != tc.want {
+				t.Errorf("stripTags(%q) = %q, want %q", tc.s, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestResolveItemContent(t *testing.T) {
+	t.Run("markdown present, default strip", func(t *testing.T) {
+		cfg := ItemsConfig{HTML: "strip"}
+		got, err := resolveItemContent("<p>raw</p>", "**bold**", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemContent: %s", err)
+		}
+		if !strings.Contains(got, "<strong>bold</strong>") {
+			t.Errorf("expected rendered markdown, got %q", got)
+		}
+		if strings.Contains(got, "raw") {
+			t.Errorf("raw description must not be used when sourceMarkdown is present, got %q", got)
+		}
+	})
+
+	t.Run("markdown present, unsafe", func(t *testing.T) {
+		cfg := ItemsConfig{HTML: "unsafe"}
+		got, err := resolveItemContent("ignored", "before <script>x</script> after", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemContent: %s", err)
+		}
+		if !strings.Contains(got, "<script>x</script>") {
+			t.Errorf("expected raw <script> to pass through in unsafe mode, got %q", got)
+		}
+	})
+
+	t.Run("no markdown, default strip", func(t *testing.T) {
+		cfg := ItemsConfig{HTML: "strip"}
+		got, err := resolveItemContent("<p>raw &amp; unsafe</p>", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemContent: %s", err)
+		}
+		if strings.Contains(got, "<p>") {
+			t.Errorf("expected tags stripped, got %q", got)
+		}
+	})
+
+	t.Run("no markdown, escape", func(t *testing.T) {
+		cfg := ItemsConfig{HTML: "escape"}
+		got, err := resolveItemContent("<b>hi</b>", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemContent: %s", err)
+		}
+		if got != "&lt;b&gt;hi&lt;/b&gt;" {
+			t.Errorf("resolveItemContent escape = %q, want %q", got, "&lt;b&gt;hi&lt;/b&gt;")
+		}
+	})
+
+	t.Run("no markdown, unsafe", func(t *testing.T) {
+		cfg := ItemsConfig{HTML: "unsafe"}
+		got, err := resolveItemContent("<b>hi</b>", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemContent: %s", err)
+		}
+		if got != "<b>hi</b>" {
+			t.Errorf("resolveItemContent unsafe = %q, want unchanged %q", got, "<b>hi</b>")
+		}
+	})
+
+	t.Run("truncation applied pre-render", func(t *testing.T) {
+		cfg := ItemsConfig{HTML: "strip", ContentMaxLength: 5}
+		got, err := resolveItemContent("ignored", "one two three four five", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemContent: %s", err)
+		}
+		if strings.Contains(got, "three") {
+			t.Errorf("expected source truncated to ~5 chars before rendering, got %q", got)
+		}
+	})
+}
+
+// -------------------------------------------------------------------
+// Phase 3 (item formatting): resolveItemLink
+// -------------------------------------------------------------------
+
+func TestResolveItemLink(t *testing.T) {
+	defaults := func() LinkConfig {
+		cfg := ItemsConfig{}
+		cfg.applyDefaults()
+		return cfg.Link
+	}
+
+	t.Run("normal, default label is accessible (DEC-026)", func(t *testing.T) {
+		got, err := resolveItemLink("https://x", "T", "", defaults())
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		want := LinkResolution{Href: "https://x", Label: "Continue reading"}
+		if got != want {
+			t.Errorf("got %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("label_field: link restores pre-existing behavior", func(t *testing.T) {
+		cfg := defaults()
+		cfg.LabelField = "link"
+		got, err := resolveItemLink("https://x", "T", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if got.Label != "https://x" {
+			t.Errorf("Label = %q, want %q", got.Label, "https://x")
+		}
+	})
+
+	t.Run("label_field: title", func(t *testing.T) {
+		cfg := defaults()
+		cfg.LabelField = "title"
+		got, err := resolveItemLink("https://x", "T", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if got.Label != "T" {
+			t.Errorf("Label = %q, want %q", got.Label, "T")
+		}
+	})
+
+	t.Run("label_field: static with custom fallback", func(t *testing.T) {
+		cfg := defaults()
+		cfg.LabelFallback = "read me"
+		got, err := resolveItemLink("https://x", "T", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if got.Label != "read me" {
+			t.Errorf("Label = %q, want %q", got.Label, "read me")
+		}
+	})
+
+	t.Run("empty field falls back to label_fallback", func(t *testing.T) {
+		cfg := defaults()
+		cfg.LabelField = "title"
+		cfg.LabelFallback = "Read more"
+		got, err := resolveItemLink("https://x", "", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if got.Label != "Read more" {
+			t.Errorf("Label = %q, want %q", got.Label, "Read more")
+		}
+	})
+
+	t.Run("missing link, default missing mode", func(t *testing.T) {
+		got, err := resolveItemLink("", "T", "", defaults())
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if !got.AsPlainText || got.Omit {
+			t.Errorf("got %#v, want AsPlainText=true, Omit=false", got)
+		}
+		if got.Label != "Continue reading" {
+			t.Errorf("Label = %q, want %q", got.Label, "Continue reading")
+		}
+	})
+
+	t.Run("missing link, omit", func(t *testing.T) {
+		cfg := defaults()
+		cfg.Missing = "omit"
+		got, err := resolveItemLink("", "T", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if !got.Omit {
+			t.Errorf("got %#v, want Omit=true", got)
+		}
+	})
+
+	t.Run("missing link, source_link with channel", func(t *testing.T) {
+		cfg := defaults()
+		cfg.Missing = "source_link"
+		got, err := resolveItemLink("", "T", "https://chan", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if got.Href != "https://chan" || got.AsPlainText {
+			t.Errorf("got %#v, want Href=https://chan, AsPlainText=false", got)
+		}
+	})
+
+	t.Run("missing link, source_link, channel also empty falls back to unlinked (DEC-027)", func(t *testing.T) {
+		cfg := defaults()
+		cfg.Missing = "source_link"
+		got, err := resolveItemLink("", "T", "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemLink: %s", err)
+		}
+		if !got.AsPlainText || got.Href != "" {
+			t.Errorf("got %#v, want AsPlainText=true, Href empty", got)
+		}
+	})
+
+	t.Run("missing link, required returns error", func(t *testing.T) {
+		cfg := defaults()
+		cfg.Required = true
+		_, err := resolveItemLink("", "T", "", cfg)
+		if err == nil {
+			t.Error("expected error when required link is missing, got nil")
+		}
+	})
+}
+
+// -------------------------------------------------------------------
+// Phase 4 (item formatting): formatItemDate
+// -------------------------------------------------------------------
+
+func TestFormatItemDate(t *testing.T) {
+	cases := []struct {
+		name   string
+		raw    string
+		layout string
+		want   string
+	}{
+		{"parseable, custom layout", "2020-04-11 00:00:00", "Jan 2, 2006", "Apr 11, 2020"},
+		{"parseable, default layout", "2020-04-11 00:00:00", "2006-01-02", "2020-04-11"},
+		{"parseable, RFC3339 (production sqlite driver's actual return shape)", "2020-04-11T00:00:00Z", "Jan 2, 2006", "Apr 11, 2020"},
+		{"unparseable, longer than 10 chars (DEC-028)", "Sat, 11 Apr 2020", "Jan 2, 2006", "Sat, 11 Ap"},
+		{"unparseable, 10 chars or shorter", "bad-date", "Jan 2, 2006", "bad-date"},
+		{"empty", "", "Jan 2, 2006", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := formatItemDate(tc.raw, tc.layout)
+			if got != tc.want {
+				t.Errorf("formatItemDate(%q, %q) = %q, want %q", tc.raw, tc.layout, got, tc.want)
+			}
+		})
 	}
 }
