@@ -133,13 +133,16 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		filters = append(filters, "channel:"+channel)
 	}
 
-	// Build heading — h2 keeps article titles subordinate to the page h1
+	// Build heading — h2 keeps article titles subordinate to the page h1.
+	// title/label are feed-supplied text, so they must be HTML-escaped
+	// before being embedded — otherwise a title like "Q&A: ..." breaks
+	// the page's markup.
 	var headingHTML string
 	if showField("title") {
 		if title == "" {
-			headingHTML = fmt.Sprintf("<h2>@%s</h2>", label)
+			headingHTML = fmt.Sprintf("<h2>@%s</h2>", html.EscapeString(label))
 		} else {
-			headingHTML = fmt.Sprintf("<h2>%s</h2>", title)
+			headingHTML = fmt.Sprintf("<h2>%s</h2>", html.EscapeString(title))
 		}
 	}
 
@@ -164,8 +167,9 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	}
 
 	var content string
+	var contentIsBlockHTML bool
 	if showField("content") {
-		content, err = resolveItemContent(description, sourceMarkdown, cfg)
+		content, contentIsBlockHTML, err = resolveItemContent(description, sourceMarkdown, cfg)
 		if err != nil {
 			return false, err
 		}
@@ -176,14 +180,16 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	// DEC-017's <footer> choice.
 	var sourceHTML string
 	if showField("source") && cfg.ShowSource != nil && *cfg.ShowSource && label != "" {
-		sourceHTML = fmt.Sprintf(`<p class="source">via %s</p>`, label)
+		sourceHTML = fmt.Sprintf(`<p class="source">via %s</p>`, html.EscapeString(label))
 	}
 
+	// linkRes.Label is feed-supplied text (title/link) and linkRes.Href is
+	// a feed-supplied URL; both must be HTML-escaped before embedding.
 	var footerInner string
 	if linkRes.AsPlainText {
-		footerInner = linkRes.Label
+		footerInner = html.EscapeString(linkRes.Label)
 	} else {
-		footerInner = fmt.Sprintf(`<a href=%q>%s</a>`, linkRes.Href, linkRes.Label)
+		footerInner = fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(linkRes.Href), html.EscapeString(linkRes.Label))
 	}
 	footerHTML := "<footer>\n        " + footerInner
 	if sourceHTML != "" {
@@ -202,23 +208,37 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		bodyParts = append(bodyParts, fmt.Sprintf("<p>%s</p>", dateHTML))
 	}
 	if showField("content") {
-		bodyParts = append(bodyParts, fmt.Sprintf("<p>%s</p>", content))
+		// content is only plain text (safe to wrap in a single <p>) when it
+		// came from the "strip"/"escape" raw-description paths. Rendered
+		// sourceMarkdown and "unsafe" passthrough are already block-level
+		// HTML with their own <p>/<ul>/<blockquote> elements — wrapping
+		// those in another <p> produces invalid nested markup that browsers
+		// silently mangle by auto-closing the outer <p>.
+		if contentIsBlockHTML {
+			bodyParts = append(bodyParts, content)
+		} else {
+			bodyParts = append(bodyParts, fmt.Sprintf("<p>%s</p>", content))
+		}
 	}
 	bodyParts = append(bodyParts, footerHTML)
 	bodyHTML := strings.Join(bodyParts, "\n      ")
 
+	// pubDate/link/filters are feed-supplied text embedded in HTML
+	// attributes; they must be HTML-escaped, not just Go-%q-quoted, or a
+	// query-string link like "?a=1&b=2" produces an invalid raw "&" in
+	// the attribute value.
 	if len(filters) > 0 {
 		fmt.Fprintf(out, `
-    <article data-published=%q data-link=%q data-pagefind-filter=%q>
+    <article data-published="%s" data-link="%s" data-pagefind-filter="%s">
       %s
     </article>
-`, pubDate, linkRes.Href, strings.Join(filters, ", "), bodyHTML)
+`, html.EscapeString(pubDate), html.EscapeString(linkRes.Href), html.EscapeString(strings.Join(filters, ", ")), bodyHTML)
 	} else {
 		fmt.Fprintf(out, `
-    <article data-published=%q data-link=%q>
+    <article data-published="%s" data-link="%s">
       %s
     </article>
-`, pubDate, linkRes.Href, bodyHTML)
+`, html.EscapeString(pubDate), html.EscapeString(linkRes.Href), bodyHTML)
 	}
 	return false, nil
 }
@@ -260,7 +280,15 @@ func truncateWords(s string, maxLen int) string {
 // sourceMarkdown is empty. cfg.ContentMaxLength, if set, truncates the
 // resolved pre-render source text on a word boundary before conversion
 // (DEC-029), never the rendered HTML.
-func resolveItemContent(description, sourceMarkdown string, cfg ItemsConfig) (string, error) {
+//
+// The isBlockHTML return reports whether content is already rendered,
+// block-level HTML (sourceMarkdown is always rendered via CommonMark; raw
+// description is block HTML only in cfg.HTML == "unsafe" passthrough).
+// Callers must not wrap block HTML in another <p>: CommonMark/unsafe
+// passthrough content already contains its own <p>/<ul>/<blockquote>
+// elements, and re-wrapping it produces invalid nested markup that
+// browsers silently mangle by auto-closing the outer <p>.
+func resolveItemContent(description, sourceMarkdown string, cfg ItemsConfig) (content string, isBlockHTML bool, err error) {
 	source := sourceMarkdown
 	usedMarkdown := true
 	if source == "" {
@@ -273,17 +301,19 @@ func resolveItemContent(description, sourceMarkdown string, cfg ItemsConfig) (st
 	if usedMarkdown {
 		doc := &CommonMark{Text: source}
 		if cfg.HTML == "unsafe" {
-			return doc.ToUnsafeHTML()
+			rendered, err := doc.ToUnsafeHTML()
+			return rendered, true, err
 		}
-		return doc.ToHTML()
+		rendered, err := doc.ToHTML()
+		return rendered, true, err
 	}
 	switch cfg.HTML {
 	case "escape":
-		return html.EscapeString(source), nil
+		return html.EscapeString(source), false, nil
 	case "unsafe":
-		return source, nil
+		return source, true, nil
 	default: // "strip", or unset
-		return stripTags(source), nil
+		return stripTags(source), false, nil
 	}
 }
 

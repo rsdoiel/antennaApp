@@ -601,6 +601,61 @@ func TestWriteItem_CustomStaticLabel(t *testing.T) {
 }
 
 // -------------------------------------------------------------------
+// Bug fixes found reviewing a real generated site: nested <p><p> from
+// multi-paragraph sourceMarkdown, and unescaped title/href in HTML output.
+// -------------------------------------------------------------------
+
+func TestWriteItem_MultiParagraphContentNotNested(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	sourceMarkdown := "First paragraph.\n\nSecond paragraph."
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, sourceMarkdown, nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "<p><p>") {
+		t.Errorf("rendered multi-paragraph content must not be double-wrapped in <p>, got:\n%s", out)
+	}
+	if !strings.Contains(out, "<p>First paragraph.</p>") || !strings.Contains(out, "<p>Second paragraph.</p>") {
+		t.Errorf("expected each source paragraph as its own <p>, got:\n%s", out)
+	}
+}
+
+func TestWriteItem_TitleAmpersandEscaped(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Q&A: Test", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "<h2>Q&A: Test</h2>") {
+		t.Errorf("expected title's & to be HTML-escaped, got raw ampersand:\n%s", out)
+	}
+	if !strings.Contains(out, "<h2>Q&amp;A: Test</h2>") {
+		t.Errorf("expected escaped title in heading, got:\n%s", out)
+	}
+}
+
+func TestWriteItem_LinkHrefEscaped(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	link := "https://example.com/?a=1&b=2"
+	if _, err := gen.WriteItem(&buf, link, "Title", "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, `href="https://example.com/?a=1&b=2"`) {
+		t.Errorf("expected href's & to be HTML-escaped, got raw ampersand:\n%s", out)
+	}
+	if !strings.Contains(out, `href="https://example.com/?a=1&amp;b=2"`) {
+		t.Errorf("expected escaped href, got:\n%s", out)
+	}
+}
+
+// -------------------------------------------------------------------
 // Phase 5: no-header warning
 // -------------------------------------------------------------------
 
@@ -688,7 +743,7 @@ func TestStripTags(t *testing.T) {
 func TestResolveItemContent(t *testing.T) {
 	t.Run("markdown present, default strip", func(t *testing.T) {
 		cfg := ItemsConfig{HTML: "strip"}
-		got, err := resolveItemContent("<p>raw</p>", "**bold**", cfg)
+		got, isBlockHTML, err := resolveItemContent("<p>raw</p>", "**bold**", cfg)
 		if err != nil {
 			t.Fatalf("resolveItemContent: %s", err)
 		}
@@ -698,55 +753,70 @@ func TestResolveItemContent(t *testing.T) {
 		if strings.Contains(got, "raw") {
 			t.Errorf("raw description must not be used when sourceMarkdown is present, got %q", got)
 		}
+		if !isBlockHTML {
+			t.Errorf("rendered markdown must be reported as block HTML")
+		}
 	})
 
 	t.Run("markdown present, unsafe", func(t *testing.T) {
 		cfg := ItemsConfig{HTML: "unsafe"}
-		got, err := resolveItemContent("ignored", "before <script>x</script> after", cfg)
+		got, isBlockHTML, err := resolveItemContent("ignored", "before <script>x</script> after", cfg)
 		if err != nil {
 			t.Fatalf("resolveItemContent: %s", err)
 		}
 		if !strings.Contains(got, "<script>x</script>") {
 			t.Errorf("expected raw <script> to pass through in unsafe mode, got %q", got)
 		}
+		if !isBlockHTML {
+			t.Errorf("rendered markdown must be reported as block HTML")
+		}
 	})
 
 	t.Run("no markdown, default strip", func(t *testing.T) {
 		cfg := ItemsConfig{HTML: "strip"}
-		got, err := resolveItemContent("<p>raw &amp; unsafe</p>", "", cfg)
+		got, isBlockHTML, err := resolveItemContent("<p>raw &amp; unsafe</p>", "", cfg)
 		if err != nil {
 			t.Fatalf("resolveItemContent: %s", err)
 		}
 		if strings.Contains(got, "<p>") {
 			t.Errorf("expected tags stripped, got %q", got)
 		}
+		if isBlockHTML {
+			t.Errorf("stripped plain text must not be reported as block HTML")
+		}
 	})
 
 	t.Run("no markdown, escape", func(t *testing.T) {
 		cfg := ItemsConfig{HTML: "escape"}
-		got, err := resolveItemContent("<b>hi</b>", "", cfg)
+		got, isBlockHTML, err := resolveItemContent("<b>hi</b>", "", cfg)
 		if err != nil {
 			t.Fatalf("resolveItemContent: %s", err)
 		}
 		if got != "&lt;b&gt;hi&lt;/b&gt;" {
 			t.Errorf("resolveItemContent escape = %q, want %q", got, "&lt;b&gt;hi&lt;/b&gt;")
 		}
+		if isBlockHTML {
+			t.Errorf("escaped plain text must not be reported as block HTML")
+		}
 	})
 
 	t.Run("no markdown, unsafe", func(t *testing.T) {
 		cfg := ItemsConfig{HTML: "unsafe"}
-		got, err := resolveItemContent("<b>hi</b>", "", cfg)
+		got, isBlockHTML, err := resolveItemContent("<b>hi</b>", "", cfg)
 		if err != nil {
 			t.Fatalf("resolveItemContent: %s", err)
 		}
 		if got != "<b>hi</b>" {
 			t.Errorf("resolveItemContent unsafe = %q, want unchanged %q", got, "<b>hi</b>")
 		}
+		if !isBlockHTML {
+			t.Errorf("unsafe passthrough must be reported as block HTML")
+		}
 	})
 
 	t.Run("truncation applied pre-render", func(t *testing.T) {
 		cfg := ItemsConfig{HTML: "strip", ContentMaxLength: 5}
-		got, err := resolveItemContent("ignored", "one two three four five", cfg)
+		got, _, err := resolveItemContent("ignored", "one two three four five", cfg)
 		if err != nil {
 			t.Fatalf("resolveItemContent: %s", err)
 		}

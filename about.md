@@ -36,7 +36,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.25
+version: 0.0.26
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -48,26 +48,23 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-06-27
+date_released: 2026-07-19
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.25
+## antennaApp 0.0.26
 
-- fixed RSS rendering for aggregated feeds
-- Improved metadata in head of HTML pages by incorporating the front matter of the collections or blog posts
-- Improved HTML accessibility and ARIA support in generated pages
-- Improved listing of posts, items, themes and pages
-- Added a default theme structure
-- Improved metadata handling for pages, posts and feed items
-- Added configurable CSS support
-- Fixed missing categories column in RSS SQL queries causing scan failures
-- RSS feeds now emit category elements from harvested feed data
-- Replaced string-interpolated SQL date-range queries with parameterized queries
-- Replaced deprecated ioutil with os package for file I/O
-- Use constant-time comparison for password hash validation
+- Added an `items:` block to `page.yaml` for per-collection control over how harvested feed items render in aggregate pages
+- Formalized `sourceMarkdown`-over-raw-`description` as the documented content-resolution rule for feed items
+- Fixed an unsanitized-HTML gap in the raw-`description` fallback path via `items.html` (`strip`/`escape`/`unsafe`)
+- Added `items.fields` allowlist for feed item body content, independent of PageFind filter attributes
+- Added accessibility-motivated default fallback label ("Continue reading") for feed item links via `items.link.label_field`
+- Added `items.date_format` and `items.content_max_length` controls for feed item rendering
+- Added theme-level `items.yaml` support, following the `head.yaml` field-copy pattern
+- Fixed date parsing to also accept RFC3339 timestamps, not only the space-separated layout
+- Confirmed `items:` configuration has no effect on local post/page rendering
 
 ## Authors
 
