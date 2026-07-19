@@ -1,4 +1,4 @@
-%antenna(7) user manual | version 0.0.25 7d545dc
+%antenna(7) user manual | version 0.0.25 175f54a
 % R. S. Doiel
 % 2026-06-27
 
