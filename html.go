@@ -215,11 +215,23 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		// HTML with their own <p>/<ul>/<blockquote> elements — wrapping
 		// those in another <p> produces invalid nested markup that browsers
 		// silently mangle by auto-closing the outer <p>.
+		var contentHTML string
 		if contentIsBlockHTML {
-			bodyParts = append(bodyParts, content)
+			contentHTML = content
 		} else {
-			bodyParts = append(bodyParts, fmt.Sprintf("<p>%s</p>", content))
+			contentHTML = fmt.Sprintf("<p>%s</p>", content)
 		}
+		// Wrapping content in one container — rather than leaving its
+		// elements as direct siblings in <article> — lets the site's CSS
+		// cap the whole rendered body's height as a single block when
+		// collapsed. Some posts (e.g. link-dump/bookmarks posts) render as
+		// many short elements — a heading + short paragraph per item —
+		// rather than one long paragraph; per-element height capping never
+		// triggers when every individual element is already short, so the
+		// whole post always rendered in full. See antenna's
+		// css/article-collapse.css for the collapse rule this wrapper
+		// enables.
+		bodyParts = append(bodyParts, fmt.Sprintf(`<div class="article-body">%s</div>`, contentHTML))
 	}
 	bodyParts = append(bodyParts, footerHTML)
 	bodyHTML := strings.Join(bodyParts, "\n      ")

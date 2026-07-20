@@ -622,6 +622,39 @@ func TestWriteItem_MultiParagraphContentNotNested(t *testing.T) {
 	}
 }
 
+// TestWriteItem_ContentWrappedInSingleBodyContainer guards against a
+// vertical-space bug found on a real "link-dump" post
+// (inkdroid.org/2026/07/19/bookmarks/): its sourceMarkdown renders as many
+// short elements (a heading + short paragraph per bookmark) rather than one
+// long paragraph. The site's CSS collapses long articles by capping
+// paragraph height, but capping each element individually never triggers
+// when every individual element is already short — so the whole post (18
+// headings) always renders in full. Wrapping all of "content" in one
+// container lets a single max-height/overflow rule on that container clip
+// the whole block together, regardless of how many elements it contains.
+func TestWriteItem_ContentWrappedInSingleBodyContainer(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	sourceMarkdown := "## First bookmark\n\nShort note one.\n\n## Second bookmark\n\nShort note two."
+	if _, err := gen.WriteItem(&buf, "https://example.com", "Title", "desc",
+		nil, sourceMarkdown, nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	start := strings.Index(out, `<div class="article-body">`)
+	if start < 0 {
+		t.Fatalf(`expected a <div class="article-body"> wrapper around content, got:\n%s`, out)
+	}
+	end := strings.Index(out, "</div>")
+	if end < 0 || end < start {
+		t.Fatalf("expected a closing </div> after the article-body wrapper, got:\n%s", out)
+	}
+	wrapped := out[start:end]
+	if !strings.Contains(wrapped, "First bookmark") || !strings.Contains(wrapped, "Second bookmark") {
+		t.Errorf("expected all rendered content elements (both headings) inside the single article-body wrapper, got:\n%s", out)
+	}
+}
+
 func TestWriteItem_TitleAmpersandEscaped(t *testing.T) {
 	gen := newTestGenerator()
 	var buf bytes.Buffer
