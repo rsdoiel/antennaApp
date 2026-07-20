@@ -136,13 +136,14 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	// Build heading — h2 keeps article titles subordinate to the page h1.
 	// title/label are feed-supplied text, so they must be HTML-escaped
 	// before being embedded — otherwise a title like "Q&A: ..." breaks
-	// the page's markup.
+	// the page's markup. htmlEscapeFeedText also normalizes titles some
+	// feeds have already (over-)escaped, rather than double-escaping them.
 	var headingHTML string
 	if showField("title") {
 		if title == "" {
-			headingHTML = fmt.Sprintf("<h2>@%s</h2>", html.EscapeString(label))
+			headingHTML = fmt.Sprintf("<h2>@%s</h2>", htmlEscapeFeedText(label))
 		} else {
-			headingHTML = fmt.Sprintf("<h2>%s</h2>", html.EscapeString(title))
+			headingHTML = fmt.Sprintf("<h2>%s</h2>", htmlEscapeFeedText(title))
 		}
 	}
 
@@ -180,16 +181,16 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	// DEC-017's <footer> choice.
 	var sourceHTML string
 	if showField("source") && cfg.ShowSource != nil && *cfg.ShowSource && label != "" {
-		sourceHTML = fmt.Sprintf(`<p class="source">via %s</p>`, html.EscapeString(label))
+		sourceHTML = fmt.Sprintf(`<p class="source">via %s</p>`, htmlEscapeFeedText(label))
 	}
 
 	// linkRes.Label is feed-supplied text (title/link) and linkRes.Href is
 	// a feed-supplied URL; both must be HTML-escaped before embedding.
 	var footerInner string
 	if linkRes.AsPlainText {
-		footerInner = html.EscapeString(linkRes.Label)
+		footerInner = htmlEscapeFeedText(linkRes.Label)
 	} else {
-		footerInner = fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(linkRes.Href), html.EscapeString(linkRes.Label))
+		footerInner = fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(linkRes.Href), htmlEscapeFeedText(linkRes.Label))
 	}
 	footerHTML := "<footer>\n        " + footerInner
 	if sourceHTML != "" {
@@ -241,6 +242,20 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 `, html.EscapeString(pubDate), html.EscapeString(linkRes.Href), bodyHTML)
 	}
 	return false, nil
+}
+
+// htmlEscapeFeedText HTML-escapes s for safe embedding as text content,
+// first unescaping any HTML entities s already contains. Some feeds
+// double-HTML-escape their title text before publishing it (confirmed live
+// on koreaherald.com item 10812786: its <title> contains the literal text
+// "&quot;", not a real quote character). Escaping such a title directly
+// would turn that literal "&quot;" into visible "&amp;quot;" text instead
+// of a quote mark. Unescaping first collapses any such pre-existing
+// entities to their real characters, so the following escape produces
+// exactly one, correct level of encoding regardless of whether the source
+// already (over-)encoded the text.
+func htmlEscapeFeedText(s string) string {
+	return html.EscapeString(html.UnescapeString(s))
 }
 
 // stripTagsPattern matches an HTML tag for stripTags. A deliberate

@@ -655,6 +655,32 @@ func TestWriteItem_LinkHrefEscaped(t *testing.T) {
 	}
 }
 
+// TestWriteItem_TitleWithPreEscapedEntityNotDoubleEscaped guards against a
+// regression found reviewing a real koreaherald.com item (10812786): its
+// feed title already contains the literal 6-character text "&quot;" (the
+// source double-HTML-escaped it before publishing), not a real quote
+// character. html.EscapeString(title) alone escapes the "&" in that literal
+// text again, producing visible "&amp;quot;" in the heading instead of a
+// quote mark. Titles must be entity-normalized (unescaped, then escaped)
+// before embedding so pre-existing entities collapse to their real
+// character first.
+func TestWriteItem_TitleWithPreEscapedEntityNotDoubleEscaped(t *testing.T) {
+	gen := newTestGenerator()
+	var buf bytes.Buffer
+	title := `Say &quot;hello&quot; to me`
+	if _, err := gen.WriteItem(&buf, "https://example.com", title, "desc",
+		nil, "", nil, "guid1", "2020-01-01", "", "", "", "", "", "", ItemsConfig{}); err != nil {
+		t.Fatalf("WriteItem: %s", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "&amp;quot;") {
+		t.Errorf("pre-existing entity in title must not be double-escaped, got:\n%s", out)
+	}
+	if !strings.Contains(out, "<h2>Say &#34;hello&#34; to me</h2>") {
+		t.Errorf("expected pre-existing entity normalized to a real quote then re-escaped once, got:\n%s", out)
+	}
+}
+
 // -------------------------------------------------------------------
 // Phase 5: no-header warning
 // -------------------------------------------------------------------
