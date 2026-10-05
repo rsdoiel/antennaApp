@@ -39,6 +39,7 @@ Commands:
   add          Add a feed collection to the configuration
   apply        Apply a theme to the page generator YAML
   blogit       Add a post using an automatic date-based directory path
+  completion   Generate a Bash or PowerShell completion script
   css          Generate a default CSS stylesheet and patch page.yaml
   del          Remove a collection from the configuration
   generate     Render HTML pages and RSS feeds for all (or one) collection
@@ -101,6 +102,8 @@ func PrintHelpTopic(w io.Writer, topic, appName, version, releaseDate, releaseHa
 		text = ApplyHelpText
 	case "blogit":
 		text = BlogitHelpText
+	case "completion":
+		text = CompletionHelpText
 	case "css":
 		text = CssHelpText
 	case "del":

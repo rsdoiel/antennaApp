@@ -1138,6 +1138,48 @@ your htdocs directory so search engines can discover your content.
 
 `
 
+	CompletionHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
+% R. S. Doiel
+% {release_date}
+
+# NAME
+
+completion
+
+# SYNOPSIS
+
+{app_name} completion SHELL
+
+# DESCRIPTION
+
+Writes a shell completion script to standard output. SHELL is bash or
+powershell. The script completes actions, the top level options, help
+topics after "help", "new" after "themes", shell names after "completion",
+and file names after -config and for other actions.
+
+# PARAMETERS
+
+SHELL
+: bash or powershell
+
+# EXAMPLES
+
+Bash, for the current session:
+
+    source <({app_name} completion bash)
+
+Bash, for every session:
+
+    {app_name} completion bash > ~/.local/share/bash-completion/completions/{app_name}
+
+PowerShell, for the current session:
+
+    {app_name} completion powershell | Out-String | Invoke-Expression
+
+PowerShell, for every session, add that line to the file named by $PROFILE.
+
+`
+
 	StylefromHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
 % R. S. Doiel
 % {release_date}

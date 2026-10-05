@@ -94,6 +94,11 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Interactive(cfgName, args)
 	case "stylefrom":
 		return app.ExtractStyles(out, args)
+	case "completion":
+		if len(args) != 1 {
+			return fmt.Errorf("usage: %s completion bash|powershell", app.appName)
+		}
+		return WriteCompletion(out, app.appName, args[0])
 	default:
 		return fmt.Errorf("%q not supported", action)
 	}
