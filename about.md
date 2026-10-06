@@ -36,7 +36,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.26
+version: 0.0.27
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -48,23 +48,21 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-07-19
+date_released: 2026-10-05
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.26
+## antennaApp 0.0.27
 
-- Added an `items:` block to `page.yaml` for per-collection control over how harvested feed items render in aggregate pages
-- Formalized `sourceMarkdown`-over-raw-`description` as the documented content-resolution rule for feed items
-- Fixed an unsanitized-HTML gap in the raw-`description` fallback path via `items.html` (`strip`/`escape`/`unsafe`)
-- Added `items.fields` allowlist for feed item body content, independent of PageFind filter attributes
-- Added accessibility-motivated default fallback label ("Continue reading") for feed item links via `items.link.label_field`
-- Added `items.date_format` and `items.content_max_length` controls for feed item rendering
-- Added theme-level `items.yaml` support, following the `head.yaml` field-copy pattern
-- Fixed date parsing to also accept RFC3339 timestamps, not only the space-separated layout
-- Confirmed `items:` configuration has no effect on local post/page rendering
+- Added `antenna completion bash|powershell`, with `-install` to set up completion for every new session
+- Exit codes now follow the workspace convention (DR-0003): 0 ok, 1 no, 2 usage, 65 data, 66 no input, 69 unavailable, 70 internal, 73 cannot create, 74 I/O, 75 try again, 77 permission, 78 config; they are documented under EXIT STATUS in the manual
+- Breaking for scripts: `harvest` and `generate` finish all their work, then exit non-zero when any feed, collection, post or page failed (a dead feed now exits 69); `posts`, `items` and `pages` that find nothing exit 0; a surplus argument is refused with exit 2 (`preview extra` used to start the server); `del` of an unknown collection exits 1
+- `antenna sitemap` now lists only the site's pages (from the pages collection) and its local posts, never harvested feed items; numbers its files across collections, writes them to htdocs, warns and exits 0 when there is nothing to list, and has `-clean` to remove stale `sitemap_N.xml` files
+- Fixed RSS feeds: enclosure URLs are XML-escaped (feeds with query strings were not well-formed), an unknown enclosure length is written as 0, and items now carry their own `pubDate` in RFC 1123 form (#22)
+- Fixed the skip link: `<main>` is focusable, so following it moves keyboard focus into the main area
+- Fixed `items` dropping rows that had NULL columns, `blogit` treating hyphenated file names as dates, and a feed whose body was cut off being parsed as if complete
 
 ## Authors
 
