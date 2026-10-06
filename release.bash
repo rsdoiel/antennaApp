@@ -1,5 +1,5 @@
 #!/bin/bash
-# generated with CMTools 0.0.24c 3889ec2
+# generated with CMTools 0.0.28 b1b3deb
 
 #
 # Release script for antennaApp on GitHub using gh cli.

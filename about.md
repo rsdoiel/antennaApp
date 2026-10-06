@@ -36,7 +36,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.27
+version: 0.0.28
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -54,8 +54,11 @@ date_released: 2026-10-05
 About this software
 ===================
 
-## antennaApp 0.0.27
+## antennaApp 0.0.28
 
+- Fixed the release binaries: v0.0.27 was tagged, but its cross-compiled builds failed on a cgo-only SQLite symbol, so it has no downloadable binaries; this is the first release of that code with binaries for all seven platforms
+- Fixed `antenna sitemap` in cross-compiled binaries: it opened a cgo-only SQLite driver and failed at run time without cgo
+- Everything in v0.0.27:
 - Added `antenna completion bash|powershell`, with `-install` to set up completion for every new session
 - Exit codes now follow the workspace convention (DR-0003): 0 ok, 1 no, 2 usage, 65 data, 66 no input, 69 unavailable, 70 internal, 73 cannot create, 74 I/O, 75 try again, 77 permission, 78 config; they are documented under EXIT STATUS in the manual
 - Breaking for scripts: `harvest` and `generate` finish all their work, then exit non-zero when any feed, collection, post or page failed (a dead feed now exits 69); `posts`, `items` and `pages` that find nothing exit 0; a surplus argument is refused with exit 2 (`preview extra` used to start the server); `del` of an unknown collection exits 1
