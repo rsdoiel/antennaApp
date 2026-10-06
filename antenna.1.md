@@ -1,4 +1,4 @@
-%antenna(1) user manual | version 0.0.26 fe5123c
+%antenna(1) user manual | version 0.0.26 983cf01
 % R. S. Doiel
 % 2026-07-19
 
