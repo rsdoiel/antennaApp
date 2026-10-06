@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"regexp"
 	"database/sql"
 	"fmt"
 	"os"
@@ -67,6 +68,11 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 	return cfg.Post(cName, fName)
 }
 
+// postDateShape is what a blogit POST_DATE looks like: YYYY-MM-DD. A value of
+// this shape is a date (and a typo in it is a usage error); anything else in
+// that position is a file name.
+var postDateShape = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+
 // BlogIt is a variation of Post. It will take a filepath, copy the Markdown
 // document into a blog path structure for the given root path. It then
 // calls the Post method to finish adding the new blog entry. NOTE this command
@@ -78,30 +84,24 @@ func (app *AntennaApp) BlogIt(cfgName string, args[]string) error {
 	}
 	var err error
 	postDay := time.Now()
-	cName, fName := "pages.md", ""
-	if len(args) == 1 {
+	cName, fName, dateArg := "pages.md", "", ""
+	switch {
+	case len(args) == 1:
 		fName = strings.TrimSpace(args[0])
-	} else if len(args) == 2 && strings.Contains(args[1], "-") {
-		fName = strings.TrimSpace(args[0])
-		postDay, err = time.Parse("2006-01-02", args[1])
-		if  err != nil {
-			return fmt.Errorf("failed to parse %q as post date, %s", args[1], err)
-		}
-	} else if len(args) == 2 && ! strings.Contains(args[1], "-") {
-		cName = strings.TrimSpace(args[0])
-		fName = strings.TrimSpace(args[1])
-	} else if len(args) == 3 && strings.Contains(args[2], "-") {
-		cName = strings.TrimSpace(args[0])
-		fName = strings.TrimSpace(args[1])
-		postDay, err = time.Parse("2006-01-02", args[2])
-		if  err != nil {
-			return fmt.Errorf("failed to parse %q as post date, %s", args[1], err)
-		}
-	} else {
+	case len(args) == 2 && postDateShape.MatchString(strings.TrimSpace(args[1])):
+		// FILEPATH POST_DATE. Shape decides, not a hyphen: file names like
+		// my-post.md are ordinary.
+		fName, dateArg = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+	case len(args) == 2:
 		cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
-		postDay, err = time.Parse("2006-01-02", args[2])
-		if  err != nil {
-			return fmt.Errorf("failed to parse %q as post date, %s", args[1], err)
+	default:
+		cName, fName = strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+		dateArg = strings.TrimSpace(args[2])
+	}
+	if dateArg != "" {
+		postDay, err = time.Parse("2006-01-02", dateArg)
+		if err != nil {
+			return usageErrorf("failed to parse %q as post date, %w", dateArg, err)
 		}
 	}
 	bName := filepath.Base(fName)
