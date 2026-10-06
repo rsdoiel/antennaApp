@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"io"
+	"strings"
 	"testing"
 )
 
@@ -137,5 +138,81 @@ func TestWriteCustomRSS_ValidXMLWithProblematicContent(t *testing.T) {
 	}
 	if err := validateXML(t, buf.Bytes()); err != nil {
 		t.Errorf("RSS feed is not valid XML: %s\nOutput:\n%s", err, buf.String())
+	}
+}
+
+// rssItemFor renders one item inside a minimal RSS shell and returns the
+// text and a parse error, if any.
+func rssItemFor(t *testing.T, enclosures []*Enclosure, pubDate string) (string, error) {
+	t.Helper()
+	gen := &Generator{eout: io.Discard}
+	var buf bytes.Buffer
+	buf.WriteString(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>`)
+	if err := gen.WriteItemRSS(&buf, "http://example.com/", "T", "d", nil,
+		enclosures, "g", pubDate, "", "", "published", "", "", "", ""); err != nil {
+		t.Fatalf("WriteItemRSS: %s", err)
+	}
+	buf.WriteString(`</channel></rss>`)
+	return buf.String(), validateXML(t, buf.Bytes())
+}
+
+func TestWriteItemRSS_EnclosureURLWithAmpersandIsValidXML(t *testing.T) {
+	// Podcast enclosure URLs routinely carry query strings (issue #22).
+	enc := []*Enclosure{{
+		Url:    "https://cdn.example.com/a.mp3?sid=1&source=rss&x=<y>",
+		Length: "123", Type: "audio/mpeg",
+	}}
+	out, err := rssItemFor(t, enc, "2026-06-27")
+	if err != nil {
+		t.Fatalf("not valid XML: %s\n%s", err, out)
+	}
+	// The decoded attribute must round-trip to the original URL.
+	d := xml.NewDecoder(strings.NewReader(out))
+	for {
+		tok, err := d.Token()
+		if err != nil {
+			t.Fatalf("no enclosure element found: %s", err)
+		}
+		if se, ok := tok.(xml.StartElement); ok && se.Name.Local == "enclosure" {
+			for _, a := range se.Attr {
+				if a.Name.Local == "url" && a.Value != enc[0].Url {
+					t.Errorf("url round-trip: got %q want %q", a.Value, enc[0].Url)
+				}
+			}
+			break
+		}
+	}
+}
+
+func TestWriteItemRSS_EnclosureEmptyLengthIsZero(t *testing.T) {
+	// RSS 2.0 requires length; unknown is conventionally 0.
+	out, _ := rssItemFor(t, []*Enclosure{{Url: "https://e.com/a.png", Type: "image/png"}}, "2026-06-27")
+	if !strings.Contains(out, `length="0"`) {
+		t.Errorf("expected length=\"0\" for unknown length, got:\n%s", out)
+	}
+}
+
+func TestWriteItemRSS_PubDateFromStoredLayouts(t *testing.T) {
+	// harvest.go stores "2006-01-02 15:04:05"; the production sqlite driver
+	// returns RFC3339; posts store a bare date. All must yield a pubDate
+	// carrying the item's own date (issue #22).
+	for _, in := range []string{"2025-08-23 23:34:08", "2025-08-23T23:34:08Z", "2025-08-23"} {
+		out, err := rssItemFor(t, nil, in)
+		if err != nil {
+			t.Fatalf("%q: not valid XML: %s", in, err)
+		}
+		if !strings.Contains(out, "<pubDate>Sat, 23 Aug 2025 ") {
+			t.Errorf("%q: expected RFC 1123Z pubDate for 23 Aug 2025, got:\n%s", in, out)
+		}
+	}
+}
+
+func TestWriteItemRSS_UnparsablePubDateIsOmitted(t *testing.T) {
+	out, err := rssItemFor(t, nil, "sometime last week")
+	if err != nil {
+		t.Fatalf("not valid XML: %s", err)
+	}
+	if strings.Contains(out, "<pubDate>") {
+		t.Errorf("expected no pubDate for unparsable value, got:\n%s", out)
 	}
 }

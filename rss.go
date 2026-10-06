@@ -60,6 +60,18 @@ func toXMLString(input string) string {
 	return input
 }
 
+// parseStoredDate parses a stored pubDate/updated value against
+// storedDateLayouts (harvested items, any driver) and the bare date layout
+// used for posts. ok is false when raw matches none of them.
+func parseStoredDate(raw string) (time.Time, bool) {
+	for _, l := range append(storedDateLayouts[:len(storedDateLayouts):len(storedDateLayouts)], "2006-01-02") {
+		if t, err := time.Parse(l, raw); err == nil {
+			return t, true
+		}
+	}
+	return time.Time{}, false
+}
+
 func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
 	channel string, status string, updated string, label string, sourceMarkdown string, categories string) error {
@@ -103,8 +115,15 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 	}
 	if enclosures != nil && len(enclosures) > 0 {
 		for _, enclosure := range enclosures {
-			fmt.Fprintf(out, `      <enclosure url=%q length=%q type=%q />
-`, strings.TrimSpace(enclosure.Url), enclosure.Length, strings.TrimSpace(enclosure.Type))
+			// RSS 2.0 requires length; 0 is the convention when it is unknown.
+			length := strings.TrimSpace(enclosure.Length)
+			if length == "" {
+				length = "0"
+			}
+			// XML escaping, not Go %q: URLs carry query strings with "&".
+			fmt.Fprintf(out, "      <enclosure url=\"%s\" length=\"%s\" type=\"%s\" />\n",
+				toXMLString(strings.TrimSpace(enclosure.Url)), toXMLString(length),
+				toXMLString(strings.TrimSpace(enclosure.Type)))
 		}
 	}
 	if guid != "" {
@@ -121,9 +140,8 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 		}
 	}
 	if pubDate != "" {
-		d, err := time.Parse("2006-01-02", pubDate)
-		if err == nil {
-			fmt.Fprintf(out, "      <pubDate>%s</pubDate>\n", d.Format(time.RFC822Z))
+		if d, ok := parseStoredDate(pubDate); ok {
+			fmt.Fprintf(out, "      <pubDate>%s</pubDate>\n", d.Format(time.RFC1123Z))
 		}
 	}
 	return nil
