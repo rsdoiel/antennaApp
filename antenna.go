@@ -36,6 +36,12 @@ func NewAntennaApp(appName string) *AntennaApp {
 
 // Run implements the command line functionality of the Antenna App.
 func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName string, action string, args []string) error {
+	// A surplus argument is refused before anything runs (DR-0003): a verb that
+	// takes none used to drop them silently, and `preview extra` started the
+	// web server.
+	if err := checkMaxArgs(app.appName, action, args); err != nil {
+		return err
+	}
 	switch action {
 	case "help":
 		if len(args) == 0 {
@@ -43,7 +49,7 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 			return nil
 		}
 		if !PrintHelpTopic(out, args[0], app.appName, Version, ReleaseDate, ReleaseHash) {
-			return fmt.Errorf("unknown help topic %q — try 'antenna help topics'", args[0])
+			return usageErrorf("unknown help topic %q — try 'antenna help topics'", args[0])
 		}
 		return nil
 	case "init":
@@ -96,7 +102,7 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 	case "stylefrom":
 		return app.ExtractStyles(out, args)
 	case "completion":
-		usage := fmt.Errorf("usage: %s completion bash|powershell [-install]", app.appName)
+		usage := usageErrorf("usage: %s completion bash|powershell [-install]", app.appName)
 		install, shells := false, []string{}
 		for _, a := range args {
 			if a == "-install" || a == "--install" {
@@ -122,6 +128,28 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		fmt.Fprintf(out, "installed %s\n", path)
 		return nil
 	default:
-		return fmt.Errorf("%q not supported", action)
+		return usageErrorf("%q not supported", action)
 	}
+}
+
+// maxArgs is the most positional arguments each verb documents (see
+// "antenna help VERB"). The least are checked where the verb reads them.
+// Harvest, generate, del and interactive name several collections or free
+// text and have no fixed maximum.
+var maxArgs = map[string]int{
+	"init": 0, "list": 0, "pages": 0, "sitemap": 0, "preview": 0,
+	"css": 1, "items": 1, "unpage": 1, "quote": 1, "reply": 1,
+	"apply": 2, "page": 2, "stylefrom": 2, "unpost": 2,
+	"add": 3, "posts": 3, "post": 3, "blogit": 3,
+	"rss": 4,
+}
+
+// checkMaxArgs returns a usage error when args has more positionals than
+// action documents, and nil for any verb not in maxArgs.
+func checkMaxArgs(appName, action string, args []string) error {
+	max, ok := maxArgs[action]
+	if !ok || len(args) <= max {
+		return nil
+	}
+	return usageErrorf("unexpected argument %q; try '%s help %s'", args[max], appName, action)
 }

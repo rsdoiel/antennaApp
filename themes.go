@@ -115,7 +115,7 @@ func (app *AntennaApp) ApplyTheme(cfgName string, args []string) error {
 	themeName := ""
 	generatorName := ""
 	if len(args) == 0 {
-		return fmt.Errorf("missing theme directory name")
+		return usageErrorf("missing theme directory name")
 	}
 	if len(args) > 0 {
 		themeName = args[0]
@@ -135,8 +135,11 @@ func (app *AntennaApp) ApplyTheme(cfgName string, args []string) error {
 		generatorName = cfg.Generator
 
 	}
-	if generatorName == "" || themeName == "" {
-		return fmt.Errorf("theme theme or generator name")
+	if themeName == "" {
+		return usageErrorf("missing theme directory name")
+	}
+	if generatorName == "" {
+		return configErrorf("no generator YAML named on the command line and no generator set in %s", cfgName)
 	}
 	// Reading or create a generator using generatorName
 	if _, err := os.Stat(generatorName); err == nil {
@@ -179,11 +182,11 @@ func updateHeadElements(gen *Generator, themeName string) (bool, error) {
 	if _, err := os.Stat(fName); err == nil {
 		src, err := os.ReadFile(fName)
 		if err != nil {
-			return false, fmt.Errorf("failed to read %q, %s", fName, err)
+			return false, fmt.Errorf("failed to read %q, %w", fName, err)
 		}
 		head := &Generator{}
 		if err := yaml.Unmarshal(src, &head); err != nil {
-			return false, fmt.Errorf("failed to parse %q, %s", fName, err)
+			return false, dataErrorf("failed to parse %q, %w", fName, err)
 		}
 		if head.Meta != nil && len(head.Meta) > 0 {
 			// Clear the previous Meta attributes
@@ -220,7 +223,7 @@ func updateHeadElements(gen *Generator, themeName string) (bool, error) {
 	if _, err := os.Stat(fName); err == nil {
 		src, err := os.ReadFile(fName)
 		if err != nil {
-			return false, fmt.Errorf("failed to read %q, %s", fName, err)
+			return false, fmt.Errorf("failed to read %q, %w", fName, err)
 		}
 		if len(src) > 0 {
 			gen.Style = fmt.Sprintf("%s\n\n", src)
@@ -245,11 +248,11 @@ func updateItemsElement(gen *Generator, themeName string) (bool, error) {
 	}
 	src, err := os.ReadFile(fName)
 	if err != nil {
-		return false, fmt.Errorf("failed to read %q, %s", fName, err)
+		return false, fmt.Errorf("failed to read %q, %w", fName, err)
 	}
 	var items ItemsConfig
 	if err := yaml.Unmarshal(src, &items); err != nil {
-		return false, fmt.Errorf("failed to parse %q, %s", fName, err)
+		return false, dataErrorf("failed to parse %q, %w", fName, err)
 	}
 	gen.Items = items
 	return true, nil
@@ -274,12 +277,12 @@ func updateBodyElements(gen *Generator, themeName string) (bool, error) {
 		if err == nil {
 			// convert src from Markdown to HTML then assign to attribute.
 			if err := doc.Parse(src); err != nil {
-				return false, fmt.Errorf("failed to parse %q, %s\n", fName, err)
+				return false, fmt.Errorf("failed to parse %q, %w", fName, err)
 			}
 			fmt.Printf("Setting attr from %q\n", fName)
 			innerHTML, err := doc.ToHTML()
 			if err != nil {
-				return false, fmt.Errorf("failed to render %q, %s\n", fName, err)
+				return false, dataErrorf("failed to render %q, %w", fName, err)
 			}
 			switch attr {
 			case "Header":
@@ -346,7 +349,7 @@ func (cfg *AppConfig) NewTheme(out io.Writer, themeName string) error {
 		themeDir = filepath.Join(cfg.Htdocs, themeName)
 	}
 	if err := os.MkdirAll(themeDir, 0775); err != nil {
-		return fmt.Errorf("cannot create %s: %s", themeDir, err)
+		return fmt.Errorf("cannot create %s: %w", themeDir, asCreate(err))
 	}
 	skipped := false
 	for name, content := range defaultThemeFiles() {
@@ -357,7 +360,7 @@ func (cfg *AppConfig) NewTheme(out io.Writer, themeName string) error {
 			continue
 		}
 		if err := os.WriteFile(dest, []byte(content), 0664); err != nil {
-			return fmt.Errorf("cannot write %s: %s", dest, err)
+			return fmt.Errorf("cannot write %s: %w", dest, asCreate(err))
 		}
 		fmt.Fprintf(out, "created: %s\n", dest)
 	}
@@ -395,10 +398,10 @@ func (app *AntennaApp) NewTheme(out io.Writer, cfgName string, args []string) er
 func saveGenerator(fName string, gen *Generator) error {
 	src, err := yaml.Marshal(gen)
 	if err != nil {
-		return fmt.Errorf("failed to encode %q, %s", fName, err)
+		return fmt.Errorf("failed to encode %q, %w", fName, err)
 	}
 	if err := os.WriteFile(fName, src, 0664); err != nil {
-		return fmt.Errorf("failed to write %q, %s", fName, err)
+		return fmt.Errorf("failed to write %q, %w", fName, asCreate(err))
 	}
 	return nil
 }

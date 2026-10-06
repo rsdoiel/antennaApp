@@ -17,15 +17,13 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"fmt"
-
 	// 3rd Party
 	_ "github.com/glebarez/go-sqlite"
 )
 
 func (app *AntennaApp) Add(cfgName string, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("missing collection name")
+		return usageErrorf("missing collection name")
 	}
 	// create a cfg object
 	cfg := &AppConfig{}
@@ -44,7 +42,7 @@ func (app *AntennaApp) Add(cfgName string, args []string) error {
 // YAML, HTML or RSS files.
 func (app *AntennaApp) Del(cfgName string, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("missing collection name")
+		return usageErrorf("missing collection name")
 	}
 
 	// create a cfg object

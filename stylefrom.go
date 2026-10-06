@@ -39,7 +39,7 @@ import (
  */
 func (app *AntennaApp) ExtractStyles(out io.Writer, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("missing input file — usage: stylefrom INPUT_FILE [OUTPUT_PATH]")
+		return usageErrorf("missing input file — usage: stylefrom INPUT_FILE [OUTPUT_PATH]")
 	}
 	inputFile := args[0]
 	outputPath := filepath.Join("theme", "style.css")
@@ -55,12 +55,12 @@ func (app *AntennaApp) ExtractStyles(out io.Writer, args []string) error {
 	// Ensure the output directory exists.
 	if dir := filepath.Dir(outputPath); dir != "." && dir != "" {
 		if err := os.MkdirAll(dir, 0775); err != nil {
-			return fmt.Errorf("cannot create directory %q: %w", dir, err)
+			return fmt.Errorf("cannot create directory %q: %w", dir, asCreate(err))
 		}
 	}
 
 	if err := os.WriteFile(outputPath, []byte(css), 0664); err != nil {
-		return fmt.Errorf("cannot write %q: %w", outputPath, err)
+		return fmt.Errorf("cannot write %q: %w", outputPath, asCreate(err))
 	}
 
 	fmt.Fprintf(out, "wrote CSS to %s\n", outputPath)

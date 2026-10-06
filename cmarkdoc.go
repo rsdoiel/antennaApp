@@ -19,7 +19,6 @@ package antennaApp
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	//"os"
 	"regexp"
@@ -112,7 +111,7 @@ func SplitFrontMatter(src []byte) (map[string]interface{}, string, error) {
 	}
 
 	if !foundEnd && inFrontMatter {
-		return nil, fmt.Sprintf("%s", src), errors.New("unclosed FrontMatter")
+		return nil, fmt.Sprintf("%s", src), dataErrorf("unclosed FrontMatter")
 	}
 
 	if len(frontMatterLines) == 0 {
@@ -122,7 +121,7 @@ func SplitFrontMatter(src []byte) (map[string]interface{}, string, error) {
 	// Parse FrontMatter as YAML
 	var result map[string]interface{}
 	if err := yaml.Unmarshal([]byte(strings.Join(frontMatterLines, "\n")), &result); err != nil {
-		return nil, "", err
+		return nil, "", dataErrorf("front matter: %w", err)
 	}
 	// The rest of the document starts after the second "---"
 	return result, strings.Join(rest, "\n"), nil
@@ -236,7 +235,7 @@ func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person
 						peopleList = append(peopleList, person)
 					}
 				default:
-					return nil, fmt.Errorf("failed to parse %q (%d) -> %T %+v", key, i, v, v)
+					return nil, dataErrorf("failed to parse %q (%d) -> %T %+v", key, i, v, v)
 				}
 			}
 		case map[string]interface{}:
@@ -245,7 +244,7 @@ func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person
 				peopleList = append(peopleList, person)
 			}
 		default:
-			return nil, fmt.Errorf("unable to parse %q", key)
+			return nil, dataErrorf("unable to parse %q", key)
 		}
 	}
 	// If we have a populated peopleList return it.
@@ -254,7 +253,7 @@ func (doc *CommonMark) GetPersons(key string, isRequired bool) ([]*gofeed.Person
 	}
 	// Do we required a populated peopleList?
 	if isRequired {
-		return nil, fmt.Errorf("no persons found for %q", key)
+		return nil, dataErrorf("no persons found for %q", key)
 	}
 	// An empty peopleList is OK, field is optional
 	return nil, nil

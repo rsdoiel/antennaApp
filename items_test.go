@@ -79,14 +79,18 @@ func TestItemsFromDB_EmptyTitle(t *testing.T) {
 	}
 }
 
-func TestItemsFromDB_Empty(t *testing.T) {
+func TestItemsFromDB_EmptyIsNotAnError(t *testing.T) {
 	db := newTestItemsDB(t)
 	defer db.Close()
 
 	var buf bytes.Buffer
-	err := itemsFromDB(&buf, db)
-	if err == nil {
-		t.Error("expected error when DB has no items, got nil")
+	// A listing that matches nothing is not a failure (workspace DR-0003,
+	// item 3): it prints nothing and succeeds, as ls of an empty directory does.
+	if err := itemsFromDB(&buf, db); err != nil {
+		t.Errorf("expected no error when DB has no items, got %v", err)
+	}
+	if buf.Len() != 0 {
+		t.Errorf("expected no output for an empty listing, got %q", buf.String())
 	}
 }
 

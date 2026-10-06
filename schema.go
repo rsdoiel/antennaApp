@@ -82,11 +82,11 @@ func setupDatabase(cName string, dbName string) error {
 		}
 		defer db.Close()
 		if db == nil {
-			return fmt.Errorf("%s opened and returned nil", dbName)
+			return internalErrorf("%s opened and returned nil", dbName)
 		}
 		_, err = db.Exec(stmt)
 		if err != nil {
-			return fmt.Errorf("%s\nstmt: %s", err, stmt)
+			return fmt.Errorf("%w\nstmt: %s", err, stmt)
 		}
 	}
 	return nil
@@ -176,9 +176,10 @@ func (cfg *AppConfig) AddCollection(cfgName string, cName string) error {
 // DelCollection removes a collection from the configuration, saving it.
 func (cfg *AppConfig) DelCollection(cfgName string, cName string) error {
 	i := cfg.CollectionIndex(cName)
-	if i > -1 {
-		cfg.Collections = append(cfg.Collections[:i], cfg.Collections[i+1:]...)
+	if i < 0 {
+		return negativef("%s not in collection", cName)
 	}
+	cfg.Collections = append(cfg.Collections[:i], cfg.Collections[i+1:]...)
 	// Save all the updates
 	if err := cfg.SaveConfig(cfgName); err != nil {
 		return err
@@ -207,7 +208,7 @@ func  (app *AntennaApp) ListCollectionFiles(out io.Writer, cfgName string, args 
 // ListCollectionFiles returns a list of collections defined in the configuration
 func (cfg *AppConfig) ListCollectionFiles(cfgName string) ([]string, error) {
 	if cfg.Collections == nil {
-		return nil, fmt.Errorf("not properly initialized")
+		return nil, noInputf("not properly initialized")
 	}
 	names := []string{}
 	for _, col := range cfg.Collections {
@@ -299,7 +300,10 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 	if err != nil {
 		return err
 	}
-	return yaml.Unmarshal(src, &cfg)
+	if err := yaml.Unmarshal(src, &cfg); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
+	return nil
 }
 
 // SaveConfig save the current configuration of the AntennaApp
@@ -331,7 +335,7 @@ func (cfg *AppConfig) GetCollection(cName string) (*Collection, error) {
 	if i > -1 {
 		return cfg.Collections[i], nil
 	}
-	return nil, fmt.Errorf("%s not in collection", cName)
+	return nil, negativef("%s not in collection", cName)
 }
 
 func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface{}, cfg *AppConfig) error {
@@ -399,7 +403,7 @@ func (collection *Collection) UpdateFrontMatter(frontMatter map[string]interface
 func (cfg *AppConfig) Posts(cName string, options []string) error {
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
-		return fmt.Errorf("%s, %s", cName, err)
+		return fmt.Errorf("%s, %w", cName, err)
 	}
 	dsn := collection.DbName
 	db, err := sql.Open("sqlite", dsn)
@@ -417,21 +421,21 @@ func (cfg *AppConfig) Posts(cName string, options []string) error {
 		fromDate, toDate := options[1], options[2]
 		rows, err = db.Query(SQLListDateRangePosts, fromDate, toDate)
 		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLListDateRangePosts, dsn, err)
+			return fmt.Errorf("%s\n%s, %w", SQLListDateRangePosts, dsn, err)
 		}
 	case len(options) == 2:
 		count, err := strconv.Atoi(options[1])
 		if err != nil {
-			return err
+			return usageErrorf("%q is not a count, %w", options[1], err)
 		}
 		rows, err = db.Query(SQLListRecentPosts, count)
 		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLListRecentPosts, dsn, err)
+			return fmt.Errorf("%s\n%s, %w", SQLListRecentPosts, dsn, err)
 		}
 	default:
 		rows, err = db.Query(SQLListPosts)
 		if err != nil {
-			return fmt.Errorf("%s\n%s, %s", SQLListPosts, dsn, err)
+			return fmt.Errorf("%s\n%s, %w", SQLListPosts, dsn, err)
 		}
 	}
 	if rows != nil {
@@ -439,6 +443,7 @@ func (cfg *AppConfig) Posts(cName string, options []string) error {
 	}
 
 	i := 0
+	tally := &failureTally{}
 	for rows.Next() {
 		var (
 			link     string
@@ -448,8 +453,10 @@ func (cfg *AppConfig) Posts(cName string, options []string) error {
 		)
 		if err := rows.Scan(&link, &title, &pubDate, &postPath); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			tally.add(dataErrorf("failed to read row: %w", err))
 			continue
 		}
+		tally.add(nil)
 		if strings.Contains(pubDate, "T") {
 			parts := strings.SplitN(pubDate, "T", 2)
 			pubDate = parts[0]
@@ -461,12 +468,11 @@ func (cfg *AppConfig) Posts(cName string, options []string) error {
 		fmt.Printf("- [%s](%s), %s\n",
 			title, postPath, pubDate)
 	}
-	if i == 0 {
-		return fmt.Errorf("no published posts")
+	if i > 0 {
+		fmt.Println("")
 	}
-	fmt.Println("")
-
-	return nil
+	// A listing that matches nothing is not a failure (DR-0003).
+	return tally.err("rows")
 }
 
 // updateItem will perform an "upsert" to insert or update the row
@@ -512,15 +518,15 @@ func (cfg *AppConfig) PublishPost(cName string, fName string) error {
 
 	src, err := os.ReadFile(fName)
 	if err != nil {
-		return fmt.Errorf("failed to read %q, %s", fName, err)
+		return fmt.Errorf("failed to read %q, %w", fName, err)
 	}
 	doc := &CommonMark{}
 	if err := doc.Parse(src); err != nil {
-		return fmt.Errorf("failed to parse %q, %s", fName, err)
+		return fmt.Errorf("failed to parse %q, %w", fName, err)
 	}
 	postPath := doc.GetAttributeString("postPath", "")
 	if postPath == "" {
-		return fmt.Errorf("missing postPath")
+		return dataErrorf("missing postPath")
 	}
 	updateMarkdownDoc := false
 	if doc.FrontMatter == nil {
@@ -536,7 +542,7 @@ func (cfg *AppConfig) PublishPost(cName string, fName string) error {
 	if updateMarkdownDoc {
 		doc.FrontMatter["dateModified"] = today
 		if err = saveMarkdown(fName, doc); err != nil {
-			return fmt.Errorf("unable to save %s, %s", fName, err)
+			return fmt.Errorf("unable to save %s, %w", fName, err)
 		}
 	}
 	dsn := collection.DbName
@@ -559,7 +565,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 
 	doc, err := LoadCommonMark(fName)
 	if err != nil {
-		return fmt.Errorf("failed to load %q, %s", fName, err)
+		return fmt.Errorf("failed to load %q, %w", fName, err)
 	}
 	updateMarkdownDoc := false
 	if doc.FrontMatter == nil {
@@ -580,7 +586,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 	// ODT files are not written back — their metadata is read-only from the archive.
 	if updateMarkdownDoc && !isODTFile(fName) {
 		if err = saveMarkdown(fName, doc); err != nil {
-			return fmt.Errorf("unable to save %s, %s", fName, err)
+			return fmt.Errorf("unable to save %s, %w", fName, err)
 		}
 	}
 
@@ -630,7 +636,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 		description = innerHTML
 	}
 	if title == "" && description == "" {
-		return fmt.Errorf("missing both title and description")
+		return dataErrorf("missing both title and description")
 	}
 
 	if postPath != "" {
@@ -638,7 +644,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 			if cfg.BaseURL != "" {
 				link = cfg.BaseURL + "/" + normalizeToHTMLExt(postPath)
 			} else {
-				return fmt.Errorf("missing base_url in antenna YAML, could not form link using postPath %q", postPath)
+				return configErrorf("missing base_url in antenna YAML, could not form link using postPath %q", postPath)
 			}
 		}
 		// Write out an HTML page to the postPath, normalizing source extension to .html
@@ -664,7 +670,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 	if dateModified != "" {
 		d, err := time.Parse("2006-01-02", dateModified)
 		if err != nil {
-			return fmt.Errorf("failed to parse dateModified: %q, %s", dateModified, err)
+			return dataErrorf("failed to parse dateModified: %q, %w", dateModified, err)
 		}
 		updated = d.Format(time.RFC3339)
 	}
@@ -674,14 +680,14 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 	if authors != nil {
 		authorsSrc, err = json.Marshal(authors)
 		if err != nil {
-			return fmt.Errorf("failed to marshal author, %s", err)
+			return fmt.Errorf("failed to marshal author, %w", err)
 		}
 	}
 	var categoriesSrc []byte
 	if cats := doc.GetAttributeStringSlice("categories"); len(cats) > 0 {
 		categoriesSrc, err = json.Marshal(cats)
 		if err != nil {
-			return fmt.Errorf("failed to marshal categories, %s", err)
+			return fmt.Errorf("failed to marshal categories, %w", err)
 		}
 	}
 	dsn := collection.DbName
@@ -721,11 +727,14 @@ func (cfg *AppConfig) Unpost(cName string, fName string) error {
 func itemsFromDB(out io.Writer, db *sql.DB) error {
 	rows, err := db.Query(SQLListItems)
 	if err != nil {
-		return fmt.Errorf("%s: %s", SQLListItems, err)
+		return fmt.Errorf("%s: %w", SQLListItems, err)
 	}
 	defer rows.Close()
 
 	i := 0
+	// A row that cannot be read is reported and counted, and the rest are
+	// still listed; the command then fails instead of exiting 0 (DR-0003).
+	tally := &failureTally{}
 	for rows.Next() {
 		var (
 			link, title, description, sourceMarkdown string
@@ -734,8 +743,10 @@ func itemsFromDB(out io.Writer, db *sql.DB) error {
 		if err := rows.Scan(&link, &title, &description, &sourceMarkdown,
 			&pubDate, &postPath, &status, &channel, &label, &updated); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			tally.add(dataErrorf("failed to read row: %w", err))
 			continue
 		}
+		tally.add(nil)
 		if len(pubDate) > 10 {
 			pubDate = pubDate[:10]
 		}
@@ -756,11 +767,11 @@ func itemsFromDB(out io.Writer, db *sql.DB) error {
 	if err := rows.Err(); err != nil {
 		return err
 	}
-	if i == 0 {
-		return fmt.Errorf("no items found")
+	if i > 0 {
+		fmt.Fprintln(out, "")
 	}
-	fmt.Fprintln(out, "")
-	return nil
+	// A listing that matches nothing is not a failure (DR-0003).
+	return tally.err("rows")
 }
 
 /** Items writes a listing of all harvested items in a collection to out.
@@ -778,7 +789,7 @@ func itemsFromDB(out io.Writer, db *sql.DB) error {
 func (cfg *AppConfig) Items(out io.Writer, cName string) error {
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
-		return fmt.Errorf("%s, %s", cName, err)
+		return fmt.Errorf("%s, %w", cName, err)
 	}
 	db, err := sql.Open("sqlite", collection.DbName)
 	if err != nil {

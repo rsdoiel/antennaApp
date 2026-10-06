@@ -1088,3 +1088,34 @@ func TestWritePageIndex_MainIsFocusTarget(t *testing.T) {
 		t.Errorf("expected %s, got:\n%s", focusableMain, buf.String())
 	}
 }
+
+// A row that cannot be read is reported and the rest of the page is still
+// written, but the command then fails; it must not exit 0 with items missing
+// (DR-0003 item 4).
+func TestWriteHTML_UnreadableRowFailsAfterWritingTheRest(t *testing.T) {
+	gen := newTestGenerator()
+	db := newTestItemsDB(t)
+	defer db.Close()
+	for _, row := range []string{
+		`('https://example.com/ok', 'Readable', 'body', 'published')`,
+		`('https://example.com/bad', NULL, 'body', 'published')`,
+	} {
+		if _, err := db.Exec(`INSERT INTO items (link, title, description, status) VALUES ` + row); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var buf bytes.Buffer
+	err := gen.WriteHTML(&buf, db, "", nil)
+	if err == nil {
+		t.Fatal("expected an error for the unreadable row, got nil")
+	}
+	if got := ExitCodeFor(err); got != classData {
+		t.Errorf("class %s, want data; error: %v", got.Name, err)
+	}
+	if !strings.Contains(err.Error(), "1 of 2 rows failed") {
+		t.Errorf("expected the counts, got %v", err)
+	}
+	if !strings.Contains(buf.String(), "Readable") {
+		t.Errorf("the readable row was not written:\n%s", buf.String())
+	}
+}

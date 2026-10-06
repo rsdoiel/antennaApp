@@ -132,7 +132,7 @@ func pageTo(s string, curPos int, pageSize int, tot int) (int, error) {
 	case strings.HasPrefix(s, "+"):
 		curPos = normalizePos(val+curPos, pageSize, tot)
 	default:
-		return curPos, fmt.Errorf("unable to parse %q", s)
+		return curPos, usageErrorf("unable to parse %q", s)
 	}
 	return curPos, nil
 }

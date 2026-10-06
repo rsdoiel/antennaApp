@@ -86,7 +86,7 @@ func InitPageGenerator(pageName string) error {
 	} else {
 		// NOTE: Create a default page pagefooter Generator
 		if err := os.WriteFile(pageName, []byte(DefaultGeneratorYaml), 0664); err != nil {
-			return fmt.Errorf("failed to create %q, %s", pageName, err)
+			return fmt.Errorf("failed to create %q, %w", pageName, asCreate(err))
 		}
 	}
 	return nil
@@ -97,7 +97,7 @@ func InitPageGenerator(pageName string) error {
 // for a handful of page.
 func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("expected filepath for Markdown content")
+		return usageErrorf("expected filepath for Markdown content")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
@@ -114,7 +114,7 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 // Unpage will remove a CommonMark document filePath
 func (app *AntennaApp) Unpage(cfgName string, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("expected filepath for Markdown content")
+		return usageErrorf("expected filepath for Markdown content")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
@@ -146,12 +146,12 @@ func (cfg *AppConfig) Unpage(fName string) error {
 	dsn := collection.DbName
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
-		return fmt.Errorf("failed to open %s, %s", dsn, err)
+		return fmt.Errorf("failed to open %s, %w", dsn, err)
 	}
 	defer db.Close()
 
 	if _, err := db.Exec(SQLDeletePageByPath, fName, fName); err != nil {
-		return fmt.Errorf("%s, %s", dsn, err)
+		return fmt.Errorf("%s, %w", dsn, err)
 	}
 	return nil
 }
@@ -215,12 +215,12 @@ func (cfg *AppConfig) Page(fName string, oName string) error {
 	dsn := collection.DbName
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
-		return fmt.Errorf("failed to open %s, %s", dsn, err)
+		return fmt.Errorf("failed to open %s, %w", dsn, err)
 	}
 	defer db.Close()
 	timestamp := time.Now().Format(time.RFC3339)
 	if _, err := db.Exec(SQLUpdatePage, fName, oName, timestamp); err != nil {
-		return fmt.Errorf("%s, %s", dsn, err)
+		return fmt.Errorf("%s, %w", dsn, err)
 	}
 	return nil
 }
@@ -243,7 +243,7 @@ func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
 	)
 	rows, err = db.Query(SQLListPages)
 	if err != nil {
-		return nil, fmt.Errorf("%s\n%s, %s", SQLListItems, dsn, err)
+		return nil, fmt.Errorf("%s\n%s, %w", SQLListItems, dsn, err)
 	}
 	if rows != nil {
 		defer rows.Close()
@@ -251,6 +251,7 @@ func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
 
 	i := 0
 	pages := []map[string]string{}
+	tally := &failureTally{}
 	for rows.Next() {
 		var (
 			inputPath  string
@@ -259,8 +260,10 @@ func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
 		)
 		if err = rows.Scan(&inputPath, &outputPath, &updated); err != nil {
 			displayErrorStatus("failed to read row (%d), %s\n", i, err)
+			tally.add(dataErrorf("failed to read row (%d): %w", i, err))
 			continue
 		}
+		tally.add(nil)
 		if i == 0 {
 			i++
 		}
@@ -271,10 +274,8 @@ func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
 		}
 		pages = append(pages, page)
 	}
-	if i == 0 {
-		return nil, fmt.Errorf("no pages found")
-	}
-	return pages, nil
+	// No pages is an empty list, not an error (DR-0003).
+	return pages, tally.err("rows")
 }
 
 // Pages diplays a page information to standard output
@@ -287,16 +288,17 @@ func (cfg *AppConfig) Pages() error {
 	dsn := collection.DbName
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
-		return fmt.Errorf("failed to open %s, %s", dsn, err)
+		return fmt.Errorf("failed to open %s, %w", dsn, err)
 	}
 	defer db.Close()
 
 	rows, err := db.Query(SQLDisplayPage)
 	if err != nil {
-		return fmt.Errorf("%s, %s", dsn, err)
+		return fmt.Errorf("%s, %w", dsn, err)
 	}
 	defer rows.Close()
 
+	tally := &failureTally{}
 	for rows.Next() {
 		var (
 			iName   string
@@ -305,10 +307,12 @@ func (cfg *AppConfig) Pages() error {
 		)
 		if err := rows.Scan(&iName, &oName, &updated); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
+			tally.add(dataErrorf("failed to read row: %w", err))
 			continue
 		}
+		tally.add(nil)
 		fmt.Printf("%s\t%s\t%s\n", iName, oName, updated)
 	}
-	return nil
+	return tally.err("rows")
 }
 

@@ -391,7 +391,7 @@ func resolveItemLink(link, title, channelURL string, cfg LinkConfig) (LinkResolu
 		return LinkResolution{Href: link, Label: label}, nil
 	}
 	if cfg.Required {
-		return LinkResolution{}, fmt.Errorf("item link is required but empty (items.link.required: true)")
+		return LinkResolution{}, dataErrorf("item link is required but empty (items.link.required: true)")
 	}
 	switch cfg.Missing {
 	case "omit":
@@ -605,6 +605,9 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 		return err
 	}
 	defer rows.Close()
+	// An item row that cannot be read is reported and counted, the rest are
+	// still written, and the page then fails instead of exiting 0.
+	tally := &failureTally{}
 	// Setup and write out the body
 	for rows.Next() {
 		var (
@@ -631,8 +634,10 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 			&channel, &status, &updated, &label, &postPath, &sourceMarkdown,
 			&categories); err != nil {
 			fmt.Fprintf(gen.eout, "error (%s): %s\n", stmt, err)
+			tally.add(dataErrorf("reading item row: %w", err))
 			continue
 		}
+		tally.add(nil)
 		if authorsSrc != "" {
 			authors = []*gofeed.Person{}
 			if err := json.Unmarshal([]byte(authorsSrc), &authors); err != nil {
@@ -666,7 +671,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
 	}
 	// close the body
-	return nil
+	return tally.err("rows")
 }
 
 // pageDisplayName derives a human-readable label from a Markdown input path.
@@ -694,12 +699,15 @@ func (gen *Generator) WritePageIndex(out io.Writer, db *sql.DB) error {
 
 	fmt.Fprintln(out, `  <main id="main-content" tabindex="-1">`)
 	fmt.Fprintln(out, "    <ul>")
+	tally := &failureTally{}
 	for rows.Next() {
 		var inputPath, outputPath string
 		if err := rows.Scan(&inputPath, &outputPath); err != nil {
 			fmt.Fprintf(gen.eout, "error (page-index row): %s\n", err)
+			tally.add(dataErrorf("reading page-index row: %w", err))
 			continue
 		}
+		tally.add(nil)
 		// Normalise outputPath: ensure it starts with / for web-root linking
 		href := "/" + strings.TrimLeft(filepath.ToSlash(outputPath), "/")
 		label := pageDisplayName(inputPath)
@@ -710,7 +718,7 @@ func (gen *Generator) WritePageIndex(out io.Writer, db *sql.DB) error {
 	}
 	fmt.Fprintln(out, "    </ul>")
 	fmt.Fprintln(out, "  </main>")
-	return nil
+	return tally.err("rows")
 }
 
 // WriteHtmlPage renders a post as an HTML Page using HTML connent and wrapping it based on the

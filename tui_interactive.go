@@ -29,7 +29,7 @@ import (
 )
 
 // errCancelled is returned when the user aborts an action with "c" or ESC.
-var errCancelled = fmt.Errorf("action cancelled")
+var errCancelled = negativef("action cancelled")
 
 // iHistoryEntry records one confirmed-and-run command within a session.
 type iHistoryEntry struct {
@@ -206,7 +206,7 @@ func (s *iSession) exportToFile(shell string) error {
 	}
 	f, err := os.Create(name)
 	if err != nil {
-		return fmt.Errorf("cannot create %q: %w", name, err)
+		return fmt.Errorf("cannot create %q: %w", name, asCreate(err))
 	}
 	defer f.Close()
 	stamp := time.Now().Format("2006-01-02")
@@ -242,7 +242,7 @@ func (s *iSession) handleHistory(args []string) error {
 	case "powershell", "ps1", "pwsh":
 		return s.exportToFile("powershell")
 	default:
-		return fmt.Errorf("unknown format %q — use: history, history bash, history powershell", args[0])
+		return usageErrorf("unknown format %q — use: history, history bash, history powershell", args[0])
 	}
 }
 
@@ -322,7 +322,7 @@ func (s *iSession) guide(action string, args []string) error {
 	case "stylefrom":
 		return s.guideStylefrom(args)
 	default:
-		return fmt.Errorf("unknown action %q — type ? to see all actions", action)
+		return usageErrorf("unknown action %q — type ? to see all actions", action)
 	}
 }
 
@@ -487,7 +487,7 @@ antenna configuration so it can be harvested and its content generated into HTML
 		preFile, "my-feeds.md")
 	if err != nil { return err }
 	if collectionFile == "" {
-		return fmt.Errorf("collection file is required")
+		return usageErrorf("collection file is required")
 	}
 
 	name, err := iOptionalStep(s.scanner, "NAME",
@@ -527,7 +527,7 @@ file (.md) and its SQLite3 database are left on disk untouched.
 		pre, "")
 	if err != nil { return err }
 	if collectionFile == "" {
-		return fmt.Errorf("collection file is required")
+		return usageErrorf("collection file is required")
 	}
 
 	return s.confirmAndRun("del", []string{collectionFile})
@@ -572,7 +572,7 @@ a 'link' pointing to the public URL.
 		preFile, "")
 	if err != nil { return err }
 	if filePath == "" {
-		return fmt.Errorf("filepath is required")
+		return usageErrorf("filepath is required")
 	}
 
 	finalArgs := []string{}
@@ -607,7 +607,7 @@ blog/2026/03/01/my-post.md, then adds it to the collection as a post.
 		preFile, "")
 	if err != nil { return err }
 	if filePath == "" {
-		return fmt.Errorf("filepath is required")
+		return usageErrorf("filepath is required")
 	}
 
 	postDate, err := iOptionalStep(s.scanner, "POST_DATE",
@@ -644,7 +644,7 @@ The Markdown file itself is not deleted from disk.
 		preCollection, "pages.md")
 	if err != nil { return err }
 	if collection == "" {
-		return fmt.Errorf("collection name is required")
+		return usageErrorf("collection name is required")
 	}
 
 	urlOrPath, err := iStep(s.scanner, "URL or POST_PATH",
@@ -652,7 +652,7 @@ The Markdown file itself is not deleted from disk.
 		preURL, "")
 	if err != nil { return err }
 	if urlOrPath == "" {
-		return fmt.Errorf("url or post path is required")
+		return usageErrorf("url or post path is required")
 	}
 
 	return s.confirmAndRun("unpost", []string{collection, urlOrPath})
@@ -677,7 +677,7 @@ Optionally limit output with a count or a date range (not both).
 		preCollection, "pages.md")
 	if err != nil { return err }
 	if collection == "" {
-		return fmt.Errorf("collection name is required")
+		return usageErrorf("collection name is required")
 	}
 
 	count, err := iOptionalStep(s.scanner, "COUNT",
@@ -729,7 +729,7 @@ Only use this action with files you trust completely.
 		preInput, "")
 	if err != nil { return err }
 	if inputPath == "" {
-		return fmt.Errorf("input path is required")
+		return usageErrorf("input path is required")
 	}
 
 	outputPath, err := iOptionalStep(s.scanner, "OUTPUT_PATH",
@@ -761,7 +761,7 @@ when the generate action runs. The HTML and Markdown files stay on disk.
 		pre, "")
 	if err != nil { return err }
 	if inputPath == "" {
-		return fmt.Errorf("input path is required")
+		return usageErrorf("input path is required")
 	}
 
 	return s.confirmAndRun("unpage", []string{inputPath})
@@ -852,7 +852,7 @@ limit the output with a count or a date range (not both).
 		preCollection, "pages.md")
 	if err != nil { return err }
 	if collection == "" {
-		return fmt.Errorf("collection name is required")
+		return usageErrorf("collection name is required")
 	}
 
 	rssFile, err := iStep(s.scanner, "RSS_FILENAME",
@@ -860,7 +860,7 @@ limit the output with a count or a date range (not both).
 		preFile, "feed.xml")
 	if err != nil { return err }
 	if rssFile == "" {
-		return fmt.Errorf("RSS filename is required")
+		return usageErrorf("RSS filename is required")
 	}
 
 	count, err := iOptionalStep(s.scanner, "COUNT",
@@ -986,7 +986,7 @@ HTML pages are structured when the generate action runs.
 		prePath, "theme")
 	if err != nil { return err }
 	if themePath == "" {
-		return fmt.Errorf("theme path is required")
+		return usageErrorf("theme path is required")
 	}
 
 	yamlFile, err := iOptionalStep(s.scanner, "YAML_FILE_PATH",
@@ -1020,7 +1020,7 @@ into a theme directory as style.css.
 		preInput, "")
 	if err != nil { return err }
 	if inputFile == "" {
-		return fmt.Errorf("input file is required")
+		return usageErrorf("input file is required")
 	}
 
 	outputPath, err := iOptionalStep(s.scanner, "OUTPUT_PATH",

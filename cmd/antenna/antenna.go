@@ -29,6 +29,23 @@ import (
 
 var ()
 
+/** exitCodeOf returns the process exit status for an error a command
+ * returned, following the workspace exit-code convention (DR-0003): 0 for nil,
+ * 2 usage, 65 data, 66 no_input, 69 unavailable, 73 cant_create, 74 io,
+ * 75 temp_fail, 77 no_permission, 78 config, 1 for an answer of "no" and 70
+ * for an error nothing classified.
+ *
+ * Parameters:
+ *   err (error) — the error returned by Run, or nil.
+ *
+ * Returns:
+ *   int — the exit status.
+ *
+ * Example:
+ *   os.Exit(exitCodeOf(err))
+ */
+func exitCodeOf(err error) int { return antennaApp.ExitCodeFor(err).Code }
+
 func main() {
 	appName := filepath.Base(os.Args[0])
 	cfgName := strings.TrimSuffix(appName, ".exe") + ".yaml"
@@ -51,7 +68,7 @@ func main() {
 		if len(args) > 0 {
 			if !antennaApp.PrintHelpTopic(out, args[0], appName, version, releaseDate, releaseHash) {
 				fmt.Fprintf(eout, "unknown help topic %q — try 'antenna help topics'\n", args[0])
-				os.Exit(1)
+				os.Exit(2)
 			}
 		} else {
 			fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
@@ -76,7 +93,7 @@ func main() {
 	antennaApp := antennaApp.NewAntennaApp(appName)
 	if err := antennaApp.Run(in, out, eout, cfgName, action, args); err != nil {
 		fmt.Fprintln(eout, err)
-		os.Exit(1)
+		os.Exit(exitCodeOf(err))
 	}
 	os.Exit(0)
 }

@@ -119,7 +119,7 @@ func WriteCompletion(w io.Writer, appName, shell string) error {
 	case "powershell", "pwsh":
 		script = powershellCompletion
 	default:
-		return fmt.Errorf("unsupported shell %q — use one of: %s", shell, strings.Join(completionShells, ", "))
+		return usageErrorf("unsupported shell %q — use one of: %s", shell, strings.Join(completionShells, ", "))
 	}
 	r := strings.NewReplacer(
 		"{app_name}", name,
@@ -283,7 +283,7 @@ func InstallCompletion(appName, shell, home, dataHome, goos string) (string, err
 		path := filepath.Join(dataHome, "bash-completion", "completions", name)
 		if old, err := os.ReadFile(path); err == nil {
 			if !strings.HasPrefix(string(old), "# bash completion for ") {
-				return "", fmt.Errorf("%s exists and was not written by %s, not overwriting", path, name)
+				return "", cantCreatef("%s exists and was not written by %s, not overwriting", path, name)
 			}
 		} else if !os.IsNotExist(err) {
 			return "", err

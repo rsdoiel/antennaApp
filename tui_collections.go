@@ -387,7 +387,7 @@ func addCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg
 		cName = options[0]
 	}
 	if cName == "" {
-		return fmt.Errorf("Missing collection name")
+		return usageErrorf("Missing collection name")
 	}
 	
 	if _, err := os.Stat(cName); os.IsNotExist(err) {
@@ -423,7 +423,7 @@ description: %q
 // deleteCollection provides the prompts to delete a collection	scanner := bufio.NewScanner(os.Stdin)
 func deleteCollection(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
 	if cfg.Collections == nil {
-		return fmt.Errorf("no collections to delete")
+		return negativef("no collections to delete")
 	}	
 	var cName string
 	if len(options) < 1 {
@@ -440,15 +440,15 @@ func deleteCollection(scanner *bufio.Scanner, options []string, cfgName string, 
 				scanner.Scan()
 				answer, _, _ := parseAnswer(scanner.Text())
 				if (answer != "yes" && answer != "y") {
-					return fmt.Errorf("delete %s cancelled", cName)
+					return negativef("delete %s cancelled", cName)
 				}
 				return cfg.DelCollection(cfgName, cName)	
 		}
 	}
 	if cName == "" {
-		return fmt.Errorf("Missing collection name")
+		return usageErrorf("Missing collection name")
 	}
-	return fmt.Errorf("%q not found", cName)
+	return negativef("%q not found", cName)
 }
 
 // harvestCollection will retrieve and aggregate collection items
@@ -571,7 +571,7 @@ func generateRssFiles(scanner *bufio.Scanner, options []string, cfgName string, 
 		case len(options) == 3:
 			count, err = strconv.Atoi(options[2])
 			if err != nil {
-				return fmt.Errorf("%q, %s", options[2], err)
+				return fmt.Errorf("%q, %w", options[2], err)
 			}
 	}
 	if fromDate == ""  {
@@ -590,7 +590,7 @@ func generateRssFiles(scanner *bufio.Scanner, options []string, cfgName string, 
 		txt := scanner.Text()
 		count, err = strconv.Atoi(txt)
 		if err != nil {
-			return fmt.Errorf("%q, %s", options[2], err)
+			return fmt.Errorf("%q, %w", options[2], err)
 		}
 	}
 	return cfg.RssPosts(cName, rssFeed, count, fromDate, toDate)
@@ -603,10 +603,10 @@ func generateSitemapFiles(scanner *bufio.Scanner, options []string, cfgName stri
 
 // appleThemes list themes available in the project
 func listThemes(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("listThemes() not implemented yet.")
+	return internalErrorf("listThemes() not implemented yet.")
 }
 
 // runPreview will run the web server on localhost so you can preview your site in the web browser
 func runPreview(scanner *bufio.Scanner, options []string, cfgName string, cfg *AppConfig) error {
-	return fmt.Errorf("runPreview() not implemented yet.")
+	return internalErrorf("runPreview() not implemented yet.")
 }

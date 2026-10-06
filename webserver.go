@@ -127,7 +127,7 @@ func (r *RedirectService) Route(key string) (string, bool) {
 func LoadRedirects(fName string) (map[string]string, error) {
 	src, err := os.ReadFile(fName)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read %s, %s", fName, err)
+		return nil, fmt.Errorf("Can't read %s, %w", fName, err)
 	}
 	r := csv.NewReader(bytes.NewReader(src))
 	// Allow support for comment rows
@@ -140,7 +140,7 @@ func LoadRedirects(fName string) (map[string]string, error) {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("Can't read %s, %s", fName, err)
+			return nil, fmt.Errorf("Can't read %s, %w", fName, err)
 		}
 		if len(row) == 2 {
 			// Define direct here.
@@ -193,7 +193,7 @@ func (r *RedirectService) AddRedirectRoute(target, destination string) error {
 	// Make sure prefix has not been defined and don't collide
 	for _, p := range prefixes {
 		if strings.HasPrefix(p, target) || strings.HasPrefix(target, p) {
-			return fmt.Errorf("targets %q and %q collide", target, p)
+			return configErrorf("targets %q and %q collide", target, p)
 		}
 	}
 	r.routes[target] = destination
@@ -348,7 +348,7 @@ func LoadAccess(fName string) (*Access, error) {
 	case strings.HasSuffix(fName, ".json"):
 		return loadAccessJSON(fName)
 	default:
-		return nil, fmt.Errorf("%q, unsupported format", fName)
+		return nil, configErrorf("%q, unsupported format", fName)
 	}
 }
 
@@ -361,7 +361,7 @@ func loadAccessYAML(accessYAML string) (*Access, error) {
 		return nil, err
 	}
 	if err := yaml.Unmarshal(src, &auth); err != nil {
-		return nil, err
+		return nil, configErrorf("%s: %w", accessYAML, err)
 	}
 	return auth, nil
 }
@@ -375,7 +375,7 @@ func loadAccessJSON(accessJSON string) (*Access, error) {
 		return nil, err
 	}
 	if err := json.Unmarshal(src, &auth); err != nil {
-		return nil, err
+		return nil, configErrorf("%s: %w", accessJSON, err)
 	}
 	return auth, nil
 }
@@ -388,7 +388,7 @@ func (a *Access) DumpAccess(fName string) error {
 	case strings.HasSuffix(fName, ".json"):
 		return a.dumpAccessJSON(fName)
 	default:
-		return fmt.Errorf("%q, unsupported format", fName)
+		return configErrorf("%q, unsupported format", fName)
 	}
 }
 
@@ -750,7 +750,7 @@ func (w *WebService) SafeFileSystem() (SafeFileSystem, error) {
 	if info, err := os.Stat(w.DocRoot); err != nil {
 		return SafeFileSystem{}, err
 	} else if info.IsDir() == false {
-		return SafeFileSystem{}, fmt.Errorf("%q is not a directory", w.DocRoot)
+		return SafeFileSystem{}, noInputf("%q is not a directory", w.DocRoot)
 	}
 	return SafeFileSystem{http.Dir(w.DocRoot)}, nil
 }
@@ -770,12 +770,12 @@ func (w *WebService) SafeFileSystem() (SafeFileSystem, error) {
 // log.Fatal(http.ListenAndService(":8000", nil))
 func MakeSafeFileSystem(docRoot string) (SafeFileSystem, error) {
 	if docRoot == "" {
-		return SafeFileSystem{}, fmt.Errorf("document root not set")
+		return SafeFileSystem{}, configErrorf("document root not set")
 	}
 	if info, err := os.Stat(docRoot); err != nil {
 		return SafeFileSystem{}, err
 	} else if info.IsDir() == false {
-		return SafeFileSystem{}, fmt.Errorf("%q is not a directory", docRoot)
+		return SafeFileSystem{}, noInputf("%q is not a directory", docRoot)
 	}
 	return SafeFileSystem{http.Dir(docRoot)}, nil
 }
@@ -870,7 +870,7 @@ func LoadWebService(setup string) (*WebService, error) {
 	case strings.HasSuffix(setup, ".json"):
 		ws, err = loadWebServiceJSON(setup)
 	default:
-		err = fmt.Errorf("%q, unknown format.", setup)
+		err = configErrorf("%q, unknown format.", setup)
 	}
 	if err != nil {
 		return nil, err
@@ -890,7 +890,7 @@ func loadWebServiceYAML(setup string) (*WebService, error) {
 	}
 	w := new(WebService)
 	if err := yaml.Unmarshal(src, &w); err != nil {
-		return nil, err
+		return nil, configErrorf("%s: %w", setup, err)
 	}
 	if w.DocRoot == "" {
 		w.DocRoot = "."
@@ -912,7 +912,7 @@ func loadWebServiceJSON(setup string) (*WebService, error) {
 	}
 	w := new(WebService)
 	if err := json.Unmarshal(src, &w); err != nil {
-		return nil, err
+		return nil, configErrorf("%s: %w", setup, err)
 	}
 	if w.DocRoot == "" {
 		w.DocRoot = "."
@@ -942,7 +942,7 @@ func (ws *WebService) DumpWebService(fName string) error {
 	case strings.HasSuffix(fName, ".json"):
 		err = ws.dumpWebServiceJSON(fName)
 	default:
-		err = fmt.Errorf("%q, unsupported format", fName)
+		err = configErrorf("%q, unsupported format", fName)
 	}
 	if access != nil {
 		ws.Access = access

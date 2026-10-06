@@ -65,7 +65,7 @@ func (gen *Generator) WriteOPML(out io.Writer, db *sql.DB, appName string, colle
 		if err := rows.Scan(&link, &title, &description, &feedLink,
 			&linksSrc, &updated, &published, &authorsSrc,
 			&language, &copyright, &generator, &categoriesSrc, &feedType, &feedVersion); err != nil {
-			return err
+			return dataErrorf("reading channel row: %w", err)
 		}
 		if link != "" && title != "" {
 			entry := &opml.Outline{}

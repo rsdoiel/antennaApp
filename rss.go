@@ -242,7 +242,7 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
 			&channel, &status, &updated, &label, &postPath, &sourceMarkdown,
 			&categories); err != nil {
-			return err
+			return dataErrorf("reading item row: %w", err)
 		}
 		if authorsSrc != "" {
 			// Do we have a JSON object?

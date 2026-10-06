@@ -92,7 +92,7 @@ func generateSitemaps(cfg *AppConfig) error {
 		sitemapFiles = append(sitemapFiles, l...)
 	}
 	if len(sitemapFiles) == 0 {
-		return fmt.Errorf("no posts or pages found in any collection")
+		return negativef("no posts or pages found in any collection")
 	}
 
 	// Create the sitemap index
@@ -114,13 +114,13 @@ func generateSitemaps(cfg *AppConfig) error {
 	// Marshal the index to XML
 	indexData, err := xml.MarshalIndent(index, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal sitemap index: %s", err)
+		return fmt.Errorf("failed to marshal sitemap index: %w", err)
 	}
 	indexData = []byte(xml.Header + string(indexData))
 
 	// Write the index to file
 	if err := os.WriteFile("sitemap_index.xml", indexData, 0644); err != nil {
-		return fmt.Errorf("failed to write sitemap_index.xml: %s", err)
+		return fmt.Errorf("failed to write sitemap_index.xml: %w", asCreate(err))
 	}
 
 	log.Println("Sitemap files and index generated successfully!")
@@ -142,7 +142,7 @@ func sitemap(cfg *AppConfig, dbName string) ([]string, error) {
 	// Open the SQLite database
 	db, err := sql.Open("sqlite3", dbName)
 	if err != nil {
-		return sitemapFiles, fmt.Errorf("failed to open database (%s): %s", dbName, err)
+		return sitemapFiles, fmt.Errorf("failed to open database (%s): %w", dbName, err)
 	}
 	defer db.Close()
 
@@ -202,17 +202,20 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 	// Query the pages table for in the collection.
 	rows, err := db.Query(sqlStmt)
 	if err != nil {
-		return urls, fmt.Errorf("failed to query %s collection, %s", dbName, err)
+		return urls, fmt.Errorf("failed to query %s collection, %w", dbName, err)
 	}
 	defer rows.Close()
 
+	tally := &failureTally{}
 	for rows.Next() {
 		var outputPath string
 		var updated time.Time
 		if err := rows.Scan(&outputPath, &updated); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to scan row (%s): %s\n", dbName, err)
+			tally.add(dataErrorf("failed to scan row (%s): %w", dbName, err))
 			continue
 		}
+		tally.add(nil)
 
 		// Determine changefreq and priority based on rules
 		changeFreq := cfg.DefaultFreq
@@ -242,5 +245,5 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 		urls = append(urls, u)
 	}
 
-	return urls, nil
+	return urls, tally.err("rows")
 }

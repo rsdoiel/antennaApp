@@ -195,12 +195,12 @@ func (cfg *ItemsConfig) validate() error {
 	switch cfg.HTML {
 	case "", "strip", "escape", "unsafe":
 	default:
-		return fmt.Errorf("items.html: invalid value %q (want strip, escape, or unsafe)", cfg.HTML)
+		return configErrorf("items.html: invalid value %q (want strip, escape, or unsafe)", cfg.HTML)
 	}
 	switch cfg.Link.Missing {
 	case "", "unlinked", "omit", "source_link":
 	default:
-		return fmt.Errorf("items.link.missing: invalid value %q (want unlinked, omit, or source_link)", cfg.Link.Missing)
+		return configErrorf("items.link.missing: invalid value %q (want unlinked, omit, or source_link)", cfg.Link.Missing)
 	}
 	return nil
 }
@@ -239,7 +239,7 @@ func (gen *Generator) LoadConfig(cfgName string) error {
 	}
 	obj := new(Generator)
 	if err := yaml.Unmarshal(src, &obj); err != nil {
-		return err
+		return configErrorf("%s: %w", cfgName, err)
 	}
 	// Pull in the configuration elements
 	if obj.AppName != "" {
@@ -340,6 +340,10 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 			args = append(args, col.File)
 		}
 	}
+	// Everything asked for is generated even when part of it fails; the
+	// command then reports the failures and exits with the class of the first
+	// (DR-0003 item 4), not 0.
+	tally := &failureTally{}
 	for _, cName := range args {
 		col, err := cfg.GetCollection(cName)
 		if err != nil {
@@ -350,19 +354,28 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 			continue
 		}
 		// Regenerate the aggregation page (HTML + RSS + OPML)
-		if err := col.Generate(out, eout, app.appName, cfg); err != nil {
-			fmt.Fprintf(eout, "warning %s: %s\n", col.File, err)
+		colErr := col.Generate(out, eout, app.appName, cfg)
+		if colErr != nil {
+			fmt.Fprintf(eout, "warning %s: %s\n", col.File, colErr)
 		}
 		// Regenerate individual post HTML pages stored in this collection
 		if err := col.GeneratePosts(eout, app.appName, cfg); err != nil {
 			fmt.Fprintf(eout, "warning generating posts for %s: %s\n", col.File, err)
+			if colErr == nil {
+				colErr = err
+			}
 		}
+		tally.add(colErr)
 	}
 	// Regenerate all pages tracked in the pages table
-	if err := cfg.GeneratePages(eout); err != nil {
-		fmt.Fprintf(eout, "warning generating pages: %s\n", err)
+	pagesErr := cfg.GeneratePages(eout)
+	if pagesErr != nil {
+		fmt.Fprintf(eout, "warning generating pages: %s\n", pagesErr)
 	}
-	return nil
+	if err := tally.err("collections"); err != nil {
+		return err
+	}
+	return pagesErr
 }
 
 /** GeneratePosts re-renders the HTML file for every post (item with postPath set)
@@ -374,8 +387,10 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
  *   cfg     (*AppConfig) — loaded antenna.yaml configuration
  *
  * Returns:
- *   error — database query error, or nil on success; per-post render errors are
- *           written to eout and do not stop processing
+ *   error — database query error; or nil on success; or, when some posts
+ *           failed, the class of the first failure with the counts. Every
+ *           per-post error is also written to eout and does not stop
+ *           processing
  *
  * Example:
  *   err := col.GeneratePosts(os.Stderr, "antenna", cfg)
@@ -403,7 +418,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 			return err
 		}
 		if err := yaml.Unmarshal(src, &gen); err != nil {
-			return err
+			return configErrorf("%s: %w", collection.Generator, err)
 		}
 	} else {
 		if err := yaml.Unmarshal([]byte(DefaultGeneratorYaml), &gen); err != nil {
@@ -417,6 +432,9 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 	}
 	defer rows.Close()
 
+	// Every post is attempted; failures are counted and returned at the end so
+	// generate does not exit 0 with posts missing (DR-0003 item 4).
+	tally := &failureTally{}
 	for rows.Next() {
 		var (
 			link           string
@@ -426,6 +444,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 		)
 		if err := rows.Scan(&link, &postPath, &pubDate, &sourceMarkdown); err != nil {
 			fmt.Fprintf(eout, "warning reading post row: %s\n", err)
+			tally.add(dataErrorf("reading post row: %w", err))
 			continue
 		}
 		if sourceMarkdown == "" {
@@ -445,6 +464,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 		innerHTML, err := doc.ToUnsafeHTML()
 		if err != nil {
 			fmt.Fprintf(eout, "warning rendering markdown for %q: %s\n", postPath, err)
+			tally.add(dataErrorf("rendering markdown for %q: %w", postPath, err))
 			continue
 		}
 		htmlName := normalizeToHTMLExt(filepath.Join(cfg.Htdocs, postPath))
@@ -452,14 +472,21 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 		if _, err := os.Stat(dName); err != nil {
 			if err := os.MkdirAll(dName, 0775); err != nil {
 				fmt.Fprintf(eout, "warning creating directory %q: %s\n", dName, err)
+				tally.add(fmt.Errorf("creating directory %q: %w", dName, asCreate(err)))
 				continue
 			}
 		}
-		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.FrontMatter); err != nil {
+		err = gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.FrontMatter)
+		if err != nil {
 			fmt.Fprintf(eout, "warning writing HTML for %q: %s\n", postPath, err)
+			err = fmt.Errorf("writing HTML for %q: %w", postPath, err)
 		}
+		tally.add(err)
 	}
-	return rows.Err()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	return tally.err("posts")
 }
 
 /** GeneratePages re-renders the HTML file for every page tracked in the pages table.
@@ -471,7 +498,8 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
  *   eout (io.Writer) — warning and error messages
  *
  * Returns:
- *   error — always nil; per-page errors are written to eout
+ *   error — nil, or the class of the first failure with the counts; every
+ *           per-page error is also written to eout
  *
  * Example:
  *   err := cfg.GeneratePages(os.Stderr)
@@ -479,20 +507,28 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 func (cfg *AppConfig) GeneratePages(eout io.Writer) error {
 	pages, err := cfg.GetPages()
 	if err != nil {
-		// No pages collection or no pages found — not an error during generate
-		return nil
+		// No pages collection is not an error during generate; a database
+		// that cannot be read is.
+		if class, _ := classify(err); class == classNegative {
+			return nil
+		}
+		return err
 	}
+	tally := &failureTally{}
 	for _, page := range pages {
 		inputPath := page["inputPath"]
 		outputPath := page["outputPath"]
 		if inputPath == "" {
 			continue
 		}
-		if err := cfg.Page(inputPath, outputPath); err != nil {
+		err := cfg.Page(inputPath, outputPath)
+		if err != nil {
 			fmt.Fprintf(eout, "warning generating page %q: %s\n", inputPath, err)
+			err = fmt.Errorf("%s: %w", inputPath, err)
 		}
+		tally.add(err)
 	}
-	return nil
+	return tally.err("pages")
 }
 
 func (collection *Collection) ApplyFilters(db *sql.DB) error {
@@ -503,7 +539,7 @@ func (collection *Collection) ApplyFilters(db *sql.DB) error {
 		if strings.TrimSpace(stmt) != "" {
 			_, err := db.Exec(stmt)
 			if err != nil {
-				return fmt.Errorf("%s\nstmt: %s", err, stmt)
+				return fmt.Errorf("%w\nstmt: %s", err, stmt)
 			}
 		}
 	}
@@ -524,7 +560,7 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 			return err
 		}
 		if err := yaml.Unmarshal(src, &gen); err != nil {
-			return err
+			return configErrorf("%s: %w", collection.Generator, err)
 		}
 	} else {
 		if err := yaml.Unmarshal([]byte(DefaultGeneratorYaml), &gen); err != nil {

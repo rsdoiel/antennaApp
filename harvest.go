@@ -43,16 +43,21 @@ func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, arg
 			args = append(args, col.File)
 		}
 	}
+	// Harvest every collection asked for, then report: a failed collection
+	// does not stop the rest, and does not let the command exit 0 either.
+	tally := &failureTally{}
 	for _, cName := range args {
 		col, err := cfg.GetCollection(cName)
 		if err != nil {
 			return err
 		}
-		if err := col.Harvest(out, eout, cfg.UserAgent); err != nil {
+		err = col.Harvest(out, eout, cfg.UserAgent)
+		if err != nil {
 			fmt.Fprintf(eout, "warning %s: %s\n", col.File, err)
 		}
+		tally.add(err)
 	}
-	return nil
+	return tally.err("collections")
 }
 
 func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent string) error {
@@ -72,20 +77,26 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
 		return err
 	}
 	defer db.Close()
-	// Retrieve is feed for links and save channel and items for feed
+	// Retrieve is feed for links and save channel and items for feed. One
+	// feed failing does not stop the others; the failures are counted and
+	// returned at the end.
+	tally := &failureTally{}
 	for _, link := range links {
 		// Retrieve feed data
 		feed, err := webget(userAgent, link.URL)
 		if err != nil {
 			fmt.Fprintf(eout, "warning (%s %s): %s\n", link.Label, link.URL, err)
+			tally.add(fmt.Errorf("%s %s: %w", link.Label, link.URL, err))
 			continue
 		}
 
 		// Save the Channel data for the feed
 		if err := saveChannel(db, link.URL, link.Label, feed); err != nil {
 			fmt.Fprintf(eout, "failed to save chanel %q, %s\n", link.URL, err)
+			tally.add(fmt.Errorf("saving channel %s: %w", link.URL, err))
 			continue
 		}
+		tally.add(nil)
 		// Setup a progress output
 		t0 := time.Now()
 		rptTime := time.Now()
@@ -118,7 +129,7 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
 		}
 		fmt.Fprintf(out, "processed %d/%d from %s %s\n", i, tot, link.Label, userAgent)
 	}
-	return nil
+	return tally.err("feeds")
 }
 
 func redirectHandler(req *http.Request, via []*http.Request) error {
@@ -127,7 +138,7 @@ func redirectHandler(req *http.Request, via []*http.Request) error {
 		for _, redirect := range via {
 			urlList = append(urlList, redirect.URL.String())
 		}
-		return fmt.Errorf("stopped after 5 redirectos: %s", strings.Join(urlList, ", "))
+		return unavailablef("stopped after 5 redirectos: %s", strings.Join(urlList, ", "))
 	}
 	fmt.Fprintf(os.Stderr, "redirecting to %s because %s\n", req.URL.String(), http.ErrUseLastResponse)
 	return http.ErrUseLastResponse
@@ -143,7 +154,7 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 	}
 	req, err := http.NewRequest("GET", href, nil)
 	if err != nil {
-		return nil, err
+		return nil, dataErrorf("bad feed URL %q: %w", href, err)
 	}
 	if userAgent == "" {
 		req.Header.Set("User-Agent", fmt.Sprintf("antenna/%s %s", Version, ReleaseHash))
@@ -157,7 +168,7 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 		return nil, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("http error: %s", res.Status)
+		return nil, unavailablef("http error: %s", res.Status)
 	}
 	// See if we can clean up some stuff that'll break feed parsing
 	src, err := io.ReadAll(res.Body)
@@ -171,12 +182,12 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 	fp := gofeed.NewParser()
 	feed, err := fp.Parse(buf)
 	if err != nil {
-		return nil, fmt.Errorf("feed error for %q, %s", href, err)
+		return nil, dataErrorf("feed error for %q, %w", href, err)
 	}
 	if feed.Link == "" || feed.Link == "/" {
 		u, err := url.Parse(href)
 		if err != nil {
-			return nil, err
+			return nil, dataErrorf("bad feed URL %q: %w", href, err)
 		}
 		u.Path = "/"
 		feed.Link = u.String()
@@ -234,7 +245,7 @@ func saveChannel(db *sql.DB, link string, feedLabel string, channel *gofeed.Feed
 		authorsStr, channel.Language, channel.Copyright, channel.Generator,
 		categoriesStr, channel.FeedType, channel.FeedVersion)
 	if err != nil {
-		return fmt.Errorf("%s\nstmt: %s", err, stmt)
+		return fmt.Errorf("%w\nstmt: %s", err, stmt)
 	}
 	return nil
 }
@@ -267,25 +278,25 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 	if item.DublinCoreExt != nil {
 		dcExt, err = json.Marshal(item.DublinCoreExt)
 		if err != nil {
-			return fmt.Errorf("failed to marshal item.DublinCoreExt, %s", err)
+			return fmt.Errorf("failed to marshal item.DublinCoreExt, %w", err)
 		}
 	}
 	if item.Enclosures != nil {
 		enclosures, err = json.Marshal(item.Enclosures)
 		if err != nil {
-			return fmt.Errorf("failed to marshal item.Enclosures, %s", err)
+			return fmt.Errorf("failed to marshal item.Enclosures, %w", err)
 		}
 	}
 	if item.Authors != nil {
 		authors, err = json.Marshal(item.Authors)
 		if err != nil {
-			return fmt.Errorf("failed to marshal item.Authors, %s", err)
+			return fmt.Errorf("failed to marshal item.Authors, %w", err)
 		}
 	}
 	if item.Categories != nil {
 		categories, err = json.Marshal(item.Categories)
 		if err != nil {
-			return fmt.Errorf("failed to marshal item.Categories, %s", err)
+			return fmt.Errorf("failed to marshal item.Categories, %w", err)
 		}
 	}
 	// FIXME: Need to find a feed that uses the source:markdown name space to verify this is how gofeed
@@ -322,7 +333,7 @@ func saveItem(db *sql.DB, feedLabel string, channel string, status string, item 
 		string(enclosures), item.GUID, pubDate, string(dcExt),
 		channel, status, updated, feedLabel, postPath, sourceMarkdown,
 		string(categories)); err != nil {
-		return fmt.Errorf("%s\nstmt: %s", err, stmt)
+		return fmt.Errorf("%w\nstmt: %s", err, stmt)
 	}
 	return nil
 }

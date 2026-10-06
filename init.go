@@ -35,7 +35,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 			return err
 		}
 		if err := yaml.Unmarshal(src, &cfg); err != nil {
-			return err
+			return configErrorf("%s: %w", fName, err)
 		}
 	} else {
 		fmt.Printf("creating %s\n", fName)
@@ -55,18 +55,18 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 
 	if cfg.Htdocs != "" {
 		if _, err := os.Stat(cfg.Htdocs); err != nil {
-			return fmt.Errorf("problem with htdocs: %q in %s: %s", cfg.Htdocs, fName, err)
+			return fmt.Errorf("problem with htdocs: %q in %s: %w", cfg.Htdocs, fName, err)
 		}
 	}
 	if cfg.Generator == "" {
 		cfg.Generator = "page.yaml"
 	}
 	if err := cfg.SaveConfig(cfgName); err != nil {
-		return fmt.Errorf("failed to save %s, %s", cfgName, err)
+		return fmt.Errorf("failed to save %s, %w", cfgName, asCreate(err))
 	}
 
 	if err := InitPageGenerator(cfg.Generator); err != nil {
-		return fmt.Errorf("failed to generate default %s, %s", cfg.Generator, err)
+		return fmt.Errorf("failed to generate default %s, %w", cfg.Generator, err)
 	}
 	// Add the default pages.md collection.
 	cName := "pages.md"
@@ -74,7 +74,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	if _, err := os.Stat(cName); err != nil {
 		fmt.Printf("Creating the %s\n", cName)
 		if err := os.WriteFile(cName, []byte(DefaultPageCollectionMarkdown), 0664); err != nil {
-			return fmt.Errorf("failed to created %s, %s", cName, err)
+			return fmt.Errorf("failed to created %s, %w", cName, asCreate(err))
 		}
 	} else {
 		fmt.Printf("using existing %s\n", cName)
@@ -83,7 +83,7 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 	if _, err := os.Stat(dbName); err != nil {
 		fmt.Printf("Adding %s\n", cName)
 		if err := app.Add(cfgName, []string{cName}); err != nil {
-			return fmt.Errorf("failed to create default collection, %s, %s", cName, err)
+			return fmt.Errorf("failed to create default collection, %s, %w", cName, err)
 		}
 	} else {
 		fmt.Printf("using existing %s\n", dbName)

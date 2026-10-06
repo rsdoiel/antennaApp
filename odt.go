@@ -281,7 +281,7 @@ func ParseODTMeta(path string) (*ODTMeta, error) {
 		}
 		return parseODTMetaXML(data)
 	}
-	return nil, fmt.Errorf("meta.xml not found in %q", path)
+	return nil, dataErrorf("meta.xml not found in %q", path)
 }
 
 // parseODTContentXML scans content.xml byte data and returns every hyperlink

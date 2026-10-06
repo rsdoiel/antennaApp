@@ -34,7 +34,7 @@ func saveMarkdown(fName string, doc *CommonMark) error {
 	backupName := strings.TrimSuffix(fName, ".md") + ".bak"
 	if _, err := os.Stat(backupName); err == nil {
 		if err := os.Remove(backupName); err != nil {
-			return fmt.Errorf("failed to back %q as %q, %s", fName, backupName, err)
+			return fmt.Errorf("failed to back %q as %q, %w", fName, backupName, err)
 		}
 	}
 	if err := os.Rename(fName, backupName); err != nil {
@@ -52,7 +52,7 @@ func saveMarkdown(fName string, doc *CommonMark) error {
 // are provided it will convert the CommonMark document to HTML and save it in the postPath.
 func (app *AntennaApp) Post(cfgName string, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("expected a Markdown filename or collection name and Markdown filename")
+		return usageErrorf("expected a Markdown filename or collection name and Markdown filename")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
@@ -74,7 +74,7 @@ func (app *AntennaApp) Post(cfgName string, args []string) error {
 // element in the post's path followed by a date directory structure.
 func (app *AntennaApp) BlogIt(cfgName string, args[]string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("expected a Markdown filename or filename post date")
+		return usageErrorf("expected a Markdown filename or filename post date")
 	}
 	var err error
 	postDay := time.Now()
@@ -109,7 +109,7 @@ func (app *AntennaApp) BlogIt(cfgName string, args[]string) error {
 	if _, err := os.Stat(postDir); err != nil {
 		// Security: Use 0755 instead of 0777 for directory permissions
 		if err := os.MkdirAll(postDir, 0755); err != nil {
-			return fmt.Errorf("failed to create %q, %s", postDir, err)
+			return fmt.Errorf("failed to create %q, %w", postDir, asCreate(err))
 		}
 	}
 	src, err := os.ReadFile(fName)
@@ -140,7 +140,7 @@ func (app *AntennaApp) Posts(cfgName string, args []string) error {
 
 func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 	if len(args) != 2 {
-		return fmt.Errorf("expected a collection name and url in the collection")
+		return usageErrorf("expected a collection name and url in the collection")
 	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
@@ -152,21 +152,17 @@ func (app *AntennaApp) Unpost(cfgName string, args []string) error {
 
 // RssPosts, gernate RSS to stdout for posts
 func (app *AntennaApp) RssPosts(cfgName string, args []string) error {
-	cfg := &AppConfig{}
-	if err := cfg.LoadConfig(cfgName); err != nil {
-		return err
-	}
 	cName := "pages.md"
 	rssFeed := ""
 	if len(args) > 0 {
 		cName = strings.TrimSpace(args[0])
 	} else {
-		return fmt.Errorf("missing collection to use for RSS feed")
+		return usageErrorf("missing collection to use for RSS feed")
 	}
 	if len(args) > 1 {
 		rssFeed = strings.TrimSpace(args[1])
 	} else {
-		return fmt.Errorf("missing RSS filename to generate")
+		return usageErrorf("missing RSS filename to generate")
 	}
 	var (
 		fromDate string
@@ -180,8 +176,14 @@ func (app *AntennaApp) RssPosts(cfgName string, args []string) error {
 	case len(args) == 3:
 		count, err = strconv.Atoi(args[2])
 		if err != nil {
-			return fmt.Errorf("%q, %s", args[2], err)
+			return usageErrorf("%q is not a count, %s", args[2], err)
 		}
+	}
+	// The command line is checked first so a mistake in it is reported as one
+	// even when there is no antenna.yaml to read.
+	cfg := &AppConfig{}
+	if err := cfg.LoadConfig(cfgName); err != nil {
+		return err
 	}
 	return cfg.RssPosts(cName, rssFeed, count, fromDate, toDate)
 }
@@ -191,10 +193,10 @@ func (app *AntennaApp) RssPosts(cfgName string, args []string) error {
 func (cfg *AppConfig) RssPosts(cName string, rssFeed string, count int, fromDate string, toDate string) error {
 	appName := filepath.Base(os.Args[0])
 	if cName == "" {
-		return fmt.Errorf("missing collection to use for RSS feed")
+		return usageErrorf("missing collection to use for RSS feed")
 	}
 	if rssFeed == "" {
-		return fmt.Errorf("missing RSS filename to generate")
+		return usageErrorf("missing RSS filename to generate")
 	}
 	feedLink := fmt.Sprintf("%s/%s", cfg.BaseURL, rssFeed)
 	out, err := os.Create(rssFeed)
@@ -205,7 +207,7 @@ func (cfg *AppConfig) RssPosts(cName string, rssFeed string, count int, fromDate
 
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
-		return fmt.Errorf("%s, %s", cName, err)
+		return fmt.Errorf("%s, %w", cName, err)
 	}
 	dsn := collection.DbName
 	db, err := sql.Open("sqlite", dsn)

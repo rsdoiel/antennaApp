@@ -27,7 +27,8 @@ func (tf *TextFragment) String() string {
 func ParseTextFragmentURL(s string) (*TextFragment, error) {
 	u, err := url.Parse(s)
 	if err != nil {
-		return nil, err
+		// A *url.Error from Parse is a malformed URL, not an unreachable one.
+		return nil, usageErrorf("bad URL %q: %w", s, err)
 	}
 	tf := new(TextFragment)
 	tf.Link = s
@@ -50,11 +51,11 @@ func ParseTextFragmentURL(s string) (*TextFragment, error) {
 // standard  output.
 func (app *AntennaApp) QuoteTextFragment(out io.Writer, cfgName string, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("expected a text fragment URL to parse")
+		return usageErrorf("expected a text fragment URL to parse")
 	}
 	tf, err := ParseTextFragmentURL(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to parse, %q, %s", args[0], err)
+		return usageErrorf("failed to parse, %q, %s", args[0], err)
 	}
 	fmt.Fprintf(out, "\n\n> %s\n\n([%s](%s), accessed %s)\n\n",
 		strings.TrimSpace(tf.Text),

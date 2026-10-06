@@ -430,7 +430,7 @@ func (cfg *AppConfig) GenerateCSS(out io.Writer, cssPath string) error {
 	cssDir := filepath.Dir(absCSS)
 	if _, err := os.Stat(cssDir); err != nil {
 		if err := os.MkdirAll(cssDir, 0775); err != nil {
-			return fmt.Errorf("cannot create %s: %s", cssDir, err)
+			return fmt.Errorf("cannot create %s: %w", cssDir, asCreate(err))
 		}
 	}
 
@@ -438,14 +438,14 @@ func (cfg *AppConfig) GenerateCSS(out io.Writer, cssPath string) error {
 	if _, err := os.Stat(absCSS); err == nil {
 		bakPath := absCSS + ".bak"
 		if err := os.Rename(absCSS, bakPath); err != nil {
-			return fmt.Errorf("cannot backup %s: %s", absCSS, err)
+			return fmt.Errorf("cannot backup %s: %w", absCSS, err)
 		}
 		fmt.Fprintf(out, "backed up %s → %s\n", absCSS, bakPath)
 	}
 
 	// Write the default CSS
 	if err := os.WriteFile(absCSS, []byte(DefaultCSS), 0664); err != nil {
-		return fmt.Errorf("cannot write %s: %s", absCSS, err)
+		return fmt.Errorf("cannot write %s: %w", absCSS, asCreate(err))
 	}
 	fmt.Fprintf(out, "wrote %s\n", absCSS)
 
