@@ -15,6 +15,7 @@ title: User Manual
   - [add](antenna-add.7.md)
   - [apply](antenna-apply.7.md)
   - [blogit](antenna-blogit.7.md)
+  - [completion](antenna-completion.7.md)
   - [css](antenna-css.7.md)
   - [del](antenna-del.7.md)
   - [generate](antenna-generate.7.md)

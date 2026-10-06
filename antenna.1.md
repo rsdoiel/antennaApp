@@ -208,6 +208,13 @@ list in descending publication-date order. Items include blog posts, static page
 and feed entries harvested from remote feeds. COLLECTION_NAME defaults to pages.md.
 Compare with 'posts' (items with a postPath only) and 'pages' (static pages only).
 
+completion SHELL [-install]
+: Write a shell completion script for SHELL (bash or powershell) to standard
+output. With -install the script is installed for every new session instead:
+for bash into $XDG_DATA_HOME/bash-completion/completions/antenna (replacing only
+a file antenna wrote), for PowerShell beside the profile with one line added to
+the profile to load it, once. Use 'antenna help completion' for full details.
+
 help [TOPIC]
 : Display help. Without TOPIC the full manual page is shown. With TOPIC the guide
 for that specific command or concept is shown. Run 'antenna help topics' for a list
