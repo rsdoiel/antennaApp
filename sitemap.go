@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -38,6 +39,16 @@ type SitemapIndex struct {
 
 // Sitemap implements the antenna sitemap action.
 func (app *AntennaApp) Sitemap(cfgName string, args []string) error {
+	// The command line is judged before anything is read.
+	clean := false
+	for _, a := range args {
+		switch a {
+		case "-clean", "--clean":
+			clean = true
+		default:
+			return usageErrorf("unexpected argument %q; try '%s help sitemap'", a, app.appName)
+		}
+	}
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
@@ -59,7 +70,7 @@ func (app *AntennaApp) Sitemap(cfgName string, args []string) error {
 	cfg.FreqRules = map[string]string{"blog/": "daily", "news/": "hourly"}
 	cfg.PriRules = map[string]string{"": "1.0", "blog/": "0.8", "about/": "0.7"}
 	*/
-	return generateSitemaps(cfg, os.Stderr)
+	return generateSitemaps(cfg, os.Stderr, clean)
 }
 
 // Sitemap implements the antenna sitemap action for TUI.
@@ -74,7 +85,7 @@ func (cfg *AppConfig) Sitemap() error {
 
 	// Setup some sain defaults.
 	cfg.ChunkSize = 100
-	return generateSitemaps(cfg, os.Stderr)
+	return generateSitemaps(cfg, os.Stderr, false)
 }
 
 /** generateSitemaps writes the site's sitemap files and index into the
@@ -94,8 +105,10 @@ func (cfg *AppConfig) Sitemap() error {
  * sitemaps.org schema.
  *
  * Parameters:
- *   cfg  (*AppConfig) — the loaded antenna.yaml, with BaseURL and ChunkSize set
- *   eout (io.Writer)  — where warnings and progress are written
+ *   cfg   (*AppConfig) — the loaded antenna.yaml, with BaseURL and ChunkSize set
+ *   eout  (io.Writer)  — where warnings and progress are written
+ *   clean (bool)       — remove sitemap_N.xml files in htdocs that this run
+ *                        did not write (see removeStaleSitemaps)
  *
  * Returns:
  *   error — nil, or the failures of the collections that could not be read,
@@ -104,7 +117,8 @@ func (cfg *AppConfig) Sitemap() error {
  * Example:
  *   err := generateSitemaps(cfg, os.Stderr)
  */
-func generateSitemaps(cfg *AppConfig, eout io.Writer) error {
+func generateSitemaps(cfg *AppConfig, eout io.Writer, clean bool) error {
+	written := map[string]bool{}
 	tally := &failureTally{}
 	urls := []URL{}
 	seen := map[string]bool{}
@@ -129,7 +143,9 @@ func generateSitemaps(cfg *AppConfig, eout io.Writer) error {
 	}
 	if len(urls) == 0 {
 		fmt.Fprintln(eout, "warning: no pages or posts found in any collection, no sitemap written")
-		return tally.err("collections")
+		// There is no current sitemap, so every old file is stale, the index
+		// included: nothing points at it any more.
+		return withCleanup(tally, clean, cfg.Htdocs, written, true, eout)
 	}
 
 	// Chunk across the whole run so file names are unique and each file is
@@ -155,6 +171,7 @@ func generateSitemaps(cfg *AppConfig, eout io.Writer) error {
 		if err := os.WriteFile(filepath.Join(cfg.Htdocs, name), []byte(xml.Header+string(xmlData)), 0644); err != nil {
 			return fmt.Errorf("failed to write %s: %w", name, asCreate(err))
 		}
+		written[name] = true
 		sitemaps = append(sitemaps, struct {
 			Loc string `xml:"loc"`
 		}{Loc: fmt.Sprintf("%s/%s", cfg.BaseURL, name)})
@@ -170,7 +187,67 @@ func generateSitemaps(cfg *AppConfig, eout io.Writer) error {
 		return fmt.Errorf("failed to write sitemap_index.xml: %w", asCreate(err))
 	}
 	fmt.Fprintln(eout, "Sitemap files and index generated successfully!")
+	return withCleanup(tally, clean, cfg.Htdocs, written, false, eout)
+}
+
+// withCleanup finishes generateSitemaps: it removes stale files when asked,
+// and returns the collection failures, or the first failure to remove a file.
+// Nothing is removed when a collection failed, because the map is then
+// incomplete and the files that look stale may be all that is left of what
+// that collection contributed.
+func withCleanup(tally *failureTally, clean bool, dir string, written map[string]bool, removeIndex bool, eout io.Writer) error {
+	if clean && tally.failed > 0 {
+		fmt.Fprintln(eout, "warning: cleanup skipped because a collection could not be read")
+		clean = false
+	}
+	if clean {
+		if err := removeStaleSitemaps(dir, written, removeIndex, eout); err != nil {
+			if collectionErr := tally.err("collections"); collectionErr != nil {
+				return collectionErr
+			}
+			return err
+		}
+	}
 	return tally.err("collections")
+}
+
+// staleSitemapName matches the numbered sitemap files antenna writes and
+// nothing else: sitemap_2.xml, not sitemap_2.xml.bak, my_sitemap_2.xml or
+// sitemap_index.xml.
+var staleSitemapName = regexp.MustCompile(`^sitemap_[0-9]+\.xml$`)
+
+// removeStaleSitemaps deletes the regular files in dir named sitemap_<number>.xml
+// that are not in keep, and, when removeIndex is set, sitemap_index.xml too.
+// Anything else in dir is left alone, including directories and look-alike
+// names. Each removal is reported on eout. All the stale files are attempted;
+// the first failure is returned.
+func removeStaleSitemaps(dir string, keep map[string]bool, removeIndex bool, eout io.Writer) error {
+	if dir == "" {
+		dir = "."
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	tally := &failureTally{}
+	for _, e := range entries {
+		name := e.Name()
+		stale := staleSitemapName.MatchString(name) && !keep[name]
+		if removeIndex && name == "sitemap_index.xml" {
+			stale = true
+		}
+		if !stale || !e.Type().IsRegular() {
+			continue
+		}
+		if err := os.Remove(filepath.Join(dir, name)); err != nil {
+			fmt.Fprintf(eout, "warning: could not remove stale %s: %s\n", name, err)
+			tally.add(fmt.Errorf("removing stale %s: %w", name, err))
+			continue
+		}
+		tally.add(nil)
+		fmt.Fprintf(eout, "removed stale %s\n", name)
+	}
+	return tally.err("files")
 }
 
 // startsWith checks if a string starts with a prefix.

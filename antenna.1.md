@@ -160,9 +160,10 @@ generate [COLLECTION_NAME]
 : This process the collections rendering HTML pages and RSS 2.0 feeds for each collection.
 If the collection name is provided then only that HTML page will be generated.
 
-sitemap
+sitemap [-clean]
 : This will generate a set of sitemap files for pages and posts found through the
 antenna.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml, sitemap_2.xml, ...)
+With -clean, sitemap files left over from an earlier run are removed.
 
 preview
 : Let's your preview the rendered your Antenna instance as a localhost website using

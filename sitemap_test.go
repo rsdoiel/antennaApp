@@ -141,7 +141,7 @@ func TestSitemap_ListsPagesAndLocalPostsNotHarvestedItems(t *testing.T) {
 	addPost(t, "pages.db", "blog/2026/10/01/first.md")
 	addHarvested(t, "news.db", 5)
 	addPost(t, "news.db", "blog/2026/10/02/second.md")
-	if err := generateSitemaps(cfg, &bytes.Buffer{}); err != nil {
+	if err := generateSitemaps(cfg, &bytes.Buffer{}, false); err != nil {
 		t.Fatalf("generateSitemaps: %s", err)
 	}
 	locs, _ := sitemapLocs(t, ".")
@@ -158,7 +158,7 @@ func TestSitemap_NeverListsTheRootForHarvestedItems(t *testing.T) {
 	cfg := sitemapSite(t, "pages.md")
 	addPage(t, "pages.db", "about.html")
 	addHarvested(t, "pages.db", 4)
-	if err := generateSitemaps(cfg, &bytes.Buffer{}); err != nil {
+	if err := generateSitemaps(cfg, &bytes.Buffer{}, false); err != nil {
 		t.Fatal(err)
 	}
 	locs, _ := sitemapLocs(t, ".")
@@ -171,7 +171,7 @@ func TestSitemap_PagesOnlyFromThePagesCollection(t *testing.T) {
 	cfg := sitemapSite(t, "pages.md", "news.md")
 	addPage(t, "pages.db", "about.html")
 	addPage(t, "news.db", "stray.html")
-	if err := generateSitemaps(cfg, &bytes.Buffer{}); err != nil {
+	if err := generateSitemaps(cfg, &bytes.Buffer{}, false); err != nil {
 		t.Fatal(err)
 	}
 	locs, _ := sitemapLocs(t, ".")
@@ -187,7 +187,7 @@ func TestSitemap_CollectionWithoutPagesTableStillListsItsPosts(t *testing.T) {
 	addPost(t, "old.db", "blog/2025/01/01/older.md")
 	sitemapExec(t, "old.db", `DROP TABLE pages`)
 	var warn bytes.Buffer
-	if err := generateSitemaps(cfg, &warn); err != nil {
+	if err := generateSitemaps(cfg, &warn, false); err != nil {
 		t.Fatalf("a missing pages table must not fail the command: %s", err)
 	}
 	locs, _ := sitemapLocs(t, ".")
@@ -206,7 +206,7 @@ func TestSitemap_NothingToMapWarnsAndWritesNothing(t *testing.T) {
 	cfg := sitemapSite(t, "pages.md", "news.md")
 	addHarvested(t, "news.db", 3)
 	var warn bytes.Buffer
-	if err := generateSitemaps(cfg, &warn); err != nil {
+	if err := generateSitemaps(cfg, &warn, false); err != nil {
 		t.Fatalf("nothing to map must not be an error, got: %s", err)
 	}
 	if !strings.Contains(warn.String(), "no pages or posts") {
@@ -229,7 +229,7 @@ func TestSitemap_ChunkFilesAreUniqueAndIndexedOnce(t *testing.T) {
 	addPost(t, "news.db", "blog/n1.md")
 	addPost(t, "news.db", "blog/n2.md")
 	addPost(t, "notes.db", "blog/o1.md")
-	if err := generateSitemaps(cfg, &bytes.Buffer{}); err != nil {
+	if err := generateSitemaps(cfg, &bytes.Buffer{}, false); err != nil {
 		t.Fatal(err)
 	}
 	locs, files := sitemapLocs(t, ".")
@@ -257,7 +257,7 @@ func TestSitemap_FilesAreWrittenToHtdocs(t *testing.T) {
 		t.Fatal(err)
 	}
 	addPage(t, "pages.db", "about.html")
-	if err := generateSitemaps(cfg, &bytes.Buffer{}); err != nil {
+	if err := generateSitemaps(cfg, &bytes.Buffer{}, false); err != nil {
 		t.Fatal(err)
 	}
 	locs, _ := sitemapLocs(t, "public")
@@ -275,7 +275,7 @@ func TestSitemap_MissingDatabaseIsReportedNotCreated(t *testing.T) {
 	cfg := sitemapSite(t, "pages.md")
 	addPage(t, "pages.db", "about.html")
 	cfg.Collections = append(cfg.Collections, &Collection{File: "gone.md", DbName: "gone.db"})
-	err := generateSitemaps(cfg, &bytes.Buffer{})
+	err := generateSitemaps(cfg, &bytes.Buffer{}, false)
 	wantClass(t, "sitemap with a missing database", err, classNoInput)
 	if _, statErr := os.Stat("gone.db"); statErr == nil {
 		t.Errorf("gone.db was created as a side effect of opening it")
@@ -289,7 +289,7 @@ func TestSitemap_PostWithoutUpdatedDateIsListed(t *testing.T) {
 	cfg := sitemapSite(t, "pages.md")
 	sitemapExec(t, "pages.db", `INSERT INTO items (link, postPath, title, description, pubDate, status)
 		VALUES ('https://example.com/blog/x.md', 'blog/x.md', 'T', 'D', '2026-10-01 12:00:00', 'published')`)
-	if err := generateSitemaps(cfg, &bytes.Buffer{}); err != nil {
+	if err := generateSitemaps(cfg, &bytes.Buffer{}, false); err != nil {
 		t.Fatalf("generateSitemaps: %s", err)
 	}
 	locs, _ := sitemapLocs(t, ".")

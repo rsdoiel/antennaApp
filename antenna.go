@@ -137,7 +137,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 // Harvest, generate, del and interactive name several collections or free
 // text and have no fixed maximum.
 var maxArgs = map[string]int{
-	"init": 0, "list": 0, "pages": 0, "sitemap": 0, "preview": 0,
+	"init": 0, "list": 0, "pages": 0, "preview": 0,
+	"sitemap": 1,
 	"css": 1, "items": 1, "unpage": 1, "quote": 1, "reply": 1,
 	"apply": 2, "page": 2, "stylefrom": 2, "unpost": 2,
 	"add": 3, "posts": 3, "post": 3, "blogit": 3,
