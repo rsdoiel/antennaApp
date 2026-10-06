@@ -20,23 +20,35 @@
 </nav>
 <main id="main-content">
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.25">antennaApp 0.0.25</h2>
+<h2 id="antennaapp-0.0.27">antennaApp 0.0.27</h2>
 <ul>
-<li>fixed RSS rendering for aggregated feeds</li>
-<li>Improved metadata in head of HTML pages by incorporating the front
-matter of the collections or blog posts</li>
-<li>Improved HTML accessibility and ARIA support in generated pages</li>
-<li>Improved listing of posts, items, themes and pages</li>
-<li>Added a default theme structure</li>
-<li>Improved metadata handling for pages, posts and feed items</li>
-<li>Added configurable CSS support</li>
-<li>Fixed missing categories column in RSS SQL queries causing scan
-failures</li>
-<li>RSS feeds now emit category elements from harvested feed data</li>
-<li>Replaced string-interpolated SQL date-range queries with
-parameterized queries</li>
-<li>Replaced deprecated ioutil with os package for file I/O</li>
-<li>Use constant-time comparison for password hash validation</li>
+<li>Added <code>antenna completion bash|powershell</code>, with
+<code>-install</code> to set up completion for every new session</li>
+<li>Exit codes now follow the workspace convention (DR-0003): 0 ok, 1
+no, 2 usage, 65 data, 66 no input, 69 unavailable, 70 internal, 73
+cannot create, 74 I/O, 75 try again, 77 permission, 78 config; they are
+documented under EXIT STATUS in the manual</li>
+<li>Breaking for scripts: <code>harvest</code> and <code>generate</code>
+finish all their work, then exit non-zero when any feed, collection,
+post or page failed (a dead feed now exits 69); <code>posts</code>,
+<code>items</code> and <code>pages</code> that find nothing exit 0; a
+surplus argument is refused with exit 2 (<code>preview extra</code> used
+to start the server); <code>del</code> of an unknown collection exits
+1</li>
+<li><code>antenna sitemap</code> now lists only the site’s pages (from
+the pages collection) and its local posts, never harvested feed items;
+numbers its files across collections, writes them to htdocs, warns and
+exits 0 when there is nothing to list, and has <code>-clean</code> to
+remove stale <code>sitemap_N.xml</code> files</li>
+<li>Fixed RSS feeds: enclosure URLs are XML-escaped (feeds with query
+strings were not well-formed), an unknown enclosure length is written as
+0, and items now carry their own <code>pubDate</code> in RFC 1123 form
+(#22)</li>
+<li>Fixed the skip link: <code>&lt;main&gt;</code> is focusable, so
+following it moves keyboard focus into the main area</li>
+<li>Fixed <code>items</code> dropping rows that had NULL columns,
+<code>blogit</code> treating hyphenated file names as dates, and a feed
+whose body was cut off being parsed as if complete</li>
 </ul>
 <h2 id="authors">Authors</h2>
 <ul>

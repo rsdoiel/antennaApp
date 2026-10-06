@@ -215,11 +215,12 @@ This process the collections rendering HTML pages and RSS 2.0 feeds for
 each collection. If the collection name is provided then only that HTML
 page will be generated.
 </dd>
-<dt>sitemap</dt>
+<dt>sitemap [-clean]</dt>
 <dd>
 This will generate a set of sitemap files for pages and posts found
 through the antenna.yaml file. (e.g. sitemap_index.xml, sitemap_1.xml,
-sitemap_2.xml, …)
+sitemap_2.xml, …) With -clean, sitemap files left over from an earlier
+run are removed.
 </dd>
 <dt>preview</dt>
 <dd>
@@ -274,6 +275,16 @@ Markdown list in descending publication-date order. Items include blog
 posts, static pages, and feed entries harvested from remote feeds.
 COLLECTION_NAME defaults to pages.md. Compare with ‘posts’ (items with a
 postPath only) and ‘pages’ (static pages only).
+</dd>
+<dt>completion SHELL [-install]</dt>
+<dd>
+Write a shell completion script for SHELL (bash or powershell) to
+standard output. With -install the script is installed for every new
+session instead: for bash into
+$XDG_DATA_HOME/bash-completion/completions/antenna (replacing only a
+file antenna wrote), for PowerShell beside the profile with one line
+added to the profile to load it, once. Use ‘antenna help completion’ for
+full details.
 </dd>
 <dt>help [TOPIC]</dt>
 <dd>
@@ -381,6 +392,104 @@ written to the directory designated in the <strong>antenna</strong> YAML
 configuration file (defaults to to the current working directory, ““).
 The”preview” action serves that out over localhost (default port 8000)
 so you can read your static site with your favorite web browser.</p>
+<h1 id="exit-status">EXIT STATUS</h1>
+<p><strong>antenna</strong> exits with the codes the workspace uses for
+every command-line tool (workspace DR-0003), so a script can tell what
+went wrong from the number alone.</p>
+<table>
+<colgroup>
+<col style="width: 27%" />
+<col style="width: 31%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: right;">Code</th>
+<th>Class</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td>ok</td>
+<td>Success. A listing that matches nothing (posts, items, pages) is
+still 0.</td>
+</tr>
+<tr>
+<td style="text-align: right;">1</td>
+<td>negative</td>
+<td>The command ran and the answer is no: the named collection is not in
+the configuration, an action you cancelled.</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td>usage</td>
+<td>The command line is wrong and nothing was attempted: unknown action,
+flag or help topic, a missing or surplus argument, a bad date or
+count.</td>
+</tr>
+<tr>
+<td style="text-align: right;">65</td>
+<td>data</td>
+<td>Content that was read is wrong: a document with unclosed front
+matter, a file that is not a valid ODT, a feed that does not parse, a
+damaged database.</td>
+</tr>
+<tr>
+<td style="text-align: right;">66</td>
+<td>no_input</td>
+<td>A named file or the workspace is missing: no antenna.yaml, no such
+Markdown file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">69</td>
+<td>unavailable</td>
+<td>A feed or service could not be reached, or answered with an
+error.</td>
+</tr>
+<tr>
+<td style="text-align: right;">70</td>
+<td>internal</td>
+<td>A bug, or an error nothing classified. Please report it.</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td>cant_create</td>
+<td>An output could not be created: the file or directory is in the way,
+or its directory cannot be made.</td>
+</tr>
+<tr>
+<td style="text-align: right;">74</td>
+<td>io</td>
+<td>A read or write failed part way.</td>
+</tr>
+<tr>
+<td style="text-align: right;">75</td>
+<td>temp_fail</td>
+<td>Trying again later may work: a locked database, a port already in
+use.</td>
+</tr>
+<tr>
+<td style="text-align: right;">77</td>
+<td>no_permission</td>
+<td>The operating system refused access.</td>
+</tr>
+<tr>
+<td style="text-align: right;">78</td>
+<td>config</td>
+<td>A configuration file is present but wrong: antenna.yaml or a
+generator YAML file that does not parse, or a setting with an invalid
+value.</td>
+</tr>
+</tbody>
+</table>
+<p>The harvest and generate actions do all their work first. When some
+feeds, collections or pages failed, they print the counts (for example
+“1 of 2 feeds failed”) and exit with the class of the first failure, in
+configuration order, not 0. A cron job that harvests daily will
+therefore see a non-zero status when a feed is down, and the other feeds
+will still have been harvested.</p>
 <h1 id="also">Also</h1>
 <ul>
 <li><a href="antenna-themes.7.html">antenna-themes (7)</a></li>
