@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<h1 id="implementation-plan-feed-item-formatting-control">Implementation
+Plan: Feed Item Formatting Control</h1>
+<p>Implements the design in <code>design_item_formatting.md</code>.
+Decisions referenced throughout are in <code>decisions.md</code>
+(DEC-022 through DEC-031).</p>
+<p>Tests are written before implementation in every phase (TDD). Each
+task is independent enough to commit separately. Tasks within a phase
+may be done in parallel; phases must be done in order unless noted
+otherwise.</p>
+<hr />
+<h2 id="phase-1-config-types-defaults-validation">Phase 1 — Config
+types, defaults, validation</h2>
+<p>No callers changed yet. New types and pure functions only.</p>
+<h3
+id="task-1.1-test-itemsconfiglinkconfig-yaml-unmarshaling-and-defaults">Task
+1.1 — Test <code>ItemsConfig</code>/<code>LinkConfig</code> YAML
+unmarshaling and defaults</h3>
+<p>Create <code>items_config_test.go</code>. Write
+<code>TestItemsConfigDefaults</code> covering:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Input YAML</th>
+<th>Expected after <code>applyDefaults()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Empty block</td>
+<td><code>items: {}</code></td>
+<td><code>Fields=[title,source,pubDate,content]</code>,
+<code>Link.LabelField="static"</code>,
+<code>Link.LabelFallback="Continue reading"</code>,
+<code>Link.Missing="unlinked"</code>,
+<code>DateFormat="2006-01-02"</code>, <code>ShowSource=true</code>,
+<code>HTML="strip"</code></td>
+</tr>
+<tr>
+<td>Partial override</td>
+<td><code>items: {html: unsafe}</code></td>
+<td>only <code>HTML="unsafe"</code> differs from defaults</td>
+</tr>
+<tr>
+<td><code>show_source: false</code> explicit</td>
+<td><code>items: {show_source: false}</code></td>
+<td><code>ShowSource=false</code> (not overwritten back to true)</td>
+</tr>
+<tr>
+<td>No <code>items:</code> key at all</td>
+<td><code>page.yaml</code> omits <code>items:</code></td>
+<td><code>Generator.Items</code> zero value;
+<code>applyDefaults()</code> still produces the same defaults as the
+empty-block case</td>
+</tr>
+</tbody>
+</table>
+<p>Verify tests fail before implementation (red).</p>
+<h3 id="task-1.2-test-validate">Task 1.2 — Test
+<code>validate()</code></h3>
+<p>Add <code>TestItemsConfigValidate</code> covering:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Input</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>html: bogus</code></td>
+<td>invalid enum</td>
+<td>error mentioning <code>items.html</code></td>
+</tr>
+<tr>
+<td><code>link.missing: bogus</code></td>
+<td>invalid enum</td>
+<td>error mentioning <code>items.link.missing</code></td>
+</tr>
+<tr>
+<td>All valid enum values</td>
+<td><code>strip</code>/<code>escape</code>/<code>unsafe</code>,
+<code>unlinked</code>/<code>omit</code>/<code>source_link</code></td>
+<td>no error</td>
+</tr>
+</tbody>
+</table>
+<p>Verify tests fail (red).</p>
+<h3
+id="task-1.3-implement-itemsconfig-linkconfig-applydefaults-validate-in-generator.go">Task
+1.3 — Implement <code>ItemsConfig</code>, <code>LinkConfig</code>,
+<code>applyDefaults()</code>, <code>validate()</code> in
+<code>generator.go</code></h3>
+<p>Add the types and methods per <code>design_item_formatting.md</code>.
+Add <code>Items ItemsConfig</code> to <code>Generator</code>.</p>
+<p>Run <code>TestItemsConfigDefaults</code> and
+<code>TestItemsConfigValidate</code> — must pass (green). Run
+<code>go build ./...</code> — must compile cleanly.</p>
+<hr />
+<h2 id="phase-2-content-resolution-and-truncation">Phase 2 — Content
+resolution and truncation</h2>
+<p>Depends on Phase 1 for <code>ItemsConfig</code>. Independent of
+Phases 3–4.</p>
+<h3 id="task-2.1-test-truncatewords">Task 2.1 — Test
+<code>truncateWords</code></h3>
+<p>Add <code>TestTruncateWords</code> to <code>html_test.go</code>:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Input</th>
+<th>maxLen</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shorter than max</td>
+<td><code>"hello"</code></td>
+<td>10</td>
+<td><code>"hello"</code> (unchanged)</td>
+</tr>
+<tr>
+<td>Exact length</td>
+<td><code>"hello"</code></td>
+<td>5</td>
+<td><code>"hello"</code></td>
+</tr>
+<tr>
+<td>Mid-word cut avoided</td>
+<td><code>"the quick brown fox"</code></td>
+<td>12</td>
+<td><code>"the quick"</code> (backs off to last space before/at 12, not
+<code>"the quick br"</code>)</td>
+</tr>
+<tr>
+<td>No whitespace before limit</td>
+<td><code>"supercalifragilistic"</code></td>
+<td>5</td>
+<td>falls back to a hard cut at <code>maxLen</code> (documented as the
+no-good-boundary case)</td>
+</tr>
+</tbody>
+</table>
+<p>Verify red.</p>
+<h3 id="task-2.2-test-striptags">Task 2.2 — Test
+<code>stripTags</code></h3>
+<p>Add <code>TestStripTags</code>:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Input</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Plain text</td>
+<td><code>"hello"</code></td>
+<td><code>"hello"</code></td>
+</tr>
+<tr>
+<td>Simple tags</td>
+<td><code>"&lt;p&gt;hello&lt;/p&gt;"</code></td>
+<td><code>"hello"</code></td>
+</tr>
+<tr>
+<td>Nested tags</td>
+<td><code>"&lt;div&gt;&lt;b&gt;hi&lt;/b&gt; there&lt;/div&gt;"</code></td>
+<td><code>"hi there"</code></td>
+</tr>
+<tr>
+<td>Unclosed/malformed tag</td>
+<td><code>"&lt;p&gt;hi"</code></td>
+<td><code>"hi"</code> (document limitation: not a full parser)</td>
+</tr>
+</tbody>
+</table>
+<p>Verify red.</p>
+<h3 id="task-2.3-test-resolveitemcontent">Task 2.3 — Test
+<code>resolveItemContent</code></h3>
+<p>Add <code>TestResolveItemContent</code>:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th><code>description</code></th>
+<th><code>sourceMarkdown</code></th>
+<th><code>cfg.HTML</code></th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Markdown present, default</td>
+<td><code>&lt;p&gt;raw&lt;/p&gt;</code></td>
+<td><code>**bold**</code></td>
+<td><code>strip</code></td>
+<td>rendered via <code>ToHTML()</code>:
+<code>&lt;strong&gt;bold&lt;/strong&gt;</code>-ish,
+<code>&lt;p&gt;raw&lt;/p&gt;</code> never used</td>
+</tr>
+<tr>
+<td>Markdown present, unsafe</td>
+<td>any</td>
+<td><code>&lt;script&gt;x&lt;/script&gt;</code></td>
+<td><code>unsafe</code></td>
+<td>rendered via <code>ToUnsafeHTML()</code>, raw
+<code>&lt;script&gt;</code> passes through</td>
+</tr>
+<tr>
+<td>No Markdown, default</td>
+<td><code>&lt;p&gt;raw &amp; unsafe&lt;/p&gt;</code></td>
+<td><code>""</code></td>
+<td><code>strip</code></td>
+<td>tags stripped: <code>"raw &amp; unsafe"</code> (entity handling per
+<code>stripTags</code>)</td>
+</tr>
+<tr>
+<td>No Markdown, escape</td>
+<td><code>&lt;b&gt;hi&lt;/b&gt;</code></td>
+<td><code>""</code></td>
+<td><code>escape</code></td>
+<td><code>"&amp;lt;b&amp;gt;hi&amp;lt;/b&amp;gt;"</code></td>
+</tr>
+<tr>
+<td>No Markdown, unsafe</td>
+<td><code>&lt;b&gt;hi&lt;/b&gt;</code></td>
+<td><code>""</code></td>
+<td><code>unsafe</code></td>
+<td><code>"&lt;b&gt;hi&lt;/b&gt;"</code> unchanged</td>
+</tr>
+<tr>
+<td>Truncation applied pre-render</td>
+<td>long <code>sourceMarkdown</code></td>
+<td>—</td>
+<td>any</td>
+<td>truncated markdown source is what gets rendered, not truncated
+HTML</td>
+</tr>
+</tbody>
+</table>
+<p>Verify red.</p>
+<h3
+id="task-2.4-implement-truncatewords-striptags-resolveitemcontent-in-html.go">Task
+2.4 — Implement <code>truncateWords</code>, <code>stripTags</code>,
+<code>resolveItemContent</code> in <code>html.go</code></h3>
+<p>Per <code>design_item_formatting.md</code>. Run all Phase 2 tests —
+must pass (green).</p>
+<hr />
+<h2 id="phase-3-link-resolution">Phase 3 — Link resolution</h2>
+<p>Depends on Phase 1. Independent of Phase 2.</p>
+<h3 id="task-3.1-test-resolveitemlink">Task 3.1 — Test
+<code>resolveItemLink</code></h3>
+<p>Add <code>TestResolveItemLink</code> to
+<code>html_test.go</code>:</p>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th><code>link</code></th>
+<th><code>title</code></th>
+<th><code>channelURL</code></th>
+<th><code>cfg</code></th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Normal, default label (DEC-026)</td>
+<td><code>"https://x"</code></td>
+<td><code>"T"</code></td>
+<td>—</td>
+<td>defaults (post-<code>applyDefaults()</code>:
+<code>label_field: static</code>,
+<code>label_fallback: "Continue reading"</code>)</td>
+<td><code>Href="https://x"</code>, <code>Label="Continue reading"</code>
+regardless of title/link</td>
+</tr>
+<tr>
+<td><code>label_field: link</code> (explicit opt-out)</td>
+<td><code>"https://x"</code></td>
+<td><code>"T"</code></td>
+<td>—</td>
+<td><code>label_field: link</code></td>
+<td><code>Label="https://x"</code> (restores pre-DEC-026 behavior)</td>
+</tr>
+<tr>
+<td><code>label_field: title</code></td>
+<td><code>"https://x"</code></td>
+<td><code>"T"</code></td>
+<td>—</td>
+<td><code>label_field: title</code></td>
+<td><code>Label="T"</code></td>
+</tr>
+<tr>
+<td><code>label_field: static</code>, custom fallback</td>
+<td><code>"https://x"</code></td>
+<td><code>"T"</code></td>
+<td>—</td>
+<td><code>label_field: static, label_fallback: "read me"</code></td>
+<td><code>Label="read me"</code> regardless of title/link</td>
+</tr>
+<tr>
+<td>Empty field falls back</td>
+<td><code>"https://x"</code></td>
+<td><code>""</code></td>
+<td>—</td>
+<td><code>label_field: title, label_fallback: "Read more"</code></td>
+<td><code>Label="Read more"</code></td>
+</tr>
+<tr>
+<td>Missing link, default</td>
+<td><code>""</code></td>
+<td><code>"T"</code></td>
+<td>—</td>
+<td>defaults</td>
+<td><code>AsPlainText=true</code>,
+<code>Label="Continue reading"</code></td>
+</tr>
+<tr>
+<td>Missing link, omit</td>
+<td><code>""</code></td>
+<td>—</td>
+<td>—</td>
+<td><code>missing: omit</code></td>
+<td><code>Omit=true</code></td>
+</tr>
+<tr>
+<td>Missing link, source_link with channel</td>
+<td><code>""</code></td>
+<td>—</td>
+<td><code>"https://chan"</code></td>
+<td><code>missing: source_link</code></td>
+<td><code>Href="https://chan"</code></td>
+</tr>
+<tr>
+<td>Missing link, source_link, channel also empty</td>
+<td><code>""</code></td>
+<td>—</td>
+<td><code>""</code></td>
+<td><code>missing: source_link</code></td>
+<td>falls back to <code>AsPlainText=true</code> (DEC-027)</td>
+</tr>
+<tr>
+<td>Missing link, required</td>
+<td><code>""</code></td>
+<td>—</td>
+<td>—</td>
+<td><code>required: true</code></td>
+<td>returns an error</td>
+</tr>
+</tbody>
+</table>
+<p>Verify red.</p>
+<h3
+id="task-3.2-implement-resolveitemlink-and-linkresolution-in-html.go">Task
+3.2 — Implement <code>resolveItemLink</code> and
+<code>LinkResolution</code> in <code>html.go</code></h3>
+<p>Per <code>design_item_formatting.md</code>. Run
+<code>TestResolveItemLink</code> — must pass (green).</p>
+<hr />
+<h2 id="phase-4-date-formatting">Phase 4 — Date formatting</h2>
+<p>Depends on Phase 1 only. Fully independent of Phases 2–3.</p>
+<h3 id="task-4.1-test-formatitemdate">Task 4.1 — Test
+<code>formatItemDate</code></h3>
+<p>Add <code>TestFormatItemDate</code>:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th><code>raw</code></th>
+<th><code>layout</code></th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parseable, custom layout</td>
+<td><code>"2020-04-11 00:00:00"</code></td>
+<td><code>"Jan 2, 2006"</code></td>
+<td><code>"Apr 11, 2020"</code></td>
+</tr>
+<tr>
+<td>Parseable, default layout</td>
+<td><code>"2020-04-11 00:00:00"</code></td>
+<td><code>"2006-01-02"</code></td>
+<td><code>"2020-04-11"</code></td>
+</tr>
+<tr>
+<td>Unparseable, longer than 10 chars (raw feed string)</td>
+<td><code>"Sat, 11 Apr 2020"</code></td>
+<td><code>"Jan 2, 2006"</code></td>
+<td><code>"Sat, 11 Ap"</code> (first 10 characters — matches current
+<code>WriteItem</code> truncation exactly, DEC-028)</td>
+</tr>
+<tr>
+<td>Unparseable, 10 chars or shorter</td>
+<td><code>"bad-date"</code></td>
+<td>any</td>
+<td><code>"bad-date"</code> unchanged (nothing to truncate)</td>
+</tr>
+<tr>
+<td>Empty</td>
+<td><code>""</code></td>
+<td>any</td>
+<td><code>""</code></td>
+</tr>
+</tbody>
+</table>
+<p>Verify red.</p>
+<h3 id="task-4.2-implement-formatitemdate-in-html.go">Task 4.2 —
+Implement <code>formatItemDate</code> in <code>html.go</code></h3>
+<p>Per <code>design_item_formatting.md</code>. Run
+<code>TestFormatItemDate</code> — must pass (green).</p>
+<hr />
+<h2 id="phase-5-writeitem-writehtml-integration">Phase 5 —
+<code>WriteItem</code> / <code>WriteHTML</code> integration</h2>
+<p>Depends on Phases 1–4 all being complete. This is the phase that
+actually changes existing, currently-tested behavior — run the full
+existing <code>html_test.go</code> suite before starting, to have a
+known-green baseline.</p>
+<h3
+id="task-5.1-extend-existing-writeitem-tests-for-the-new-cfg-parameter">Task
+5.1 — Extend existing <code>WriteItem</code> tests for the new
+<code>cfg</code> parameter</h3>
+<p>Update <code>html_test.go</code>’s existing
+<code>TestWriteItem_*</code> cases to pass a default-valued
+<code>ItemsConfig</code> (post-<code>applyDefaults()</code>). Two of the
+two existing exceptions from <code>decisions.md</code>
+§6/DEC-024/DEC-026 apply here, and existing test expectations must be
+updated accordingly rather than asserted byte-for-byte unchanged:</p>
+<ol type="1">
+<li><strong>Anchor text</strong> in every existing
+<code>TestWriteItem_*</code> case that asserts an
+<code>&lt;a href=...&gt;</code> element must be updated: the visible
+anchor text changes from the item’s link URL to
+<code>"Continue reading"</code> (DEC-026), even though <code>href</code>
+itself is unchanged. This is the larger, deliberately-flagged default
+change — confirm each pre-existing test case’s expected string is
+updated, not just left passing by coincidence.</li>
+<li><strong>Raw-description fallback</strong> cases (items with no
+<code>sourceMarkdown</code>) change from unescaped raw HTML to
+tag-stripped plain text (DEC-024) — only relevant if any existing test
+exercises that branch; confirm whether one does, and update its
+expectation if so.</li>
+</ol>
+<p>Everything else — content resolution, date rendering (post-DEC-028
+fix), field ordering, PageFind <code>filters</code> attribute
+construction — must remain byte-for-byte unchanged. This narrower claim
+is the actual regression guard; don’t let it get confused with the two
+named exceptions above.</p>
+<p>Add new cases:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th><code>cfg</code></th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fields</code> restricts sections</td>
+<td><code>Fields: ["title", "content"]</code></td>
+<td>date and footer/link sections absent from output</td>
+</tr>
+<tr>
+<td><code>show_source: false</code></td>
+<td>—</td>
+<td>source/label block absent</td>
+</tr>
+<tr>
+<td>Omitted item</td>
+<td><code>link=""</code>, <code>missing: omit</code></td>
+<td><code>WriteItem</code> writes nothing, returns
+<code>(true, nil)</code> or equivalent omit signal</td>
+</tr>
+<tr>
+<td>Default label is accessible (DEC-026)</td>
+<td>defaults, no <code>items:</code> override</td>
+<td>anchor text is <code>"Continue reading"</code>, <code>href</code>
+still the item link</td>
+</tr>
+<tr>
+<td>Opt back into URL-as-label</td>
+<td><code>label_field: link</code></td>
+<td>anchor text is the item’s URL again, matching pre-DEC-026
+output</td>
+</tr>
+<tr>
+<td>Custom static label</td>
+<td><code>label_fallback: "read me"</code> (label_field left at default
+<code>static</code>)</td>
+<td>anchor text is <code>"read me"</code></td>
+</tr>
+</tbody>
+</table>
+<p>Verify new cases fail (red); existing-behavior regression cases
+should already pass once Task 5.2’s signature change compiles (confirm,
+don’t assume).</p>
+<h3 id="task-5.2-update-writeitem-signature-and-body-in-html.go">Task
+5.2 — Update <code>WriteItem</code> signature and body in
+<code>html.go</code></h3>
+<p>Add <code>cfg ItemsConfig</code> parameter. Wire in
+<code>resolveItemLink</code> (checked first, for <code>Omit</code>),
+<code>resolveItemContent</code>, <code>formatItemDate</code>, and
+<code>cfg.Fields</code>-based section filtering, per
+<code>design_item_formatting.md</code>. Change the return signature if
+needed to signal “item omitted” to the caller
+(e.g. <code>(bool, error)</code> — omitted/not-omitted plus error).</p>
+<p>Run all Phase 5 <code>TestWriteItem_*</code> tests — must pass
+(green).</p>
+<h3 id="task-5.3-update-writehtml-in-html.go">Task 5.3 — Update
+<code>WriteHTML</code> in <code>html.go</code></h3>
+<p>Call <code>gen.Items.applyDefaults()</code> and
+<code>gen.Items.validate()</code> once at the start of collection
+generation (return <code>validate()</code>’s error immediately — config
+typos must abort <code>generate</code>, not silently misrender). Pass
+<code>gen.Items</code> to every <code>WriteItem</code> call in the
+item-scan loop; skip counting/advancing past items that come back
+omitted.</p>
+<p>Run <code>go build ./...</code> and <code>go test ./...</code> — must
+both succeed.</p>
+<hr />
+<h2 id="phase-6-theme-integration">Phase 6 — Theme integration</h2>
+<p>Depends on Phase 1 (needs <code>ItemsConfig</code>) only. Independent
+of Phases 2–5, except that Phase 7’s smoke test exercises the full stack
+together.</p>
+<h3 id="task-6.1-test-istargetfile-recognizes-items.yaml">Task 6.1 —
+Test <code>isTargetFile</code> recognizes <code>items.yaml</code></h3>
+<p>Add to <code>themes_test.go</code>:
+<code>TestIsTargetFile_ItemsYAML</code> — asserts
+<code>isTargetFile("items.yaml") == true</code>.</p>
+<p>Verify red.</p>
+<h3 id="task-6.2-add-items.yaml-to-istargetfile-in-themes.go">Task 6.2 —
+Add <code>"items.yaml"</code> to <code>isTargetFile</code> in
+<code>themes.go</code></h3>
+<p>Run the new test — green.</p>
+<h3 id="task-6.3-test-updateitemselement">Task 6.3 — Test
+<code>updateItemsElement</code></h3>
+<p>Add <code>TestUpdateItemsElement</code> to
+<code>themes_test.go</code> using a temp directory:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Case</th>
+<th>Setup</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No <code>items.yaml</code> present</td>
+<td>empty theme dir</td>
+<td><code>(false, nil)</code>, <code>gen.Items</code> unchanged</td>
+</tr>
+<tr>
+<td><code>items.yaml</code> present</td>
+<td>valid YAML per the worked example in the design doc</td>
+<td><code>(true, nil)</code>, <code>gen.Items</code> matches the parsed
+content</td>
+</tr>
+<tr>
+<td>Malformed <code>items.yaml</code></td>
+<td>invalid YAML</td>
+<td>non-nil error</td>
+</tr>
+</tbody>
+</table>
+<p>Verify red.</p>
+<h3
+id="task-6.4-implement-updateitemselement-in-themes.go-wire-into-applytheme">Task
+6.4 — Implement <code>updateItemsElement</code> in
+<code>themes.go</code>; wire into <code>ApplyTheme</code></h3>
+<p>Per <code>design_item_formatting.md</code>. Run
+<code>TestUpdateItemsElement</code> — green. Run
+<code>go build ./...</code> and <code>go test ./...</code> — must both
+succeed.</p>
+<hr />
+<h2 id="phase-7-final-verification">Phase 7 — Final verification</h2>
+<h3 id="task-7.1-full-test-run">Task 7.1 — Full test run</h3>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> antennaApp <span class="kw">&amp;&amp;</span> <span class="ex">go</span> test ./...</span></code></pre></div>
+<p>All tests must pass, including every pre-existing
+<code>TestWriteItem_*</code> case (regression guard from Task 5.1).</p>
+<h3 id="task-7.2-build-all-programs">Task 7.2 — Build all programs</h3>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> antennaApp <span class="kw">&amp;&amp;</span> <span class="fu">make</span> build</span></code></pre></div>
+<p>All binaries must build cleanly.</p>
+<h3
+id="task-7.3-smoke-test-no-items-block-verify-the-two-named-exceptions-byte-identical-otherwise">Task
+7.3 — Smoke test: no <code>items:</code> block — verify the two named
+exceptions, byte-identical otherwise</h3>
+<ol type="1">
+<li>Using an existing collection’s <code>page.yaml</code> with no
+<code>items:</code> key, run <code>antenna harvest</code> then
+<code>antenna generate</code> against a feed with at least one item that
+has a <code>description</code> but no <code>source:markdown</code>
+extension.</li>
+<li>Diff the generated aggregate HTML against a copy generated before
+this change. Two differences are expected and correct, not regressions:
+<ul>
+<li>Every item’s footer anchor <strong>text</strong> now reads
+<code>"Continue reading"</code> instead of the item’s URL (DEC-026) —
+<code>href</code> itself is unchanged.</li>
+<li>The raw-<code>description</code>-fallback item (no
+<code>sourceMarkdown</code>) is now tag-stripped instead of raw HTML
+passthrough (DEC-024) — only relevant if the test feed actually has such
+an item; verify whether it does and note the result either way.</li>
+</ul></li>
+<li>Everything else (content resolution/rendering, date display, field
+ordering, PageFind <code>filters</code> attributes) must be
+byte-identical to the pre-change output. Any other difference is a
+regression.</li>
+</ol>
+<h3
+id="task-7.4-smoke-test-default-anchor-label-is-screen-reader-friendly-dec-026">Task
+7.4 — Smoke test: default anchor label is screen-reader-friendly
+(DEC-026)</h3>
+<ol type="1">
+<li>With no <code>items:</code> block at all, regenerate a collection
+and inspect the aggregate HTML. Verify every item’s footer anchor reads
+<code>&lt;a href="ITEM_LINK"&gt;Continue reading&lt;/a&gt;</code> — not
+the URL spelled out as the link text.</li>
+<li>Add <code>label_field: link</code> explicitly and regenerate —
+verify the anchor text reverts to the raw URL, confirming the opt-out
+path works.</li>
+</ol>
+<h3
+id="task-7.5-smoke-test-custom-static-label-the-original-motivating-use-case">Task
+7.5 — Smoke test: custom static label (the original motivating use
+case)</h3>
+<ol type="1">
+<li><p>Add to a collection’s <code>page.yaml</code>:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label_fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;read me&quot;</span></span></code></pre></div>
+<p>(<code>label_field</code> intentionally omitted — relying on the
+<code>static</code> default.)</p></li>
+<li><p>Regenerate. Verify every item’s footer anchor text reads “read
+me” regardless of title, and <code>href</code> is still each item’s own
+link.</p></li>
+</ol>
+<h3 id="task-7.6-smoke-test-missing-omit-and-missing-source_link">Task
+7.6 — Smoke test: <code>missing: omit</code> and
+<code>missing: source_link</code></h3>
+<ol type="1">
+<li>Manually clear the <code>link</code> column for one test item in the
+collection’s SQLite3 database
+(<code>UPDATE items SET link = '' WHERE ...</code>).</li>
+<li>With <code>missing: omit</code> — regenerate, verify that item is
+absent from the aggregate page entirely.</li>
+<li>With <code>missing: source_link</code> — regenerate, verify that
+item’s anchor now points at its channel’s feed URL.</li>
+</ol>
+<h3 id="task-7.7-smoke-test-html-unsafe-opt-in">Task 7.7 — Smoke test:
+<code>html: unsafe</code> opt-in</h3>
+<ol type="1">
+<li>Harvest an item whose <code>sourceMarkdown</code> contains embedded
+raw HTML (e.g. an <code>&lt;iframe&gt;</code> or
+<code>&lt;script&gt;</code> a feed included inline).</li>
+<li>With default config — verify the raw HTML does not appear in
+rendered output (goldmark safe mode).</li>
+<li>With <code>items: {html: unsafe}</code> — verify the raw HTML now
+passes through unchanged.</li>
+</ol>
+<h3 id="task-7.8-smoke-test-theme-items.yaml">Task 7.8 — Smoke test:
+theme <code>items.yaml</code></h3>
+<ol type="1">
+<li>Create a theme directory with only <code>header.md</code> and
+<code>items.yaml</code> (using the worked example from
+<code>design_item_formatting.md</code>).</li>
+<li>Run <code>antenna apply THEME_PATH page.yaml</code>.</li>
+<li>Inspect <code>page.yaml</code> — verify the <code>items:</code>
+block matches <code>items.yaml</code>’s content, nested under one
+<code>items:</code> key (not flat-merged).</li>
+<li>Regenerate the collection and confirm rendering matches Task 7.5’s
+expectations.</li>
+</ol>
+<h3 id="task-7.9-smoke-test-date_format-and-content_max_length">Task 7.9
+— Smoke test: <code>date_format</code> and
+<code>content_max_length</code></h3>
+<ol type="1">
+<li>Set <code>date_format: "Jan 2, 2006"</code> and
+<code>content_max_length: 100</code> on a test collection.</li>
+<li>Regenerate. Verify dates render in the new format and long item
+descriptions truncate at a word boundary at or before 100 characters of
+source text.</li>
+</ol>
+<h3
+id="task-7.10-smoke-test-unparseable-stored-date-matches-legacy-truncation-dec-028">Task
+7.10 — Smoke test: unparseable stored date matches legacy truncation
+(DEC-028)</h3>
+<ol type="1">
+<li>Manually set one test item’s <code>pubDate</code> in the
+collection’s SQLite3 database to a string that doesn’t match
+<code>"2006-01-02 15:04:05"</code> (e.g. a raw RFC822-style string like
+<code>"Sat, 11 Apr 2020 00:00:00 GMT"</code>).</li>
+<li>Regenerate with a custom <code>date_format</code> set. Verify the
+rendered date for that item is the first 10 characters of the stored
+string, unchanged from what today’s (pre-this-feature)
+<code>WriteItem</code> would have shown — <em>not</em> the full raw
+string, and <em>not</em> an error aborting <code>generate</code>.</li>
+</ol>
+<hr />
+<h2 id="task-dependency-summary">Task dependency summary</h2>
+<pre><code>Phase 1 (1.1–1.3)
+    │
+    ├─── Phase 2 (2.1–2.4) ──┐
+    ├─── Phase 3 (3.1–3.2) ──┼──── Phase 5 (5.1–5.3) ──── Phase 7
+    ├─── Phase 4 (4.1–4.2) ──┘                                │
+    └─── Phase 6 (6.1–6.4) ─────────────────────────────────────┘</code></pre>
+<p>Phases 2, 3, 4, and 6 all depend only on Phase 1 and may proceed in
+parallel. Phase 5 depends on Phases 2, 3, and 4 (it wires all three into
+<code>WriteItem</code>). Phase 7 depends on Phase 5 and Phase 6 both
+being complete.</p>
+</main>
+</body>
+</html>

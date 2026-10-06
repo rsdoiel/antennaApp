@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<h1 id="design-item-layout-control-in-page.yaml">Design: Item Layout
+Control in <code>page.yaml</code></h1>
+<p>Status: Proposal / Draft Author: (your name) Related project: <a
+href="https://github.com/rsdoiel/antennaApp">antennaApp</a> Related
+files: <code>page.yaml</code>, <code>antenna.yaml</code>; implementation
+in <code>html.go</code> (<code>WriteItem</code>),
+<code>harvest.go</code> (<code>saveItem</code>),
+<code>cmarkdoc.go</code> (<code>CommonMark</code>),
+<code>generator.go</code>/<code>page.go</code>/<code>schema.go</code>
+(post/page rendering — unaffected).</p>
+<h2 id="problem-statement">1. Problem Statement</h2>
+<p>Antenna App currently gives fine-grained control over <strong>local
+post</strong> metadata publication via <code>allowed_meta_fields</code>
+in <code>page.yaml</code> (documented in
+<code>antenna-metadata.7.md</code>). Every YAML front-matter field on a
+post is emitted as a <code>&lt;meta&gt;</code> element (and a
+<code>data-pagefind-filter</code> attribute) unless that allowlist
+restricts it.</p>
+<p>There is no equivalent control for <strong>harvested feed
+items</strong> — the entries pulled from external RSS/Atom/JSON sources
+into a collection’s aggregation page (<code>COLLECTION.html</code>).
+Feed items differ from local posts in ways that matter for
+rendering:</p>
+<ul>
+<li>Their metadata comes from an external feed, not YAML front matter
+you authored — you don’t control which fields exist or their
+quality.</li>
+<li>Each item’s body content can come from <strong>two different sources
+with two different trust levels</strong> (see §5.0) — this is new
+information confirmed by reading the code, and it is the central fact
+this revision is built around. Feed items are not simply “one field
+called <code>description</code>.”</li>
+<li>Each item belongs to a <strong>source feed/channel</strong>, a
+concept with no analogue for local posts (a post has one author:
+you).</li>
+<li>The presence of a <code>link</code> back to the original article is
+not guaranteed and needs an explicit, predictable fallback
+behavior.</li>
+</ul>
+<p>This document proposes extending <code>page.yaml</code> with a new
+<code>items:</code> block that gives per-collection control over how
+feed items are rendered into the aggregation HTML, following the same
+declarative, non-template-language philosophy the project already uses
+(see <code>decisions.md</code>: “avoid template languages, they get too
+involved to document and explain”).</p>
+<p><strong>Explicit goal for this revision:</strong> give more control
+over the <em>displayed</em> content of feed items, while leaving
+local-post rendering completely untouched. When Markdown content is
+available for a feed item, it must be preferred over the raw feed
+<code>description</code> — Markdown is the safer path, because it
+already renders through a non-<code>unsafe</code> Markdown pipeline.
+Concretely: <strong>this is already how the code behaves today</strong>
+(<code>html.go</code> <code>WriteItem</code> prefers
+<code>sourceMarkdown</code> over <code>description</code> when present).
+That behavior was previously an implicit, undocumented fallback; this
+proposal turns it into an explicit, declared part of the design (§5.0)
+rather than introducing new behavior.</p>
+<h2 id="design-goals">2. Design Goals</h2>
+<ol type="1">
+<li><strong>Consistency with existing config.</strong> Reuse the
+<code>allowed_meta_fields</code> mental model (ordered allowlist of
+field names) rather than inventing a new mechanism.</li>
+<li><strong>No template language.</strong> No <code>{{ }}</code>
+placeholders, no conditional expressions embedded in strings.
+Configuration is a set of named, independently documentable options —
+each option does exactly one thing.</li>
+<li><strong>Markdown-preferred, declared explicitly.</strong> Feed item
+body content resolves from <code>sourceMarkdown</code> first,
+<code>description</code> only as a fallback (§5.0). This is existing
+behavior, now named and documented rather than left inside one
+<code>if</code> statement in <code>WriteItem</code>.</li>
+<li><strong>Safe by default on the one path that has no established
+sanitization.</strong> The <code>sourceMarkdown</code> path already
+renders through goldmark’s safe mode (<code>CommonMark.ToHTML()</code>,
+no raw HTML passthrough) — that does not change. The raw
+<code>description</code> fallback path currently has <em>no</em>
+sanitization at all (<code>fmt.Fprintf</code> with <code>%s</code>,
+unescaped) — that is the one place this proposal changes default
+behavior, and it must be called out (§6).</li>
+<li><strong>Explicit handling of missing data</strong>, particularly
+missing <code>link</code> values, since the current code has no fallback
+behavior for this case at all.</li>
+<li><strong>Backward compatible for local posts and pages — absolutely,
+no exceptions.</strong> Nothing in this proposal touches
+<code>GeneratePosts</code>, <code>Page()</code>, <code>Post()</code>, or
+<code>CommonMark.ToUnsafeHTML()</code>. Posts and pages continue to
+render exactly as they do today, regardless of any <code>items:</code>
+configuration.</li>
+<li><strong>Backward compatible for feed items, except where a
+called-out default is a deliberate improvement.</strong> Collections
+without an <code>items:</code> block behave exactly as they do today,
+with two named exceptions — both called out individually rather than
+left implicit (§6): the raw-<code>description</code>- fallback safety
+default (§5.6), and the screen-reader-friendly anchor label default
+(§5.2, goal 9 below).</li>
+<li><strong>Stay in <code>page.yaml</code>.</strong> Item rendering is
+presentational — it belongs with the file that already owns “how to
+construct an HTML page,” not in <code>antenna.yaml</code>, which owns
+collection registration and SQL <code>filter</code> statements.</li>
+<li><strong>Screen-reader-friendly anchor text by default.</strong> The
+current default — anchor text is the raw link URL — is read aloud
+character-by-character by screen readers, which is a poor listening
+experience. Consistent with this project’s existing accessibility
+decisions (<code>decisions.md</code> DEC-016 skip-navigation link,
+DEC-019 <code>&lt;time&gt;</code> element, DEC-020 heading warning), the
+default anchor label changes to a fixed, human-readable call-to-action
+string rather than the URL (§5.2). This is an intentional, called-out
+behavior change, not a silently changed default.</li>
+</ol>
+<h2 id="non-goals">3. Non-Goals</h2>
+<ul>
+<li>This document does not propose per-feed override configuration (e.g.
+“trust HTML from feed A but not feed B”). See §7 for a suggested home
+for that as a follow-up.</li>
+<li><strong>This document does not change local post or page rendering
+in any way.</strong> <code>allowed_meta_fields</code>, front-matter
+<code>&lt;meta&gt;</code>/PageFind-filter emission, and
+<code>ToUnsafeHTML()</code> usage for posts/pages are entirely out of
+scope.</li>
+<li><strong>This document does not change which fields are emitted as
+PageFind <code>data-pagefind-filter</code> attributes on feed
+items</strong> (categories, <code>dc_*</code> fields,
+<code>author</code>, <code>label</code>, <code>channel</code> — built in
+<code>WriteItem</code>’s <code>filters</code> slice).
+<code>decisions.md</code> DEC-010 already establishes that feed item
+metadata is always rendered in full for that purpose. The new
+<code>items.fields</code> in this proposal governs only the
+human-visible body fields (title, date, content, link, source) — a
+separate code path in <code>WriteItem</code> from the
+<code>filters</code> slice. This is an explicit carve-out so
+implementation does not conflate the two.</li>
+<li>This document does not address feed harvesting/fetching logic
+itself, except where §5.0 must describe the existing
+<code>harvest.go</code> behavior that produces
+<code>sourceMarkdown</code> in order to declare the rendering precedence
+correctly.</li>
+</ul>
+<h2 id="current-state-confirmed-by-reading-the-code">4. Current State
+(confirmed by reading the code)</h2>
+<p>Confirmed via <code>antenna-metadata.7.md</code> and
+<code>antenna-post.7.md</code>:</p>
+<ul>
+<li><code>page.yaml</code> already supports
+<code>allowed_meta_fields</code>, an ordered list restricting which
+front-matter keys get published as <code>&lt;meta&gt;</code> tags for
+posts and pages only (<code>decisions.md</code> DEC-010).</li>
+<li>Local post Markdown is rendered via
+<code>CommonMark.ToUnsafeHTML()</code> — raw HTML passes through
+unchanged. This applies to files the <em>user</em> authors and trusts,
+and is unaffected by this proposal.</li>
+</ul>
+<p>Confirmed via direct source reading (<code>html.go</code>,
+<code>harvest.go</code>, <code>cmarkdoc.go</code>,
+<code>sql_stmts.go</code>):</p>
+<ul>
+<li><strong>Two rendering pipelines with two trust levels already
+exist:</strong> <code>CommonMark.ToHTML()</code>
+(<code>cmarkdoc.go:326</code>) uses goldmark <strong>without</strong>
+<code>html.WithUnsafe()</code> — raw HTML embedded in Markdown text is
+dropped/ escaped. <code>CommonMark.ToUnsafeHTML()</code>
+(<code>cmarkdoc.go:353</code>) enables <code>html.WithUnsafe()</code> —
+raw HTML passes through. Posts/pages (<code>generator.go:341</code>,
+<code>page.go:176</code>, <code>schema.go:597</code>) use the unsafe
+renderer; feed items (<code>html.go:153</code>) use the safe renderer.
+This trust boundary is correct as-is and this proposal preserves
+it.</li>
+<li><strong><code>sourceMarkdown</code> is already preferred over
+<code>description</code> at render time.</strong> <code>WriteItem</code>
+(<code>html.go:148-156</code>): <code>content := description</code>,
+then overwritten <code>if sourceMarkdown != ""</code> with the
+goldmark-safe-rendered Markdown. This existing precedence is what §5.0
+formalizes.</li>
+<li><strong><code>sourceMarkdown</code> is populated automatically at
+harvest time</strong> (<code>harvest.go:291-315</code>, function
+<code>saveItem</code>): if the feed provides a
+<code>source:markdown</code> extension, that value is used (marked
+<code>FIXME</code> in the source — never verified against a real feed);
+otherwise the feed’s HTML <code>description</code> is converted to
+Markdown via <code>html2md</code>
+(<code>github.com/JohannesKaufmann/html-to-markdown</code>).
+<code>sourceMarkdown</code> stays empty only when the item has no
+description at all, or when the <code>html2md</code> conversion fails
+(logged as a warning to stderr).</li>
+<li><strong>The raw-<code>description</code>-fallback path has no
+sanitization at all.</strong> When <code>sourceMarkdown</code> is empty,
+<code>content := description</code> is interpolated directly via
+<code>fmt.Fprintf(out, ..., "%s", ..., content, ...)</code> —
+<code>%s</code> does not HTML-escape. This is the one path this proposal
+must close (§5.6).</li>
+<li><strong>No fallback exists today for a missing
+<code>link</code>.</strong> An empty <code>link</code> value currently
+renders <code>&lt;a href=""&gt;</code> with the link string (also empty)
+as the anchor text — confirms the concern in §1.</li>
+<li><strong>Anchor text is currently the link URL itself, not the item
+title.</strong> <code>html.go:164-166</code>:
+<code>&lt;a href=%q&gt;%s&lt;/a&gt;</code>, with <code>link</code>
+passed for both the <code>href</code> and the visible text. A
+<code>label_field</code> default of <code>title</code> would therefore
+be a real behavior change for existing sites (see §5.2, §6).</li>
+<li><strong>Dates are stored, not parsed, at render time.</strong>
+<code>saveItem</code> (<code>harvest.go:249-259</code>) stores
+<code>pubDate</code>/<code>updated</code> as
+<code>"2006-01-02 15:04:05"</code> (Go reference layout) when
+<code>gofeed</code> successfully parses the feed’s date, but falls back
+to the feed’s raw, unparsed date string (any format) when it doesn’t.
+<code>WriteItem</code> then only ever string-slices the first 10
+characters — it never calls <code>time.Parse</code>. A configurable
+<code>date_format</code> needs its own explicit input-layout assumption
+and parse-failure fallback (§5.3).</li>
+<li><strong>Items table schema</strong>
+(<code>sql_stmts.go:45-61</code>): <code>link</code>,
+<code>postPath</code>, <code>title</code>, <code>description</code>,
+<code>authors</code>, <code>enclosures</code>, <code>guid</code>,
+<code>pubDate</code>, <code>dcExt</code>, <code>channel</code>,
+<code>sourceMarkdown</code>, <code>status</code>, <code>label</code>,
+<code>updated</code>, <code>categories</code>. <code>source</code> (as
+used conceptually in §5.1) is not a literal column — it is derived from
+<code>label</code>/<code>channel</code>.</li>
+</ul>
+<h2 id="proposed-schema">5. Proposed Schema</h2>
+<p>Add an <code>items:</code> block to <code>page.yaml</code>, alongside
+the existing <code>allowed_meta_fields</code> key.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">allowed_meta_fields</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> title</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> author</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> description</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> keywords</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> series</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> seriesNumber</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">fields</span><span class="kw">:</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> title</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> source</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> pubDate</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> content</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label_field</span><span class="kw">:</span><span class="at"> static</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label_fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Continue reading&quot;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">required</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">missing</span><span class="kw">:</span><span class="at"> unlinked</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">date_format</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;2006-01-02&quot;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">content_max_length</span><span class="kw">:</span><span class="at"> </span><span class="dv">280</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">show_source</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">html</span><span class="kw">:</span><span class="at"> strip</span></span></code></pre></div>
+<h3
+id="content-source-resolution-declared-explicitly-not-new-behavior">5.0
+Content source resolution (declared explicitly — not new behavior)</h3>
+<p>For every rendered item, the body content resolves in this order:</p>
+<ol type="1">
+<li><strong><code>sourceMarkdown</code>, if non-empty.</strong>
+Populated at harvest time from the feed’s <code>source:markdown</code>
+extension when present, otherwise auto-converted from the feed’s HTML
+<code>description</code> via <code>html2md</code> (§4). Rendered via
+<code>CommonMark.ToHTML()</code> — goldmark safe mode, no raw HTML
+passthrough.</li>
+<li><strong><code>description</code> (raw, feed-supplied HTML/text),
+only when <code>sourceMarkdown</code> is empty</strong> — either the
+item genuinely has no description, or the harvest-time
+<code>html2md</code> conversion failed.</li>
+</ol>
+<p>This precedence already exists in <code>WriteItem</code> today; this
+proposal does not change it, only makes it an explicit, documented part
+of the configuration model instead of an implicit fallback inside one
+<code>if</code> statement. Markdown is preferred because it is already
+rendered through the same safe pipeline used for feed items today; the
+raw <code>description</code> fallback is the one path with no
+established sanitization, and is what §5.6 must close.</p>
+<p><strong>This resolution is local to feed items only.</strong> A post
+or page is a single authored Markdown document with no
+<code>description</code>/<code>sourceMarkdown</code> duality, and always
+renders via <code>CommonMark.ToUnsafeHTML()</code>, unchanged by this
+proposal.</p>
+<h3 id="items.fields-list-of-string-default-all-known-item-fields">5.1
+<code>items.fields</code> (list of string, default: all known item
+fields)</h3>
+<p>Ordered allowlist of item fields to render in the visible article
+body, mirroring <code>allowed_meta_fields</code>. Known item fields:
+<code>title</code>, <code>link</code>, <code>pubDate</code>,
+<code>content</code>, <code>source</code> (derived from the parent
+channel’s <code>label</code>/ <code>channel</code> columns, not a
+literal item column).</p>
+<p><code>content</code> refers to the <strong>resolved</strong> body per
+§5.0 (Markdown-preferred) — not literally the raw
+<code>description</code> table column. Selecting <code>content</code>
+says nothing about which underlying source produced it; that is governed
+entirely by §5.0’s precedence and §5.6’s trust handling.</p>
+<p>Fields not in this list are not rendered for items in this
+collection. Order in the list determines render order. This list has no
+effect on the PageFind <code>data-pagefind-filter</code> attributes
+emitted in the <code>filters</code> slice (categories,
+<code>dc_*</code>, author, label, channel) — see §3.</p>
+<h3 id="items.link-object">5.2 <code>items.link</code> (object)</h3>
+<p>Controls the anchor generated for each item.</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>Key</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>label_field</code></td>
+<td>string</td>
+<td><code>static</code></td>
+<td>Item field supplying the anchor text, or the literal sentinel
+<code>static</code> (see below). <strong>Default changed from current
+behavior</strong> (§6, goal 9): renders a fixed, screen-reader-friendly
+label instead of the raw link URL. Set to <code>link</code> to restore
+the current URL-as-anchor-text behavior; set to <code>title</code> to
+use the item title instead.</td>
+</tr>
+<tr>
+<td><code>label_fallback</code></td>
+<td>string</td>
+<td><code>"Continue reading"</code></td>
+<td>When <code>label_field</code> names a field: literal text used when
+that field’s value is empty or missing. When
+<code>label_field: static</code> (the default): the literal anchor text
+used for <strong>every</strong> item, unconditionally.</td>
+</tr>
+<tr>
+<td><code>required</code></td>
+<td>bool</td>
+<td><code>false</code></td>
+<td>If <code>true</code>, items lacking a <code>link</code> value fail
+collection generation (hard error) rather than being handled per
+<code>missing</code>.</td>
+</tr>
+<tr>
+<td><code>missing</code></td>
+<td>enum: <code>unlinked</code> | <code>omit</code> |
+<code>source_link</code></td>
+<td><code>unlinked</code></td>
+<td>Per-item fallback when <code>link</code> is absent and
+<code>required</code> is <code>false</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>label_field: static</code> is now the default</strong>,
+not merely an available option. <strong>Why the default
+changed:</strong> the current behavior — anchor text is the raw link URL
+— is read aloud character-by-character by screen readers, a poor
+listening experience for a link blog or aggregator meant to be browsed
+by ear as much as by eye. This is a deliberate, explicit default change
+(§6), consistent with this project’s existing accessibility decisions
+(<code>decisions.md</code> DEC-016, DEC-019, DEC-020), not a silent
+one.</p>
+<p>A field-derived label can also never usefully fall back to
+<code>label_fallback</code> when the chosen field is one that is
+realistically always present — <code>link</code> is a case in point:
+<code>label_fallback</code> would never fire in practice, since a
+rendered item’s <code>link</code> is essentially never empty once it
+exists in the <code>items</code> table. Sites that want a fixed
+call-to-action label regardless of per-item data set
+<code>label_fallback</code> directly; <code>label_field: static</code>
+(the default) means per-item data is ignored entirely and
+<code>label_fallback</code> is always the rendered anchor text. Example
+— a site wanting “read me” instead of the new default “Continue
+reading,” leaving title/description rendering untouched, needs only:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label_fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;read me&quot;</span></span></code></pre></div>
+<p>Restoring the pre-this-proposal behavior (anchor text = URL) requires
+an explicit opt-out:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label_field</span><span class="kw">:</span><span class="at"> link</span></span></code></pre></div>
+<p><code>missing</code> semantics:</p>
+<ul>
+<li><code>unlinked</code> — render <code>label_field</code>’s value (or
+<code>label_fallback</code>) as plain text, no <code>&lt;a&gt;</code>
+element.</li>
+<li><code>omit</code> — exclude the item from the generated aggregation
+entirely.</li>
+<li><code>source_link</code> — use the parent feed/channel’s URL in
+place of the missing item URL. If the channel URL is <em>also</em>
+empty, fall back to <code>unlinked</code> rather than producing an empty
+<code>href</code> — this recursive-fallback case was previously
+undefined and must be pinned down before implementation.</li>
+</ul>
+<p>Rationale: a boolean <code>show_link: true/false</code> cannot
+express these three distinct, useful behaviors, so an enum is used
+instead of overloading a boolean.</p>
+<h3 id="items.date_format-string-default-2006-01-02">5.3
+<code>items.date_format</code> (string, default:
+<code>"2006-01-02"</code>)</h3>
+<p>A Go <code>time</code> package reference-layout string, applied to
+<code>pubDate</code>/<code>updated</code> when rendered.</p>
+<p><strong>Input-layout assumption, made explicit:</strong>
+<code>pubDate</code>/<code>updated</code> are stored as
+<code>"2006-01-02 15:04:05"</code> when <code>gofeed</code> successfully
+parsed the feed’s date (§4); implementation must <code>time.Parse</code>
+against that layout before reformatting. When the stored value does not
+parse against that layout (the feed’s original unparsed date string, in
+an unknown format — see §4), implementation must fall back to the same
+truncation current code already performs — the first 10 characters of
+the stored string (or the whole string, if shorter) — rather than
+erroring the whole <code>generate</code> run <strong>or</strong>
+displaying the full untruncated raw string. The latter was considered
+and rejected: it would silently change output length for any item whose
+date <code>gofeed</code> couldn’t parse, which is exactly the kind of
+unflagged behavior change goal 7 (§2) rules out. Matching the existing
+10-character truncation exactly means this fallback path produces
+byte-identical output to today’s code, with no exception to call out.
+There is no general-purpose parser for arbitrary feed date formats
+already present in the codebase, so this fallback is a design
+requirement, not an edge case to defer.</p>
+<h3 id="items.content_max_length-int-default-unset-no-truncation">5.4
+<code>items.content_max_length</code> (int, default: unset / no
+truncation)</h3>
+<p>Renamed from <code>description_max_length</code> for consistency with
+<code>content</code> (§5.0, §5.1) — this truncates the <strong>resolved,
+pre-render source text</strong> (either <code>sourceMarkdown</code> or
+raw <code>description</code>, whichever won precedence in §5.0), on a
+word boundary, <strong>before</strong> Markdown/HTML conversion.
+Truncating post-render HTML is explicitly rejected — it risks cutting
+mid-tag and producing unbalanced markup.</p>
+<h3 id="items.show_source-bool-default-true">5.5
+<code>items.show_source</code> (bool, default: <code>true</code>)</h3>
+<p>Whether to render the originating feed/channel label alongside each
+item. Meaningful only for feed items (an aggregation may draw from many
+channels); has no equivalent for local posts, which is why it lives here
+rather than in <code>allowed_meta_fields</code>.</p>
+<h3 id="items.html-enum-strip-escape-unsafe-default-strip">5.6
+<code>items.html</code> (enum: <code>strip</code> | <code>escape</code>
+| <code>unsafe</code>, default: <code>strip</code>)</h3>
+<p>Because the resolved body can come from either of two pipelines
+(§5.0), this setting has two distinct effects depending on which one
+resolved for a given item:</p>
+<p><strong>When content resolved from <code>sourceMarkdown</code> (the
+common case):</strong></p>
+<ul>
+<li><code>strip</code> / <code>escape</code> (default) — render via
+<code>CommonMark.ToHTML()</code>, the same goldmark-safe renderer
+already used for items today. No code path change; this only formalizes
+existing behavior as a declared setting.</li>
+<li><code>unsafe</code> — render via
+<code>CommonMark.ToUnsafeHTML()</code> instead — the same renderer
+already used for local posts. Must be an explicit, deliberate
+per-collection opt-in; raw HTML embedded in the Markdown then passes
+through unchanged.</li>
+</ul>
+<p><strong>When content resolved from raw <code>description</code>
+(fallback only, per §5.0 — no <code>sourceMarkdown</code> available for
+that item):</strong></p>
+<ul>
+<li><code>strip</code> (default) — strip HTML tags, render remaining
+text as plain text.</li>
+<li><code>escape</code> — HTML-escape the raw description so tags
+display literally rather than render.</li>
+<li><code>unsafe</code> — pass the raw description through unchanged.
+Not recommended: this is the one path with no established sanitization
+today (§4).</li>
+</ul>
+<p><strong>This default (<code>strip</code> on the
+raw-description-fallback path) is a real behavior change</strong> from
+current code, which today interpolates raw <code>description</code>
+completely unescaped whenever <code>sourceMarkdown</code> is empty (§4).
+The Markdown-path default is <strong>not</strong> a behavior change — it
+already renders via <code>ToHTML()</code> today. Only the fallback-path
+default needs to be called out in release notes (§6); the common case is
+unaffected.</p>
+<h3 id="theme-integration-items.yaml">5.7 Theme integration:
+<code>items.yaml</code></h3>
+<p>A theme directory (<code>antenna-themes.7.md</code>) may include an
+<code>items.yaml</code> file alongside <code>header.md</code>,
+<code>nav.md</code>, <code>footer.md</code>,
+<code>top_content.md</code>, <code>bottom_content.md</code>, and
+<code>head.yaml</code>. <code>antenna apply THEME_PATH</code> merges its
+content under a single <code>items:</code> key in the resulting
+<code>page.yaml</code> — the same one-file-to-one-wrapper-key pattern
+already used for <code>header.md</code> → <code>header:</code>,
+<code>nav.md</code> → <code>nav:</code>, etc.</p>
+<p>This is <strong>not</strong> the <code>head.yaml</code> pattern.
+<code>head.yaml</code>’s own top-level keys (<code>title</code>,
+<code>meta</code>, <code>link</code>, <code>script</code>,
+<code>style</code>) are merged flat into <code>page.yaml</code>’s top
+level, with no wrapper. <code>items.yaml</code> cannot follow that
+pattern: its own sub-key <code>link</code> (§5.2, the anchor-fallback
+config) would collide with <code>head.yaml</code>’s top-level
+<code>link:</code> (the page’s <code>&lt;link&gt;</code> elements list)
+the moment both landed in the same flat namespace.
+<code>items.yaml</code>’s entire content is therefore nested under one
+<code>items:</code> key when applied, exactly mirroring the
+Markdown-file theme components rather than <code>head.yaml</code>.</p>
+<p>Example <code>theme/items.yaml</code>:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fields</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> title</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> source</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> pubDate</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> content</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">label_fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;read me&quot;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">date_format</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Jan 2, 2006&quot;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">content_max_length</span><span class="kw">:</span><span class="at"> </span><span class="dv">320</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">show_source</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">html</span><span class="kw">:</span><span class="at"> strip</span></span></code></pre></div>
+<p>(<code>label_field</code> is omitted — <code>static</code> is now the
+default, §5.2 — so only <code>label_fallback</code> needs to be set to
+override the label text.)</p>
+<p>After <code>antenna apply theme/</code>, this appears in
+<code>page.yaml</code> as:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">fields</span><span class="kw">:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> title</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> source</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> pubDate</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> content</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label_fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;read me&quot;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">date_format</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Jan 2, 2006&quot;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">content_max_length</span><span class="kw">:</span><span class="at"> </span><span class="dv">320</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">show_source</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">html</span><span class="kw">:</span><span class="at"> strip</span></span></code></pre></div>
+<p>As with the other theme files, <code>antenna apply</code> should not
+overwrite an existing <code>items:</code> block in
+<code>page.yaml</code> without the same conflict handling already used
+for the other theme-sourced keys (<code>antenna-themes.7.md</code>).</p>
+<h2 id="backward-compatibility">6. Backward Compatibility</h2>
+<ul>
+<li><strong>Local posts and pages: zero behavior change</strong>,
+unconditionally. No part of <code>items:</code> configuration reaches
+<code>GeneratePosts</code>, <code>Page()</code>, <code>Post()</code>, or
+<code>ToUnsafeHTML()</code>.</li>
+<li>Collections without an <code>items:</code> block: feed item
+rendering is unchanged from current output, <strong>except</strong> for
+the two specific, deliberate defaults below, which apply even without an
+<code>items:</code> block:
+<ol type="1">
+<li><code>html: strip</code> on the
+raw-<code>description</code>-fallback path (§5.6) — a safety fix.
+Applies only to items that lack <code>sourceMarkdown</code>. Must be
+called out in release notes; sites that depend on raw feed HTML passing
+through in that fallback case need an explicit opt-out
+(<code>html: unsafe</code>).</li>
+<li><code>label_field: static</code> /
+<code>label_fallback: "Continue reading"</code> (§5.2, goal 9) — an
+accessibility fix. Anchor text for <strong>every</strong> item changes
+from the raw link URL to a fixed, human-readable label. This is a
+visible change to every existing collection’s rendered output, not a
+narrow edge case like (1), and must be prominently called out in release
+notes. Sites that want the previous URL-as-anchor-text behavior back
+need an explicit opt-out (<code>label_field: link</code>).</li>
+<li>Nothing else changes by default — the <code>date_format</code>
+fallback for unparseable stored dates is defined to match current
+truncation behavior exactly (§5.3), specifically so it does <em>not</em>
+need to be added to this exception list.</li>
+</ol></li>
+<li>All keys are optional; the block itself is optional.</li>
+<li>Unknown keys under <code>items:</code> should be ignored
+(forward-compatible), consistent with tolerant YAML parsing elsewhere in
+the project.</li>
+</ul>
+<h2 id="deferred-per-feed-overrides-follow-up-proposal">7. Deferred:
+Per-Feed Overrides (Follow-up Proposal)</h2>
+<p>A likely follow-up need: trusting HTML from one feed but not another
+within the same collection. This cannot cleanly live in the collection’s
+link-list Markdown file without complicating the existing
+<code>- [FEED_LABEL](FEED_URL "OPTIONAL_FEED_DESCRIPTION")</code>
+syntax, which the project intentionally keeps simple.</p>
+<p>Recommended home: <code>antenna.yaml</code>, as a sibling to the
+existing per- collection <code>filter</code> attribute (already a list
+of SQL statements scoped to one collection). E.g.:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collections</span><span class="kw">:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> travel.md</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">filter</span><span class="kw">:</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;UPDATE items SET status = &#39;review&#39;&quot;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="st">&quot;UPDATE items SET status = &#39;published&#39; WHERE pubDate &gt;= date(&#39;now&#39;, &#39;-21 days&#39;)&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">items_overrides</span><span class="kw">:</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">&quot;https://example.com/feed.xml&quot;</span><span class="kw">:</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">html</span><span class="kw">:</span><span class="at"> unsafe</span></span></code></pre></div>
+<p>This keeps <code>antenna.yaml</code> as the place for
+collection-scoped, per-source configuration, and <code>page.yaml</code>
+as the place for whole-collection presentation structure. Not part of
+this proposal’s implementation scope; noted here so the schema in §5
+doesn’t need to be reworked later to accommodate it.</p>
+<h2 id="implementation-notes-for-whoever-picks-this-up">8.
+Implementation Notes (for whoever picks this up)</h2>
+<ul>
+<li><p>Suggested Go shape for the config struct, to sit alongside
+whatever struct currently backs <code>allowed_meta_fields</code>:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ItemsConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    Fields            <span class="op">[]</span><span class="dt">string</span>   <span class="st">`yaml:&quot;fields&quot;`</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    Link              LinkConfig <span class="st">`yaml:&quot;link&quot;`</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    DateFormat        <span class="dt">string</span>     <span class="st">`yaml:&quot;date_format&quot;`</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    ContentMaxLength  <span class="dt">int</span>        <span class="st">`yaml:&quot;content_max_length&quot;`</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    ShowSource        <span class="dt">bool</span>       <span class="st">`yaml:&quot;show_source&quot;`</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    HTML              <span class="dt">string</span>     <span class="st">`yaml:&quot;html&quot;`</span> <span class="co">// &quot;strip&quot; | &quot;escape&quot; | &quot;unsafe&quot;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LinkConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    LabelField    <span class="dt">string</span> <span class="st">`yaml:&quot;label_field&quot;`</span>    <span class="co">// default &quot;static&quot; (§5.2, goal 9); item field name, or &quot;static&quot;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    LabelFallback <span class="dt">string</span> <span class="st">`yaml:&quot;label_fallback&quot;`</span> <span class="co">// default &quot;Continue reading&quot;; fallback text, or the fixed label when LabelField == &quot;static&quot;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    Required      <span class="dt">bool</span>   <span class="st">`yaml:&quot;required&quot;`</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    Missing       <span class="dt">string</span> <span class="st">`yaml:&quot;missing&quot;`</span> <span class="co">// &quot;unlinked&quot; | &quot;omit&quot; | &quot;source_link&quot;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div></li>
+<li><p><strong>Content resolution should be one function</strong>,
+implementing §5.0 and §5.6 together, e.g.:
+<code>resolveItemContent(description, sourceMarkdown string, cfg ItemsConfig) (html string, err error)</code>
+— decides <code>sourceMarkdown</code> vs <code>description</code>
+(§5.0), applies <code>content_max_length</code> truncation to the
+pre-render source text (§5.4), then renders via <code>ToHTML()</code> or
+<code>ToUnsafeHTML()</code> per <code>cfg.HTML</code> and which source
+won (§5.6). <code>WriteItem</code> calls this once instead of inlining
+the current
+<code>content := description; if sourceMarkdown != "" { ... }</code>
+block.</p></li>
+<li><p><strong>Date formatting</strong> needs a small helper that
+attempts <code>time.Parse("2006-01-02 15:04:05", raw)</code> first,
+formats with <code>cfg.DateFormat</code> on success, and on parse
+failure falls back to the first 10 characters of the raw stored string
+(matching current <code>WriteItem</code> truncation exactly, §5.3) —
+never the full untruncated string, and never a hard error.</p></li>
+<li><p>Rendering should remain plain Go string/HTML-builder composition
+— no introduction of
+<code>text/template</code>/<code>html/template</code>, per the project’s
+stated design constraint. <code>strings.Builder</code>,
+<code>html.EscapeString</code>, and a small hand-rolled tag stripper
+(for the raw-<code>description</code> <code>strip</code> mode) are
+sufficient; goldmark already exists as a dependency and handles the
+Markdown-path cases.</p></li>
+<li><p>Validation: <code>items.html</code>,
+<code>items.link.missing</code> should be validated against their enum
+values at config-load time (wherever <code>page.yaml</code> is currently
+parsed), producing a clear error for typos rather than silently falling
+back.</p></li>
+<li><p>Testing: given the project’s existing <code>_test.go</code>
+pattern (see <code>html_test.go</code>, <code>cmarkdoc_test.go</code>),
+an <code>items_test.go</code> addition covering: each
+<code>missing</code> mode (including the channel-URL-also-empty case for
+<code>source_link</code>, §5.2), each <code>html</code> mode
+<strong>crossed with</strong> which content source resolved (§5.0 × §5.6
+— four meaningful combinations, not two),
+<code>content_max_length</code> boundary behavior (exact-length,
+word-boundary truncation), and <code>date_format</code> with both a
+parseable and an unparseable stored date string (§5.3).</p></li>
+</ul>
+<h2 id="open-questions">9. Open Questions</h2>
+<ol type="1">
+<li><del>Should <code>items.fields</code> support any fields beyond the
+confirmed set?</del> Resolved — confirmed against
+<code>sql_stmts.go</code>: <code>title</code>, <code>link</code>,
+<code>pubDate</code>, <code>content</code> (resolved per §5.0),
+<code>source</code> (derived, not a column).</li>
+<li>Should <code>content_max_length</code> truncation add an ellipsis or
+other indicator, and should that be configurable or fixed?</li>
+<li>Is per-collection <code>items:</code> sufficient, or is there a
+near-term need for per-theme defaults (i.e. a theme ships a suggested
+<code>items:</code> block that <code>page.yaml</code> can override)? Out
+of scope for this proposal but worth flagging before implementation
+locks in the override precedence order.</li>
+<li>Should <code>html: unsafe</code> require a corresponding warning at
+<code>generate</code> time (similar in spirit to the <code>post</code>
+action’s unsafe-mode warning in its man page), for both the
+Markdown-path and the raw-description-path meanings of
+<code>unsafe</code> (§5.6), so the risk is visible to whoever runs the
+command?</li>
+<li>The <code>source:markdown</code> feed extension path in
+<code>harvest.go</code> is marked <code>FIXME</code> — never verified
+against a real feed. Should this proposal’s implementation include
+finding or constructing a test feed that uses it, so §5.0’s first
+precedence branch has real test coverage rather than only the
+<code>html2md</code>-converted branch?</li>
+</ol>
+</main>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<p>completion — generate a Bash or PowerShell completion script</p>
+<p>SYNOPSIS antenna completion SHELL</p>
+<p>DESCRIPTION Writes a shell completion script to standard output.
+SHELL is bash or powershell. The script completes actions, the top level
+options, help topics after “help”, “new” after “themes”, shell names
+after “completion”, and file names after -config and for other
+actions.</p>
+<p>PARAMETERS SHELL bash or powershell</p>
+<p>EXAMPLE source &lt;(antenna completion bash) antenna completion bash
+&gt; ~/.local/share/bash-completion/completions/antenna antenna
+completion powershell | Out-String | Invoke-Expression</p>
+</main>
+</body>
+</html>

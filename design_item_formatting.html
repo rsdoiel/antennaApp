@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>harvey</title>
+    <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">Harvey</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+</ul>
+</nav>
+<main id="main-content">
+<h1 id="design-feed-item-formatting-control">Design: Feed Item
+Formatting Control</h1>
+<p>Covers the implementation of decisions DEC-022 through DEC-031 from
+<code>decisions.md</code>. See also:
+<code>item_formatting_proposal.md</code> (finalized proposal).</p>
+<hr />
+<h2 id="scope">Scope</h2>
+<p>One new configuration surface, <code>items:</code> in
+<code>page.yaml</code>, controlling how harvested feed items render into
+aggregate collection pages. Three things this explicitly does
+<strong>not</strong> touch:</p>
+<ol type="1">
+<li>Local post/page rendering (<code>GeneratePosts</code>,
+<code>Page()</code>, <code>Post()</code>,
+<code>CommonMark.ToUnsafeHTML()</code>) — DEC-031.</li>
+<li><code>allowed_meta_fields</code> — posts/pages metadata allowlisting
+is unrelated and unchanged.</li>
+<li>PageFind <code>data-pagefind-filter</code> attribute emission on
+<code>&lt;article&gt;</code> elements (categories, <code>dc_*</code>,
+author, label, channel) — DEC-025, DEC-010 stays in force.</li>
+</ol>
+<hr />
+<h2 id="content-resolution-and-rendering-pipeline">Content resolution
+and rendering pipeline</h2>
+<pre><code>Feed item body (per item)
+  │
+  ├─ sourceMarkdown non-empty (the common case — html2md-converted at
+  │  harvest time from the feed&#39;s HTML description, or a native
+  │  source:markdown extension value; see harvest.go saveItem)
+  │     │
+  │     ├─ items.html: strip | escape (default) → CommonMark.ToHTML()
+  │     │  (goldmark safe mode — unchanged from current behavior)
+  │     └─ items.html: unsafe → CommonMark.ToUnsafeHTML()
+  │        (same renderer already used for local posts — explicit opt-in)
+  │
+  └─ sourceMarkdown empty (fallback — no description, or html2md failed)
+        │
+        ├─ items.html: strip (default) → tag-stripped plain text
+        ├─ items.html: escape → html.EscapeString(description)
+        └─ items.html: unsafe → description, unmodified (not recommended)</code></pre>
+<p><code>items.content_max_length</code>, when set, truncates the
+pre-render source text (whichever branch — <code>sourceMarkdown</code>
+or <code>description</code> — was selected) on a word boundary, before
+this pipeline runs (DEC-029).</p>
+<hr />
+<h2 id="schema-additions">Schema additions</h2>
+<h3 id="generator-struct-generator.go"><code>Generator</code> struct
+(<code>generator.go</code>)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Items, when set, controls how harvested feed items render in aggregate</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">// collection pages. Has no effect on local post/page rendering (DEC-031).</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Items ItemsConfig <span class="st">`json:&quot;items,omitempty&quot; yaml:&quot;items,omitempty&quot;`</span></span></code></pre></div>
+<h3 id="new-types-generator.go-alongside-generator">New types
+(<code>generator.go</code>, alongside <code>Generator</code>)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> ItemsConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Fields is an ordered allowlist of visible body fields to render.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Known values: &quot;title&quot;, &quot;link&quot;, &quot;pubDate&quot;, &quot;content&quot;, &quot;source&quot;.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Empty means all fields (default).</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    Fields <span class="op">[]</span><span class="dt">string</span> <span class="st">`json:&quot;fields,omitempty&quot; yaml:&quot;fields,omitempty&quot;`</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Link LinkConfig <span class="st">`json:&quot;link,omitempty&quot; yaml:&quot;link,omitempty&quot;`</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">// DateFormat is a Go reference-layout string applied to pubDate/updated.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Default: &quot;2006-01-02&quot;.</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    DateFormat <span class="dt">string</span> <span class="st">`json:&quot;date_format,omitempty&quot; yaml:&quot;date_format,omitempty&quot;`</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ContentMaxLength truncates resolved pre-render source text on a word</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">// boundary. Zero means no truncation (default).</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    ContentMaxLength <span class="dt">int</span> <span class="st">`json:&quot;content_max_length,omitempty&quot; yaml:&quot;content_max_length,omitempty&quot;`</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ShowSource controls whether the originating feed/channel label is</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">// rendered. Default: true.</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    ShowSource <span class="op">*</span><span class="dt">bool</span> <span class="st">`json:&quot;show_source,omitempty&quot; yaml:&quot;show_source,omitempty&quot;`</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// HTML is one of &quot;strip&quot; (default), &quot;escape&quot;, &quot;unsafe&quot; — see DEC-024.</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    HTML <span class="dt">string</span> <span class="st">`json:&quot;html,omitempty&quot; yaml:&quot;html,omitempty&quot;`</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LinkConfig <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// LabelField names the item field supplying anchor text, or the</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// literal sentinel &quot;static&quot; (DEC-026). Default: &quot;static&quot; — a</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// deliberate, called-out change from the pre-existing behavior of</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="co">// using the raw link URL as anchor text (screen readers read a URL</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="co">// character-by-character, which is a poor listening experience). Set</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// to &quot;link&quot; to restore the previous behavior.</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    LabelField <span class="dt">string</span> <span class="st">`json:&quot;label_field,omitempty&quot; yaml:&quot;label_field,omitempty&quot;`</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="co">// LabelFallback is used when LabelField&#39;s value is empty/missing, or</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// unconditionally when LabelField == &quot;static&quot; (the default).</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Default: &quot;Continue reading&quot;.</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    LabelFallback <span class="dt">string</span> <span class="st">`json:&quot;label_fallback,omitempty&quot; yaml:&quot;label_fallback,omitempty&quot;`</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Required, if true, fails collection generation when an item&#39;s link</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    <span class="co">// is empty, instead of applying Missing. Default: false.</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    Required <span class="dt">bool</span> <span class="st">`json:&quot;required,omitempty&quot; yaml:&quot;required,omitempty&quot;`</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Missing is one of &quot;unlinked&quot; (default), &quot;omit&quot;, &quot;source_link&quot; — DEC-027.</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    Missing <span class="dt">string</span> <span class="st">`json:&quot;missing,omitempty&quot; yaml:&quot;missing,omitempty&quot;`</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>ShowSource</code> is <code>*bool</code> (not <code>bool</code>)
+so that an omitted <code>items:</code> block or an omitted
+<code>show_source</code> key can be distinguished from an explicit
+<code>show_source: false</code> — needed because the default is
+<code>true</code>, not Go’s zero value.</p>
+<h3 id="defaulting">Defaulting</h3>
+<p>A single function, called once when <code>page.yaml</code> is loaded
+(alongside wherever <code>AllowedMetaFields</code> currently gets no
+special defaulting, since it has no default other than empty):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>cfg <span class="op">*</span>ItemsConfig<span class="op">)</span> applyDefaults<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>cfg<span class="op">.</span>Fields<span class="op">)</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">.</span>Fields <span class="op">=</span> <span class="op">[]</span><span class="dt">string</span><span class="op">{</span><span class="st">&quot;title&quot;</span><span class="op">,</span> <span class="st">&quot;source&quot;</span><span class="op">,</span> <span class="st">&quot;pubDate&quot;</span><span class="op">,</span> <span class="st">&quot;content&quot;</span><span class="op">}</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>Link<span class="op">.</span>LabelField <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">.</span>Link<span class="op">.</span>LabelField <span class="op">=</span> <span class="st">&quot;static&quot;</span> <span class="co">// DEC-026 — accessibility default, not &quot;link&quot;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>Link<span class="op">.</span>LabelFallback <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">.</span>Link<span class="op">.</span>LabelFallback <span class="op">=</span> <span class="st">&quot;Continue reading&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>Link<span class="op">.</span>Missing <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">.</span>Link<span class="op">.</span>Missing <span class="op">=</span> <span class="st">&quot;unlinked&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>DateFormat <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">.</span>DateFormat <span class="op">=</span> <span class="st">&quot;2006-01-02&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>ShowSource <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        t <span class="op">:=</span> <span class="ot">true</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">.</span>ShowSource <span class="op">=</span> <span class="op">&amp;</span>t</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg<span class="op">.</span>HTML <span class="op">==</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        cfg<span class="op">.</span>HTML <span class="op">=</span> <span class="st">&quot;strip&quot;</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 id="validation">Validation</h3>
+<p>At the same load point, validate enums and fail fast on typos
+(mirrors the project’s existing config-load error style):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> <span class="op">(</span>cfg <span class="op">*</span>ItemsConfig<span class="op">)</span> validate<span class="op">()</span> <span class="dt">error</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> cfg<span class="op">.</span>HTML <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;strip&quot;</span><span class="op">,</span> <span class="st">&quot;escape&quot;</span><span class="op">,</span> <span class="st">&quot;unsafe&quot;</span><span class="op">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;items.html: invalid value %q (want strip, escape, or unsafe)&quot;</span><span class="op">,</span> cfg<span class="op">.</span>HTML<span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> cfg<span class="op">.</span>Link<span class="op">.</span>Missing <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="st">&quot;unlinked&quot;</span><span class="op">,</span> <span class="st">&quot;omit&quot;</span><span class="op">,</span> <span class="st">&quot;source_link&quot;</span><span class="op">:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">default</span><span class="op">:</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;items.link.missing: invalid value %q (want unlinked, omit, or source_link)&quot;</span><span class="op">,</span> cfg<span class="op">.</span>Link<span class="op">.</span>Missing<span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">nil</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 id="new-components-html.go">New components
+(<code>html.go</code>)</h2>
+<h3 id="resolveitemcontent"><code>resolveItemContent</code></h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> resolveItemContent<span class="op">(</span>description<span class="op">,</span> sourceMarkdown <span class="dt">string</span><span class="op">,</span> cfg ItemsConfig<span class="op">)</span> <span class="op">(</span><span class="dt">string</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span></code></pre></div>
+<ol type="1">
+<li><code>source, usedMarkdown := sourceMarkdown, true</code>; if
+<code>sourceMarkdown == ""</code>,
+<code>source, usedMarkdown = description, false</code>.</li>
+<li>If <code>cfg.ContentMaxLength &gt; 0</code>,
+<code>source = truncateWords(source, cfg.ContentMaxLength)</code>.</li>
+<li>If <code>usedMarkdown</code>:
+<ul>
+<li><code>doc := &amp;CommonMark{Text: source}</code></li>
+<li><code>cfg.HTML == "unsafe"</code> →
+<code>doc.ToUnsafeHTML()</code></li>
+<li>else → <code>doc.ToHTML()</code> (covers both <code>strip</code> and
+<code>escape</code> — goldmark safe mode already drops/escapes embedded
+raw HTML; there is no meaningful difference between the two on this
+branch, both just mean “don’t use unsafe mode”)</li>
+</ul></li>
+<li>Else (raw description fallback):
+<ul>
+<li><code>cfg.HTML == "strip"</code> (default) →
+<code>stripTags(source)</code></li>
+<li><code>cfg.HTML == "escape"</code> →
+<code>html.EscapeString(source)</code></li>
+<li><code>cfg.HTML == "unsafe"</code> → <code>source</code>,
+unchanged</li>
+</ul></li>
+</ol>
+<p><code>WriteItem</code> replaces its current inline block:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>content <span class="op">:=</span> description</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> sourceMarkdown <span class="op">!=</span> <span class="st">&quot;&quot;</span> <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    doc <span class="op">:=</span> <span class="op">&amp;</span>CommonMark<span class="op">{</span>Text<span class="op">:</span> sourceMarkdown<span class="op">}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> src<span class="op">,</span> err <span class="op">:=</span> doc<span class="op">.</span>ToHTML<span class="op">();</span> err <span class="op">==</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        content <span class="op">=</span> src</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>with a single call to <code>resolveItemContent</code>.</p>
+<h3 id="truncatewords"><code>truncateWords</code></h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> truncateWords<span class="op">(</span>s <span class="dt">string</span><span class="op">,</span> maxLen <span class="dt">int</span><span class="op">)</span> <span class="dt">string</span></span></code></pre></div>
+<p>If <code>len(s) &lt;= maxLen</code>, return <code>s</code> unchanged.
+Otherwise slice to <code>maxLen</code>, then back off to the last
+preceding whitespace boundary (never cut mid-word). Operates on the
+source text (Markdown or raw description), before any HTML/Markdown
+conversion — DEC-029.</p>
+<h3 id="striptags"><code>stripTags</code></h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode go"><code class="sourceCode go"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> stripTags<span class="op">(</span>s <span class="dt">string</span><span class="op">)</span> <span class="dt">string</span></span></code></pre></div>
+<p>A small hand-rolled tag stripper (regexp
+<code>&lt;[^&gt;]*&gt;</code> removal), used only on the
+raw-description-fallback path. This is a deliberate simplification, not
+a full HTML parser — acceptable here because it only ever runs on the
+minority fallback path (no <code>sourceMarkdown</code> available), and
+the alternative (introducing a full HTML-sanitization dependency) is
+disproportionate to how rarely this branch executes. Document this
+limitation in the function’s comment.</p>
+<h3 id="formatitemdate"><code>formatItemDate</code></h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> formatItemDate<span class="op">(</span>raw <span class="dt">string</span><span class="op">,</span> layout <span class="dt">string</span><span class="op">)</span> <span class="dt">string</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> storedLayout <span class="op">=</span> <span class="st">&quot;2006-01-02 15:04:05&quot;</span> <span class="co">// matches harvest.go saveItem</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> formatItemDate<span class="op">(</span>raw <span class="dt">string</span><span class="op">,</span> layout <span class="dt">string</span><span class="op">)</span> <span class="dt">string</span> <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    t<span class="op">,</span> err <span class="op">:=</span> time<span class="op">.</span>Parse<span class="op">(</span>storedLayout<span class="op">,</span> raw<span class="op">)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        <span class="co">// DEC-028 — unparseable (raw feed date string, format unknown).</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Match today&#39;s WriteItem truncation exactly rather than returning</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// the full raw string, so this fallback stays byte-identical to</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// current output instead of becoming an unflagged exception.</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span><span class="op">(</span>raw<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">10</span> <span class="op">{</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> raw<span class="op">[:</span><span class="dv">10</span><span class="op">]</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> raw</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> t<span class="op">.</span>Format<span class="op">(</span>layout<span class="op">)</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Replaces the current string-slice-to-10-characters logic in
+<code>WriteItem</code> for both <code>pubDate</code> and
+<code>updated</code>. Note the truncation logic isn’t removed — it’s
+preserved as the parse-failure fallback, not superseded by
+<code>time.Parse</code>.</p>
+<h3 id="resolveitemlink"><code>resolveItemLink</code></h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> LinkResolution <span class="kw">struct</span> <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    Href        <span class="dt">string</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    Label       <span class="dt">string</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    AsPlainText <span class="dt">bool</span> <span class="co">// true: render Label as text, no &lt;a&gt; (Missing == &quot;unlinked&quot;)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    Omit        <span class="dt">bool</span> <span class="co">// true: exclude the item entirely (Missing == &quot;omit&quot;)</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> resolveItemLink<span class="op">(</span>link<span class="op">,</span> title<span class="op">,</span> channelURL <span class="dt">string</span><span class="op">,</span> cfg LinkConfig<span class="op">)</span> <span class="op">(</span>LinkResolution<span class="op">,</span> <span class="dt">error</span><span class="op">)</span></span></code></pre></div>
+<p>Logic: 1. Compute <code>label</code>: -
+<code>cfg.Link.LabelField == "static"</code> →
+<code>label = cfg.LabelFallback</code> - else look up the named field’s
+value (<code>link</code> or <code>title</code> are the only fields that
+make sense here;
+<code>source</code>/<code>pubDate</code>/<code>content</code> are
+rejected at <code>validate()</code> time as invalid
+<code>label_field</code> values) → if empty,
+<code>label      = cfg.LabelFallback</code>, else the field’s value. 2.
+If <code>link != ""</code> →
+<code>return LinkResolution{Href: link, Label: label}, nil</code>. 3.
+<code>link == ""</code>: - <code>cfg.Required</code> → return an error;
+caller aborts collection generation. -
+<code>cfg.Missing == "omit"</code> →
+<code>return LinkResolution{Omit: true}, nil</code>. -
+<code>cfg.Missing == "source_link"</code> → if
+<code>channelURL != ""</code>,
+<code>return LinkResolution{Href: channelURL, Label: label}, nil</code>;
+else fall through to <code>unlinked</code> (DEC-027). -
+<code>cfg.Missing == "unlinked"</code> (default, or the
+<code>source_link</code> fallthrough) →
+<code>return LinkResolution{Label: label, AsPlainText: true}, nil</code>.</p>
+<p><code>WriteItem</code> must check <code>Omit</code> <strong>before
+writing any output</strong> — the item is skipped entirely, not
+partially rendered then discarded.</p>
+<hr />
+<h2 id="writeitem-changes-html.go"><code>WriteItem</code> changes
+(<code>html.go</code>)</h2>
+<p><code>WriteItem</code> gains a trailing <code>cfg ItemsConfig</code>
+parameter. Internally:</p>
+<ol type="1">
+<li>Call <code>resolveItemLink</code> first. If <code>Omit</code>,
+return immediately without writing anything.</li>
+<li>Call <code>resolveItemContent</code> for the body.</li>
+<li>Call <code>formatItemDate</code> for
+<code>pubDate</code>/<code>updated</code> using
+<code>cfg.DateFormat</code>.</li>
+<li>Filter which of heading/date/content/footer-link/source-label
+sections are emitted based on <code>cfg.Fields</code> (ordered
+allowlist) — default (<code>cfg.Fields</code> unset before
+<code>applyDefaults()</code> runs, which never reaches
+<code>WriteItem</code>) emits all sections in their current order.</li>
+<li>Render the footer anchor using <code>LinkResolution</code>:
+<code>&lt;a href=%q&gt;%s&lt;/a&gt;</code> when
+<code>!AsPlainText</code>, otherwise the label as plain text with no
+<code>&lt;a&gt;</code>.</li>
+<li>Gate the source/label block on <code>cfg.ShowSource</code>.</li>
+</ol>
+<p>The <code>filters</code> slice (PageFind attributes) is entirely
+unaffected — DEC-025.</p>
+<h3 id="writehtml-caller-changes"><code>WriteHTML</code> caller
+changes</h3>
+<p><code>WriteHTML</code> currently builds <code>gen</code> from
+<code>page.yaml</code> already. It now:</p>
+<ol type="1">
+<li>Runs <code>gen.Items.applyDefaults()</code> and
+<code>gen.Items.validate()</code> once, at collection-generation start
+(config-load time errors, not per-item).</li>
+<li>Passes <code>gen.Items</code> to every <code>WriteItem</code> call
+in its item-scan loop.</li>
+</ol>
+<hr />
+<h2 id="theme-integration-themes.go">Theme integration
+(<code>themes.go</code>)</h2>
+<h3 id="istargetfile"><code>isTargetFile</code></h3>
+<p>Add <code>"items.yaml"</code> to the target-file map so
+<code>findDirectoriesWithTargetFiles</code> (used by
+<code>antenna themes list</code>) recognizes theme directories that
+define only <code>items.yaml</code>.</p>
+<h3 id="updateitemselement"><code>updateItemsElement</code></h3>
+<p>New function, following <code>updateHeadElements</code>’s existing
+pattern (read theme file if present, unmarshal into a throwaway struct,
+copy over if non-empty — not a deep merge):</p>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Update a generator&#39;s items configuration from a theme items.yaml file.</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">func</span> updateItemsElement<span class="op">(</span>gen <span class="op">*</span>Generator<span class="op">,</span> themeName <span class="dt">string</span><span class="op">)</span> <span class="op">(</span><span class="dt">bool</span><span class="op">,</span> <span class="dt">error</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    fName <span class="op">:=</span> filepath<span class="op">.</span>Join<span class="op">(</span>themeName<span class="op">,</span> <span class="st">&quot;items.yaml&quot;</span><span class="op">)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> _<span class="op">,</span> err <span class="op">:=</span> os<span class="op">.</span>Stat<span class="op">(</span>fName<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">false</span><span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    src<span class="op">,</span> err <span class="op">:=</span> os<span class="op">.</span>ReadFile<span class="op">(</span>fName<span class="op">)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">false</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;failed to read %q, %s&quot;</span><span class="op">,</span> fName<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">var</span> items ItemsConfig</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> err <span class="op">:=</span> yaml<span class="op">.</span>Unmarshal<span class="op">(</span>src<span class="op">,</span> <span class="op">&amp;</span>items<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ot">false</span><span class="op">,</span> fmt<span class="op">.</span>Errorf<span class="op">(</span><span class="st">&quot;failed to parse %q, %s&quot;</span><span class="op">,</span> fName<span class="op">,</span> err<span class="op">)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    gen<span class="op">.</span>Items <span class="op">=</span> items</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ot">true</span><span class="op">,</span> <span class="ot">nil</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Wired into <code>ApplyTheme</code> alongside the existing calls:</p>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode go"><code class="sourceCode go"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> ok<span class="op">,</span> err <span class="op">:=</span> updateItemsElement<span class="op">(</span>gen<span class="op">,</span> themeName<span class="op">);</span> err <span class="op">!=</span> <span class="ot">nil</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> err</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> ok <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    changed <span class="op">=</span> ok</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Note: unlike <code>updateHeadElements</code>, which copies individual
+sub-fields
+(<code>Meta</code>/<code>Link</code>/<code>Script</code>/<code>Style</code>)
+conditionally, <code>updateItemsElement</code> assigns the whole
+<code>ItemsConfig</code> wholesale when <code>items.yaml</code> is
+present — there is only one field to copy (<code>gen.Items</code>), so
+there’s no need for the per-sub-field-presence checks
+<code>updateHeadElements</code> uses. <code>applyDefaults()</code> and
+<code>validate()</code> still run later, at <code>WriteHTML</code> time,
+not here.</p>
+<hr />
+<h2 id="worked-example">Worked example</h2>
+<p><code>theme/items.yaml</code>:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fields</span><span class="kw">:</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> title</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> source</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> pubDate</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> content</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">label_fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;read me&quot;</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">date_format</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Jan 2, 2006&quot;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">content_max_length</span><span class="kw">:</span><span class="at"> </span><span class="dv">320</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="fu">show_source</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="fu">html</span><span class="kw">:</span><span class="at"> strip</span></span></code></pre></div>
+<p><code>label_field</code> is omitted — <code>static</code> is now the
+default (DEC-026), so only <code>label_fallback</code> needs overriding
+to get a site-specific label instead of the default “Continue
+reading”.</p>
+<p>After <code>antenna apply theme/ page.yaml</code>,
+<code>page.yaml</code> contains:</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">items</span><span class="kw">:</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">fields</span><span class="kw">:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> title</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> source</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> pubDate</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> content</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">link</span><span class="kw">:</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">label_fallback</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;read me&quot;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">date_format</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;Jan 2, 2006&quot;</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">content_max_length</span><span class="kw">:</span><span class="at"> </span><span class="dv">320</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">show_source</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">html</span><span class="kw">:</span><span class="at"> strip</span></span></code></pre></div>
+<p>Rendered <code>&lt;article&gt;</code> output changes in the footer
+anchor — from today’s
+<code>&lt;a href="https://example.com/post"&gt;https://example.com/post&lt;/a&gt;</code>
+to
+<code>&lt;a href="https://example.com/post"&gt;read me&lt;/a&gt;</code>
+— and also picks up the
+<code>date_format</code>/<code>content_max_length</code> effects; title
+and content-selection otherwise unaffected by this particular config.
+Note that even <em>without</em> this <code>items.yaml</code> at all, the
+anchor text would already have changed to the default “Continue reading”
+(DEC-026) — that default applies workspace-wide, not just to collections
+using this theme.</p>
+<hr />
+<h2 id="files-changed-summary">Files changed summary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>File</th>
+<th>Nature of change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>generator.go</code></td>
+<td>Add <code>Items ItemsConfig</code> to <code>Generator</code>; define
+<code>ItemsConfig</code>, <code>LinkConfig</code>,
+<code>applyDefaults()</code>, <code>validate()</code></td>
+</tr>
+<tr>
+<td><code>html.go</code></td>
+<td>Add <code>resolveItemContent</code>, <code>truncateWords</code>,
+<code>stripTags</code>, <code>formatItemDate</code>,
+<code>resolveItemLink</code>, <code>LinkResolution</code>; update
+<code>WriteItem</code> signature and body; update <code>WriteHTML</code>
+to call <code>applyDefaults()</code>/<code>validate()</code> and pass
+<code>gen.Items</code> through</td>
+</tr>
+<tr>
+<td><code>themes.go</code></td>
+<td>Add <code>"items.yaml"</code> to <code>isTargetFile</code>; add
+<code>updateItemsElement</code>; wire into <code>ApplyTheme</code></td>
+</tr>
+<tr>
+<td><code>items_test.go</code> / <code>html_test.go</code></td>
+<td>New tests per <code>plan_item_formatting.md</code></td>
+</tr>
+<tr>
+<td><code>item_formatting_proposal.md</code></td>
+<td>Finalized reference document (no further change expected)</td>
+</tr>
+<tr>
+<td><code>decisions.md</code></td>
+<td>DEC-022 through DEC-031 (already recorded)</td>
+</tr>
+</tbody>
+</table>
+</main>
+</body>
+</html>
