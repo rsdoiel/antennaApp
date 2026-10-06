@@ -326,6 +326,34 @@ configuration file (defaults to to the current working directory, "").
 The "preview" action  serves that out over localhost (default port 8000)
 so you can read your static site with your favorite web browser.
 
+# EXIT STATUS
+
+**{app_name}** exits with the codes the workspace uses for every
+command-line tool (workspace DR-0003), so a script can tell what went
+wrong from the number alone.
+
+| Code | Class | Meaning |
+|-----:|-------|---------|
+| 0 | ok | Success. A listing that matches nothing (posts, items, pages) is still 0. |
+| 1 | negative | The command ran and the answer is no: the named collection is not in the configuration, nothing to build a sitemap from, an action you cancelled. |
+| 2 | usage | The command line is wrong and nothing was attempted: unknown action, flag or help topic, a missing or surplus argument, a bad date or count. |
+| 65 | data | Content that was read is wrong: a document with unclosed front matter, a file that is not a valid ODT, a feed that does not parse, a damaged database. |
+| 66 | no_input | A named file or the workspace is missing: no antenna.yaml, no such Markdown file. |
+| 69 | unavailable | A feed or service could not be reached, or answered with an error. |
+| 70 | internal | A bug, or an error nothing classified. Please report it. |
+| 73 | cant_create | An output could not be created: the file or directory is in the way, or its directory cannot be made. |
+| 74 | io | A read or write failed part way. |
+| 75 | temp_fail | Trying again later may work: a locked database, a port already in use. |
+| 77 | no_permission | The operating system refused access. |
+| 78 | config | A configuration file is present but wrong: antenna.yaml or a generator YAML file that does not parse, or a setting with an invalid value. |
+
+The harvest and generate actions do all their work first. When some feeds,
+collections or pages failed, they print the counts (for example "1 of 2
+feeds failed") and exit with the class of the first failure, in
+configuration order, not 0. A cron job that harvests daily will therefore
+see a non-zero status when a feed is down, and the other feeds will still
+have been harvested.
+
 # Also 
 
 - [antenna-themes (7)](antenna-themes.7.md)
