@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"path/filepath"
 )
 
@@ -95,10 +96,31 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 	case "stylefrom":
 		return app.ExtractStyles(out, args)
 	case "completion":
-		if len(args) != 1 {
-			return fmt.Errorf("usage: %s completion bash|powershell", app.appName)
+		usage := fmt.Errorf("usage: %s completion bash|powershell [-install]", app.appName)
+		install, shells := false, []string{}
+		for _, a := range args {
+			if a == "-install" || a == "--install" {
+				install = true
+			} else {
+				shells = append(shells, a)
+			}
 		}
-		return WriteCompletion(out, app.appName, args[0])
+		if len(shells) != 1 {
+			return usage
+		}
+		if !install {
+			return WriteCompletion(out, app.appName, shells[0])
+		}
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		path, err := InstallCompletion(app.appName, shells[0], home, os.Getenv("XDG_DATA_HOME"), runtime.GOOS)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "installed %s\n", path)
+		return nil
 	default:
 		return fmt.Errorf("%q not supported", action)
 	}

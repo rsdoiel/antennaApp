@@ -17,8 +17,11 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -236,3 +239,85 @@ Register-ArgumentCompleter -Native -CommandName {app_name},{app_name}.exe -Scrip
     }
 }
 `
+
+// completionMarker tags the profile line InstallCompletion adds, so a second
+// install finds it and leaves the profile alone.
+const completionMarker = "# antenna completion"
+
+/** InstallCompletion installs the completion script for a shell so it loads
+ * in every new session, and returns the path of the script it wrote.
+ *
+ * For bash the script goes in the bash-completion user directory
+ * ($XDG_DATA_HOME/bash-completion/completions/NAME, or the same under
+ * ~/.local/share), which bash-completion loads on demand. An existing file
+ * there is replaced only if it is an antenna completion script.
+ *
+ * For PowerShell the script is written beside the profile and the profile
+ * gets one line that dot-sources it. The line is added once.
+ *
+ * Parameters:
+ *   appName  (string) — binary name to register; a .exe suffix is ignored
+ *   shell    (string) — "bash" or "powershell" ("pwsh" is accepted)
+ *   home     (string) — the user's home directory
+ *   dataHome (string) — $XDG_DATA_HOME, or "" for the default
+ *   goos     (string) — runtime.GOOS, which picks the PowerShell profile location
+ *
+ * Returns:
+ *   (string, error) — the installed script path; an error for an unsupported
+ *   shell, a foreign file in the way, or a failed write
+ *
+ * Example:
+ *   path, err := InstallCompletion("antenna", "bash", home, "", "linux")
+ */
+func InstallCompletion(appName, shell, home, dataHome, goos string) (string, error) {
+	name := strings.TrimSuffix(appName, ".exe")
+	var script bytes.Buffer
+	if err := WriteCompletion(&script, appName, shell); err != nil {
+		return "", err
+	}
+	switch strings.ToLower(strings.TrimSpace(shell)) {
+	case "bash":
+		if dataHome == "" {
+			dataHome = filepath.Join(home, ".local", "share")
+		}
+		path := filepath.Join(dataHome, "bash-completion", "completions", name)
+		if old, err := os.ReadFile(path); err == nil {
+			if !strings.HasPrefix(string(old), "# bash completion for ") {
+				return "", fmt.Errorf("%s exists and was not written by %s, not overwriting", path, name)
+			}
+		} else if !os.IsNotExist(err) {
+			return "", err
+		}
+		return path, writeFileIn(path, script.Bytes())
+	default: // powershell, checked by WriteCompletion
+		profileDir := filepath.Join(home, ".config", "powershell")
+		if goos == "windows" {
+			profileDir = filepath.Join(home, "Documents", "PowerShell")
+		}
+		path := filepath.Join(profileDir, name+"-completion.ps1")
+		if err := writeFileIn(path, script.Bytes()); err != nil {
+			return "", err
+		}
+		profile := filepath.Join(profileDir, "Microsoft.PowerShell_profile.ps1")
+		line := fmt.Sprintf(". '%s' %s", path, completionMarker)
+		cur, err := os.ReadFile(profile)
+		if err != nil && !os.IsNotExist(err) {
+			return "", err
+		}
+		if strings.Contains(string(cur), path) {
+			return path, nil
+		}
+		if len(cur) > 0 && !bytes.HasSuffix(cur, []byte("\n")) {
+			cur = append(cur, '\n')
+		}
+		return path, os.WriteFile(profile, append(cur, []byte(line+"\n")...), 0o644)
+	}
+}
+
+// writeFileIn writes data to path, creating its directory first.
+func writeFileIn(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0o644)
+}
