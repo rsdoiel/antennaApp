@@ -1315,8 +1315,12 @@ the main content:
 The skip link is visually hidden off-screen until it receives keyboard
 focus, at which point it becomes visible.
 
+The target is <main id="main-content" tabindex="-1">; tabindex="-1" makes
+the link move keyboard focus into the main area, not just scroll to it.
+
 If you maintain your own stylesheet, add these rules:
 
+  main:focus { outline: none; }
   .skip-link {
     position: absolute;
     top: -999px;

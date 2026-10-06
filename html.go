@@ -598,7 +598,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 `, indentText(strings.TrimSpace(gen.TopContent), 2))
 	}
 	// main landmark wraps the primary feed content
-	fmt.Fprintln(out, `  <main id="main-content">`)
+	fmt.Fprintln(out, `  <main id="main-content" tabindex="-1">`)
 	stmt := SQLDisplayItems
 	rows, err := db.Query(stmt)
 	if err != nil {
@@ -692,7 +692,7 @@ func (gen *Generator) WritePageIndex(out io.Writer, db *sql.DB) error {
 	}
 	defer rows.Close()
 
-	fmt.Fprintln(out, `  <main id="main-content">`)
+	fmt.Fprintln(out, `  <main id="main-content" tabindex="-1">`)
 	fmt.Fprintln(out, "    <ul>")
 	for rows.Next() {
 		var inputPath, outputPath string
@@ -760,7 +760,7 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	// Now render our innerHTML
 	if pubDate != "" && link != "" {
 		fmt.Fprintf(out, `
-  <main id="main-content">
+  <main id="main-content" tabindex="-1">
     <article data-published=%q data-link=%q>
       %s
     </article>
@@ -769,7 +769,7 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 
 	} else {
 		fmt.Fprintf(out, `
-  <main id="main-content">
+  <main id="main-content" tabindex="-1">
     %s
   </main>
 `, indentText(innerHTML, 4))

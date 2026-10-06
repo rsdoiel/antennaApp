@@ -166,6 +166,12 @@ main {
   padding: var(--content-pad);
 }
 
+/* The skip link moves focus to <main> (tabindex="-1"); it is a landmark,
+   not a control, so no focus ring. */
+main:focus {
+  outline: none;
+}
+
 /* ------------------------------------------------------------------ */
 /* 6. Navigation                                                        */
 /* ------------------------------------------------------------------ */

@@ -165,3 +165,9 @@ func TestPatchGeneratorYAML_InstructsWhenLinkSectionExists(t *testing.T) {
 		t.Errorf("expected CSS href in instruction message, got: %q", msg)
 	}
 }
+
+func TestDefaultCSS_MainFocusHasNoOutline(t *testing.T) {
+	if !strings.Contains(DefaultCSS, "main:focus") {
+		t.Errorf("expected main:focus rule so the programmatic focus target shows no outline")
+	}
+}

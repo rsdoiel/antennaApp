@@ -1042,3 +1042,49 @@ func TestFormatItemDate(t *testing.T) {
 		})
 	}
 }
+
+// -------------------------------------------------------------------
+// Skip link target must take focus: <main> carries tabindex="-1" so
+// following #main-content moves keyboard focus into the main area
+// (WCAG 2.4.1) instead of leaving it on the skip link.
+// -------------------------------------------------------------------
+
+const focusableMain = `<main id="main-content" tabindex="-1">`
+
+func TestWriteHTML_MainIsFocusTarget(t *testing.T) {
+	gen := newTestGenerator()
+	db := newTestItemsDB(t)
+	defer db.Close()
+	var buf bytes.Buffer
+	if err := gen.WriteHTML(&buf, db, "", nil); err != nil {
+		t.Fatalf("WriteHTML: %s", err)
+	}
+	if !strings.Contains(buf.String(), focusableMain) {
+		t.Errorf("expected %s, got:\n%s", focusableMain, buf.String())
+	}
+}
+
+func TestWriteHtmlPage_MainIsFocusTarget(t *testing.T) {
+	gen := newTestGenerator()
+	tmpFile := filepath.Join(t.TempDir(), "test.html")
+	if err := gen.WriteHtmlPage(tmpFile, "", "", "", "<p>hi</p>", nil); err != nil {
+		t.Fatalf("WriteHtmlPage: %s", err)
+	}
+	content, _ := os.ReadFile(tmpFile)
+	if strings.Count(string(content), focusableMain) != 1 {
+		t.Errorf("expected one %s, got:\n%s", focusableMain, content)
+	}
+}
+
+func TestWritePageIndex_MainIsFocusTarget(t *testing.T) {
+	gen := &Generator{}
+	db := newTestPagesDB(t, [][2]string{{"about.md", "about.html"}})
+	defer db.Close()
+	var buf bytes.Buffer
+	if err := gen.WritePageIndex(&buf, db); err != nil {
+		t.Fatalf("WritePageIndex: %s", err)
+	}
+	if !strings.Contains(buf.String(), focusableMain) {
+		t.Errorf("expected %s, got:\n%s", focusableMain, buf.String())
+	}
+}
