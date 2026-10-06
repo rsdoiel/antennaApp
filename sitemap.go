@@ -4,9 +4,10 @@ import (
 	"database/sql"
 	"encoding/xml"
 	"fmt"
-	"log"
+	"io"
 	"os"
-	"time"
+	"path/filepath"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -14,7 +15,7 @@ import (
 // URL represents a single URL entry in the sitemap.
 type URL struct {
 	Loc        string `xml:"loc"`
-	LastMod    string `xml:"lastmod"`
+	LastMod    string `xml:"lastmod,omitempty"`
 	ChangeFreq string `xml:"changefreq,omitempty"`
 	Priority   string `xml:"priority,omitempty"`
 }
@@ -58,7 +59,7 @@ func (app *AntennaApp) Sitemap(cfgName string, args []string) error {
 	cfg.FreqRules = map[string]string{"blog/": "daily", "news/": "hourly"}
 	cfg.PriRules = map[string]string{"": "1.0", "blog/": "0.8", "about/": "0.7"}
 	*/
-	return generateSitemaps(cfg)
+	return generateSitemaps(cfg, os.Stderr)
 }
 
 // Sitemap implements the antenna sitemap action for TUI.
@@ -73,58 +74,103 @@ func (cfg *AppConfig) Sitemap() error {
 
 	// Setup some sain defaults.
 	cfg.ChunkSize = 100
-	return generateSitemaps(cfg)
+	return generateSitemaps(cfg, os.Stderr)
 }
 
-// generateSitemaps iterates over all the collections pages and posts and
-// generates the needed sitemaps
-func generateSitemaps(cfg *AppConfig) error {
-	sitemapFiles := []string{}
+/** generateSitemaps writes the site's sitemap files and index into the
+ * document root (cfg.Htdocs).
+ *
+ * What is listed: the pages of the site, which come only from the pages
+ * collection (pages.md), and the local posts, which are the items with a
+ * postPath in any collection. Harvested feed items are not pages of this site
+ * and are never listed. A collection whose database has no pages table
+ * (an older database) has no pages, which is not a failure; its posts still
+ * count.
+ *
+ * Every collection is processed even when one fails; the failures are then
+ * reported with the class of the first (DR-0003). When there is nothing to
+ * list the function warns on eout, writes no file, and succeeds: an
+ * aggregation-only site has no sitemap, and an empty one is not valid per the
+ * sitemaps.org schema.
+ *
+ * Parameters:
+ *   cfg  (*AppConfig) — the loaded antenna.yaml, with BaseURL and ChunkSize set
+ *   eout (io.Writer)  — where warnings and progress are written
+ *
+ * Returns:
+ *   error — nil, or the failures of the collections that could not be read,
+ *           or an error writing a sitemap file
+ *
+ * Example:
+ *   err := generateSitemaps(cfg, os.Stderr)
+ */
+func generateSitemaps(cfg *AppConfig, eout io.Writer) error {
+	tally := &failureTally{}
+	urls := []URL{}
+	seen := map[string]bool{}
 	for _, col := range cfg.Collections {
 		if col.DbName == "" {
-			fmt.Fprintf(os.Stderr, "%q is missing SQLite3 db name\n", col.File)
+			fmt.Fprintf(eout, "%q is missing SQLite3 db name\n", col.File)
 			continue
 		}
-		l, err := sitemap(cfg, col.DbName)
+		colURLs, err := collectionURLs(cfg, col)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%q (%q) sitemap error, %s\n", col.File, col.DbName, err)
+			fmt.Fprintf(eout, "%q (%q) sitemap error, %s\n", col.File, col.DbName, err)
+			tally.add(fmt.Errorf("%s: %w", col.File, err))
+		} else {
+			tally.add(nil)
 		}
-		sitemapFiles = append(sitemapFiles, l...)
+		for _, u := range colURLs {
+			if !seen[u.Loc] {
+				seen[u.Loc] = true
+				urls = append(urls, u)
+			}
+		}
 	}
-	if len(sitemapFiles) == 0 {
-		return negativef("no posts or pages found in any collection")
+	if len(urls) == 0 {
+		fmt.Fprintln(eout, "warning: no pages or posts found in any collection, no sitemap written")
+		return tally.err("collections")
 	}
 
-	// Create the sitemap index
+	// Chunk across the whole run so file names are unique and each file is
+	// named once in the index.
+	chunk := cfg.ChunkSize
+	if chunk <= 0 {
+		chunk = 100
+	}
 	var sitemaps []struct {
 		Loc string `xml:"loc"`
 	}
-	for _, file := range sitemapFiles {
+	for i := 0; i < len(urls); i += chunk {
+		end := i + chunk
+		if end > len(urls) {
+			end = len(urls)
+		}
+		urlSet := URLSet{Xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9", URLs: urls[i:end]}
+		xmlData, err := xml.MarshalIndent(urlSet, "", "  ")
+		if err != nil {
+			return internalErrorf("failed to marshal sitemap chunk %d: %w", i/chunk+1, err)
+		}
+		name := fmt.Sprintf("sitemap_%d.xml", i/chunk+1)
+		if err := os.WriteFile(filepath.Join(cfg.Htdocs, name), []byte(xml.Header+string(xmlData)), 0644); err != nil {
+			return fmt.Errorf("failed to write %s: %w", name, asCreate(err))
+		}
 		sitemaps = append(sitemaps, struct {
 			Loc string `xml:"loc"`
-		}{
-			Loc: fmt.Sprintf("%s/%s", cfg.BaseURL, file),
-		})
-	}
-	index := SitemapIndex{
-		Xmlns:    "http://www.sitemaps.org/schemas/sitemap/0.9",
-		Sitemaps: sitemaps,
+		}{Loc: fmt.Sprintf("%s/%s", cfg.BaseURL, name)})
+		fmt.Fprintf(eout, "Generated %s with %d URLs\n", name, end-i)
 	}
 
-	// Marshal the index to XML
+	index := SitemapIndex{Xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9", Sitemaps: sitemaps}
 	indexData, err := xml.MarshalIndent(index, "", "  ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal sitemap index: %w", err)
+		return internalErrorf("failed to marshal sitemap index: %w", err)
 	}
-	indexData = []byte(xml.Header + string(indexData))
-
-	// Write the index to file
-	if err := os.WriteFile("sitemap_index.xml", indexData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(cfg.Htdocs, "sitemap_index.xml"), []byte(xml.Header+string(indexData)), 0644); err != nil {
 		return fmt.Errorf("failed to write sitemap_index.xml: %w", asCreate(err))
 	}
-
-	log.Println("Sitemap files and index generated successfully!")
-	return nil
+	fmt.Fprintln(eout, "Sitemap files and index generated successfully!")
+	return tally.err("collections")
 }
 
 // startsWith checks if a string starts with a prefix.
@@ -132,69 +178,44 @@ func startsWith(s, prefix string) bool {
 	return len(s) >= len(prefix) && s[:len(prefix)] == prefix
 }
 
-// sitemap generates the needed sitemaps for a given collection
-func sitemap(cfg *AppConfig, dbName string) ([]string, error) {
-	var (
-		urls         []URL
-		sitemapFiles []string
-	)
+// isPagesCollection reports whether col is the pages collection, the one that
+// holds the site's pages table (antenna page adds to pages.md).
+func isPagesCollection(col *Collection) bool {
+	base := filepath.Base(col.File)
+	return strings.TrimSuffix(base, filepath.Ext(base)) == "pages"
+}
 
-	// Open the SQLite database
-	db, err := sql.Open("sqlite3", dbName)
+// collectionURLs returns the sitemap URLs for one collection: its pages (the
+// pages collection only) and its local posts. A database file that does not
+// exist is reported as an error and is never created by looking at it.
+func collectionURLs(cfg *AppConfig, col *Collection) ([]URL, error) {
+	if _, err := os.Stat(col.DbName); err != nil {
+		return nil, err
+	}
+	db, err := sql.Open("sqlite3", col.DbName)
 	if err != nil {
-		return sitemapFiles, fmt.Errorf("failed to open database (%s): %w", dbName, err)
+		return nil, fmt.Errorf("failed to open database (%s): %w", col.DbName, err)
 	}
 	defer db.Close()
-
-	// Process pages and posts for collection
-	if pageUrls, err := processSitemapRows(cfg, dbName, db, SQLSitemapListPages); err != nil {
-		return sitemapFiles, err
-	} else {
-		urls = append(urls, pageUrls...)
-	}
-	if postUrls, err := processSitemapRows(cfg, dbName, db, SQLSitemapListPosts); err != nil {
-		return sitemapFiles, err
-	} else {
-		urls = append(urls, postUrls...)
-	}
-
-	if len(urls) == 0 {
-		fmt.Fprintf(os.Stderr, "No pages or posts found in %s database\n", dbName)
-		return nil, nil
-	}
-
-	// Split URLs into chunks
-	for i := 0; i < len(urls); i += cfg.ChunkSize {
-		end := i + cfg.ChunkSize
-		if end > len(urls) {
-			end = len(urls)
+	urls := []URL{}
+	if isPagesCollection(col) {
+		var n int
+		if err := db.QueryRow(SQLHasPagesTable).Scan(&n); err != nil {
+			return nil, fmt.Errorf("failed to inspect %s: %w", col.DbName, err)
 		}
-		chunk := urls[i:end]
-
-		// Create the URLSet for this chunk"
-		urlSet := URLSet{
-			Xmlns: "http://www.sitemaps.org/schemas/sitemap/0.9",
-			URLs:  chunk,
+		if n > 0 {
+			pageURLs, err := processSitemapRows(cfg, col.DbName, db, SQLSitemapListPages)
+			if err != nil {
+				return urls, err
+			}
+			urls = append(urls, pageURLs...)
 		}
-
-		// Marshal to XML
-		xmlData, err := xml.MarshalIndent(urlSet, "", "  ")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to marshal XML for chunk %d: %v\n", i/cfg.ChunkSize+1, err)
-			continue
-		}
-		xmlData = []byte(xml.Header + string(xmlData))
-
-		// Write to file
-		filename := fmt.Sprintf("sitemap_%d.xml", i/cfg.ChunkSize+1)
-		if err := os.WriteFile(filename, xmlData, 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to write sitemap file %s: %v\n", filename, err)
-			continue
-		}
-		sitemapFiles = append(sitemapFiles, filename)
-		log.Printf("Generated %s with %d URLs", filename, len(chunk))
 	}
-	return sitemapFiles, nil
+	postURLs, err := processSitemapRows(cfg, col.DbName, db, SQLSitemapListPosts)
+	if err != nil {
+		return urls, err
+	}
+	return append(urls, postURLs...), nil
 }
 
 func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt string) ([]URL, error) {
@@ -209,7 +230,7 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 	tally := &failureTally{}
 	for rows.Next() {
 		var outputPath string
-		var updated time.Time
+		var updated sql.NullTime
 		if err := rows.Scan(&outputPath, &updated); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to scan row (%s): %s\n", dbName, err)
 			tally.add(dataErrorf("failed to scan row (%s): %w", dbName, err))
@@ -234,7 +255,10 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 		}
 		u := URL{
 			Loc:     fmt.Sprintf("%s/%s", cfg.BaseURL, outputPath),
-			LastMod: updated.Format("2006-01-02"),
+		}
+		// A row with no updated date is still listed, without lastmod.
+		if updated.Valid {
+			u.LastMod = updated.Time.Format("2006-01-02")
 		}
 		if changeFreq != "" {
 			u.ChangeFreq = changeFreq

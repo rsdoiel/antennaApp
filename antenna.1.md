@@ -316,7 +316,7 @@ wrong from the number alone.
 | Code | Class | Meaning |
 |-----:|-------|---------|
 | 0 | ok | Success. A listing that matches nothing (posts, items, pages) is still 0. |
-| 1 | negative | The command ran and the answer is no: the named collection is not in the configuration, nothing to build a sitemap from, an action you cancelled. |
+| 1 | negative | The command ran and the answer is no: the named collection is not in the configuration, an action you cancelled. |
 | 2 | usage | The command line is wrong and nothing was attempted: unknown action, flag or help topic, a missing or surplus argument, a bad date or count. |
 | 65 | data | Content that was read is wrong: a document with unclosed front matter, a file that is not a valid ODT, a feed that does not parse, a damaged database. |
 | 66 | no_input | A named file or the workspace is missing: no antenna.yaml, no such Markdown file. |

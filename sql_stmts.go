@@ -280,8 +280,13 @@ ORDER BY outputPath
     END as outputPath,
 	updated
 FROM items
-WHERE pubDate IS NOT NULL AND pubDate != ""
+WHERE postPath IS NOT NULL AND postPath != ""
+  AND pubDate IS NOT NULL AND pubDate != ""
 ORDER BY postPath;`
+
+	// SQLHasPagesTable counts the pages table: 0 for an older database that
+	// predates it.
+	SQLHasPagesTable = `SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'pages';`
 
 	// SQLDeletePageByPath removes a page by either input or output paths.
 	SQLDeletePageByPath = `DELETE

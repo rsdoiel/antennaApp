@@ -335,7 +335,7 @@ wrong from the number alone.
 | Code | Class | Meaning |
 |-----:|-------|---------|
 | 0 | ok | Success. A listing that matches nothing (posts, items, pages) is still 0. |
-| 1 | negative | The command ran and the answer is no: the named collection is not in the configuration, nothing to build a sitemap from, an action you cancelled. |
+| 1 | negative | The command ran and the answer is no: the named collection is not in the configuration, an action you cancelled. |
 | 2 | usage | The command line is wrong and nothing was attempted: unknown action, flag or help topic, a missing or surplus argument, a bad date or count. |
 | 65 | data | Content that was read is wrong: a document with unclosed front matter, a file that is not a valid ODT, a feed that does not parse, a damaged database. |
 | 66 | no_input | A named file or the workspace is missing: no antenna.yaml, no such Markdown file. |
@@ -1157,8 +1157,15 @@ sitemap
 # DESCRIPTION
 
 Generates a set of sitemap files (sitemap_index.xml, sitemap_1.xml, ...)
-for all pages and posts found via antenna.yaml. Place these in the root of
-your htdocs directory so search engines can discover your content.
+in the htdocs directory so search engines can discover your content.
+
+The sitemap lists the pages of your site, which come from the pages
+collection (pages.md), and your local posts, which are the items with a
+postPath in any collection. Items harvested from feeds are not pages of your
+site and are never listed, so a site that only aggregates feeds has no
+sitemap. When there is nothing to list, {app_name} says so on standard error,
+writes no files and exits 0. A collection whose database file is missing is
+reported and the others are still mapped, then the command exits 66.
 
 # EXAMPLES
 
