@@ -1,4 +1,4 @@
-%antenna(7) user manual | version 0.0.28 b1b3deb
+%antenna(7) user manual | version 0.0.28 1e5ac36
 % R. S. Doiel
 % 2026-10-05
 

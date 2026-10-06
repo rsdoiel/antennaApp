@@ -20,8 +20,15 @@
 </nav>
 <main id="main-content">
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.27">antennaApp 0.0.27</h2>
+<h2 id="antennaapp-0.0.28">antennaApp 0.0.28</h2>
 <ul>
+<li>Fixed the release binaries: v0.0.27 was tagged, but its
+cross-compiled builds failed on a cgo-only SQLite symbol, so it has no
+downloadable binaries; this is the first release of that code with
+binaries for all seven platforms</li>
+<li>Fixed <code>antenna sitemap</code> in cross-compiled binaries: it
+opened a cgo-only SQLite driver and failed at run time without cgo</li>
+<li>Everything in v0.0.27:</li>
 <li>Added <code>antenna completion bash|powershell</code>, with
 <code>-install</code> to set up completion for every new session</li>
 <li>Exit codes now follow the workspace convention (DR-0003): 0 ok, 1
