@@ -311,7 +311,9 @@ ORDER BY pubDate DESC`
 
 	// SQLListItems will list all items by their descending pubDate
 	SQLListItems = `SELECT
-  link, title, description, sourceMarkdown, pubDate, postPath, status, channel, label, updated
+  link, ifnull(title, ''), ifnull(description, ''), ifnull(sourceMarkdown, ''),
+  ifnull(pubDate, ''), ifnull(postPath, ''), ifnull(status, ''),
+  ifnull(channel, ''), ifnull(label, ''), ifnull(updated, '')
 FROM items
 ORDER BY pubDate DESC`
 

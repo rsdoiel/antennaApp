@@ -112,3 +112,22 @@ func TestItemsFromDB_LongPubDate(t *testing.T) {
 		t.Errorf("time component should be stripped from pubDate, got:\n%s", out)
 	}
 }
+
+// Harvested rows can carry NULL in columns the schema does not forbid it in
+// (the live-site databases have NULL sourceMarkdown). Such a row is listed,
+// not dropped with a message while the command exits 0.
+func TestItemsFromDB_NullColumnsAreListed(t *testing.T) {
+	db := newTestItemsDB(t)
+	defer db.Close()
+	if _, err := db.Exec(`INSERT INTO items (link, title, pubDate, status, description, sourceMarkdown, postPath, label)
+		VALUES ('https://example.com/null', 'Has nulls', '2026-10-05', 'published', NULL, NULL, NULL, NULL)`); err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	if err := itemsFromDB(&buf, db); err != nil {
+		t.Fatalf("itemsFromDB: %s", err)
+	}
+	if !strings.Contains(buf.String(), "[Has nulls](https://example.com/null)") {
+		t.Errorf("a row with NULL columns was dropped; output:\n%s", buf.String())
+	}
+}
