@@ -32,7 +32,6 @@ import (
 
 	// 3rd Party Packages
 	sqlite "github.com/glebarez/go-sqlite"
-	sqlite3 "github.com/mattn/go-sqlite3"
 	"gopkg.in/yaml.v3"
 )
 
@@ -151,9 +150,8 @@ func classify(err error) (exitClass, bool) {
 	if errors.As(err, &sqlErr) {
 		return sqliteClass(sqlErr.Code()), true
 	}
-	var sqlErr3 sqlite3.Error
-	if errors.As(err, &sqlErr3) {
-		return sqliteClass(int(sqlErr3.Code)), true
+	if code, ok := mattnSQLiteCode(err); ok {
+		return sqliteClass(code), true
 	}
 	// Content that would not decode is wrong content, whichever verb read it.
 	var syn *json.SyntaxError

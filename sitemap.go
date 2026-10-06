@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/glebarez/go-sqlite"
 )
 
 // URL represents a single URL entry in the sitemap.
@@ -269,7 +269,9 @@ func collectionURLs(cfg *AppConfig, col *Collection) ([]URL, error) {
 	if _, err := os.Stat(col.DbName); err != nil {
 		return nil, err
 	}
-	db, err := sql.Open("sqlite3", col.DbName)
+	// The pure-Go driver, like every other command: the cgo-only "sqlite3"
+	// driver does not work in the cross-compiled release binaries.
+	db, err := sql.Open("sqlite", col.DbName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database (%s): %w", col.DbName, err)
 	}
