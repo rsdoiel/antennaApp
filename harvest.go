@@ -171,11 +171,11 @@ func webget(userAgent string, href string) (*gofeed.Feed, error) {
 		return nil, unavailablef("http error: %s", res.Status)
 	}
 	// See if we can clean up some stuff that'll break feed parsing
-	src, err := io.ReadAll(res.Body)
-	if err != err {
-		return nil, err
-	}
 	defer res.Body.Close()
+	src, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, unavailablef("reading %s: %w", href, err)
+	}
 	src = bytes.ReplaceAll(src, []byte(``), []byte(``))
 	buf := bytes.NewBuffer(src)
 
