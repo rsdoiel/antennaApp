@@ -19,3 +19,6 @@ demo/*.db
 demo/*.bash
 demo/blog/
 blog_demo/
+
+# PageFind output is generated, large and changes on every build; never commit it.
+pagefind/
