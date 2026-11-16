@@ -24,7 +24,7 @@ To match the workspace standard (knowledge and opml are the models; Go 1.27.3 ac
 - [x] Makefile: add `check-release` and make `release` run `generate` then `check-release`.
 - [x] Makefile: add `check-go-version` (go.mod, codemeta.json and the Go in use agree); `check-release` calls it.
 - [x] Drop the armv7l target and 32-bit Pi wording (dropped 2026-10-27).
-- [ ] publish.bash/publish.ps1: take knowledge's checked versions (a failed pull no longer publishes nothing silently).
-- [ ] release.bash: bring up to fountain's version.
-- [ ] release.ps1: take knowledge's (existing-draft check, checksums).
+- [x] publish.bash/publish.ps1: take knowledge's checked versions (a failed pull no longer publishes nothing silently).
+- [x] release.bash: matches fountain's apart from the generated-by header.
+- [x] release.ps1: take knowledge's (existing-draft check, checksums).
 - [ ] website.mak, page.tmpl, add-col-scope.lua, website.ps1: take knowledge's (check `NO_PUBLISH` and nav links).
