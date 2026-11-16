@@ -40,7 +40,7 @@ version: 0.0.28
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
-  - Go
+  - Go >= 1.27.3
 
 keywords:
   - RSS
@@ -110,14 +110,14 @@ Features:
 
 ## Programming languages
 
-- Go
+- Go >= 1.27.3
 
 
 
 
 ## Software Requirements
 
-- Go >= 1.26.2
+- Go >= 1.27.3
 - CMTools >= 0.0.45b
 
 

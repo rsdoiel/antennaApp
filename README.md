@@ -43,7 +43,7 @@ To run Antenna App you just need to [install](INSTALL.md) it on a Raspberry Pi, 
 
 Requirements top compile the Antenna App from source code.
 
-- Go >= 1.26.2
+- Go >= 1.27.3
 
 ### Software Suggestions
 
