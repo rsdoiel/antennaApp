@@ -87,9 +87,63 @@ func (cfg *AppConfig) GenerateTOC(eout io.Writer) error {
 	warnf := func(format string, args ...any) {
 		fmt.Fprintf(eout, "warning: toc.opml: "+format+"\n", args...)
 	}
+	data, state, tallyErr, err := cfg.buildTOC(warnf)
+	if err != nil {
+		return err
+	}
+	htdocs := cfg.Htdocs
+	if htdocs == "" {
+		htdocs = "."
+	}
+	tocPath := filepath.Join(htdocs, tocFileName)
+	switch state {
+	case tocNoBase:
+		return nil
+	case tocNothing:
+		if err := os.Remove(tocPath); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		return tallyErr
+	}
+	if err := os.MkdirAll(filepath.Dir(tocPath), 0o775); err != nil {
+		return asCreate(err)
+	}
+	if _, err := writeStable(tocPath, data, 0o666, tocStamps...); err != nil {
+		return err
+	}
+	return tallyErr
+}
+
+// tocState says what buildTOC found to write.
+type tocState int
+
+const (
+	tocNoBase  tocState = iota // no base_url: no table of contents is written
+	tocNothing                 // nothing to list: no table of contents is written
+	tocBuilt                   // data holds the file
+)
+
+/** buildTOC works out the content of toc.opml without writing it, so generate
+ * and validate agree on what the file should be (DR-0013, DR-0017 5). The
+ * warnings generate prints (a page whose Markdown is not published, a post with
+ * an unreadable date) go to warnf.
+ *
+ * Parameters:
+ *   warnf (func(string, ...any)) — receives each warning as a format and arguments
+ *
+ * Returns:
+ *   []byte   — the file, with its XML declaration, when the state is tocBuilt
+ *   tocState — whether there is a file to write
+ *   error    — the failures of reading rows, to be returned after the file is written
+ *   error    — a failure to build the document
+ *
+ * Example:
+ *   data, state, tallyErr, err := cfg.buildTOC(func(string, ...any) {})
+ */
+func (cfg *AppConfig) buildTOC(warnf func(string, ...any)) ([]byte, tocState, error, error) {
 	if strings.TrimSpace(cfg.BaseURL) == "" {
 		warnf("no base_url in the configuration, so no table of contents is written")
-		return nil
+		return nil, tocNoBase, nil, nil
 	}
 	htdocs := cfg.Htdocs
 	if htdocs == "" {
@@ -100,13 +154,9 @@ func (cfg *AppConfig) GenerateTOC(eout io.Writer) error {
 	collections := cfg.tocCollections(htdocs)
 	posts := cfg.tocPosts(htdocs, warnf, tally)
 
-	tocPath := filepath.Join(htdocs, tocFileName)
 	if len(pages)+len(collections)+len(posts)+len(cfg.Subsites) == 0 {
-		if err := os.Remove(tocPath); err != nil && !os.IsNotExist(err) {
-			return err
-		}
 		warnf("nothing to list (no published pages, collection items pages or posts), so no table of contents is written")
-		return tally.err("table of contents")
+		return nil, tocNothing, tally.err("table of contents"), nil
 	}
 
 	base := strings.TrimRight(cfg.BaseURL, "/")
@@ -131,15 +181,9 @@ func (cfg *AppConfig) GenerateTOC(eout io.Writer) error {
 	}
 	src, err := xml.MarshalIndent(o, "", "\t")
 	if err != nil {
-		return fmt.Errorf("toc.opml: %w", err)
+		return nil, tocBuilt, nil, fmt.Errorf("toc.opml: %w", err)
 	}
-	if err := os.MkdirAll(filepath.Dir(tocPath), 0o775); err != nil {
-		return asCreate(err)
-	}
-	if _, err := writeStable(tocPath, []byte(xml.Header+string(src)+"\n"), 0o666, tocStamps...); err != nil {
-		return err
-	}
-	return tally.err("table of contents")
+	return []byte(xml.Header + string(src) + "\n"), tocBuilt, tally.err("table of contents"), nil
 }
 
 // tocTitle is the host and path of the site's base address, as Dave Winer's

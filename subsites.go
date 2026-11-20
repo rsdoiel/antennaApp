@@ -123,10 +123,9 @@ func (cfg *AppConfig) GenerateBonbonJSON(eout io.Writer) error {
 				map[bool]string{true: "keeps an empty one, which breaks it", false: "ignores any other type"}[isString])
 		}
 	}
-	// encoding/json sorts the keys of a map.
-	src, err := json.MarshalIndent(cfg.Bonbon, "", "  ")
+	src, err := cfg.bonbonJSONBytes()
 	if err != nil {
-		return configErrorf("bonbon in antenna.yaml cannot be written as JSON: %w", err)
+		return err
 	}
 	htdocs := cfg.Htdocs
 	if htdocs == "" {
@@ -136,8 +135,19 @@ func (cfg *AppConfig) GenerateBonbonJSON(eout io.Writer) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o775); err != nil {
 		return asCreate(err)
 	}
-	if _, err := writeStable(path, append(src, '\n'), 0o666); err != nil {
+	if _, err := writeStable(path, src, 0o666); err != nil {
 		return err
 	}
 	return nil
+}
+
+// bonbonJSONBytes is the content of bonbon.json for the bonbon mapping: a JSON
+// object with sorted keys (encoding/json sorts the keys of a map), two-space
+// indent and a final newline.
+func (cfg *AppConfig) bonbonJSONBytes() ([]byte, error) {
+	src, err := json.MarshalIndent(cfg.Bonbon, "", "  ")
+	if err != nil {
+		return nil, configErrorf("bonbon in antenna.yaml cannot be written as JSON: %w", err)
+	}
+	return append(src, '\n'), nil
 }

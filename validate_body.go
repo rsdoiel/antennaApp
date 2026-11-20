@@ -216,7 +216,7 @@ func (v *validator) checkLink(file, from, dest string, line int, byHTML map[stri
 	}
 	if u.Scheme == "http" || u.Scheme == "https" {
 		if v.cfg != nil && strings.TrimSpace(v.cfg.BaseURL) != "" &&
-			strings.HasPrefix(dest, strings.TrimRight(v.cfg.BaseURL, "/")+"/") {
+			strings.HasPrefix(dest, strings.TrimRight(v.cfg.BaseURL, "/")+"/") && v.isOwnAddress(u, byHTML) {
 			v.add("link-absolute-self", SeverityInfo, file, line,
 				"%s is an address on this site; a relative link works for every reader", dest)
 		}
@@ -265,6 +265,28 @@ func (v *validator) checkLink(file, from, dest string, line int, byHTML map[stri
 			v.add("link-missing", SeverityWarning, file, line, "%s does not exist", dest)
 		}
 	}
+}
+
+// isOwnAddress reports whether an absolute address under base_url is a page or
+// file of this site. base_url names the whole host, which can hold other sites,
+// so an address that is none of this site's pages, posts or files is not "on
+// this site".
+func (v *validator) isOwnAddress(u *url.URL, byHTML map[string][]string) bool {
+	base, err := url.Parse(strings.TrimRight(v.cfg.BaseURL, "/"))
+	if err != nil {
+		return false
+	}
+	site := path.Clean(strings.TrimPrefix(strings.TrimPrefix(u.Path, base.Path), "/"))
+	if site == "." || site == "" {
+		return false
+	}
+	if _, ok := byHTML[site]; ok {
+		return true
+	}
+	if _, ok := v.targets[site]; ok {
+		return true
+	}
+	return v.existsInSite(site)
 }
 
 // checkMacros reports a {{page.NAME}} that names a key the page does not have,

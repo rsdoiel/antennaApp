@@ -92,10 +92,15 @@ func TestValidateLinkUnrenderedAndLinkMissing(t *testing.T) {
 
 func TestValidateLinkAbsoluteSelfIsInfo(t *testing.T) {
 	bodySite(t)
-	write(t, "docs/p.md", bodyDoc("[About](http://localhost:8000/about.html)\n"))
+	// base_url covers the whole host, which also holds other sites: only an
+	// address that is a page or file of this site is "on this site".
+	write(t, "docs/p.md", bodyDoc("[About](http://localhost:8000/about.html)\n\n[Other site](http://localhost:8000/othersite/)\n\n[Elsewhere](http://localhost:8000/mkpage/docs.html)\n"))
 	out, err := runValidate(t, "docs/p.md")
 	if _, ok := finding(out, "docs/p.md", "info", "link-absolute-self"); !ok {
 		t.Errorf("no link-absolute-self:\n%s", out)
+	}
+	if n := strings.Count(out, "link-absolute-self"); n != 1 {
+		t.Errorf("want one finding, for about.html only (not another site on the host), got %d:\n%s", n, out)
 	}
 	if err != nil {
 		t.Errorf("info alone must exit 0, got %v", err)

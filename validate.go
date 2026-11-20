@@ -69,6 +69,7 @@ func (e *findingsError) Error() string {
 
 // validator holds the state of one validate run.
 type validator struct {
+	cfgName  string      // the configuration file, for findings about it
 	cfg      *AppConfig  // nil when a file or directory is checked with no antenna.yaml
 	targets  LinkTargets // what antenna renders, nil when cfg is nil
 	online   bool
@@ -171,7 +172,7 @@ func parseValidateArgs(args []string) (jsonMode, online bool, target string, err
 }
 
 func (app *AntennaApp) validate(out io.Writer, cfgName, target string, jsonMode, online bool) error {
-	v := &validator{online: online}
+	v := &validator{online: online, cfgName: cfgName}
 	cfg := &AppConfig{}
 	cfgErr := cfg.LoadConfig(cfgName)
 	var files []string
@@ -409,6 +410,3 @@ func relativeToWorkDir(p string) string {
 	}
 	return filepath.ToSlash(p)
 }
-
-// checkSite runs the checks that look at the whole site (DR-0017 5).
-func (v *validator) checkSite() {}
