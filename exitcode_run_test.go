@@ -258,3 +258,21 @@ func TestRun_SurplusArgumentsAreUsage(t *testing.T) {
 		wantClass(t, c.verb+" with a surplus argument", runIn(t, c.verb, c.args...), classUsage)
 	}
 }
+
+// DR-0003 item 1: unpage of a path no page record matches ran correctly and
+// the answer is no (1). A page that is there is removed (0), and a second
+// unpage of the same path is then the negative case.
+func TestRun_UnpageNoMatchIsNegative(t *testing.T) {
+	newWorkspace(t, true)
+	if err := os.WriteFile("about.md", []byte("---\ntitle: About\n---\n\nHello\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	wantClass(t, "unpage of a path never paged", runIn(t, "unpage", "nosuch.md"), classNegative)
+	if err := runIn(t, "page", "about.md"); err != nil {
+		t.Fatalf("page: %s", err)
+	}
+	if err := runIn(t, "unpage", "about.md"); err != nil {
+		t.Errorf("unpage of a paged file: want no error, got %v", err)
+	}
+	wantClass(t, "second unpage of the same path", runIn(t, "unpage", "about.md"), classNegative)
+}

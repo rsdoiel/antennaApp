@@ -151,8 +151,13 @@ func (cfg *AppConfig) Unpage(fName string) error {
 	}
 	defer db.Close()
 
-	if _, err := db.Exec(SQLDeletePageByPath, fName, fName); err != nil {
+	res, err := db.Exec(SQLDeletePageByPath, fName, fName)
+	if err != nil {
 		return fmt.Errorf("%s, %w", dsn, err)
+	}
+	// No matching record is a negative answer (exit 1), not a success.
+	if n, err := res.RowsAffected(); err == nil && n == 0 {
+		return negativef("no page record matches %q", fName)
 	}
 	return nil
 }

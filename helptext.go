@@ -1347,7 +1347,8 @@ unpage
 # DESCRIPTION
 
 Removes the page record associated with INPUT_PATH from the pages collection.
-The HTML and Markdown files on disk are not deleted.
+The HTML and Markdown files on disk are not deleted. When no page record
+matches INPUT_PATH, {app_name} prints an error and exits 1.
 
 # PARAMETERS
 
