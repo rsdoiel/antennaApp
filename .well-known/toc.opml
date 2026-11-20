@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+	<head>
+		<title>antennaApp</title>
+		<dateModified>Fri, 20 Nov 2026 13:57:44 -0800</dateModified>
+	</head>
+	<body>
+		<outline text="Pages">
+			<outline text="Antenna App" url="https://rsdoiel.github.io/antennaApp/index.md"></outline>
+			<outline text="User Manual" url="https://rsdoiel.github.io/antennaApp/user_manual.md"></outline>
+			<outline text="Getting Started" url="https://rsdoiel.github.io/antennaApp/getting_started.md"></outline>
+			<outline text="Tutorial" url="https://rsdoiel.github.io/antennaApp/tutorial.md"></outline>
+			<outline text="Build a Blog with Antenna" url="https://rsdoiel.github.io/antennaApp/Build_a_Blog_with_Antenna_App.md"></outline>
+			<outline text="Build a Link Blog with Antenna" url="https://rsdoiel.github.io/antennaApp/Build_a_Link_Blog_with_Antenna_App.md"></outline>
+			<outline text="Simple Websites using Markdown" url="https://rsdoiel.github.io/antennaApp/simple_websites_using_Markdown.md"></outline>
+			<outline text="INSTALL" url="https://rsdoiel.github.io/antennaApp/INSTALL.md"></outline>
+			<outline text="Installing an unsigned executable on macOS" url="https://rsdoiel.github.io/antennaApp/INSTALL_NOTES_macOS.md"></outline>
+			<outline text="Installing an unsigned executable on Windows" url="https://rsdoiel.github.io/antennaApp/INSTALL_NOTES_Windows.md"></outline>
+			<outline text="antennaApp" url="https://rsdoiel.github.io/antennaApp/about.md"></outline>
+			<outline text="Changes" url="https://rsdoiel.github.io/antennaApp/CHANGES.md"></outline>
+			<outline text="Development Notes" url="https://rsdoiel.github.io/antennaApp/development_notes.md"></outline>
+			<outline text="Example Collection" url="https://rsdoiel.github.io/antennaApp/example.md"></outline>
+			<outline text="Antenna App — Design: HTML Accessibility and ARIA Improvements" url="https://rsdoiel.github.io/antennaApp/design_accessibility.md"></outline>
+			<outline text="Design: Enhanced Metadata Processing" url="https://rsdoiel.github.io/antennaApp/design_enhanced_metadata.md"></outline>
+			<outline text="Curate Concept" url="https://rsdoiel.github.io/antennaApp/design_ideas_for_curate.md"></outline>
+			<outline text="Design: Feed Item Formatting Control" url="https://rsdoiel.github.io/antennaApp/design_item_formatting.md"></outline>
+			<outline text="Antenna App — Implementation Plan: HTML Accessibility and ARIA" url="https://rsdoiel.github.io/antennaApp/plan_accessibility.md"></outline>
+			<outline text="Implementation Plan: Enhanced Metadata Processing" url="https://rsdoiel.github.io/antennaApp/plan_enhanced_metadata.md"></outline>
+			<outline text="Implementation Plan: Feed Item Formatting Control" url="https://rsdoiel.github.io/antennaApp/plan_item_formatting.md"></outline>
+			<outline text="Enhanced Front Matter Processing Feature Request" url="https://rsdoiel.github.io/antennaApp/enhanced_front_matter_processing_feature_request.md"></outline>
+			<outline text="Design: Item Layout Control in `page.yaml`" url="https://rsdoiel.github.io/antennaApp/item_formatting_proposal.md"></outline>
+			<outline text="Proposal: Per-Collection Archiving to archive.org with an Alternate Reading Link" url="https://rsdoiel.github.io/antennaApp/archive_alternate_link_proposal.md"></outline>
+		</outline>
+		<outline text="Manual pages">
+			<outline text="antenna accessibility" url="https://rsdoiel.github.io/antennaApp/antenna-accessibility.7.md"></outline>
+			<outline text="antenna add" url="https://rsdoiel.github.io/antennaApp/antenna-add.7.md"></outline>
+			<outline text="antenna apply" url="https://rsdoiel.github.io/antennaApp/antenna-apply.7.md"></outline>
+			<outline text="antenna blogit" url="https://rsdoiel.github.io/antennaApp/antenna-blogit.7.md"></outline>
+			<outline text="antenna completion" url="https://rsdoiel.github.io/antennaApp/antenna-completion.7.md"></outline>
+			<outline text="antenna configuration" url="https://rsdoiel.github.io/antennaApp/antenna-configuration.7.md"></outline>
+			<outline text="antenna css" url="https://rsdoiel.github.io/antennaApp/antenna-css.7.md"></outline>
+			<outline text="antenna del" url="https://rsdoiel.github.io/antennaApp/antenna-del.7.md"></outline>
+			<outline text="antenna generate" url="https://rsdoiel.github.io/antennaApp/antenna-generate.7.md"></outline>
+			<outline text="antenna harvest" url="https://rsdoiel.github.io/antennaApp/antenna-harvest.7.md"></outline>
+			<outline text="antenna init" url="https://rsdoiel.github.io/antennaApp/antenna-init.7.md"></outline>
+			<outline text="antenna interactive" url="https://rsdoiel.github.io/antennaApp/antenna-interactive.7.md"></outline>
+			<outline text="antenna items" url="https://rsdoiel.github.io/antennaApp/antenna-items.7.md"></outline>
+			<outline text="antenna list" url="https://rsdoiel.github.io/antennaApp/antenna-list.7.md"></outline>
+			<outline text="antenna markdown-web" url="https://rsdoiel.github.io/antennaApp/antenna-markdown-web.7.md"></outline>
+			<outline text="antenna metadata" url="https://rsdoiel.github.io/antennaApp/antenna-metadata.7.md"></outline>
+			<outline text="antenna migrate-links" url="https://rsdoiel.github.io/antennaApp/antenna-migrate-links.7.md"></outline>
+			<outline text="antenna page" url="https://rsdoiel.github.io/antennaApp/antenna-page.7.md"></outline>
+			<outline text="antenna pages" url="https://rsdoiel.github.io/antennaApp/antenna-pages.7.md"></outline>
+			<outline text="antenna post" url="https://rsdoiel.github.io/antennaApp/antenna-post.7.md"></outline>
+			<outline text="antenna posts" url="https://rsdoiel.github.io/antennaApp/antenna-posts.7.md"></outline>
+			<outline text="antenna preview" url="https://rsdoiel.github.io/antennaApp/antenna-preview.7.md"></outline>
+			<outline text="antenna quote" url="https://rsdoiel.github.io/antennaApp/antenna-quote.7.md"></outline>
+			<outline text="antenna rss" url="https://rsdoiel.github.io/antennaApp/antenna-rss.7.md"></outline>
+			<outline text="antenna sitemap" url="https://rsdoiel.github.io/antennaApp/antenna-sitemap.7.md"></outline>
+			<outline text="antenna stylefrom" url="https://rsdoiel.github.io/antennaApp/antenna-stylefrom.7.md"></outline>
+			<outline text="antenna themes" url="https://rsdoiel.github.io/antennaApp/antenna-themes.7.md"></outline>
+			<outline text="antenna topics" url="https://rsdoiel.github.io/antennaApp/antenna-topics.7.md"></outline>
+			<outline text="antenna unpage" url="https://rsdoiel.github.io/antennaApp/antenna-unpage.7.md"></outline>
+			<outline text="antenna unpost" url="https://rsdoiel.github.io/antennaApp/antenna-unpost.7.md"></outline>
+			<outline text="antenna validate" url="https://rsdoiel.github.io/antennaApp/antenna-validate.7.md"></outline>
+			<outline text="antenna" url="https://rsdoiel.github.io/antennaApp/antenna.1.md"></outline>
+		</outline>
+	</body>
+</opml>
