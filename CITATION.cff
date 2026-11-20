@@ -29,6 +29,8 @@ abstract: |-
   - provides actions to automate most of your site curation leaving you time to focus on Markdown content
   - HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically
   - A preview web server is provided so you can read the curated content on your computer
+  - Publishes for Markdown readers such as Dave Winer's BonBon as well as for web browsers: `.md` links, Markdown renderings of collections, a `.well-known/toc.opml` table of contents, and BonBon's front matter
+  - `antenna validate` checks a site for mistakes and for what Markdown readers need, and `antenna migrate-links` brings older links up to date
   - pages nice with other static site tools like  [PageFind](https://pagefind.app "A browser side search engine") and
   [FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents")
 authors:
@@ -39,8 +41,8 @@ authors:
 
 
 repository-code: "https://github.com/rsdoiel/antennaApp"
-version: 0.0.28
-date-released: 2026-10-05
+version: 0.1.0
+date-released: 2026-11-20
 
 license-url: "https://www.gnu.org/licenses/agpl-3.0.en.html"
 keywords:

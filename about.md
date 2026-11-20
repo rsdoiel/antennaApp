@@ -26,6 +26,8 @@ abstract: |-
   - provides actions to automate most of your site curation leaving you time to focus on Markdown content
   - HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically
   - A preview web server is provided so you can read the curated content on your computer
+  - Publishes for Markdown readers such as Dave Winer's BonBon as well as for web browsers: `.md` links, Markdown renderings of collections, a `.well-known/toc.opml` table of contents, and BonBon's front matter
+  - `antenna validate` checks a site for mistakes and for what Markdown readers need, and `antenna migrate-links` brings older links up to date
   - pages nice with other static site tools like  [PageFind](https://pagefind.app "A browser side search engine") and
   [FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents")
 authors:
@@ -36,7 +38,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.0.28
+version: 0.1.0
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -48,24 +50,30 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-10-05
+date_released: 2026-11-20
 ---
 
 About this software
 ===================
 
-## antennaApp 0.0.28
+## antennaApp 0.1.0
 
-- Fixed the release binaries: v0.0.27 was tagged, but its cross-compiled builds failed on a cgo-only SQLite symbol, so it has no downloadable binaries; this is the first release of that code with binaries for all seven platforms
-- Fixed `antenna sitemap` in cross-compiled binaries: it opened a cgo-only SQLite driver and failed at run time without cgo
-- Everything in v0.0.27:
-- Added `antenna completion bash|powershell`, with `-install` to set up completion for every new session
-- Exit codes now follow the workspace convention (DR-0003): 0 ok, 1 no, 2 usage, 65 data, 66 no input, 69 unavailable, 70 internal, 73 cannot create, 74 I/O, 75 try again, 77 permission, 78 config; they are documented under EXIT STATUS in the manual
-- Breaking for scripts: `harvest` and `generate` finish all their work, then exit non-zero when any feed, collection, post or page failed (a dead feed now exits 69); `posts`, `items` and `pages` that find nothing exit 0; a surplus argument is refused with exit 2 (`preview extra` used to start the server); `del` of an unknown collection exits 1
-- `antenna sitemap` now lists only the site's pages (from the pages collection) and its local posts, never harvested feed items; numbers its files across collections, writes them to htdocs, warns and exits 0 when there is nothing to list, and has `-clean` to remove stale `sitemap_N.xml` files
-- Fixed RSS feeds: enclosure URLs are XML-escaped (feeds with query strings were not well-formed), an unknown enclosure length is written as 0, and items now carry their own `pubDate` in RFC 1123 form (#22)
-- Fixed the skip link: `<main>` is focusable, so following it moves keyboard focus into the main area
-- Fixed `items` dropping rows that had NULL columns, `blogit` treating hyphenated file names as dates, and a feed whose body was cut off being parsed as if complete
+- Antenna sites now publish for the Markdown web (Dave Winer's BonBon browser and readers like it) as well as for HTML browsers, from the same Markdown. See `antenna help markdown-web`
+- Links between your pages are written to the `.md` file; in the HTML output a link to a page, collection or post that antenna renders becomes the `.html` page, with a warning for a link to a file it does not render
+- Each collection with items also gets a Markdown rendering of them, `STEM_items.md`, declared in the HTML head as its Markdown alternate
+- `antenna generate` writes `.well-known/toc.opml`: the site's pages, collections and posts (oldest first, by year and month), with `include` outlines for the other sites on the host named by the new `subsites` list in `antenna.yaml`; it gives pages and posts previous and next links from it when their front matter names none
+- New `bonbon` setting in `antenna.yaml` writes `.well-known/bonbon.json`; with no setting no file is written and none is removed
+- Front matter keys BonBon reads: `link`, `urlPrev`, `urlNext`, `rightMarginImage` (with `rightMarginImageAlt`), `pubDate` in the RSS 2.0 form, and `{{page.NAME}}` macros in pages and posts
+- New `antenna validate [-json] [-online] [PATH]`: a read-only check of a file, a directory or the whole site, with 21 stable finding codes (front matter, dates, links, raw HTML, images, macros, stale table of contents, `.nojekyll` on GitHub Pages and more); exit 0 when clean, 1 when there are errors or warnings
+- New `antenna migrate-links [-w] [PATH]`: rewrites links to `.html` pages that antenna renders from Markdown into `.md` links in your Markdown; a dry-run diff by default, `-w` writes, and only the link destinations change
+- `antenna blogit` now makes the post publishable: it adds `pubDate` (the RSS form, in the zone of your computer, `TZ` overrides it) and a `title` from the first heading when the file has none, and never changes what is there; before this a blogit post stayed a draft
+- A date with a zone keeps it: an RSS `pubDate` such as `Mon, 30 Nov 2026 21:30:00 -0800` is stored with its offset, so a late evening post stays on its own day and month in the table of contents, the feeds and the page
+- `antenna preview` serves `.md` as `text/markdown`, serves `.well-known`, and sends Markdown to a client that asks for it with `Accept`
+- Generated files are deterministic: a file is rewritten only when its content changes, so regenerating an unchanged site changes no file; expect one round of changes in a site you regenerate for the first time (attribute order, `.md` links written as `.html`, previous and next links)
+- Breaking for scripts: `antenna unpage` exits 1 when no page record matches the path
+- Fixed: one unreadable item row no longer stops a collection's HTML page and items Markdown from being written; `{{page.title}}` inside a link you wrote no longer makes a link inside a link; an items file left by a collection that became a page index is removed
+- Every help topic's manual page is regenerated from `antenna help TOPIC` (the Makefile does it), so the `.7.md` pages are current; new topics `markdown-web`, `validate` and `migrate-links`
+- Requires Go 1.27.3 and the `opml` module 0.0.12
 
 ## Authors
 
@@ -101,6 +109,8 @@ Features:
 - provides actions to automate most of your site curation leaving you time to focus on Markdown content
 - HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically
 - A preview web server is provided so you can read the curated content on your computer
+- Publishes for Markdown readers such as Dave Winer's BonBon as well as for web browsers: `.md` links, Markdown renderings of collections, a `.well-known/toc.opml` table of contents, and BonBon's front matter
+- `antenna validate` checks a site for mistakes and for what Markdown readers need, and `antenna migrate-links` brings older links up to date
 - pages nice with other static site tools like  [PageFind](https://pagefind.app "A browser side search engine") and
 [FlatLake](https://flatlake.app "A static JSON API driven by front matter in Markdown documents")
 
@@ -118,6 +128,9 @@ Features:
 ## Software Requirements
 
 - Go >= 1.27.3
+- github.com/rsdoiel/opml >= 0.0.12
+- github.com/rsdoiel/stylefrom >= 0.0.2
+- github.com/rsdoiel/termlib >= 0.0.10
 - CMTools >= 0.0.45b
 
 
