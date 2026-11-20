@@ -18,6 +18,9 @@ Antenna App's Features:
 - HTML, RSS 2.0, OPML and sitemap.xml documents are automatically generated without additional configuration
   - HTML files are generated for each post, page and aggregation in each collection 
 - A preview web service is provided to view the render content in your web browser via a localhost URL
+- Sites are published for Markdown readers such as Dave Winer's BonBon as well as for web browsers, from the same Markdown
+  - Links use the `.md` file, a `.well-known/toc.opml` table of contents is generated, and a collection's items are also published as Markdown
+  - `antenna validate` checks a site for mistakes and for what Markdown readers need, `antenna migrate-links` brings older links up to date, and `antenna help markdown-web` is the overview
 - Site customization is possible through the use of page generators
   - Page generators are YAML files describing basic elements of a page like  header, navigation, before/after content section, footer
   - Custom page generators are composed by apply "themes" allowing customized Markdown and CSS to be shared
@@ -62,4 +65,5 @@ The following are helpful if you want to develop or customize the Antenna App so
 - [Installation](INSTALL.md)
 - [User Manual](user_manual.md)
 - [About](about.md)
+- [Changes](CHANGES.md)
 

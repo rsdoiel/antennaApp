@@ -4,7 +4,7 @@
 Ideas, not quite a roadmap
 
 
-## Release 0.0.28 blockers
+## Release 0.1.0 blockers
 
 
 ## Bugs

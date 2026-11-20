@@ -65,8 +65,8 @@ Installing from source
 
 ### Required software
 
-- Go &gt;&#x3D; 1.25.1
-- CMTools &gt;&#x3D; 0.0.40
+- Go >= 1.27.3
+- CMTools >= 0.0.45b
 
 ### Steps
 

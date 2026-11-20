@@ -263,4 +263,30 @@ git commit -m "Initial blog posts"
 git push origin main
 ~~~
 
+## Adding a post with `blogit`
+
+`antenna blogit` is a shortcut for the steps above. It copies a Markdown file into a date directory such as `blog/2026/11/19/`, adds a `pubDate` and a `title` (from the first heading) when the file has none, and posts it:
+
+~~~shell
+antenna blogit index.md notes/my-idea.md
+antenna blogit index.md notes/my-idea.md 2026-04-01
+~~~
+
+The date is now, or noon on the day you give, in your computer's time zone. When you are travelling, say where you are: `TZ=Asia/Tokyo antenna blogit index.md notes/my-idea.md`.
+
+## Publishing for Markdown readers
+
+Readers such as Dave Winer's BonBon browser show a page's Markdown, not its HTML. Antenna publishes both from the same files. Write links between your pages to the `.md` file (`[About](about.md)`); in the HTML antenna writes them as `.html`. Set `base_url` in `antenna.yaml` and `antenna generate` also writes `.well-known/toc.opml`, a table of contents those readers use. See `antenna help markdown-web`.
+
+## Checking your site
+
+`antenna validate` reads your site and reports mistakes, such as a post with no date, a link to a page that does not exist, or a table of contents that is out of date. It never changes a file.
+
+~~~shell
+antenna validate
+antenna validate blog
+~~~
+
+If it reports links to `.html` pages, `antenna migrate-links` shows a diff of the `.md` links to use instead, and `antenna migrate-links -w` writes them.
+
 Happy blogging!
