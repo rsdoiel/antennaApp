@@ -710,6 +710,18 @@ The HTML structure is controlled by the page generator YAML (page.yaml or
 a per-collection override). Front matter from each item is emitted as
 meta elements in the generated HTML.
 
+A collection with items to show also gets a Markdown rendering of them,
+STEM_items.md, beside its HTML page, and the page declares it in its head as
+its Markdown alternate. A collection with nothing to show has neither, and a
+file left by an earlier run is removed.
+
+Output is the same every time it is generated from the same data. A file is
+rewritten only when its content changes. The lines that record when it was
+built (the date meta element of an HTML page, dateModified in an items file,
+lastBuildDate in an RSS feed and dateCreated in OPML) do not count, so
+generating an unchanged site changes no file or modification time, and those
+dates say when the content last changed, not when generate last ran.
+
 # PARAMETERS
 
 COLLECTION_NAME

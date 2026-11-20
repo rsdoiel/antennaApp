@@ -17,12 +17,12 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"html"
 	"io"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -494,7 +494,7 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 	}
 	fmt.Fprintf(out, "  %s\n", elementFromMap("meta", m))
 	// Format the date
-	formattedDate := time.Now().Format(time.RFC3339)
+	formattedDate := clock().Format(time.RFC3339)
 	m = map[string]string{
 		"name":    "generator",
 		"content": fmt.Sprintf("%s/%s", gen.AppName, gen.Version),
@@ -764,20 +764,19 @@ func (gen *Generator) WritePageIndex(out io.Writer, db *sql.DB) error {
 
 // WriteHtmlPage renders a post as an HTML Page using HTML connent and wrapping it based on the
 // generator configuration.
+//
+// The page is rendered in memory and written with writeStable, so a page that
+// has not changed, apart from the time it was built, is left as it is.
 func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubDate string, innerHTML string, frontMatter map[string]interface{}) error {
-	// clear existing page
-	if _, err := os.Stat(htmlName); err == nil {
-		if err := os.Remove(htmlName); err != nil {
-			return nil
-		}
-	}
-	// Create the HTML file
-	out, err := os.Create(htmlName)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
+	var buf bytes.Buffer
+	gen.renderHtmlPage(&buf, link, postPath, pubDate, innerHTML, frontMatter)
+	_, err := writeStable(htmlName, buf.Bytes(), 0o666, htmlStamps...)
+	return err
+}
 
+// renderHtmlPage writes the whole page to out. The closing tags are deferred,
+// so they are written when this function returns.
+func (gen *Generator) renderHtmlPage(out io.Writer, link string, postPath, pubDate string, innerHTML string, frontMatter map[string]interface{}) {
 	// Create the outer elements of a page.
 	fmt.Fprintf(out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
 	defer fmt.Fprintln(out, "</html>")
@@ -847,5 +846,4 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	if gen.Footer != "" {
 		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
 	}
-	return nil
 }

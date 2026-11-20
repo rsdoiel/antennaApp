@@ -203,7 +203,7 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 	}
 	// The following are hardcode because they are dependent on the generator and
 	// when it executed.
-	timestamp := time.Now().Format(time.RFC822Z)
+	timestamp := clock().Format(time.RFC822Z)
 	fmt.Fprintf(out, `    <lastBuildDate>%s</lastBuildDate>
 `, timestamp)
 	fmt.Fprintf(out, `    <generator>%s/%s</generator>

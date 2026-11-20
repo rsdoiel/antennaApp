@@ -25,7 +25,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	// 3rd Party Packages
 	"gopkg.in/yaml.v3"
@@ -613,7 +612,7 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	var mdBuf bytes.Buffer
 	mdCount := 0
 	if collection.Mode != "page-index" {
-		mdCount, err = gen.WriteItemsMarkdown(&mdBuf, db, collection, time.Now())
+		mdCount, err = gen.WriteItemsMarkdown(&mdBuf, db, collection, clock())
 		if err != nil {
 			return err
 		}
@@ -633,63 +632,54 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	rssName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".xml")
 	opmlName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".opml")
 
-	// clear existing page
-	if _, err := os.Stat(htmlName); err == nil {
-		if err := os.Remove(htmlName); err != nil {
-			return nil
-		}
-	}
-
-	// Create the HTML file
-	out, err := os.Create(htmlName)
-	if err != nil {
-		return err
-	}
+	// Every output file is rendered in memory first and written with writeStable,
+	// which leaves a file alone when only its build-time line would change.
 
 	// Write out HTML page — mode: page-index renders a simple link list from
 	// the pages table; the default "aggregate" mode renders feed item cards.
+	var out bytes.Buffer
 	if collection.Mode == "page-index" {
 		// Wrap the link list in a full HTML shell using the same header/nav/footer
 		// as the aggregate mode, but replace <main> content with WritePageIndex.
-		fmt.Fprintf(out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
-		gen.writeHeadElement(out, "", nil)
-		fmt.Fprintln(out, "<body>")
-		fmt.Fprintln(out, `  <a href="#main-content" class="skip-link">Skip to main content</a>`)
+		fmt.Fprintf(&out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
+		gen.writeHeadElement(&out, "", nil)
+		fmt.Fprintln(&out, "<body>")
+		fmt.Fprintln(&out, `  <a href="#main-content" class="skip-link">Skip to main content</a>`)
 		if gen.Header != "" {
-			fmt.Fprintf(out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
+			fmt.Fprintf(&out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
 		}
 		if gen.Nav != "" {
-			fmt.Fprintf(out, "  <nav aria-label=\"Site navigation\">\n    %s\n  </nav>\n", indentText(strings.TrimSpace(gen.Nav), 4))
+			fmt.Fprintf(&out, "  <nav aria-label=\"Site navigation\">\n    %s\n  </nav>\n", indentText(strings.TrimSpace(gen.Nav), 4))
 		}
 		if gen.TopContent != "" {
-			fmt.Fprintf(out, "\n    %s\n", indentText(strings.TrimSpace(gen.TopContent), 2))
+			fmt.Fprintf(&out, "\n    %s\n", indentText(strings.TrimSpace(gen.TopContent), 2))
 		}
-		if err := gen.WritePageIndex(out, db); err != nil {
-			out.Close()
+		if err := gen.WritePageIndex(&out, db); err != nil {
 			return err
 		}
 		if gen.BottomContent != "" {
-			fmt.Fprintf(out, "\n    %s\n", indentText(strings.TrimSpace(gen.BottomContent), 2))
+			fmt.Fprintf(&out, "\n    %s\n", indentText(strings.TrimSpace(gen.BottomContent), 2))
 		}
 		if gen.Footer != "" {
-			fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
+			fmt.Fprintf(&out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
 		}
-		fmt.Fprintln(out, "</body>")
-		fmt.Fprintln(out, "</html>")
+		fmt.Fprintln(&out, "</body>")
+		fmt.Fprintln(&out, "</html>")
 	} else {
-		if err := gen.WriteHTML(out, db, appName, collection); err != nil {
-			out.Close()
+		if err := gen.WriteHTML(&out, db, appName, collection); err != nil {
 			return err
 		}
 	}
-	out.Close()
+	if _, err := writeStable(htmlName, out.Bytes(), 0o666, htmlStamps...); err != nil {
+		return err
+	}
 
 	// The items file sits beside the HTML page. It is generated output, replaced
-	// on every run, and removed when the collection has nothing to show now.
+	// when it changes, and removed when the collection has nothing to show now.
 	if collection.Mode != "page-index" {
 		mdName := filepath.Join(cfg.Htdocs, itemsMarkdownName(collection.File))
 		if mdCount > 0 {
-			if err := os.WriteFile(mdName, mdBuf.Bytes(), 0664); err != nil {
+			if _, err := writeStable(mdName, mdBuf.Bytes(), 0o664, itemsMDStamps...); err != nil {
 				return err
 			}
 		} else if err := os.Remove(mdName); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -697,45 +687,24 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		}
 	}
 
-	// clear existing page
-	if _, err := os.Stat(rssName); err == nil {
-		if err := os.Remove(rssName); err != nil {
-			return nil
-		}
+	// The RSS feed
+	var rssBuf bytes.Buffer
+	if err := gen.WriteRSS(&rssBuf, db, appName, collection); err != nil {
+		return err
 	}
-
-	// Create the RSS file
-	out, err = os.Create(rssName)
-	if err != nil {
+	if _, err := writeStable(rssName, rssBuf.Bytes(), 0o666, rssStamps...); err != nil {
 		return err
 	}
 
-	// Write out RSS page
-	if err := gen.WriteRSS(out, db, appName, collection); err != nil {
-		return err
-	}
-	out.Close()
-
-	// Write OPML to a buffer first — only create the file if there are feeds
+	// OPML, only when there are feeds
 	var opmlBuf bytes.Buffer
 	if err := gen.WriteOPML(&opmlBuf, db, appName, collection); err != nil {
 		return err
 	}
 	if opmlBuf.Len() > 0 {
-		if _, err := os.Stat(opmlName); err == nil {
-			if err := os.Remove(opmlName); err != nil {
-				return err
-			}
-		}
-		out, err = os.Create(opmlName)
-		if err != nil {
+		if _, err := writeStable(opmlName, opmlBuf.Bytes(), 0o666, opmlStamps...); err != nil {
 			return err
 		}
-		if _, err := opmlBuf.WriteTo(out); err != nil {
-			out.Close()
-			return err
-		}
-		out.Close()
 	}
 	return nil
 }

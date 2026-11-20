@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"bytes"
 	"regexp"
 	"database/sql"
 	"fmt"
@@ -199,11 +200,6 @@ func (cfg *AppConfig) RssPosts(cName string, rssFeed string, count int, fromDate
 		return usageErrorf("missing RSS filename to generate")
 	}
 	feedLink := fmt.Sprintf("%s/%s", cfg.BaseURL, rssFeed)
-	out, err := os.Create(rssFeed)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
 
 	collection, err := cfg.GetCollection(cName)
 	if err != nil {
@@ -221,13 +217,23 @@ func (cfg *AppConfig) RssPosts(cName string, rssFeed string, count int, fromDate
 		return err
 	}
 
+	// Rendered in memory, then written with writeStable: the file is not
+	// created when the collection or the query fails, and is left alone when
+	// only its lastBuildDate would change.
+	var buf bytes.Buffer
+	var werr error
 	switch {
 	case fromDate != "" && toDate != "":
-		return gen.WriteCustomRSS(out, db, SQLRssDateRangePosts, feedLink, appName, collection, fromDate, toDate)
+		werr = gen.WriteCustomRSS(&buf, db, SQLRssDateRangePosts, feedLink, appName, collection, fromDate, toDate)
 	case count > 0:
-		return gen.WriteCustomRSS(out, db, SQLRssRecentPosts, feedLink, appName, collection, count)
+		werr = gen.WriteCustomRSS(&buf, db, SQLRssRecentPosts, feedLink, appName, collection, count)
 	default:
-		return gen.WriteCustomRSS(out, db, SQLRssPosts, feedLink, appName, collection)
+		werr = gen.WriteCustomRSS(&buf, db, SQLRssPosts, feedLink, appName, collection)
 	}
+	if werr != nil {
+		return werr
+	}
+	_, err = writeStable(rssFeed, buf.Bytes(), 0o666, rssStamps...)
+	return err
 }
 

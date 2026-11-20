@@ -35,7 +35,7 @@ func (gen *Generator) WriteOPML(out io.Writer, db *sql.DB, appName string, colle
 	// Build our OPML structure from the collection and channels' table
 	o := opml.New()
 	o.Head.Title = collection.Title
-	o.Head.Created = time.Now().Format(time.RFC822Z)
+	o.Head.Created = clock().Format(time.RFC822Z)
 	o.Body.Outline = []*opml.Outline{}
 
 	stmt := SQLDisplayChannels
