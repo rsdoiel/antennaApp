@@ -124,6 +124,12 @@ unpage INPUT_PATH
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
+validate [-json] [-online] [PATH]
+: Check the site, a directory or one Markdown file for problems, and for what
+Markdown readers such as BonBon need. It only reads: it never changes a file.
+With no PATH it checks the whole site named by the configuration. Exit 0 means no
+errors or warnings, 1 means there are some. See "{app_name} help validate".
+
 pages
 : List the page entries in the pages.md collection. Pages are ordered by
 descending updated timestamp.
@@ -1392,6 +1398,165 @@ INPUT_PATH
 
 `
 
+	ValidateHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
+% R. S. Doiel
+% {release_date}
+
+# NAME
+
+validate
+
+# SYNOPSIS
+
+{app_name} validate [-json] [-online] [PATH]
+
+# DESCRIPTION
+
+Checks Markdown for mistakes and for what Markdown readers such as BonBon
+need, and reports each finding as one line:
+
+    PATH:LINE: SEVERITY: CODE: message
+
+validate only reads. It changes no file, and makes no network request unless
+-online is given. With no PATH it checks the whole site: the pages, the
+collection source files and the posts the site's own data names, plus the site
+itself (the configuration, the table of contents, bonbon.json). A directory is
+walked for .md and .markdown files, skipping folders whose name begins with a
+dot and the items pages {app_name} generates. A single file is checked alone.
+Checks that need to know what {app_name} renders are skipped when there is no
+configuration file.
+
+A finding has a severity: error, warning or info. The last line counts them.
+Only errors and warnings affect the exit status.
+
+# OPTIONS
+
+-json
+: Write one JSON object per finding (code, severity, file, line, message) and
+a last object {"summary": {...}}. A failure of the command itself is also
+written as an object with error, class and code.
+
+-online
+: Also ask each sub-site named in the subsites setting for its table of
+contents, the way BonBon does, and warn about one that does not answer.
+
+# CHECKS
+
+Each file:
+
+front-matter
+: The front matter cannot be read (error).
+
+post-no-pubdate
+: A file with a postPath and no pubDate is a draft; readers do not see it
+(warning). {app_name} blogit adds the date.
+
+date-unreadable
+: A pubDate or datePublished {app_name} cannot read (error).
+
+date-form
+: pubDate is not the RSS 2.0 form BonBon expects (info).
+
+no-title
+: No title in the front matter and no level-1 heading (warning).
+
+postpath-mismatch
+: postPath names a different file than the one it is in (warning).
+
+nav-address
+: urlPrev, urlNext or rightMarginImage is not an http, https, mailto or
+relative address (error).
+
+link-html
+: A relative link to a .html page that {app_name} renders from Markdown. A
+Markdown reader needs the .md link. The message says which (warning). A link to
+a collection's page is named as its items Markdown when that file exists.
+
+link-unrendered
+: A relative .md link to a file that exists but that {app_name} does not render
+(warning).
+
+link-missing
+: A relative link to a file that does not exist (warning).
+
+link-absolute-self
+: An absolute link to a page or file of this site, where a relative link works
+for every reader (info).
+
+raw-html
+: Raw HTML, script or SVG, which Markdown readers strip (warning).
+
+image-type
+: An image that is not PNG, JPEG, GIF or WebP (warning).
+
+macro-missing
+: A {{page.NAME}} that names a key the page does not have (warning).
+
+Code spans and code blocks are never looked into.
+
+The whole site:
+
+no-base-url
+: There is no base_url (warning).
+
+htdocs-missing
+: htdocs is not a directory (error).
+
+row-source-missing
+: The pages table has a row for a file that does not exist (error). Remove it
+with {app_name} unpage.
+
+not-published
+: A page's or post's Markdown is not in htdocs, so the table of contents leaves
+it out (warning).
+
+toc-stale
+: .well-known/toc.opml is missing or is not what generate would write (warning).
+
+bonbon-json
+: .well-known/bonbon.json differs from the bonbon setting, is not a JSON
+object, or holds a known key BonBon would drop or break (warning).
+
+nojekyll
+: A github.io site served from the repository root has no .nojekyll file, so
+GitHub Pages hides .well-known (warning).
+
+subsite-unreachable
+: With -online, a sub-site's table of contents does not answer 200 (warning).
+
+# EXIT STATUS
+
+0
+: No errors or warnings (info does not count).
+
+1
+: At least one error or warning was found.
+
+2
+: The command line is wrong (an unknown option, more than one PATH).
+
+66
+: PATH does not exist, or there is no configuration file for a whole-site check.
+
+78
+: The configuration file is present but wrong.
+
+# EXAMPLES
+
+{app_name} validate
+{app_name} validate blog
+{app_name} validate blog/2026/11/19/my-post.md
+{app_name} validate -online
+{app_name} validate -json | jq 'select(.severity == "error")'
+
+# SEE ALSO
+
+{app_name} help markdown-web
+{app_name} help metadata
+{app_name} help blogit
+
+`
+
 	UnpostHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
 % R. S. Doiel
 % {release_date}
@@ -1725,6 +1890,14 @@ and a title from the first heading when the file has none (see
 {app_name} help blogit). A post with no pubDate is a draft and is not in the
 table of contents.
 
+# CHECKING A SITE
+
+{app_name} validate reads the whole site, a directory or one file and reports
+what a Markdown reader would trip over: links that point at .html pages instead
+of the .md source, raw HTML and SVG, images BonBon does not show, posts with no
+date, a table of contents that is out of date, a missing .nojekyll on GitHub
+Pages and more. It never changes a file. See {app_name} help validate.
+
 # FRONT MATTER AND MACROS
 
 (see: {app_name} help metadata)
@@ -1761,6 +1934,7 @@ The HTML pages keep them; the Markdown you write is what a reader shows.
 {app_name} help generate
 {app_name} help preview
 {app_name} help metadata
+{app_name} help validate
 
 `
 

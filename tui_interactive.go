@@ -268,6 +268,7 @@ func (s *iSession) showHelp() {
 	fmt.Print(iLine("rss", "generate an RSS feed file"))
 	fmt.Print(iLine("sitemap", "generate sitemap XML files"))
 	fmt.Print(iLine("preview", "serve the site on localhost for review"))
+	fmt.Print(iLine("validate", "check the site or a file for problems"))
 	fmt.Printf("\n%sThemes%s\n", Bold, Reset)
 	fmt.Print(iLine("themes", "list available themes"))
 	fmt.Print(iLine("apply", "apply a theme to a page generator"))
@@ -303,6 +304,8 @@ func (s *iSession) guide(action string, args []string) error {
 		return s.guidePage(args)
 	case "unpage":
 		return s.guideUnpage(args)
+	case "validate":
+		return s.guideValidate(args)
 	case "pages":
 		return s.guidePages(args)
 	case "harvest", "fetch":
@@ -1036,4 +1039,30 @@ into a theme directory as style.css.
 	}
 
 	return s.confirmAndRun("stylefrom", finalArgs)
+}
+
+func (s *iSession) guideValidate(args []string) error {
+	fmt.Printf(`
+%svalidate%s — Check the site or a file for problems
+
+Reads the Markdown and the site's data and reports mistakes, and what a
+Markdown reader such as BonBon needs. It never changes a file. Leave PATH
+empty to check the whole site.
+`, Bold+Yellow, Reset)
+
+	pre := ""
+	if len(args) > 0 {
+		pre = args[0]
+	}
+	target, err := iOptionalStep(s.scanner, "PATH",
+		"A Markdown file or a directory. Empty checks the whole site.",
+		pre, "")
+	if err != nil {
+		return err
+	}
+	finalArgs := []string{}
+	if target != "" {
+		finalArgs = append(finalArgs, target)
+	}
+	return s.confirmAndRun("validate", finalArgs)
 }

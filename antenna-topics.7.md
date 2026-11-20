@@ -25,6 +25,7 @@ Commands:
   themes       List available themes; 'themes new [NAME]' creates a skeleton
   unpage       Remove a page record from the pages collection
   unpost       Remove a post record from a collection
+  validate     Check the site or a file for problems and for BonBon readiness
 
 Reference:
   accessibility  Skip navigation link, lang attribute, and CSS requirements

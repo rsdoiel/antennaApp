@@ -70,6 +70,7 @@ var completionCommands = []CompletionCommand{
 	{Name: "themes"},
 	{Name: "unpage"},
 	{Name: "unpost"},
+	{Name: "validate"},
 }
 
 // completionFlags are the top level options, before the verb.

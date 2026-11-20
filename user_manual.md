@@ -36,6 +36,7 @@ title: User Manual
   - [themes](antenna-themes.7.md)
   - [unpage](antenna-unpage.7.md)
   - [unpost](antenna-unpost.7.md)
+  - [validate](antenna-validate.7.md)
   - [accessibility](antenna-accessibility.7.md)
   - [configuration](antenna-configuration.7.md)
   - [markdown-web](antenna-markdown-web.7.md)

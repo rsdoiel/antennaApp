@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="name">NAME</h1>
 <p>antenna</p>
 <h1 id="synopsis">SYNOPSIS</h1>
@@ -141,6 +139,14 @@ This will will remove a page’s from a collection based in the input
 filepath provided. It does not remove the page on disk, just from the
 collection so that it will no longer be used to create a corresponding
 HTML page when the generate action is run.
+</dd>
+<dt>validate [-json] [-online] [PATH]</dt>
+<dd>
+Check the site, a directory or one Markdown file for problems, and for
+what Markdown readers such as BonBon need. It only reads: it never
+changes a file. With no PATH it checks the whole site named by the
+configuration. Exit 0 means no errors or warnings, 1 means there are
+some. See “antenna help validate”.
 </dd>
 <dt>pages</dt>
 <dd>
@@ -403,79 +409,79 @@ went wrong from the number alone.</p>
 <col style="width: 40%" />
 </colgroup>
 <thead>
-<tr>
-<th style="text-align: right;">Code</th>
-<th>Class</th>
-<th>Meaning</th>
+<tr class="header">
+<th style="text-align: right;" scope="col">Code</th>
+<th scope="col">Class</th>
+<th scope="col">Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td style="text-align: right;">0</td>
 <td>ok</td>
 <td>Success. A listing that matches nothing (posts, items, pages) is
 still 0.</td>
 </tr>
-<tr>
+<tr class="even">
 <td style="text-align: right;">1</td>
 <td>negative</td>
 <td>The command ran and the answer is no: the named collection is not in
 the configuration, an action you cancelled.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td style="text-align: right;">2</td>
 <td>usage</td>
 <td>The command line is wrong and nothing was attempted: unknown action,
 flag or help topic, a missing or surplus argument, a bad date or
 count.</td>
 </tr>
-<tr>
+<tr class="even">
 <td style="text-align: right;">65</td>
 <td>data</td>
 <td>Content that was read is wrong: a document with unclosed front
 matter, a file that is not a valid ODT, a feed that does not parse, a
 damaged database.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td style="text-align: right;">66</td>
 <td>no_input</td>
 <td>A named file or the workspace is missing: no antenna.yaml, no such
 Markdown file.</td>
 </tr>
-<tr>
+<tr class="even">
 <td style="text-align: right;">69</td>
 <td>unavailable</td>
 <td>A feed or service could not be reached, or answered with an
 error.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td style="text-align: right;">70</td>
 <td>internal</td>
 <td>A bug, or an error nothing classified. Please report it.</td>
 </tr>
-<tr>
+<tr class="even">
 <td style="text-align: right;">73</td>
 <td>cant_create</td>
 <td>An output could not be created: the file or directory is in the way,
 or its directory cannot be made.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td style="text-align: right;">74</td>
 <td>io</td>
 <td>A read or write failed part way.</td>
 </tr>
-<tr>
+<tr class="even">
 <td style="text-align: right;">75</td>
 <td>temp_fail</td>
 <td>Trying again later may work: a locked database, a port already in
 use.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td style="text-align: right;">77</td>
 <td>no_permission</td>
 <td>The operating system refused access.</td>
 </tr>
-<tr>
+<tr class="even">
 <td style="text-align: right;">78</td>
 <td>config</td>
 <td>A configuration file is present but wrong: antenna.yaml or a
@@ -494,6 +500,9 @@ will still have been harvested.</p>
 <ul>
 <li><a href="antenna-themes.7.html">antenna-themes (7)</a></li>
 </ul>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

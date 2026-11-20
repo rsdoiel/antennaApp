@@ -105,6 +105,12 @@ unpage INPUT_PATH
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
+validate [-json] [-online] [PATH]
+: Check the site, a directory or one Markdown file for problems, and for what
+Markdown readers such as BonBon need. It only reads: it never changes a file.
+With no PATH it checks the whole site named by the configuration. Exit 0 means no
+errors or warnings, 1 means there are some. See "antenna help validate".
+
 pages
 : List the page entries in the pages.md collection. Pages are ordered by
 descending updated timestamp.

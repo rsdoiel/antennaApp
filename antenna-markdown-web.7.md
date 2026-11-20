@@ -62,6 +62,14 @@ and a title from the first heading when the file has none (see
 antenna help blogit). A post with no pubDate is a draft and is not in the
 table of contents.
 
+# CHECKING A SITE
+
+antenna validate reads the whole site, a directory or one file and reports
+what a Markdown reader would trip over: links that point at .html pages instead
+of the .md source, raw HTML and SVG, images BonBon does not show, posts with no
+date, a table of contents that is out of date, a missing .nojekyll on GitHub
+Pages and more. It never changes a file. See antenna help validate.
+
 # FRONT MATTER AND MACROS
 
 (see: antenna help metadata)
@@ -98,5 +106,6 @@ The HTML pages keep them; the Markdown you write is what a reader shows.
 antenna help generate
 antenna help preview
 antenna help metadata
+antenna help validate
 
 

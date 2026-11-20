@@ -67,6 +67,13 @@ blog/YYYY/MM/DD/ and posts it, adding a pubDate in the RSS form BonBon
 expects and a title from the first heading when the file has none (see
 antenna help blogit). A post with no pubDate is a draft and is not in
 the table of contents.</p>
+<h1 id="checking-a-site">CHECKING A SITE</h1>
+<p>antenna validate reads the whole site, a directory or one file and
+reports what a Markdown reader would trip over: links that point at
+.html pages instead of the .md source, raw HTML and SVG, images BonBon
+does not show, posts with no date, a table of contents that is out of
+date, a missing .nojekyll on GitHub Pages and more. It never changes a
+file. See antenna help validate.</p>
 <h1 id="front-matter-and-macros">FRONT MATTER AND MACROS</h1>
 <p>(see: antenna help metadata)</p>
 <p>The front matter fields BonBon reads (link, urlPrev, urlNext,
@@ -94,7 +101,8 @@ configuration.</p>
 readers. The HTML pages keep them; the Markdown you write is what a
 reader shows.</p>
 <h1 id="see-also">SEE ALSO</h1>
-<p>antenna help generate antenna help preview antenna help metadata</p>
+<p>antenna help generate antenna help preview antenna help metadata
+antenna help validate</p>
 </section>
 <footer>
 <p>AntennaApp</p>
