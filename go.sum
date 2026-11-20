@@ -42,8 +42,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
-github.com/rsdoiel/opml v0.0.11 h1:FgPzid7kZfTOoz9cGyg45V6dOW9m2UOf4/6pdP/KyhE=
-github.com/rsdoiel/opml v0.0.11/go.mod h1:7Ua73wSFSuB+kWNpKih7n/Pd72xoXWg94GLepr9oiNs=
+github.com/rsdoiel/opml v0.0.12 h1:6B81wQK7PZPUEg3KTuS35v1pgGG6EGLo20a20bd5yxw=
+github.com/rsdoiel/opml v0.0.12/go.mod h1:Fm9urXy7NmIVV/P1AFiZ2wvJIw0fSCZuWoJrBMhhePk=
 github.com/rsdoiel/stylefrom v0.0.2 h1:R98EKfSxrbC489llzwuTAxDGN8eJSHiKRVgqw1wantg=
 github.com/rsdoiel/stylefrom v0.0.2/go.mod h1:Jzzin4po1hb1fUpB0FhB+svZhb0cgih1RgeQniYVRHg=
 github.com/rsdoiel/termlib v0.0.10 h1:ZNPgV/mQZ/lVNuIci5SNkAG8Cv9LbdC0uTOUXFpTfME=
