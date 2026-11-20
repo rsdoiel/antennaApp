@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	// 3rd Party Packages
 	"gopkg.in/yaml.v3"
@@ -583,6 +584,15 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 		}
 		gen.Link = append(gen.Link, m)
 	}
+	// The HTML page declares its Markdown rendering (DR-0008 4), unless the
+	// collection is a page index, which has no items to render.
+	if collection.Mode != "page-index" {
+		gen.Link = append(gen.Link, map[string]string{
+			"rel":  "alternate",
+			"type": "text/markdown",
+			"href": itemsMarkdownName(collection.File),
+		})
+	}
 	return gen.Generate(eout, appName, cfg, collection)
 }
 
@@ -657,6 +667,19 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		}
 	}
 	out.Close()
+
+	// Markdown rendering of the items, beside the HTML page (DR-0008). It is
+	// generated output and is replaced on every run.
+	if collection.Mode != "page-index" {
+		mdName := filepath.Join(cfg.Htdocs, itemsMarkdownName(collection.File))
+		var mdBuf bytes.Buffer
+		if err := gen.WriteItemsMarkdown(&mdBuf, db, collection, time.Now()); err != nil {
+			return err
+		}
+		if err := os.WriteFile(mdName, mdBuf.Bytes(), 0664); err != nil {
+			return err
+		}
+	}
 
 	// clear existing page
 	if _, err := os.Stat(rssName); err == nil {
