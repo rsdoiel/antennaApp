@@ -48,6 +48,8 @@ var (
 	rssStamps = []*regexp.Regexp{regexp.MustCompile(`<lastBuildDate>[^<]*</lastBuildDate>`)}
 	// opmlStamps is the head's dateCreated.
 	opmlStamps = []*regexp.Regexp{regexp.MustCompile(`<dateCreated>[^<]*</dateCreated>`)}
+	// tocStamps is the table of contents' dateModified: when its content last changed.
+	tocStamps = []*regexp.Regexp{regexp.MustCompile(`<dateModified>[^<]*</dateModified>`)}
 )
 
 // stripStamps returns b without the first match of each stamp pattern.

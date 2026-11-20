@@ -336,7 +336,10 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	if len(args) == 0 {
+	// The table of contents lists the whole site, so it is written only when the
+	// whole site is generated, not for generate COLLECTION_NAME.
+	wholeSite := len(args) == 0
+	if wholeSite {
 		for _, col := range cfg.Collections {
 			args = append(args, col.File)
 		}
@@ -375,10 +378,21 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 	if pagesErr != nil {
 		fmt.Fprintf(eout, "warning generating pages: %s\n", pagesErr)
 	}
+	// The table of contents for Markdown readers (DR-0013), after everything it
+	// lists has been written.
+	var tocErr error
+	if wholeSite {
+		if tocErr = cfg.GenerateTOC(eout); tocErr != nil {
+			fmt.Fprintf(eout, "warning writing the table of contents: %s\n", tocErr)
+		}
+	}
 	if err := tally.err("collections"); err != nil {
 		return err
 	}
-	return pagesErr
+	if pagesErr != nil {
+		return pagesErr
+	}
+	return tocErr
 }
 
 /** GeneratePosts re-renders the HTML file for every post (item with postPath set)
