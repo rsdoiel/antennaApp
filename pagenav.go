@@ -34,7 +34,8 @@ var pageNavKeys = []struct{ Key, Rel, Text string }{
  * copy of the document's in which urlPrev and urlNext are rewritten like any
  * link in the page (a same-site .md address becomes the .html page, DR-0007),
  * and an address that is not http, https, mailto or relative is dropped with a
- * warning. The document's own front matter, and so the published Markdown, is
+ * warning; a rightMarginImage source that is not http, https or relative is
+ * dropped the same way. The document's own front matter, and so the published Markdown, is
  * not changed.
  *
  * Returns:
@@ -81,6 +82,20 @@ func (doc *CommonMark) htmlFrontMatter() map[string]interface{} {
 			raw = dest
 		}
 		out[nk.Key] = raw
+	}
+	// The margin image's source gets the same care: a script or data address
+	// is dropped with a warning.
+	if raw, ok := doc.FrontMatter["rightMarginImage"].(string); ok {
+		raw = strings.TrimSpace(raw)
+		switch {
+		case raw == "":
+			delete(out, "rightMarginImage")
+		case !isSafeImageAddress(raw):
+			if doc.Links != nil && doc.Links.Warn != nil {
+				fmt.Fprintf(doc.Links.Warn, "warning: %s: ignoring rightMarginImage %q: only http, https and relative addresses are used\n", doc.Links.From, raw)
+			}
+			delete(out, "rightMarginImage")
+		}
 	}
 	return out
 }

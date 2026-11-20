@@ -549,6 +549,9 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 			if key == "urlPrev" || key == "urlNext" {
 				continue // written as <link rel="prev"> and <link rel="next">
 			}
+			if key == "rightMarginImage" || key == "rightMarginImageAlt" {
+				continue // written as the page's margin image
+			}
 			if len(allowed) > 0 && !allowed[key] {
 				continue
 			}
@@ -783,22 +786,30 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 	if nav := pageNavHTML(frontMatter); nav != "" {
 		navHTML = "\n    " + indentText(nav, 4)
 	}
+	// The margin image goes first, so it floats beside the top of the text.
+	imgHTML := marginImageHTML(frontMatter)
 	// Now render our innerHTML
 	if pubDate != "" && link != "" {
+		if imgHTML != "" {
+			imgHTML += "\n      "
+		}
 		fmt.Fprintf(out, `
   <main id="main-content" tabindex="-1">
     <article data-published=%q data-link=%q>
-      %s
+      %s%s
     </article>%s
   </main>
-`, pubDate, link, indentText(innerHTML, 6), navHTML)
+`, pubDate, link, imgHTML, indentText(innerHTML, 6), navHTML)
 
 	} else {
+		if imgHTML != "" {
+			imgHTML += "\n    "
+		}
 		fmt.Fprintf(out, `
   <main id="main-content" tabindex="-1">
-    %s%s
+    %s%s%s
   </main>
-`, indentText(innerHTML, 4), navHTML)
+`, imgHTML, indentText(innerHTML, 4), navHTML)
 	}
 
 	if gen.BottomContent != "" {

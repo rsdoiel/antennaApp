@@ -218,6 +218,25 @@ nav.page-nav a[rel="next"] {
   margin-left: auto;
 }
 
+/* The page's rightMarginImage floats at the right of the top of the text. It
+   keeps the text readable: no more than 40% of the line, and on a narrow
+   screen it stops floating and sits above the text. */
+.right-margin-image {
+  float: right;
+  max-width: 40%;
+  height: auto;
+  margin: 0 0 1rem 1.5rem;
+}
+
+@media (max-width: 40rem) {
+  .right-margin-image {
+    float: none;
+    display: block;
+    max-width: 100%;
+    margin: 0 0 1rem 0;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* 7. Articles — shared base                                            */
 /* ------------------------------------------------------------------ */
