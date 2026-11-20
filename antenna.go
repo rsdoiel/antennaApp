@@ -83,6 +83,8 @@ func (app *AntennaApp) Run(in io.Reader, out io.Writer, eout io.Writer, cfgName 
 		return app.Unpage(cfgName, args)
 	case "validate":
 		return app.Validate(out, eout, cfgName, args)
+	case "migrate-links":
+		return app.MigrateLinks(out, eout, cfgName, args)
 	case "css":
 		return app.GenerateCSS(out, cfgName, args)
 	case "items":
@@ -144,7 +146,7 @@ var maxArgs = map[string]int{
 	"css": 1, "items": 1, "unpage": 1, "quote": 1, "reply": 1,
 	"apply": 2, "page": 2, "stylefrom": 2, "unpost": 2,
 	"add": 3, "posts": 3, "post": 3, "blogit": 3,
-	"rss": 4, "validate": 3,
+	"rss": 4, "validate": 3, "migrate-links": 2,
 }
 
 // checkMaxArgs returns a usage error when args has more positionals than

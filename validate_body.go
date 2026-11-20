@@ -208,6 +208,35 @@ func (v *validator) checkImage(file, dest string, line int) {
 		"image %q is not PNG, JPEG, GIF or WebP, the types BonBon shows", dest)
 }
 
+// What migrationFor decided about a link to an HTML page.
+const (
+	migNone    = iota // not a link antenna renders from Markdown: leave it
+	migRewrite        // should be the .md link, newDest says which
+	migLeft           // antenna renders it but there is no Markdown to point at yet
+)
+
+// migrationFor works out what a relative link to the HTML page at site (a
+// site-relative path, slash separated) on the page from should be (DR-0017 7):
+// the .md source antenna renders it from, written relative to from, with the
+// fragment and query kept. A page or post names its source; a collection names
+// its items page when that file exists, else migLeft. Both validate (link-html)
+// and migrate-links use it, so they cannot disagree.
+func (v *validator) migrationFor(from string, u *url.URL, site string, byHTML map[string][]string) (string, int) {
+	htmlSite := path.Clean(strings.TrimSuffix(site, path.Ext(site)) + ".html")
+	target := v.markdownFor(htmlSite, byHTML)
+	if target == "" {
+		if len(byHTML[htmlSite]) > 1 {
+			return "", migLeft
+		}
+		return "", migNone
+	}
+	rel := relativeMarkdownPath(from, target)
+	if strings.HasPrefix(u.Path, "/") {
+		rel = "/" + target
+	}
+	return (&url.URL{Path: rel, RawQuery: u.RawQuery, Fragment: u.Fragment}).String(), migRewrite
+}
+
 // checkLink runs the link checks for one link destination (DR-0017 4).
 func (v *validator) checkLink(file, from, dest string, line int, byHTML map[string][]string) {
 	u, err := url.Parse(dest)
@@ -239,12 +268,7 @@ func (v *validator) checkLink(file, from, dest string, line int, byHTML map[stri
 		if byHTML == nil {
 			return
 		}
-		if target := v.markdownFor(path.Clean(strings.TrimSuffix(site, path.Ext(site))+".html"), byHTML); target != "" {
-			rel := relativeMarkdownPath(from, target)
-			if strings.HasPrefix(u.Path, "/") {
-				rel = "/" + target
-			}
-			suggest := (&url.URL{Path: rel, RawQuery: u.RawQuery, Fragment: u.Fragment}).String()
+		if suggest, status := v.migrationFor(from, u, site, byHTML); status == migRewrite {
 			v.add("link-html", SeverityWarning, file, line,
 				"link to %s should be %s: antenna renders that page from Markdown, and a Markdown reader needs the .md link (antenna migrate-links)", dest, suggest)
 		}
