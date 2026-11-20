@@ -9,10 +9,14 @@ Ideas, not quite a roadmap
 
 ## Bugs
 
+- [ ] `antenna unpage` exits 0 when no page record matches the path (a typo, or a stale row already gone). DR-0003 says not found is exit 1; print a plain error and return the negative class. Test-first through the real `unpage` dispatch.
+
 - [x] The skip link class is `skip-link` (code, CSS, tests and DR-0002 all agree); no rename needed. (2026-10-05)
 - [x] On aggregated pages the skip link jumped to the footer. `<main id="main-content">` is now `tabindex="-1"` so focus moves into it; checked on the live-site copy. Fixed in cc28293. (2026-10-05)
 
 ## Up Next
+
+- [ ] A way to remove a page completely. `unpage` only deletes the row in `pages.db`; the generated HTML and the published Markdown stay on disk, so a removed page lingers in the site, the sitemap and any hand-run `rm` is the only cleanup. Options: `unpage --files` (delete the output files too), or a `prune` verb that drops rows whose input file is gone. Found 2026-11-20 on the test blog, where a stale `index.md` row made `generate` exit 66. Also list `unpage` where authors look for it (`pages` help should point to it).
 
 ### BonBon and the Markdown web (proposed 2026-11-19)
 
