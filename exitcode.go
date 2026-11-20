@@ -287,3 +287,26 @@ func (f *failureTally) err(what string) error {
 	}
 	return fmt.Errorf("%d of %d %s failed: %w", f.failed, f.total, what, f.first)
 }
+
+// partialError marks an error from a writer that still produced all the output
+// the readable rows allow (an item row that could not be read, say). The caller
+// keeps and writes that output, finishes the rest of its work, and returns the
+// error at the end, so one bad row does not stop the others (DR-0003 item 4).
+type partialError struct{ err error }
+
+func (p *partialError) Error() string { return p.err.Error() }
+func (p *partialError) Unwrap() error { return p.err }
+
+// partial marks err as partial; nil stays nil.
+func partial(err error) error {
+	if err == nil {
+		return nil
+	}
+	return &partialError{err: err}
+}
+
+// isPartial reports whether err is, or wraps, a partialError.
+func isPartial(err error) bool {
+	var p *partialError
+	return errors.As(err, &p)
+}

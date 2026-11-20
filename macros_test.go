@@ -167,3 +167,24 @@ func TestGeneratePagesExpandsMacros(t *testing.T) {
 		t.Errorf("source Markdown was changed:\n%s", src)
 	}
 }
+
+// A title that becomes a link must not be put inside a link the author already
+// wrote: nested <a> elements are invalid HTML. The author's link wins and the
+// value is inserted as plain text.
+func TestMacroTitleLinkIsNotNestedInsideALink(t *testing.T) {
+	var warn bytes.Buffer
+	doc := macroDoc(t, "---\ntitle: X\nlink: https://x.example/\n---\n[Read {{page.title}}](/other)\n\n<https://y.example/> {{page.title}}\n", &warn)
+	got, err := doc.ToUnsafeHTML()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, `<a href="/other">Read X</a>`) {
+		t.Errorf("the author's link should hold the plain value:\n%s", got)
+	}
+	if strings.Count(got, "<a ") != 3 { // the author's two links and the one title link
+		t.Errorf("want the author's two links and one title link, got:\n%s", got)
+	}
+	if strings.Contains(got, "<a href=\"/other\">Read <a") {
+		t.Errorf("nested links:\n%s", got)
+	}
+}

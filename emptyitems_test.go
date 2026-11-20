@@ -145,3 +145,61 @@ func TestItemsAppearingLaterRestoreTheFile(t *testing.T) {
 		t.Errorf("file not written once there are items: %s", err)
 	}
 }
+
+// One item row that cannot be read must not stop the collection's other
+// output. The row is reported (generate exits with its class), but the HTML
+// page, the items Markdown and the RSS feed are still written from the rows
+// that were readable. On main the HTML page was written despite the bad row;
+// the Markdown step added by DR-0008 must not take that away.
+func TestAnUnreadableItemRowDoesNotStopTheOtherOutput(t *testing.T) {
+	cfg := sitemapSite(t, "news.md")
+	htdocs := filepath.Join(t.TempDir(), "htdocs")
+	if err := os.MkdirAll(htdocs, 0775); err != nil {
+		t.Fatal(err)
+	}
+	cfg.Htdocs = htdocs
+	col := cfg.Collections[0]
+	col.Title = "News"
+	sitemapExec(t, "news.db",
+		harvested("https://example.org/good", "Good item", "d", "2026-11-18 10:00:00", "published", "Feed"),
+		// authors is NULL, which the row reader cannot scan into a string
+		`INSERT INTO items (link, title, description, status, pubDate) VALUES ('https://example.org/bad', 'Bad item', 'd', 'published', '2026-11-17 10:00:00')`)
+	var buf bytes.Buffer
+	err := col.Generate(&buf, &buf, "antenna", cfg)
+	wantClass(t, "generate with one unreadable row", err, classData)
+	for _, name := range []string{"news.html", "news_items.md"} {
+		b, rerr := os.ReadFile(filepath.Join(htdocs, name))
+		if rerr != nil {
+			t.Errorf("%s was not written: %s", name, rerr)
+			continue
+		}
+		if !strings.Contains(string(b), "Good item") {
+			t.Errorf("%s does not hold the readable item", name)
+		}
+	}
+}
+
+// A collection switched to page-index mode shows no items, so an items file an
+// earlier aggregate run left behind is removed, not served as stale.
+func TestAStaleItemsFileIsRemovedWhenTheCollectionBecomesAPageIndex(t *testing.T) {
+	cfg := sitemapSite(t, "news.md")
+	htdocs := filepath.Join(t.TempDir(), "htdocs")
+	if err := os.MkdirAll(htdocs, 0775); err != nil {
+		t.Fatal(err)
+	}
+	cfg.Htdocs = htdocs
+	col := cfg.Collections[0]
+	col.Title = "News"
+	col.Mode = "page-index"
+	stale := filepath.Join(htdocs, "news_items.md")
+	if err := os.WriteFile(stale, []byte("---\nitemCount: 3\n---\n# stale\n"), 0664); err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	if err := col.Generate(&buf, &buf, "antenna", cfg); err != nil {
+		t.Fatalf("Generate: %s\n%s", err, buf.String())
+	}
+	if _, err := os.Stat(stale); err == nil {
+		t.Error("the stale news_items.md is still there")
+	}
+}

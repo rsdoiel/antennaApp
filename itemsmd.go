@@ -394,7 +394,7 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
 	}
 	if count == 0 {
 		// Nothing to show: no file, no front matter, no description warning.
-		return 0, tally.err("rows")
+		return 0, partial(tally.err("rows"))
 	}
 	title := collection.Title
 	if title == "" {
@@ -425,5 +425,5 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
 	if _, err := out.Write(body.Bytes()); err != nil {
 		return 0, err
 	}
-	return count, tally.err("rows")
+	return count, partial(tally.err("rows"))
 }

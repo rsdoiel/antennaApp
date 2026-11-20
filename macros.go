@@ -173,7 +173,9 @@ func (t macroTransformer) expandText(n *ast.Text, src []byte, seen map[string]bo
 		pos = seg.Start + m[1]
 		str := ast.NewString([]byte(val))
 		str.SetRaw(true) // written HTML-escaped, never parsed or entity-resolved
-		if dest := t.titleLink(key); dest != "" {
+		// A title inside a link the author wrote stays plain text: nested links
+		// are not valid HTML.
+		if dest := t.titleLink(key); dest != "" && !insideLink(n) {
 			link := ast.NewLink()
 			link.Destination = []byte(dest)
 			link.AppendChild(link, str)
@@ -190,6 +192,17 @@ func (t macroTransformer) expandText(n *ast.Text, src []byte, seen map[string]bo
 	tail.SetHardLineBreak(n.HardLineBreak())
 	insert(tail)
 	parent.RemoveChild(parent, n)
+}
+
+// insideLink reports whether n sits inside a link or autolink.
+func insideLink(n ast.Node) bool {
+	for p := n.Parent(); p != nil; p = p.Parent() {
+		switch p.(type) {
+		case *ast.Link, *ast.AutoLink:
+			return true
+		}
+	}
+	return false
 }
 
 // titleLink returns the address the expanded title links to, or "" when key is

@@ -712,7 +712,7 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 		fmt.Fprintf(out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
 	}
 	// close the body
-	return tally.err("rows")
+	return partial(tally.err("rows"))
 }
 
 // pageDisplayName derives a human-readable label from a Markdown input path.

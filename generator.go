@@ -631,10 +631,17 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	// collection with nothing to show has no items file and no alternate link.
 	var mdBuf bytes.Buffer
 	mdCount := 0
+	// rowsErr is the first error that left output partial; it is returned
+	// after every file that can be written has been.
+	var rowsErr error
 	if collection.Mode != "page-index" {
 		mdCount, err = gen.WriteItemsMarkdown(&mdBuf, db, collection, clock())
 		if err != nil {
-			return err
+			if !isPartial(err) {
+				return err
+			}
+			// An unreadable row is reported when everything else is written.
+			rowsErr = err
 		}
 		if mdCount > 0 {
 			gen.Link = append(gen.Link, map[string]string{
@@ -687,7 +694,12 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		fmt.Fprintln(&out, "</html>")
 	} else {
 		if err := gen.WriteHTML(&out, db, appName, collection); err != nil {
-			return err
+			if !isPartial(err) {
+				return err
+			}
+			if rowsErr == nil {
+				rowsErr = err
+			}
 		}
 	}
 	if _, err := writeStable(htmlName, out.Bytes(), 0o666, htmlStamps...); err != nil {
@@ -705,6 +717,10 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		} else if err := os.Remove(mdName); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
+	} else if err := os.Remove(filepath.Join(cfg.Htdocs, itemsMarkdownName(collection.File))); err != nil && !errors.Is(err, os.ErrNotExist) {
+		// A page index shows no items; an items file from an earlier aggregate
+		// run would be served stale.
+		return err
 	}
 
 	// The RSS feed
@@ -726,5 +742,5 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 			return err
 		}
 	}
-	return nil
+	return rowsErr
 }
