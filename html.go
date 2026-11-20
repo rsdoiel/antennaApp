@@ -543,14 +543,8 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 		}
 		doc := &CommonMark{FrontMatter: frontMatter}
 		for key, val := range frontMatter {
-			if key == "title" {
-				continue // already handled in <title>
-			}
-			if key == "urlPrev" || key == "urlNext" {
-				continue // written as <link rel="prev"> and <link rel="next">
-			}
-			if key == "rightMarginImage" || key == "rightMarginImageAlt" {
-				continue // written as the page's margin image
+			if frontMatterKeyRendered(key) {
+				continue // written by the renderer: <title>, <link rel>, the navigation, the margin image
 			}
 			if len(allowed) > 0 && !allowed[key] {
 				continue

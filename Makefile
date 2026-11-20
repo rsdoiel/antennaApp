@@ -87,6 +87,7 @@ $(PROGRAMS): $(PACKAGE)
 	go build -o "bin/$@$(EXT)" cmd/$@/*.go
 	@./bin/$@ -help >$@.1.md
 	@./bin/$@ -help themes >antenna-themes.7.md
+	@./bin/$@ -help metadata >antenna-metadata.7.md
 
 $(MAN_PAGES): .FORCE
 	mkdir -p man/man1
