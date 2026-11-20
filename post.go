@@ -122,6 +122,11 @@ func (app *AntennaApp) BlogIt(cfgName string, args[]string) error {
 	if err := os.WriteFile(postPath, src, 0644); err != nil {
 		return err
 	}
+	// A blogit post is meant to be published: give it the date and title a
+	// reader needs (DR-0016).
+	if err := blogitFrontMatter(postPath, postDay, dateArg != "", time.Now(), os.Stderr); err != nil {
+		return err
+	}
 	return app.Post(cfgName, []string{ cName, postPath})
 }
 
