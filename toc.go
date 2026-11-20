@@ -101,7 +101,7 @@ func (cfg *AppConfig) GenerateTOC(eout io.Writer) error {
 	posts := cfg.tocPosts(htdocs, warnf, tally)
 
 	tocPath := filepath.Join(htdocs, tocFileName)
-	if len(pages)+len(collections)+len(posts) == 0 {
+	if len(pages)+len(collections)+len(posts)+len(cfg.Subsites) == 0 {
 		if err := os.Remove(tocPath); err != nil && !os.IsNotExist(err) {
 			return err
 		}
@@ -122,6 +122,12 @@ func (cfg *AppConfig) GenerateTOC(eout io.Writer) error {
 	}
 	if len(posts) > 0 {
 		o.Body.Outline = append(o.Body.Outline, tocPostsGroup(base, posts))
+	}
+	// Sub-sites: one include outline each, after the groups, in the order
+	// listed (DR-0015 3). Nothing is fetched.
+	for _, sub := range cfg.Subsites {
+		o.Body.Outline = append(o.Body.Outline, &opml.Outline{
+			Type: "include", Text: sub.label(), URL: sub.tocAddress()})
 	}
 	src, err := xml.MarshalIndent(o, "", "\t")
 	if err != nil {

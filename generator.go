@@ -390,6 +390,13 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 		if tocErr = cfg.GenerateTOC(eout); tocErr != nil {
 			fmt.Fprintf(eout, "warning writing the table of contents: %s\n", tocErr)
 		}
+		// bonbon.json, from the bonbon block of antenna.yaml (DR-0015 5).
+		if err := cfg.GenerateBonbonJSON(eout); err != nil {
+			fmt.Fprintf(eout, "warning writing bonbon.json: %s\n", err)
+			if tocErr == nil {
+				tocErr = err
+			}
+		}
 	}
 	if err := tally.err("collections"); err != nil {
 		return err

@@ -61,6 +61,14 @@ type AppConfig struct {
 	// Collections holds a list of collections to curate
 	Collections []*Collection `json:"collections,omitempty" yaml:"collections,omitempty"`
 
+	// Subsites lists the other Markdown sites on this host that the site's
+	// table of contents points at with include outlines (DR-0015 1).
+	Subsites []Subsite `json:"subsites,omitempty" yaml:"subsites,omitempty"`
+
+	// Bonbon holds the content of .well-known/bonbon.json; when it has a key
+	// generate writes the file (DR-0015 5).
+	Bonbon map[string]any `json:"bonbon,omitempty" yaml:"bonbon,omitempty"`
+
 	// linkTargets caches what antenna renders for the duration of one
 	// generate run (DR-0007); nil outside a run, when it is read fresh.
 	linkTargets LinkTargets
@@ -309,6 +317,9 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 		return err
 	}
 	if err := yaml.Unmarshal(src, &cfg); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
+	if err := cfg.validateSubsites(); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	return nil
