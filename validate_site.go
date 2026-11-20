@@ -18,12 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package antennaApp
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // checkSite runs the checks that look at the whole site (DR-0017 5). Each
@@ -48,6 +51,9 @@ func (v *validator) checkSite() {
 	v.checkTOC(htdocs)
 	v.checkBonbonJSON(htdocs)
 	v.checkNoJekyll(htdocs)
+	if v.online {
+		v.checkSubsites(cfgFile)
+	}
 }
 
 // checkPageRows reports a pages-table row whose input file is gone: the stale
@@ -167,5 +173,35 @@ func (v *validator) checkNoJekyll(htdocs string) {
 	if _, err := os.Stat(filepath.Join(htdocs, ".nojekyll")); err != nil {
 		v.add("nojekyll", SeverityWarning, ".nojekyll", 0,
 			"base_url is a github.io address and the site is the repository root, so GitHub Pages hides .well-known (toc.opml, bonbon.json) without an empty .nojekyll file")
+	}
+}
+
+// checkSubsites asks each sub-site for its table of contents the way BonBon
+// does (an Accept header for OPML) and reports one that does not answer 200
+// (DR-0017 5). It runs only with -online: validate makes no request otherwise.
+func (v *validator) checkSubsites(cfgFile string) {
+	client := &http.Client{Timeout: 10 * time.Second}
+	for _, sub := range v.cfg.Subsites {
+		address := sub.tocAddress()
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, address, nil)
+		if err != nil {
+			cancel()
+			continue
+		}
+		req.Header.Set("Accept", "text/x-opml")
+		req.Header.Set("User-Agent", "antenna validate")
+		resp, err := client.Do(req)
+		if err != nil {
+			v.add("subsite-unreachable", SeverityWarning, cfgFile, 0, "sub-site %s: %s could not be fetched: %s", sub.root(), address, err)
+			cancel()
+			continue
+		}
+		resp.Body.Close()
+		cancel()
+		if resp.StatusCode != http.StatusOK {
+			v.add("subsite-unreachable", SeverityWarning, cfgFile, 0,
+				"sub-site %s: %s answered %d; BonBon leaves an include it cannot read as an empty node", sub.root(), address, resp.StatusCode)
+		}
 	}
 }
