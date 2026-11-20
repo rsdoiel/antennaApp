@@ -163,7 +163,7 @@ index.md:
 
 # Welcome
 
-This is a simple webpage for a simple website. See [about](about.html) for more information.
+This is a simple webpage for a simple website. See [about](about.md) for more information.
 
 ~~~
 
