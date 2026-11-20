@@ -1,20 +1,34 @@
-stylefrom — extract CSS from a LibreOffice HTML export
+%antenna(7) user manual | version 0.0.28 1e5ac36
+% R. S. Doiel
+% 2026-10-05
 
-SYNOPSIS
-  antenna stylefrom INPUT_FILE [OUTPUT_PATH]
+# NAME
 
-DESCRIPTION
-  Extracts the embedded CSS from a LibreOffice Writer HTML export
-  (INPUT_FILE, .html or .htm) and writes it to OUTPUT_PATH. OUTPUT_PATH
-  defaults to theme/style.css; the directory is created if needed.
+stylefrom
 
-  Use this action to seed a theme stylesheet from a styled Writer document.
+# SYNOPSIS
 
-PARAMETERS
-  INPUT_FILE   path to the LibreOffice-exported HTML file
-  OUTPUT_PATH  (optional) output CSS path (default: theme/style.css)
+antenna stylefrom INPUT_FILE [OUTPUT_PATH]
 
-EXAMPLE
-  antenna stylefrom my-doc.html
-  antenna stylefrom my-doc.html css/libreoffice.css
+# DESCRIPTION
+
+Extracts the embedded CSS from a LibreOffice Writer HTML export
+(INPUT_FILE, .html or .htm) and writes it to OUTPUT_PATH. OUTPUT_PATH
+defaults to theme/style.css; the directory is created if needed.
+
+Use this action to seed a theme stylesheet from a styled Writer document.
+
+# PARAMETERS
+
+INPUT_FILE
+: path to the LibreOffice-exported HTML file
+
+OUTPUT_PATH
+: (optional) output CSS path (default: theme/style.css)
+
+# EXAMPLES
+
+antenna stylefrom my-doc.html
+antenna stylefrom my-doc.html css/libreoffice.css
+
 

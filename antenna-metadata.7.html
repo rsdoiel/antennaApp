@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
-<p>metadata — front matter fields and the allowed_meta_fields
-allowlist</p>
-DESCRIPTION Every YAML front matter field in a Markdown post or page is
-emitted into the generated HTML
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>metadata</p>
+<h1 id="description">DESCRIPTION</h1>
+Every YAML front matter field in a Markdown post or page is emitted into
+the generated HTML
 <head>
 as a
 <meta name="KEY" content="VALUE">
@@ -30,70 +29,146 @@ element. The same key-value pair is also written as a
 data-pagefind-filter attribute on the enclosing
 <article>
 <p>element for PageFind faceted search.</p>
-<p>STANDARD FIELDS</p>
-title Sets
+<h1 id="standard-fields">STANDARD FIELDS</h1>
+<p>Keys are camelCase. The eight marked (BonBon) are the ones Dave
+Winer’s BonBon reads, so one Markdown file serves both BonBon and the
+HTML site. Any other key passes through unchanged.</p>
+<dl>
+<dt>title</dt>
+<dd>
+(BonBon) Sets
 <title>
 in the HTML head (not emitted as
 <meta>
-) description Short summary for search engines and RSS author Author
-name keywords List of tags; each value gets its own
+). Where the text says {{page.title}} it is expanded to this value (see
+MACROS).
+</dd>
+<dt>description</dt>
+<dd>
+(BonBon) Short summary for search engines and RSS
+</dd>
+<dt>author</dt>
+<dd>
+(BonBon) Author name
+</dd>
+<dt>pubDate</dt>
+<dd>
+(BonBon) Publication date, required for posts. YYYY-MM-DD or an RSS 2.0
+date such as Fri, 23 Oct 2026 15:19:45 GMT (see DATES)
+</dd>
+<dt>link</dt>
+<dd>
+(BonBon) Public URL of the post. Where the title is shown through
+{{page.title}} it is a link to this address (see MACROS)
+</dd>
+<dt>urlPrev</dt>
+<dd>
+(BonBon) The previous page. Written as <link rel="prev"> in the head and
+a Previous link on the page (see PREVIOUS AND NEXT)
+</dd>
+<dt>urlNext</dt>
+<dd>
+(BonBon) The next page. Written as <link rel="next"> in the head and a
+Next link on the page (see PREVIOUS AND NEXT)
+</dd>
+<dt>rightMarginImage</dt>
+<dd>
+(BonBon) An image floated to the right at the top of the text (see
+MARGIN IMAGE)
+</dd>
+<dt>rightMarginImageAlt</dt>
+<dd>
+The alt text for rightMarginImage. antenna’s own key, BonBon ignores it
+</dd>
+<dt>keywords</dt>
+<dd>
+List of tags; each value gets its own
 <meta>
-<p>pair pubDate Publication date — required for posts (YYYY-MM-DD)
-postPath Relative path to the generated HTML file — required for posts
-link Public URL of the post series Series name for multi-part posts
-seriesNumber Position within the series dateCreated Creation date
-dateModified Last-modified date datePublished Publication date (alias
-for pubDate in page context)</p>
-<p>EXAMPLE FRONT MATTER:</p>
-<table>
-<tbody>
-<tr>
-<td>title: “My Post Title”</td>
-</tr>
-<tr>
-<td>description: “A short summary.”</td>
-</tr>
-<tr>
-<td>author: “Your Name”</td>
-</tr>
-<tr>
-<td>keywords:</td>
-</tr>
-<tr>
-<td>- go</td>
-</tr>
-<tr>
-<td>- web</td>
-</tr>
-<tr>
-<td>pubDate: “2026-06-27”</td>
-</tr>
-<tr>
-<td>postPath: “blog/2026/06/27/my-post.html”</td>
-</tr>
-<tr>
-<td>series: “Building with Antenna”</td>
-</tr>
-<tr>
-<td>seriesNumber: 3</td>
-</tr>
-</tbody>
-</table>
-<p>CONTROLLING WHICH FIELDS ARE PUBLISHED (allowed_meta_fields)</p>
+pair
+</dd>
+<dt>postPath</dt>
+<dd>
+Relative path to the generated HTML file required for posts
+</dd>
+<dt>series</dt>
+<dd>
+Series name for multi-part posts
+</dd>
+<dt>seriesNumber</dt>
+<dd>
+Position within the series
+</dd>
+<dt>dateCreated</dt>
+<dd>
+Creation date
+</dd>
+<dt>dateModified</dt>
+<dd>
+Last-modified date
+</dd>
+<dt>datePublished</dt>
+<dd>
+Publication date (alias for pubDate in page context)
+</dd>
+</dl>
+<h1 id="dates">DATES</h1>
+<p>pubDate may be written as 2026-06-27, as a timestamp such as
+2026-06-27T10:00:00Z (quoted or not), or in the RSS 2.0 form BonBon
+uses, Fri, 23 Oct 2026 15:19:45 GMT. The weekday may be left out, the
+day may have one or two digits, and the zone may be GMT, UT, a US zone
+such as EST or PDT, or an offset such as +0200. antenna stores an RSS
+date as YYYY-MM-DD HH:MM:SS in UTC so that posts sort; your Markdown
+file is never changed. A date antenna cannot read is kept as written and
+reported with a warning; it does not stop the command.</p>
+<h1 id="macros">MACROS</h1>
+<p>In the text of a page or post, {{page.NAME}} is replaced by the front
+matter value NAME (spaces inside the braces are allowed), so a page can
+start with a first-level heading that reads {{page.title}}. The value is
+inserted as plain text: it never becomes Markdown or HTML. Macros are
+not expanded inside code spans or code blocks, so a page can show one.
+Expansion is a single pass; a value that itself holds a macro is shown
+as written. A name the page does not have leaves the macro visible and
+prints one warning. When the page has a link, the expanded title links
+to it (http, https, mailto or a relative address). Your published
+Markdown keeps the macros: BonBon expands them for its readers.</p>
+<h1 id="previous-and-next">PREVIOUS AND NEXT</h1>
+<p>urlPrev and urlNext name the previous and next page. A same-site .md
+address is written as the .html page, like any other link. The page gets
+<link rel="prev"> and <link rel="next"> in the head and, after its text,
+a labelled navigation with a Previous and a Next link; only the
+directions you name are shown. An address that is not http, https,
+mailto or relative is ignored with a warning.</p>
+<p>A page or post that gives neither key gets them when the site is
+generated, from the site’s table of contents (see antenna help
+generate): a page’s neighbours in path order, and for a post the older
+post as previous and the newer as next. A key you write always wins over
+these.</p>
+<h1 id="margin-image">MARGIN IMAGE</h1>
+rightMarginImage is the address of an image (http, https or a relative
+path). It is shown floated to the right at the top of the text, and on a
+narrow screen above the text. BonBon’s key has no alt text, so set
+rightMarginImageAlt to describe the image; without it the image is
+treated as decoration and has an empty alt. Neither key is also written
+as a
+<meta>
+<p>element.</p>
+<h1 id="example-front-matter">EXAMPLE FRONT MATTER</h1>
+<h1
+id="controlling-which-fields-are-published-allowed_meta_fields">CONTROLLING
+WHICH FIELDS ARE PUBLISHED (allowed_meta_fields)</h1>
 By default all front matter keys are emitted as
 <meta>
 <p>elements. To restrict which keys are published, set
 allowed_meta_fields in page.yaml:</p>
-<pre><code>allowed_meta_fields:
-  - title
-  - author
-  - description
-  - keywords
-  - series
-  - seriesNumber</code></pre>
+<p>allowed_meta_fields: - title - author - description - keywords -
+series - seriesNumber</p>
 <p>When this list is set, only the listed keys appear in generated HTML.
 Internal workflow fields (build flags, notes) are silently omitted.</p>
-<p>SEE ALSO antenna help configuration antenna help post</p>
-</main>
+<h1 id="see-also">SEE ALSO</h1>
+<p>antenna help configuration antenna help post</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

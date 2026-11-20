@@ -1,37 +1,52 @@
-post — add or update a blog post in a collection
+%antenna(7) user manual | version 0.0.28 1e5ac36
+% R. S. Doiel
+% 2026-10-05
 
-SYNOPSIS
-  antenna post [COLLECTION_NAME] FILEPATH
+# NAME
 
-DESCRIPTION
-  Adds FILEPATH to COLLECTION_NAME (default: pages.md). The file's YAML
-  front matter supplies the required fields. If a record with the same
-  postPath already exists, it is overwritten.
+post
 
-  Required front matter fields:
-    title or description  — at least one must be present
-    postPath              — relative path to the generated HTML file
-    pubDate               — publication date (YYYY-MM-DD recommended)
+# SYNOPSIS
 
-  Recommended additional fields:
-    link        public URL to the post
-    author      author name
-    description summary for RSS and search engines
-    keywords    list of tags
+antenna post [COLLECTION_NAME] FILEPATH
 
-  After posting, run 'generate' to rebuild the collection HTML and RSS feed.
+# DESCRIPTION
 
-  WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
-  Only run this action on files you control and trust.
+Adds FILEPATH to COLLECTION_NAME (default: pages.md). The file's YAML
+front matter supplies the required fields. If a record with the same
+postPath already exists, it is overwritten.
 
-PARAMETERS
-  COLLECTION_NAME  (optional) collection Markdown file (default: pages.md)
-  FILEPATH         path to the source Markdown document
+Required front matter fields:
+  title or description  at least one must be present
+  postPath              relative path to the generated HTML file
+  pubDate               publication date (YYYY-MM-DD recommended)
 
-EXAMPLE
-  antenna post index.md blog/2026/04/12/my-post.md
+Recommended additional fields:
+  link        public URL to the post
+  author      author name
+  description summary for RSS and search engines
+  keywords    list of tags
 
-SEE ALSO
-  antenna help metadata
-  antenna help blogit
+After posting, run generate to rebuild the collection HTML and RSS feed.
+
+WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
+Only run this action on files you control and trust.
+
+# PARAMETERS
+
+COLLECTION_NAME
+: (optional) collection Markdown file (default: pages.md)
+
+FILEPATH
+: path to the source Markdown document
+
+# EXAMPLES
+
+antenna post index.md blog/2026/04/12/my-post.md
+
+# SEE ALSO
+
+antenna help metadata
+antenna help blogit
+
 

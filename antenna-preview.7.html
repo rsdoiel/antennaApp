@@ -1,31 +1,58 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
-<p>preview — serve the site on localhost</p>
-<p>SYNOPSIS antenna preview</p>
-<p>DESCRIPTION Starts a local HTTP server serving the htdocs directory
-so you can review the generated site in a browser. The host and port are
-set in antenna.yaml (defaults: localhost:8000).</p>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>preview</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna preview</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Starts a local HTTP server serving the htdocs directory so you can
+review the generated site in a browser. The host and port are set in
+antenna.yaml (defaults: localhost:8000).</p>
 <p>Press Ctrl-C to stop the server.</p>
-<p>EXAMPLE antenna preview open http://localhost:8000</p>
-</main>
+<p>The preview also serves the Markdown web, so a Markdown reader such
+as BonBon or cmarkbrowser can be tried before anything is published:</p>
+<ul>
+<li>Files ending .md and .markdown are sent as text/markdown;
+charset=utf-8 and .opml files as text/x-opml; charset=utf-8, whatever
+the host’s own table says.</li>
+<li>The .well-known directory (in any folder, for toc.opml and
+bonbon.json) is served. Every other file or directory whose name starts
+with a dot is refused with 403, and so is anything inside .well-known
+that does.</li>
+<li>A client whose Accept header prefers text/markdown to text/html
+(BonBon sends “text/markdown, text/x-opml”) that asks for an HTML page
+or a folder is sent Markdown instead: the page the HTML head declares
+with <link rel="alternate" type="text/markdown">, else the page’s .md
+sibling (x.md, or index.md in a folder), else the HTML. Content-Location
+names the file sent and Vary: Accept is set. A browser gets the HTML as
+always.</li>
+</ul>
+<p>Negotiation is a convenience of the preview. A static host cannot do
+it; what works everywhere is the declared alternate and ordinary links
+to .md files.</p>
+<h1 id="examples">EXAMPLES</h1>
+<p>antenna preview open http://localhost:8000 curl -H ‘Accept:
+text/markdown’ http://localhost:8000/blog/index.html</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

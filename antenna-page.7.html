@@ -1,39 +1,51 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
-<p>page — render a Markdown file as a standalone HTML page</p>
-<p>SYNOPSIS antenna page INPUT_PATH [OUTPUT_PATH]</p>
-<p>DESCRIPTION Renders INPUT_PATH as an HTML file using the page
-generator YAML. The output file is placed next to INPUT_PATH with a
-.html extension unless OUTPUT_PATH is specified. The page is recorded in
-the pages collection (pages.md / pages.db) so it appears in ‘antenna
-pages’ output.</p>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>page</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna page INPUT_PATH [OUTPUT_PATH]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Renders INPUT_PATH as an HTML file using the page generator YAML. The
+output file is placed next to INPUT_PATH with a .html extension unless
+OUTPUT_PATH is specified. The page is recorded in the pages collection
+(pages.md / pages.db) so it appears in pages output.</p>
 <p>Pages are excluded from RSS feeds. This action is for static content
 such as About pages, contact pages, and search pages.</p>
 <p>WARNING: HTML in the Markdown source passes through unchanged (unsafe
 mode). Only run this action on files you control and trust.</p>
-<p>PARAMETERS INPUT_PATH path to the source Markdown file OUTPUT_PATH
-(optional) explicit output HTML path</p>
-<p>EXAMPLE antenna page about.md antenna page about.md
-htdocs/about.html</p>
-</main>
+<h1 id="parameters">PARAMETERS</h1>
+<dl>
+<dt>INPUT_PATH</dt>
+<dd>
+path to the source Markdown file
+</dd>
+<dt>OUTPUT_PATH</dt>
+<dd>
+(optional) explicit output HTML path
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>antenna page about.md antenna page about.md htdocs/about.html</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

@@ -64,6 +64,7 @@ Commands:
 Reference:
   accessibility  Skip navigation link, lang attribute, and CSS requirements
   configuration  antenna.yaml and page.yaml settings reference
+  markdown-web   Publishing for Markdown readers such as BonBon: links, toc.opml, preview
   metadata       Front matter fields and the allowed_meta_fields allowlist
 
   topics       Show this list of all available help topics
@@ -150,6 +151,8 @@ func PrintHelpTopic(w io.Writer, topic, appName, version, releaseDate, releaseHa
 		text = ConfigurationHelpText
 	case "metadata":
 		text = MetadataHelpText
+	case "markdown-web", "markdownweb":
+		text = MarkdownWebHelpText
 	default:
 		return false
 	}

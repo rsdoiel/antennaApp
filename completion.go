@@ -79,7 +79,7 @@ var completionFlags = []string{"-config", "-help", "-license", "-version"}
 var completionShells = []string{"bash", "powershell"}
 
 // completionTopics are help topics that are not verbs.
-var completionTopics = []string{"accessibility", "configuration", "metadata", "topics"}
+var completionTopics = []string{"accessibility", "configuration", "markdown-web", "metadata", "topics"}
 
 func completionVerbs() []string {
 	var verbs []string

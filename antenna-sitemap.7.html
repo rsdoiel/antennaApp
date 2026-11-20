@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
-<p>sitemap — generate sitemap XML files</p>
-<p>SYNOPSIS antenna sitemap [-clean]</p>
-<p>DESCRIPTION Generates a set of sitemap files (sitemap_index.xml,
-sitemap_1.xml, …) in the htdocs directory so search engines can discover
-your content.</p>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>sitemap</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna sitemap [-clean]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Generates a set of sitemap files (sitemap_index.xml, sitemap_1.xml,
+…) in the htdocs directory so search engines can discover your
+content.</p>
 <p>The sitemap lists the pages of your site, which come from the pages
 collection (pages.md), and your local posts, which are the items with a
 postPath in any collection. Items harvested from feeds are not pages of
@@ -32,17 +33,26 @@ no sitemap. When there is nothing to list, antenna says so on standard
 error, writes no files and exits 0. A collection whose database file is
 missing is reported and the others are still mapped, then the command
 exits 66.</p>
-<p>OPTIONS -clean Remove the sitemap files an earlier run left behind. A
-site that shrank, or that stopped having anything to list, can have
-sitemap_N.xml files that the new sitemap_index.xml no longer names. With
--clean, the regular files in the htdocs directory named exactly
-sitemap_NUMBER.xml that this run did not write are removed, and each
-removal is reported. When there is nothing to list, the old
-sitemap_index.xml is removed too, since nothing points at it. No other
-file is touched. If a collection could not be read nothing is removed,
-because the sitemap is then incomplete. Without -clean nothing is ever
-deleted.</p>
-<p>EXAMPLE antenna sitemap antenna sitemap -clean</p>
-</main>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-clean</dt>
+<dd>
+Remove the sitemap files an earlier run left behind. A site that shrank,
+or that stopped having anything to list, can have sitemap_N.xml files
+that the new sitemap_index.xml no longer names. With -clean, the regular
+files in the htdocs directory named exactly sitemap_NUMBER.xml that this
+run did not write are removed, and each removal is reported. When there
+is nothing to list, the old sitemap_index.xml is removed too, since
+nothing points at it. No other file is touched. If a collection could
+not be read nothing is removed, because the sitemap is then incomplete.
+Without -clean nothing is ever deleted.
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>antenna sitemap antenna sitemap -clean</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

@@ -1,32 +1,42 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
-<p>unpage — remove a page record from the pages collection</p>
-<p>SYNOPSIS antenna unpage INPUT_PATH</p>
-<p>DESCRIPTION Removes the page record associated with INPUT_PATH from
-the pages collection. The HTML and Markdown files on disk are not
-deleted.</p>
-<p>PARAMETERS INPUT_PATH path to the source Markdown file as it was
-passed to ‘page’</p>
-<p>EXAMPLE antenna unpage about.md</p>
-</main>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>unpage</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna unpage INPUT_PATH</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Removes the page record associated with INPUT_PATH from the pages
+collection. The HTML and Markdown files on disk are not deleted. When no
+page record matches INPUT_PATH, antenna prints an error and exits 1.</p>
+<h1 id="parameters">PARAMETERS</h1>
+<dl>
+<dt>INPUT_PATH</dt>
+<dd>
+path to the source Markdown file as it was passed to page
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>antenna unpage about.md</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

@@ -1,35 +1,39 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
-<p>init — initialize Antenna configuration</p>
-<p>SYNOPSIS antenna init</p>
-<p>DESCRIPTION Creates the two configuration files antenna needs if they
-do not exist:</p>
-<pre><code>antenna.yaml  main configuration (htdocs path, port, collections list)
-page.yaml     page generator (link, meta, nav, header, footer, scripts)</code></pre>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>init</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna init</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Creates the two configuration files antenna needs if they do not
+exist:</p>
+<p>antenna.yaml main configuration (htdocs path, port, collections list)
+page.yaml page generator (link, meta, nav, header, footer, scripts)</p>
 <p>Also creates a default pages.md collection and pages.db database.</p>
 <p>After running init, run ‘antenna css’ to generate a starter
 stylesheet and automatically link it in page.yaml.</p>
-<p>EXAMPLE mkdir myblog &amp;&amp; cd myblog antenna init antenna
-css</p>
-</main>
+<h1 id="examples">EXAMPLES</h1>
+<p>mkdir myblog &amp;&amp; cd myblog antenna init antenna css</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

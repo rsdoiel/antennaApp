@@ -1,23 +1,39 @@
-add — add a feed collection
+%antenna(7) user manual | version 0.0.28 1e5ac36
+% R. S. Doiel
+% 2026-10-05
 
-SYNOPSIS
-  antenna add COLLECTION_FILE [NAME DESCRIPTION]
+# NAME
+
+add
+
+# SYNOPSIS
+
+antenna add COLLECTION_FILE [NAME DESCRIPTION]
+
+# DESCRIPTION
+
+Registers a feed collection with antenna. COLLECTION_FILE is a Markdown
+document (.md) whose body lists RSS/Atom feed URLs as hyperlinks. NAME and
+DESCRIPTION are optional; if omitted, antenna reads them from the
+document's YAML front matter.
+
+antenna creates a matching SQLite3 database (same basename, .db extension)
+and records the collection in antenna.yaml.
+
+# PARAMETERS
+
+COLLECTION_FILE
+: path to the Markdown document defining the collection
+
+NAME
+: (optional) override the collection name
 
 DESCRIPTION
-  Registers a feed collection with antenna. COLLECTION_FILE is a Markdown
-  document (.md) whose body lists RSS/Atom feed URLs as hyperlinks.  NAME and
-  DESCRIPTION are optional; if omitted, antenna reads them from the
-  document's YAML front matter.
+: (optional) override the collection description
 
-  antenna creates a matching SQLite3 database (same basename, .db extension)
-  and records the collection in antenna.yaml.
+# EXAMPLES
 
-PARAMETERS
-  COLLECTION_FILE  path to the Markdown document defining the collection
-  NAME             (optional) override the collection name
-  DESCRIPTION      (optional) override the collection description
+antenna add feeds/tech.md
+antenna add feeds/tech.md "Tech Feeds" "My technology reading list"
 
-EXAMPLE
-  antenna add feeds/tech.md
-  antenna add feeds/tech.md "Tech Feeds" "My technology reading list"
 

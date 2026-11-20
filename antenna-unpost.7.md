@@ -1,18 +1,32 @@
-unpost — remove a post record from a collection
+%antenna(7) user manual | version 0.0.28 1e5ac36
+% R. S. Doiel
+% 2026-10-05
 
-SYNOPSIS
-  antenna unpost COLLECTION_NAME URL | POST_PATH
+# NAME
 
-DESCRIPTION
-  Removes an item from COLLECTION_NAME using either the public URL associated
-  with the post or the POST_PATH value. The source Markdown and generated HTML
-  files on disk are not deleted.
+unpost
 
-PARAMETERS
-  COLLECTION_NAME  collection Markdown file
-  URL or POST_PATH URL or postPath value identifying the item to remove
+# SYNOPSIS
 
-EXAMPLE
-  antenna unpost index.md https://example.com/blog/2026/04/12/my-post.html
-  antenna unpost index.md blog/2026/04/12/my-post.html
+antenna unpost COLLECTION_NAME URL | POST_PATH
+
+# DESCRIPTION
+
+Removes an item from COLLECTION_NAME using either the public URL associated
+with the post or the POST_PATH value. The source Markdown and generated HTML
+files on disk are not deleted.
+
+# PARAMETERS
+
+COLLECTION_NAME
+: collection Markdown file
+
+URL or POST_PATH
+: URL or postPath value identifying the item to remove
+
+# EXAMPLES
+
+antenna unpost index.md https://example.com/blog/2026/04/12/my-post.html
+antenna unpost index.md blog/2026/04/12/my-post.html
+
 

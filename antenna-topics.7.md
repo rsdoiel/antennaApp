@@ -29,6 +29,7 @@ Commands:
 Reference:
   accessibility  Skip navigation link, lang attribute, and CSS requirements
   configuration  antenna.yaml and page.yaml settings reference
+  markdown-web   Publishing for Markdown readers such as BonBon: links, toc.opml, preview
   metadata       Front matter fields and the allowed_meta_fields allowlist
 
   topics       Show this list of all available help topics

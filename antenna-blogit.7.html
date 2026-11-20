@@ -1,36 +1,53 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
-<p>blogit — add a post using a date-based directory path</p>
-<p>SYNOPSIS antenna blogit [COLLECTION_NAME] FILEPATH [POST_DATE]</p>
-<p>DESCRIPTION A variation of ‘post’ that places the source Markdown
-document in a blog-style date directory tree
-(e.g. blog/2026/04/12/my-post.md) before adding it to the collection. If
-POST_DATE is omitted, the current date is used. The collection defaults
-to pages.md when COLLECTION_NAME is omitted.</p>
-<p>PARAMETERS COLLECTION_NAME (optional) path to the collection Markdown
-file FILEPATH source Markdown document POST_DATE (optional) date in
-YYYY-MM-DD format</p>
-<p>EXAMPLE antenna blogit index.md notes/my-idea.md antenna blogit
-index.md notes/my-idea.md 2026-04-01</p>
-</main>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>blogit</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna blogit [COLLECTION_NAME] FILEPATH [POST_DATE]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>A variation of ‘post’ that places the source Markdown document in a
+blog-style date directory tree (e.g. blog/2026/04/12/my-post.md) before
+adding it to the collection. If POST_DATE is omitted, the current date
+is used. The collection defaults to pages.md when COLLECTION_NAME is
+omitted.</p>
+<h1 id="parameters">PARAMETERS</h1>
+<dl>
+<dt>COLLECTION_NAME</dt>
+<dd>
+(optional) path to the collection Markdown file
+</dd>
+<dt>FILEPATH</dt>
+<dd>
+source Markdown document
+</dd>
+<dt>POST_DATE</dt>
+<dd>
+(optional) date in YYYY-MM-DD format
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>antenna blogit index.md notes/my-idea.md antenna blogit index.md
+notes/my-idea.md 2026-04-01</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

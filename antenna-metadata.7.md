@@ -105,6 +105,11 @@ and <link rel="next"> in the head and, after its text, a labelled navigation
 with a Previous and a Next link; only the directions you name are shown. An
 address that is not http, https, mailto or relative is ignored with a warning.
 
+A page or post that gives neither key gets them when the site is generated,
+from the site's table of contents (see antenna help generate): a page's
+neighbours in path order, and for a post the older post as previous and the
+newer as next. A key you write always wins over these.
+
 # MARGIN IMAGE
 
 rightMarginImage is the address of an image (http, https or a relative path).

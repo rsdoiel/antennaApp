@@ -86,8 +86,7 @@ $(PROGRAMS): $(PACKAGE)
 	@mkdir -p bin
 	go build -o "bin/$@$(EXT)" cmd/$@/*.go
 	@./bin/$@ -help >$@.1.md
-	@./bin/$@ -help themes >antenna-themes.7.md
-	@./bin/$@ -help metadata >antenna-metadata.7.md
+	@for F in $@-*.7.md; do T=$${F#$@-}; T=$${T%.7.md}; ./bin/$@ -help $$T >$$F; done
 
 $(MAN_PAGES): .FORCE
 	mkdir -p man/man1
