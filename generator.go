@@ -19,6 +19,7 @@ package antennaApp
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -557,6 +558,10 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 	if err != nil {
 		return err
 	}
+	// Warnings go to the stream the caller gave, not always to os.Stderr.
+	if eout != nil {
+		gen.eout = eout
+	}
 	if collection.Generator == "" {
 		collection.Generator = cfg.Generator
 	}
@@ -585,15 +590,6 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 		}
 		gen.Link = append(gen.Link, m)
 	}
-	// The HTML page declares its Markdown rendering (DR-0008 4), unless the
-	// collection is a page index, which has no items to render.
-	if collection.Mode != "page-index" {
-		gen.Link = append(gen.Link, map[string]string{
-			"rel":  "alternate",
-			"type": "text/markdown",
-			"href": itemsMarkdownName(collection.File),
-		})
-	}
 	return gen.Generate(eout, appName, cfg, collection)
 }
 
@@ -609,6 +605,25 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	// Run the collection filter to determine which items to publish
 	if err := collection.ApplyFilters(db); err != nil {
 		return err
+	}
+
+	// The Markdown rendering of the items (DR-0008) is made now, before the HTML
+	// head is written, because the head declares it only when there is one: a
+	// collection with nothing to show has no items file and no alternate link.
+	var mdBuf bytes.Buffer
+	mdCount := 0
+	if collection.Mode != "page-index" {
+		mdCount, err = gen.WriteItemsMarkdown(&mdBuf, db, collection, time.Now())
+		if err != nil {
+			return err
+		}
+		if mdCount > 0 {
+			gen.Link = append(gen.Link, map[string]string{
+				"rel":  "alternate",
+				"type": "text/markdown",
+				"href": itemsMarkdownName(collection.File),
+			})
+		}
 	}
 
 	// figure out the name and path to write the HTML file to.
@@ -669,15 +684,15 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	}
 	out.Close()
 
-	// Markdown rendering of the items, beside the HTML page (DR-0008). It is
-	// generated output and is replaced on every run.
+	// The items file sits beside the HTML page. It is generated output, replaced
+	// on every run, and removed when the collection has nothing to show now.
 	if collection.Mode != "page-index" {
 		mdName := filepath.Join(cfg.Htdocs, itemsMarkdownName(collection.File))
-		var mdBuf bytes.Buffer
-		if err := gen.WriteItemsMarkdown(&mdBuf, db, collection, time.Now()); err != nil {
-			return err
-		}
-		if err := os.WriteFile(mdName, mdBuf.Bytes(), 0664); err != nil {
+		if mdCount > 0 {
+			if err := os.WriteFile(mdName, mdBuf.Bytes(), 0664); err != nil {
+				return err
+			}
+		} else if err := os.Remove(mdName); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 	}

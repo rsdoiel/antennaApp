@@ -327,21 +327,24 @@ func (gen *Generator) writeItemMarkdown(out io.Writer, link, title, description 
 //
 // Returns:
 //
+//	int — how many items were written. When it is 0 nothing is written to out
+//	      and no warning is given: a collection with nothing to show has no
+//	      items file (and its HTML page declares none)
 //	error — nil, or the first failure; unreadable rows are reported on the
 //	        generator's error stream and returned as a data error after the
 //	        rest are written
 //
 // Example:
 //
-//	err := gen.WriteItemsMarkdown(f, db, col, time.Now())
-func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *Collection, generated time.Time) error {
+//	n, err := gen.WriteItemsMarkdown(f, db, col, time.Now())
+func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *Collection, generated time.Time) (int, error) {
 	gen.Items.applyDefaults()
 	if err := gen.Items.validate(); err != nil {
-		return err
+		return 0, err
 	}
 	rows, err := db.Query(SQLDisplayItems)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer rows.Close()
 	var (
@@ -376,7 +379,7 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
 		omitted, err := gen.writeItemMarkdown(&body, link, title, description, authors,
 			sourceMarkdown, pubDate, channel, updated, label, gen.Items)
 		if err != nil {
-			return err
+			return 0, err
 		}
 		if omitted {
 			continue
@@ -387,7 +390,11 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
 		}
 	}
 	if err := rows.Err(); err != nil {
-		return err
+		return 0, err
+	}
+	if count == 0 {
+		// Nothing to show: no file, no front matter, no description warning.
+		return 0, tally.err("rows")
 	}
 	title := collection.Title
 	if title == "" {
@@ -416,7 +423,7 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
 		fmt.Fprintf(out, "# %s\n\n", mdEscapeInline(title))
 	}
 	if _, err := out.Write(body.Bytes()); err != nil {
-		return err
+		return 0, err
 	}
-	return tally.err("rows")
+	return count, tally.err("rows")
 }
