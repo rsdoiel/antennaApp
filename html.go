@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -445,12 +446,34 @@ func formatItemDate(raw string, layout string) string {
 	return raw
 }
 
-// elementFromMap, generate an HTML element from a map[string]string
+// attributeOrder is the order attributes are written in, so the same element
+// is the same bytes every time: the ones a reader looks for first (what it is,
+// then where it points or what it holds). Any other attribute follows these,
+// in alphabetical order.
+var attributeOrder = []string{"charset", "name", "http-equiv", "property", "rel", "type", "title", "href", "src", "content"}
+
+// elementFromMap generates an HTML start tag from a map of attributes. Go
+// ranges over a map in random order, so the attributes are written in
+// attributeOrder, then alphabetically, and regenerating a page does not change
+// it.
 func elementFromMap(element string, m map[string]string) string {
-	parts := []string{}
-	parts = append(parts, fmt.Sprintf("<%s", element))
-	for k, v := range m {
-		parts = append(parts, fmt.Sprintf("%s=%q", k, v))
+	parts := []string{fmt.Sprintf("<%s", element)}
+	written := map[string]bool{}
+	for _, k := range attributeOrder {
+		if v, ok := m[k]; ok {
+			parts = append(parts, fmt.Sprintf("%s=%q", k, v))
+			written[k] = true
+		}
+	}
+	rest := make([]string, 0, len(m))
+	for k := range m {
+		if !written[k] {
+			rest = append(rest, k)
+		}
+	}
+	sort.Strings(rest)
+	for _, k := range rest {
+		parts = append(parts, fmt.Sprintf("%s=%q", k, m[k]))
 	}
 	if element == "script" {
 		parts = append(parts, "></script>")
@@ -542,7 +565,15 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 			allowed[k] = true
 		}
 		doc := &CommonMark{FrontMatter: frontMatter}
-		for key, val := range frontMatter {
+		// Keys in alphabetical order: a map is ranged in random order, and the
+		// head must be the same bytes every time the page is generated.
+		keys := make([]string, 0, len(frontMatter))
+		for key := range frontMatter {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			val := frontMatter[key]
 			if frontMatterKeyRendered(key) {
 				continue // written by the renderer: <title>, <link rel>, the navigation, the margin image
 			}

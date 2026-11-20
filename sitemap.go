@@ -318,20 +318,8 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 		tally.add(nil)
 
 		// Determine changefreq and priority based on rules
-		changeFreq := cfg.DefaultFreq
-		priority := cfg.DefaultPri
-		for prefix, freq := range cfg.FreqRules {
-			if startsWith(outputPath, prefix) {
-				changeFreq = freq
-				break
-			}
-		}
-		for prefix, pri := range cfg.PriRules {
-			if startsWith(outputPath, prefix) {
-				priority = pri
-				break
-			}
-		}
+		changeFreq := longestPrefixRule(cfg.FreqRules, outputPath, cfg.DefaultFreq)
+		priority := longestPrefixRule(cfg.PriRules, outputPath, cfg.DefaultPri)
 		u := URL{
 			Loc:     fmt.Sprintf("%s/%s", cfg.BaseURL, outputPath),
 		}
@@ -349,4 +337,18 @@ func processSitemapRows(cfg *AppConfig, dbName string, db *sql.DB, sqlStmt strin
 	}
 
 	return urls, tally.err("rows")
+}
+
+// longestPrefixRule returns the value of the rule whose prefix is the longest
+// one outputPath starts with, or def when none matches. Rules are a map, which
+// Go ranges in random order, so when prefixes overlap (blog/ and blog/2026/)
+// the longest decides, the same way every run.
+func longestPrefixRule(rules map[string]string, outputPath, def string) string {
+	best, bestLen := def, -1
+	for prefix, value := range rules {
+		if startsWith(outputPath, prefix) && len(prefix) > bestLen {
+			best, bestLen = value, len(prefix)
+		}
+	}
+	return best
 }
