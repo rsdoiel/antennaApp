@@ -65,6 +65,10 @@ type AppConfig struct {
 	// generate run (DR-0007); nil outside a run, when it is read fresh.
 	linkTargets LinkTargets
 
+	// tocNav holds the previous and next page of every page and post in the
+	// site's table of contents, for the duration of one generate (DR-0013 5).
+	tocNav tocNav
+
 	// Sitemap settings, these should get sane defaults in the sitemap action
 	ChunkSize   int
 	DefaultFreq string

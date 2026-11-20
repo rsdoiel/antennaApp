@@ -53,6 +53,11 @@ type CommonMark struct {
 	// Macros, when set, expands {{page.NAME}} macros from the front matter
 	// while rendering (DR-0009 6). Nil expands nothing.
 	Macros *MacroExpander `json:"-" yaml:"-"`
+	// Nav and NavFrom, when set, let the HTML take urlPrev and urlNext from the
+	// site's table of contents when the front matter gives none (DR-0013 5).
+	// NavFrom is this document's own published Markdown path.
+	Nav     tocNav `json:"-" yaml:"-"`
+	NavFrom string `json:"-" yaml:"-"`
 }
 
 

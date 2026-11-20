@@ -346,6 +346,11 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 	}
 	// What antenna renders is read once for the whole run (DR-0007).
 	defer cfg.holdLinkTargets(eout)()
+	// The previous and next page of every page and post, from the same data the
+	// table of contents is made from, so a page or post that names neither gets
+	// them (DR-0013 5). Worked out before anything is rendered.
+	cfg.tocNav = cfg.computeTOCNav()
+	defer func() { cfg.tocNav = nil }()
 	// Everything asked for is generated even when part of it fails; the
 	// command then reports the failures and exits with the class of the first
 	// (DR-0003 item 4), not 0.
@@ -480,6 +485,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 		}
 		doc.Links = cfg.rewriterFor(postPath, eout)
 		doc.Macros = &MacroExpander{From: postPath, Warn: eout}
+		cfg.attachNav(doc, postPath)
 		innerHTML, err := doc.ToUnsafeHTML()
 		if err != nil {
 			fmt.Fprintf(eout, "warning rendering markdown for %q: %s\n", postPath, err)

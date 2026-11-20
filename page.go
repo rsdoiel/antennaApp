@@ -185,6 +185,7 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 	}
 	doc.Links = cfg.rewriterFor(from, eout)
 	doc.Macros = &MacroExpander{From: from, Warn: eout}
+	cfg.attachNav(doc, from)
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return err

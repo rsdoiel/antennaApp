@@ -354,3 +354,95 @@ func openIfExists(dbName string) (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+// tocNeighbours are the Markdown pages before and after one in the outline, by
+// the rule of antennaApp DR-0013 5. "" means there is none.
+type tocNeighbours struct{ prev, next string }
+
+// tocNav maps a published Markdown page (site-relative, slash separated) to its
+// neighbours in the table of contents.
+type tocNav map[string]tocNeighbours
+
+/** buildTOCNav works out the previous and next page of every page and post the
+ * table of contents lists (antennaApp DR-0013 5). In the Pages group, previous
+ * is the page above and next the page below. In Posts, which are listed newest
+ * first, previous is the older post, which is the next line down, and next is
+ * the newer one: the convention of Dave Winer's explicit urlPrev and urlNext,
+ * and the reverse of the line order. The first and last entry have only one.
+ * Collections have none.
+ *
+ * Parameters:
+ *   pages ([]tocEntry) — the Pages group in outline order
+ *   posts ([]tocEntry) — the posts, newest first
+ *
+ * Returns:
+ *   tocNav — the neighbours of each listed Markdown page
+ *
+ * Example:
+ *   nav := buildTOCNav(pages, posts)
+ */
+func buildTOCNav(pages, posts []tocEntry) tocNav {
+	nav := tocNav{}
+	for i, p := range pages {
+		var n tocNeighbours
+		if i > 0 {
+			n.prev = pages[i-1].md
+		}
+		if i+1 < len(pages) {
+			n.next = pages[i+1].md
+		}
+		nav[p.md] = n
+	}
+	for i, p := range posts {
+		var n tocNeighbours
+		if i+1 < len(posts) {
+			n.prev = posts[i+1].md // older
+		}
+		if i > 0 {
+			n.next = posts[i-1].md // newer
+		}
+		nav[p.md] = n
+	}
+	return nav
+}
+
+// computeTOCNav reads the same pages and posts GenerateTOC lists and returns
+// their neighbours. It is quiet: GenerateTOC does the warning. A database that
+// cannot be read gives no arrows at all, not wrong ones.
+func (cfg *AppConfig) computeTOCNav() tocNav {
+	htdocs := cfg.Htdocs
+	if htdocs == "" {
+		htdocs = "."
+	}
+	quiet := func(string, ...any) {}
+	tally := &failureTally{}
+	pages := cfg.tocPages(htdocs, quiet, tally)
+	posts := cfg.tocPosts(htdocs, quiet, tally)
+	if tally.err("table of contents") != nil {
+		return nil
+	}
+	return buildTOCNav(pages, posts)
+}
+
+// attachNav gives doc the site's neighbours, for the page or post at from (its
+// output path or post path), so its HTML can show previous and next when its
+// front matter names none. It does nothing outside generate, which is what
+// computes them.
+func (cfg *AppConfig) attachNav(doc *CommonMark, from string) {
+	if cfg.tocNav == nil {
+		return
+	}
+	doc.Nav, doc.NavFrom = cfg.tocNav, markdownPathFor(from)
+}
+
+// relativeMarkdownPath writes the path of the Markdown page to, relative to
+// the folder of the Markdown page from; both are site-relative and slash
+// separated. A link written this way is what the .md-to-.html rewriting of
+// DR-0007 expects.
+func relativeMarkdownPath(from, to string) string {
+	rel, err := filepath.Rel(filepath.FromSlash(path.Dir(from)), filepath.FromSlash(to))
+	if err != nil {
+		return to
+	}
+	return filepath.ToSlash(rel)
+}

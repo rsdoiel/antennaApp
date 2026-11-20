@@ -46,15 +46,21 @@ var pageNavKeys = []struct{ Key, Rel, Text string }{
  *   err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.htmlFrontMatter())
  */
 func (doc *CommonMark) htmlFrontMatter() map[string]interface{} {
-	if doc.FrontMatter == nil {
+	derived := doc.derivedNavigation()
+	if doc.FrontMatter == nil && len(derived) == 0 {
 		return nil
 	}
-	out := make(map[string]interface{}, len(doc.FrontMatter))
+	out := make(map[string]interface{}, len(doc.FrontMatter)+len(derived))
 	for k, v := range doc.FrontMatter {
 		out[k] = v
 	}
+	// Derived previous and next only fill in what the author left out; they go
+	// through the same checks and rewriting below as keys the author wrote.
+	for k, v := range derived {
+		out[k] = v
+	}
 	for _, nk := range pageNavKeys {
-		raw, ok := doc.FrontMatter[nk.Key].(string)
+		raw, ok := out[nk.Key].(string)
 		if !ok {
 			continue
 		}
@@ -129,4 +135,30 @@ func pageNavHTML(frontMatter map[string]interface{}) string {
 	}
 	sb.WriteString("</nav>")
 	return sb.String()
+}
+
+// derivedNavigation returns urlPrev and urlNext taken from the site's table of
+// contents (antennaApp DR-0013 5), as Markdown paths relative to this document,
+// for the keys the front matter does not give. Explicit front matter always
+// wins; nothing is written into the author's Markdown.
+func (doc *CommonMark) derivedNavigation() map[string]interface{} {
+	if doc.Nav == nil || doc.NavFrom == "" {
+		return nil
+	}
+	nb, ok := doc.Nav[doc.NavFrom]
+	if !ok {
+		return nil
+	}
+	given := func(key string) bool {
+		s, _ := doc.FrontMatter[key].(string)
+		return strings.TrimSpace(s) != ""
+	}
+	out := map[string]interface{}{}
+	if !given("urlPrev") && nb.prev != "" {
+		out["urlPrev"] = relativeMarkdownPath(doc.NavFrom, nb.prev)
+	}
+	if !given("urlNext") && nb.next != "" {
+		out["urlNext"] = relativeMarkdownPath(doc.NavFrom, nb.next)
+	}
+	return out
 }
