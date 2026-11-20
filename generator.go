@@ -465,6 +465,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 			doc.Text = IncludeCodeBlock(doc.Text)
 		}
 		doc.Links = cfg.rewriterFor(postPath, eout)
+		doc.Macros = &MacroExpander{From: postPath, Warn: eout}
 		innerHTML, err := doc.ToUnsafeHTML()
 		if err != nil {
 			fmt.Fprintf(eout, "warning rendering markdown for %q: %s\n", postPath, err)

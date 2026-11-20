@@ -50,6 +50,9 @@ type CommonMark struct {
 	// renders so the HTML links to the HTML page (DR-0007). Nil leaves links
 	// as written.
 	Links *LinkRewriter `json:"-" yaml:"-"`
+	// Macros, when set, expands {{page.NAME}} macros from the front matter
+	// while rendering (DR-0009 6). Nil expands nothing.
+	Macros *MacroExpander `json:"-" yaml:"-"`
 }
 
 

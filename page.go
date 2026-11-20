@@ -184,6 +184,7 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 		from = doc.GetAttributeString("postPath", fName)
 	}
 	doc.Links = cfg.rewriterFor(from, eout)
+	doc.Macros = &MacroExpander{From: from, Warn: eout}
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return err

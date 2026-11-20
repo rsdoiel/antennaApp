@@ -137,12 +137,17 @@ func (t linkTransformer) Transform(doc *ast.Document, _ text.Reader, _ parser.Co
 }
 
 // parserOptions returns the goldmark parser options the document needs: the
-// link transformer when a LinkRewriter is set.
+// macro transformer when a MacroExpander is set, then the link transformer
+// when a LinkRewriter is set (so a title link a macro makes is rewritten too).
 func (doc *CommonMark) parserOptions() []parser.Option {
-	if doc.Links == nil {
-		return nil
+	var opts []parser.Option
+	if opt := doc.macroOption(); opt != nil {
+		opts = append(opts, opt)
 	}
-	return []parser.Option{parser.WithASTTransformers(util.Prioritized(linkTransformer{doc.Links}, 100))}
+	if doc.Links != nil {
+		opts = append(opts, parser.WithASTTransformers(util.Prioritized(linkTransformer{doc.Links}, 100)))
+	}
+	return opts
 }
 
 /** LinkTargets reads what antenna renders from the site's own data: the rows

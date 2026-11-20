@@ -605,6 +605,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 
 	// Convert our document text to HTML
 	doc.Links = cfg.rewriterFor(postPath, os.Stderr)
+	doc.Macros = &MacroExpander{From: postPath, Warn: os.Stderr}
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return err
