@@ -59,9 +59,13 @@ type Finding struct {
 	Message  string   `json:"message"`
 }
 
-// errFindings marks the negative answer of a validate run that found errors or
+// findingsError is the negative answer of a validate run that found errors or
 // warnings. It is not a tool failure, so JSON mode does not add an error object.
-var errFindings = errors.New("validate found errors or warnings")
+type findingsError struct{ errs, warns int }
+
+func (e *findingsError) Error() string {
+	return fmt.Sprintf("validate: %d errors and %d warnings found", e.errs, e.warns)
+}
 
 // validator holds the state of one validate run.
 type validator struct {
@@ -131,7 +135,8 @@ func (app *AntennaApp) Validate(out io.Writer, eout io.Writer, cfgName string, a
 		return err
 	}
 	err = app.validate(out, cfgName, target, jsonMode, online)
-	if err != nil && jsonMode && !errors.Is(err, errFindings) {
+	var found *findingsError
+	if err != nil && jsonMode && !errors.As(err, &found) {
 		class := ExitCodeFor(err)
 		b, _ := json.Marshal(map[string]any{"error": err.Error(), "class": class.Name, "code": class.Code})
 		fmt.Fprintln(out, string(b))
@@ -228,7 +233,7 @@ func (v *validator) report(out io.Writer, jsonMode bool) error {
 			map[bool]string{true: "file", false: "files"}[v.files == 1], errs, warns, infos)
 	}
 	if errs+warns > 0 {
-		return classedAs(classNegative, fmt.Errorf("validate: %d errors and %d warnings found: %w", errs, warns, errFindings))
+		return classedAs(classNegative, &findingsError{errs: errs, warns: warns})
 	}
 	return nil
 }
@@ -339,6 +344,7 @@ func (v *validator) checkFile(file string) {
 	v.files++
 	doc := &CommonMark{FrontMatter: fm, Text: body}
 	v.checkFrontMatter(file, raw, doc)
+	v.checkBody(file, raw, doc)
 }
 
 // checkFrontMatter runs the checks that read only the front matter and the
