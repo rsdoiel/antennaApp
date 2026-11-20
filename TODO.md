@@ -22,6 +22,8 @@ Ideas, not quite a roadmap
 
 BonBon (https://github.com/scripting/bonBon/) is Dave Winer's browser whose native format is Markdown. Design brief, plan and records are in agents/projects/antennaApp/ (DR-0007 to DR-0014). User documentation: `antenna help markdown-web`.
 
+- [ ] Does the page verb need to format/add front matter links for supporting BonBon?
+
 - [x] Phase 1 (DR-0007): `.md` links become `.html` in HTML output, with a warning for a link to a file antenna does not render.
 - [x] Collections get a Markdown rendering of their items, `STEM_items.md`, declared as the HTML page's alternate (DR-0008).
 - [x] BonBon front matter: `link`, `urlPrev`, `urlNext`, `rightMarginImage`, RSS-form dates, `{{page.NAME}}` macros (DR-0009).
