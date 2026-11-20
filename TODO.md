@@ -38,7 +38,7 @@ BonBon (https://github.com/scripting/bonBon/) is Dave Winer's browser whose nati
 - [x] `blogit` adds `pubDate` (RSS form, local numeric offset) and a `title` from the first heading to the post's copy, so a blogit post is published and in the toc (DR-0016, built 2026-11-20).
 - [ ] `antenna validate [PATH]`: read-only site and file checks with stable codes, exit 0/1 (DR-0017). Build second.
 - [ ] `antenna migrate-links [PATH]`: `.html` links to `.md` in the author's Markdown, dry run by default, `-w` writes (DR-0017, DR-0007 4). Build after `validate`.
-- [ ] Posts are stored with their `pubDate` converted to UTC, so a post written late in the evening local time can land in the next day or month in `toc.opml`'s calendar groups (the directory comes from the local day). Seen while building `blogit`; not changed.
+- [x] A date with a zone keeps it when stored (RFC 3339 with the offset), so a post made at 21:30 Pacific stays on its day in `toc.opml`, the feeds and the page; `blogit` uses the process time zone, `TZ` overrides it (DR-0018, 2026-11-20).
 - [ ] "Markdown-clean" check: warn when a post carries raw HTML, SVG images or other things BonBon strips (it allows PNG, JPEG, GIF and WebP only, and no page CSS or JavaScript).
 - [ ] Harvest from BonBon sites: accept a site's `toc.opml` as a feed collection source.
 - [ ] Open question: a Markdown-only collection mode with no theme (only `.md` and `toc.opml`), since the reader picks the look. This changes what a collection is, so write a decision record first.
