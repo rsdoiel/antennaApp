@@ -79,10 +79,13 @@ pubDate may be written as 2026-06-27, as a timestamp such as
 2026-06-27T10:00:00Z (quoted or not), or in the RSS 2.0 form BonBon uses,
 Fri, 23 Oct 2026 15:19:45 GMT. The weekday may be left out, the day may have
 one or two digits, and the zone may be GMT, UT, a US zone such as EST or PDT,
-or an offset such as +0200. antenna stores an RSS date as YYYY-MM-DD HH:MM:SS
-in UTC so that posts sort; your Markdown file is never changed. A date antenna
-cannot read is kept as written and reported with a warning; it does not stop
-the command.
+or an offset such as +0200. A date with a zone keeps it: antenna stores
+"Mon, 30 Nov 2026 21:30:00 -0800" as 2026-11-30T21:30:00-08:00, so the post is
+on November 30 in the table of contents, the feeds and the page, the day you
+wrote it, wherever the reader is. A date in GMT, or with no zone, is stored as
+YYYY-MM-DD HH:MM:SS. Posts sort by the moment they were made. Your Markdown
+file is never changed. A date antenna cannot read is kept as written and
+reported with a warning; it does not stop the command.
 
 # MACROS
 

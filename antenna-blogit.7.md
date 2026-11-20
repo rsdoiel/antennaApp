@@ -33,6 +33,14 @@ file's date; the directory follows POST_DATE. It writes no author, description,
 link, urlPrev or urlNext. A post with no pubDate stays a draft, so to keep one
 as a draft use post, not blogit. See antenna help metadata.
 
+The time and the day directory come from the time zone of the computer
+antenna runs on, which the TZ environment variable overrides. If you work
+over SSH on another machine or are travelling, say where you are:
+
+    TZ=Asia/Tokyo antenna blogit my-post.md
+
+A pubDate you wrote yourself, with its own offset, is kept as it is.
+
 # PARAMETERS
 
 COLLECTION_NAME
