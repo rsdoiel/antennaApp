@@ -340,6 +340,8 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 			args = append(args, col.File)
 		}
 	}
+	// What antenna renders is read once for the whole run (DR-0007).
+	defer cfg.holdLinkTargets(eout)()
 	// Everything asked for is generated even when part of it fails; the
 	// command then reports the failures and exits with the class of the first
 	// (DR-0003 item 4), not 0.
@@ -461,6 +463,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 		if strings.Contains(doc.Text, "@include-code-block") {
 			doc.Text = IncludeCodeBlock(doc.Text)
 		}
+		doc.Links = cfg.rewriterFor(postPath, eout)
 		innerHTML, err := doc.ToUnsafeHTML()
 		if err != nil {
 			fmt.Fprintf(eout, "warning rendering markdown for %q: %s\n", postPath, err)
@@ -514,6 +517,7 @@ func (cfg *AppConfig) GeneratePages(eout io.Writer) error {
 		}
 		return err
 	}
+	defer cfg.holdLinkTargets(eout)()
 	tally := &failureTally{}
 	for _, page := range pages {
 		inputPath := page["inputPath"]
@@ -521,7 +525,7 @@ func (cfg *AppConfig) GeneratePages(eout io.Writer) error {
 		if inputPath == "" {
 			continue
 		}
-		err := cfg.Page(inputPath, outputPath)
+		err := cfg.pageTo(inputPath, outputPath, eout)
 		if err != nil {
 			fmt.Fprintf(eout, "warning generating page %q: %s\n", inputPath, err)
 			err = fmt.Errorf("%s: %w", inputPath, err)

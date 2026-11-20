@@ -19,6 +19,7 @@ package antennaApp
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -157,6 +158,11 @@ func (cfg *AppConfig) Unpage(fName string) error {
 }
 
 func (cfg *AppConfig) Page(fName string, oName string) error {
+	return cfg.pageTo(fName, oName, os.Stderr)
+}
+
+// pageTo renders one page; warnings about links go to eout.
+func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 	doc, err := LoadCommonMark(fName)
 	if err != nil {
 		return err
@@ -173,6 +179,11 @@ func (cfg *AppConfig) Page(fName string, oName string) error {
 	// Convert our document text to HTML
 	// NOTE: Pages are allowed to have "unsafe" embedded HTML because they are
 	// not reading from a feed, they are being read from your file system.
+	from := oName
+	if from == "" {
+		from = doc.GetAttributeString("postPath", fName)
+	}
+	doc.Links = cfg.rewriterFor(from, eout)
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return err

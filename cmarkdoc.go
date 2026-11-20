@@ -46,6 +46,10 @@ type CommonMark struct {
 	Text string `json:"text,omitempty" yaml:"text,omitempty"`
 	// useMathJax controls if MathJax support is included when rendering HTML
 	useMathJax bool `json:"-"`
+	// Links, when set, rewrites relative links to Markdown files antenna
+	// renders so the HTML links to the HTML page (DR-0007). Nil leaves links
+	// as written.
+	Links *LinkRewriter `json:"-" yaml:"-"`
 }
 
 
@@ -341,6 +345,7 @@ func (doc *CommonMark) ToHTML() (string, error) {
 		goldmark.WithExtensions(
 			extenders...
 		),
+		goldmark.WithParserOptions(doc.parserOptions()...),
 	)
 	var buf bytes.Buffer
 	if err := md.Convert([]byte(doc.Text), &buf); err != nil {
@@ -368,6 +373,7 @@ func (doc *CommonMark) ToUnsafeHTML() (string, error) {
 		goldmark.WithExtensions(
 			extenders...
 		),
+		goldmark.WithParserOptions(doc.parserOptions()...),
 		goldmark.WithRendererOptions(
 			html.WithUnsafe(),
 		),

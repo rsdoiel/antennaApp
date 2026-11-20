@@ -61,6 +61,10 @@ type AppConfig struct {
 	// Collections holds a list of collections to curate
 	Collections []*Collection `json:"collections,omitempty" yaml:"collections,omitempty"`
 
+	// linkTargets caches what antenna renders for the duration of one
+	// generate run (DR-0007); nil outside a run, when it is read fresh.
+	linkTargets LinkTargets
+
 	// Sitemap settings, these should get sane defaults in the sitemap action
 	ChunkSize   int
 	DefaultFreq string
@@ -600,6 +604,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 	}
 
 	// Convert our document text to HTML
+	doc.Links = cfg.rewriterFor(postPath, os.Stderr)
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return err
