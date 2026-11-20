@@ -9,7 +9,7 @@ require (
 	github.com/mangoumbrella/goldmark-figure v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.53
 	github.com/mmcdole/gofeed v1.5.0
-	github.com/rsdoiel/opml v0.0.10
+	github.com/rsdoiel/opml v0.0.11
 	github.com/rsdoiel/stylefrom v0.0.2
 	github.com/rsdoiel/termlib v0.0.10
 	github.com/stefanfritsch/goldmark-fences v1.0.0

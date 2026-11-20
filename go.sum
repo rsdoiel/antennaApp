@@ -6,7 +6,6 @@ github.com/PuerkitoBio/goquery v1.14.0/go.mod h1:XUxFiysSccNd2XFo0qKyhEzGlshiP21
 github.com/andybalholm/cascadia v1.3.2/go.mod h1:7gtRlve5FxPPgIgX36uWBX58OdBsSS6lUvCFb+h7KvU=
 github.com/andybalholm/cascadia v1.3.5 h1:RLjq12WJy58dN6eCIQrz0bAGZkztHWsEPFxP53Y7Ms8=
 github.com/andybalholm/cascadia v1.3.5/go.mod h1:BLRmbRjpEtNKieZOCCvYj4RqN+KRA41GBe/5O+G93kM=
-github.com/caltechlibrary/cli v0.0.16/go.mod h1:BVT+6d/QqcN4UApWR3ufjkkKj2O6+48B4G6iUpP8m38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dustin/go-humanize v1.1.0 h1:dbKTrvD0klcbBV/h4AWJdMuZogJACoMlvWIWZ5b2xWg=
@@ -43,8 +42,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
-github.com/rsdoiel/opml v0.0.10 h1:YQCocWXwdkaNhhoaXSm5XurrgtWa6SyftSLwdqOg+fI=
-github.com/rsdoiel/opml v0.0.10/go.mod h1:X7dtC+4Yn/ENAWCNvr/lIbKRWXR7vZ3HhybOEh3Fw7Q=
+github.com/rsdoiel/opml v0.0.11 h1:FgPzid7kZfTOoz9cGyg45V6dOW9m2UOf4/6pdP/KyhE=
+github.com/rsdoiel/opml v0.0.11/go.mod h1:7Ua73wSFSuB+kWNpKih7n/Pd72xoXWg94GLepr9oiNs=
 github.com/rsdoiel/stylefrom v0.0.2 h1:R98EKfSxrbC489llzwuTAxDGN8eJSHiKRVgqw1wantg=
 github.com/rsdoiel/stylefrom v0.0.2/go.mod h1:Jzzin4po1hb1fUpB0FhB+svZhb0cgih1RgeQniYVRHg=
 github.com/rsdoiel/termlib v0.0.10 h1:ZNPgV/mQZ/lVNuIci5SNkAG8Cv9LbdC0uTOUXFpTfME=
