@@ -54,6 +54,14 @@ becomes the collection's items page.
   only when its content changes, so a repository kept in git shows only real
   changes.
 
+# ADDING A POST
+
+antenna blogit FILE [POST_DATE] copies a Markdown file into
+blog/YYYY/MM/DD/ and posts it, adding a pubDate in the RSS form BonBon expects
+and a title from the first heading when the file has none (see
+antenna help blogit). A post with no pubDate is a draft and is not in the
+table of contents.
+
 # FRONT MATTER AND MACROS
 
 (see: antenna help metadata)

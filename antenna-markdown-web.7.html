@@ -61,6 +61,12 @@ contents unless the page sets urlPrev and urlNext itself.</li>
 rewrites a file only when its content changes, so a repository kept in
 git shows only real changes.</li>
 </ul>
+<h1 id="adding-a-post">ADDING A POST</h1>
+<p>antenna blogit FILE [POST_DATE] copies a Markdown file into
+blog/YYYY/MM/DD/ and posts it, adding a pubDate in the RSS form BonBon
+expects and a title from the first heading when the file has none (see
+antenna help blogit). A post with no pubDate is a draft and is not in
+the table of contents.</p>
 <h1 id="front-matter-and-macros">FRONT MATTER AND MACROS</h1>
 <p>(see: antenna help metadata)</p>
 <p>The front matter fields BonBon reads (link, urlPrev, urlNext,

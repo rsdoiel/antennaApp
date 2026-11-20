@@ -601,6 +601,22 @@ blog-style date directory tree (e.g. blog/2026/04/12/my-post.md) before
 adding it to the collection. If POST_DATE is omitted, the current date is
 used. The collection defaults to pages.md when COLLECTION_NAME is omitted.
 
+Because blogit is for putting a post on the blog, it also makes the post
+publishable. In the copy it makes (never in your original) it adds:
+
+- pubDate, when the file has neither pubDate nor datePublished: the RSS 2.0 date
+  form BonBon expects, with a numeric offset in your local time zone, for
+  example "Thu, 19 Nov 2026 09:30:00 -0800". It is the current time, or, when
+  POST_DATE is given, noon local on that day.
+- title, when the file has none: the text of its first level-1 heading
+  (# Heading). The body is not changed.
+
+An existing pubDate, datePublished or title is never changed. If POST_DATE is
+on a different day than the pubDate in the file, blogit warns and keeps the
+file's date; the directory follows POST_DATE. It writes no author, description,
+link, urlPrev or urlNext. A post with no pubDate stays a draft, so to keep one
+as a draft use post, not blogit. See {app_name} help metadata.
+
 # PARAMETERS
 
 COLLECTION_NAME
@@ -1692,6 +1708,14 @@ becomes the collection's items page.
 - The same files, byte for byte, when nothing changed: generate rewrites a file
   only when its content changes, so a repository kept in git shows only real
   changes.
+
+# ADDING A POST
+
+{app_name} blogit FILE [POST_DATE] copies a Markdown file into
+blog/YYYY/MM/DD/ and posts it, adding a pubDate in the RSS form BonBon expects
+and a title from the first heading when the file has none (see
+{app_name} help blogit). A post with no pubDate is a draft and is not in the
+table of contents.
 
 # FRONT MATTER AND MACROS
 

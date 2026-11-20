@@ -589,7 +589,9 @@ func (s *iSession) guideBlogit(args []string) error {
 %sblogit%s — Copy a file into a blog directory tree and post it
 
 Takes a Markdown (.md) file, copies it into a date-based path such as
-blog/2026/03/01/my-post.md, then adds it to the collection as a post.
+blog/2026/03/01/my-post.md, then adds it to the collection as a post. It adds
+a pubDate (now, or noon on POST_DATE) and a title from the first heading when
+the file has none, so the post is published.
 `, Bold+Yellow, Reset)
 
 	preCollection, preFile, preDate := "", "", ""
