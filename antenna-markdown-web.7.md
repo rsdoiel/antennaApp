@@ -42,6 +42,12 @@ becomes the collection's items page.
 - A table of contents, .well-known/toc.opml under htdocs, listing the site's
   pages, collection items pages and posts. A reader finds it at that fixed
   address and uses it for previous and next. It needs base_url in antenna.yaml.
+- Include outlines for the sub-sites listed in the subsites setting of
+  antenna.yaml, so a host with several Markdown sites (this one, /opml, /antenna)
+  has one table of contents at its root that BonBon can follow. Only the root
+  site of a host needs them; BonBon reads one level.
+- .well-known/bonbon.json, only when the bonbon setting of antenna.yaml has a
+  key (see WHAT IS NOT DONE).
 - Previous and next links on pages and posts, taken from that table of contents
   unless the page sets urlPrev and urlNext itself.
 - The same files, byte for byte, when nothing changed: generate rewrites a file
@@ -70,10 +76,11 @@ declared alternate, the table of contents and the .md links themselves.
 
 # WHAT IS NOT DONE
 
-antenna does not write .well-known/bonbon.json. Its keys (urlSearch,
-urlUpdateSocket, urlMirrorOf) need a search service, a websocket or a mirror,
-none of which a static site has. If you run one, write the file by hand in the
-htdocs directory.
+antenna runs no search service, update socket or mirror. Those need a
+server, which a static site does not have. By default it writes no
+.well-known/bonbon.json. If you run such a service, put its address in the
+bonbon setting of antenna.yaml (urlSearch, urlUpdateSocket, urlMirrorOf) and
+generate writes the file; see antenna help configuration.
 
 Raw HTML, CSS, scripts and SVG images are ignored by Markdown readers.
 The HTML pages keep them; the Markdown you write is what a reader shows.

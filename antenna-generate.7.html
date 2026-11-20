@@ -48,6 +48,13 @@ published in htdocs are listed. The addresses are made from base_url in
 antenna.yaml, which it needs: without one a warning is given and the
 file is not written. Like the other files it is rewritten only when its
 content changes.</p>
+<p>Sites listed in the subsites setting of antenna.yaml are added to the
+outline as include outlines (type=“include”,
+url=SITE/.well-known/toc.opml) after those groups, so the table of
+contents at a host’s root leads BonBon to its other sites. Nothing is
+fetched. If the bonbon setting of antenna.yaml has a key, generate also
+writes .well-known/bonbon.json from it; with none it writes no file and
+leaves any file you wrote alone. See antenna help configuration.</p>
 <p>The same outline gives previous and next links to pages and posts
 that name neither urlPrev nor urlNext in their front matter: for a page
 the page above and below it in path order, for a post the older post as

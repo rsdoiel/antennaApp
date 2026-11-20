@@ -731,6 +731,13 @@ are made from base_url in antenna.yaml, which it needs: without one a warning
 is given and the file is not written. Like the other files it is rewritten only
 when its content changes.
 
+Sites listed in the subsites setting of antenna.yaml are added to the outline as
+include outlines (type="include", url=SITE/.well-known/toc.opml) after those
+groups, so the table of contents at a host's root leads BonBon to its other
+sites. Nothing is fetched. If the bonbon setting of antenna.yaml has a key,
+generate also writes .well-known/bonbon.json from it; with none it writes no
+file and leaves any file you wrote alone. See {app_name} help configuration.
+
 The same outline gives previous and next links to pages and posts that name
 neither urlPrev nor urlNext in their front matter: for a page the page above and
 below it in path order, for a post the older post as previous and the newer as
@@ -1495,6 +1502,38 @@ htdocs
 generator
 : (optional, default: page.yaml) default page generator YAML
 
+base_url
+: (optional) the address the site is published at, with no trailing slash.
+  The feeds, the sitemap and the table of contents (.well-known/toc.opml) are
+  made from it; without it the table of contents is not written
+
+subsites
+: (optional) other Markdown sites on the same host, so this site's table of
+  contents can point at them. A list of objects, each with url (required: the
+  sub-site's root, an absolute http or https address with a host, no query or
+  fragment) and title (optional label). generate writes one include outline
+  per entry, after the pages, collections and posts, in the order listed, at
+  url/.well-known/toc.opml. BonBon asks only the root of a host for a table of
+  contents and follows an include to reach a sub-site, so a host with several
+  sites lists them here in the root site's antenna.yaml. Write the address as
+  the sub-site's own pages are published (same scheme and host). Nothing is
+  fetched: generate does not check that a sub-site exists. A missing or
+  relative url, a duplicate, or an entry that is not a list of objects is a
+  configuration error (exit 78)
+
+bonbon
+: (optional) the content of .well-known/bonbon.json, a mapping of keys to
+  values. When it has at least one key, generate writes the file (a JSON object,
+  keys sorted), and rewrites it only when it changes. BonBon reads three keys
+  and only as strings: urlSearch, urlUpdateSocket and urlMirrorOf; any other key
+  is written as given and ignored by BonBon today. A known key that is empty or
+  not a string draws a warning, because BonBon keeps an empty one and a search
+  then goes to a broken address: leave a key out instead of blanking it. With
+  no bonbon setting {app_name} writes no file and never removes one, so a file
+  you wrote by hand is safe; if you take the setting out, delete the file
+  yourself. {app_name} runs no search or update service; see
+  {app_name} help markdown-web
+
 collections
 : (required) list of collection objects
 
@@ -1517,6 +1556,13 @@ Example antenna.yaml:
 
   htdocs: htdocs
   port: 8000
+  base_url: https://example.org
+  subsites:
+    - url: https://example.org/opml
+      title: opml
+    - url: https://example.org/antenna
+  bonbon:
+    urlSearch: https://example.org/search
   collections:
     - file: index.md                 # aggregate (default)
     - file: links.md
@@ -1635,6 +1681,12 @@ becomes the collection's items page.
 - A table of contents, .well-known/toc.opml under htdocs, listing the site's
   pages, collection items pages and posts. A reader finds it at that fixed
   address and uses it for previous and next. It needs base_url in antenna.yaml.
+- Include outlines for the sub-sites listed in the subsites setting of
+  antenna.yaml, so a host with several Markdown sites (this one, /opml, /antenna)
+  has one table of contents at its root that BonBon can follow. Only the root
+  site of a host needs them; BonBon reads one level.
+- .well-known/bonbon.json, only when the bonbon setting of antenna.yaml has a
+  key (see WHAT IS NOT DONE).
 - Previous and next links on pages and posts, taken from that table of contents
   unless the page sets urlPrev and urlNext itself.
 - The same files, byte for byte, when nothing changed: generate rewrites a file
@@ -1663,10 +1715,11 @@ declared alternate, the table of contents and the .md links themselves.
 
 # WHAT IS NOT DONE
 
-{app_name} does not write .well-known/bonbon.json. Its keys (urlSearch,
-urlUpdateSocket, urlMirrorOf) need a search service, a websocket or a mirror,
-none of which a static site has. If you run one, write the file by hand in the
-htdocs directory.
+{app_name} runs no search service, update socket or mirror. Those need a
+server, which a static site does not have. By default it writes no
+.well-known/bonbon.json. If you run such a service, put its address in the
+bonbon setting of antenna.yaml (urlSearch, urlUpdateSocket, urlMirrorOf) and
+generate writes the file; see {app_name} help configuration.
 
 Raw HTML, CSS, scripts and SVG images are ignored by Markdown readers.
 The HTML pages keep them; the Markdown you write is what a reader shows.
