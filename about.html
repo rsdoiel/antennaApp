@@ -1,61 +1,88 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.0.28">antennaApp 0.0.28</h2>
+<h2 id="antennaapp-0.1.0">antennaApp 0.1.0</h2>
 <ul>
-<li>Fixed the release binaries: v0.0.27 was tagged, but its
-cross-compiled builds failed on a cgo-only SQLite symbol, so it has no
-downloadable binaries; this is the first release of that code with
-binaries for all seven platforms</li>
-<li>Fixed <code>antenna sitemap</code> in cross-compiled binaries: it
-opened a cgo-only SQLite driver and failed at run time without cgo</li>
-<li>Everything in v0.0.27:</li>
-<li>Added <code>antenna completion bash|powershell</code>, with
-<code>-install</code> to set up completion for every new session</li>
-<li>Exit codes now follow the workspace convention (DR-0003): 0 ok, 1
-no, 2 usage, 65 data, 66 no input, 69 unavailable, 70 internal, 73
-cannot create, 74 I/O, 75 try again, 77 permission, 78 config; they are
-documented under EXIT STATUS in the manual</li>
-<li>Breaking for scripts: <code>harvest</code> and <code>generate</code>
-finish all their work, then exit non-zero when any feed, collection,
-post or page failed (a dead feed now exits 69); <code>posts</code>,
-<code>items</code> and <code>pages</code> that find nothing exit 0; a
-surplus argument is refused with exit 2 (<code>preview extra</code> used
-to start the server); <code>del</code> of an unknown collection exits
-1</li>
-<li><code>antenna sitemap</code> now lists only the site’s pages (from
-the pages collection) and its local posts, never harvested feed items;
-numbers its files across collections, writes them to htdocs, warns and
-exits 0 when there is nothing to list, and has <code>-clean</code> to
-remove stale <code>sitemap_N.xml</code> files</li>
-<li>Fixed RSS feeds: enclosure URLs are XML-escaped (feeds with query
-strings were not well-formed), an unknown enclosure length is written as
-0, and items now carry their own <code>pubDate</code> in RFC 1123 form
-(#22)</li>
-<li>Fixed the skip link: <code>&lt;main&gt;</code> is focusable, so
-following it moves keyboard focus into the main area</li>
-<li>Fixed <code>items</code> dropping rows that had NULL columns,
-<code>blogit</code> treating hyphenated file names as dates, and a feed
-whose body was cut off being parsed as if complete</li>
+<li>Antenna sites now publish for the Markdown web (Dave Winer’s BonBon
+browser and readers like it) as well as for HTML browsers, from the same
+Markdown. See <code>antenna help markdown-web</code></li>
+<li>Links between your pages are written to the <code>.md</code> file;
+in the HTML output a link to a page, collection or post that antenna
+renders becomes the <code>.html</code> page, with a warning for a link
+to a file it does not render</li>
+<li>Each collection with items also gets a Markdown rendering of them,
+<code>STEM_items.md</code>, declared in the HTML head as its Markdown
+alternate</li>
+<li><code>antenna generate</code> writes
+<code>.well-known/toc.opml</code>: the site’s pages, collections and
+posts (oldest first, by year and month), with <code>include</code>
+outlines for the other sites on the host named by the new
+<code>subsites</code> list in <code>antenna.yaml</code>; it gives pages
+and posts previous and next links from it when their front matter names
+none</li>
+<li>New <code>bonbon</code> setting in <code>antenna.yaml</code> writes
+<code>.well-known/bonbon.json</code>; with no setting no file is written
+and none is removed</li>
+<li>Front matter keys BonBon reads: <code>link</code>,
+<code>urlPrev</code>, <code>urlNext</code>,
+<code>rightMarginImage</code> (with <code>rightMarginImageAlt</code>),
+<code>pubDate</code> in the RSS 2.0 form, and <code>{{page.NAME}}</code>
+macros in pages and posts</li>
+<li>New <code>antenna validate [-json] [-online] [PATH]</code>: a
+read-only check of a file, a directory or the whole site, with 21 stable
+finding codes (front matter, dates, links, raw HTML, images, macros,
+stale table of contents, <code>.nojekyll</code> on GitHub Pages and
+more); exit 0 when clean, 1 when there are errors or warnings</li>
+<li>New <code>antenna migrate-links [-w] [PATH]</code>: rewrites links
+to <code>.html</code> pages that antenna renders from Markdown into
+<code>.md</code> links in your Markdown; a dry-run diff by default,
+<code>-w</code> writes, and only the link destinations change</li>
+<li><code>antenna blogit</code> now makes the post publishable: it adds
+<code>pubDate</code> (the RSS form, in the zone of your computer,
+<code>TZ</code> overrides it) and a <code>title</code> from the first
+heading when the file has none, and never changes what is there; before
+this a blogit post stayed a draft</li>
+<li>A date with a zone keeps it: an RSS <code>pubDate</code> such as
+<code>Mon, 30 Nov 2026 21:30:00 -0800</code> is stored with its offset,
+so a late evening post stays on its own day and month in the table of
+contents, the feeds and the page</li>
+<li><code>antenna preview</code> serves <code>.md</code> as
+<code>text/markdown</code>, serves <code>.well-known</code>, and sends
+Markdown to a client that asks for it with <code>Accept</code></li>
+<li>Generated files are deterministic: a file is rewritten only when its
+content changes, so regenerating an unchanged site changes no file;
+expect one round of changes in a site you regenerate for the first time
+(attribute order, <code>.md</code> links written as <code>.html</code>,
+previous and next links)</li>
+<li>Breaking for scripts: <code>antenna unpage</code> exits 1 when no
+page record matches the path</li>
+<li>Fixed: one unreadable item row no longer stops a collection’s HTML
+page and items Markdown from being written; <code>{{page.title}}</code>
+inside a link you wrote no longer makes a link inside a link; an items
+file left by a collection that became a page index is removed</li>
+<li>Every help topic’s manual page is regenerated from
+<code>antenna help TOPIC</code> (the Makefile does it), so the
+<code>.7.md</code> pages are current; new topics
+<code>markdown-web</code>, <code>validate</code> and
+<code>migrate-links</code></li>
+<li>Requires Go 1.27.3 and the <code>opml</code> module 0.0.12</li>
 </ul>
 <h2 id="authors">Authors</h2>
 <ul>
@@ -89,6 +116,13 @@ you time to focus on Markdown content</p></li>
 automatically</p></li>
 <li><p>A preview web server is provided so you can read the curated
 content on your computer</p></li>
+<li><p>Publishes for Markdown readers such as Dave Winer’s BonBon as
+well as for web browsers: <code>.md</code> links, Markdown renderings of
+collections, a <code>.well-known/toc.opml</code> table of contents, and
+BonBon’s front matter</p></li>
+<li><p><code>antenna validate</code> checks a site for mistakes and for
+what Markdown readers need, and <code>antenna migrate-links</code>
+brings older links up to date</p></li>
 <li><p>pages nice with other static site tools like <a
 href="https://pagefind.app"
 title="A browser side search engine">PageFind</a> and <a
@@ -105,11 +139,14 @@ Tracker</a></li>
 </ul>
 <h2 id="programming-languages">Programming languages</h2>
 <ul>
-<li>Go</li>
+<li>Go &gt;= 1.27.3</li>
 </ul>
 <h2 id="software-requirements">Software Requirements</h2>
 <ul>
-<li>Go &gt;= 1.26.2</li>
+<li>Go &gt;= 1.27.3</li>
+<li>github.com/rsdoiel/opml &gt;= 0.0.12</li>
+<li>github.com/rsdoiel/stylefrom &gt;= 0.0.2</li>
+<li>github.com/rsdoiel/termlib &gt;= 0.0.10</li>
 <li>CMTools &gt;= 0.0.45b</li>
 </ul>
 <h2 id="software-suggestions">Software Suggestions</h2>
@@ -118,6 +155,9 @@ Tracker</a></li>
 <li>Pandoc &gt;= 3.9</li>
 <li>Bash or PowerShell</li>
 </ul>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

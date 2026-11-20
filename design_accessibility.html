@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1
 id="antenna-app-design-html-accessibility-and-aria-improvements">Antenna
 App — Design: HTML Accessibility and ARIA Improvements</h1>
@@ -127,28 +125,28 @@ item.</p>
 <col style="width: 57%" />
 </colgroup>
 <thead>
-<tr>
-<th>Change</th>
-<th>CSS impact</th>
+<tr class="header">
+<th scope="col">Change</th>
+<th scope="col">CSS impact</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>Skip link</td>
 <td>New <code>.skip-link</code> / <code>.skip-link:focus</code> rules
 needed in default CSS</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>&lt;address&gt;</code> → <code>&lt;footer&gt;</code></td>
 <td><code>article address</code> selectors must become
 <code>article footer</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Date below heading</td>
 <td><code>article h2</code> selectors may need adjustment if they styled
 inline date text</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>&lt;time&gt;</code> element</td>
 <td>New <code>article footer time</code> or <code>article p time</code>
 selectors for date styling</td>
@@ -165,27 +163,27 @@ page on the website.</p>
 <col style="width: 57%" />
 </colgroup>
 <thead>
-<tr>
-<th>File</th>
-<th>Change</th>
+<tr class="header">
+<th scope="col">File</th>
+<th scope="col">Change</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>html.go</code></td>
 <td>All changes: <code>Generator.Lang</code>, skip link,
 <code>WriteItem</code> structure, typo fix, warning</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>generator.go</code></td>
 <td><code>NewGenerator</code> sets <code>Lang = "en-US"</code>;
 <code>LoadConfig</code> reads <code>lang:</code> key</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>html_test.go</code></td>
 <td>New and updated tests for all changed behaviours</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>website/</code></td>
 <td>Document CSS impact for aggregation lists</td>
 </tr>
@@ -226,6 +224,9 @@ class="sourceCode html"><code class="sourceCode html"><span id="cb9-1"><a href="
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">&quot;https://example.com/post&quot;</span><span class="dt">&gt;</span>https://example.com/post<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">footer</span><span class="dt">&gt;</span></span>
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">article</span><span class="dt">&gt;</span></span></code></pre></div>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1
 id="proposal-per-collection-archiving-to-archive.org-with-an-alternate-reading-link">Proposal:
 Per-Collection Archiving to archive.org with an Alternate Reading
@@ -118,7 +116,7 @@ enough to keep one API credential out of version control.</li>
 <ul>
 <li><strong><code>Collection</code> struct</strong>
 (<code>schema.go:230-278</code>) already has a
-<code>Filters []string</code> field populated from
+<code>Filters   []string</code> field populated from
 <code>antenna.yaml</code>’s per-collection <code>filters:</code> list,
 and a <code>DbName</code> field naming that collection’s SQLite
 database. A new <code>Archive bool</code> field (or similarly named)
@@ -325,11 +323,11 @@ actually runs.</li>
 <code>"Archived copy"</code> string sufficient for a first version?</li>
 <li>Should <code>archiveLink</code> distinguish “never attempted” from
 “attempted and failed,” so a failed submission can be retried on the
-next <code>antenna archive</code> run rather than silently never being
-retried again? A <code>''</code>- means-both design (§5.2) is simpler
-but means a permanently-failing URL (e.g. one the Wayback Machine’s
-crawler is blocked from) gets retried forever, burning rate-limit budget
-on every run for a URL that will never succeed.</li>
+next <code>antenna    archive</code> run rather than silently never
+being retried again? A <code>''</code>- means-both design (§5.2) is
+simpler but means a permanently-failing URL (e.g. one the Wayback
+Machine’s crawler is blocked from) gets retried forever, burning
+rate-limit budget on every run for a URL that will never succeed.</li>
 <li>Should there be a per-item or per-collection cap on how old an item
 can be and still get archived retroactively (e.g. only archive items
 from the last N days), or should <code>antenna archive</code> always
@@ -356,6 +354,9 @@ touching the network-calling <code>ArchiveItems</code> step at all —
 mirroring how <code>item_formatting_proposal.md</code>’s implementation
 separated pure rendering logic (<code>resolveItemContent</code>,
 <code>resolveItemLink</code>) from I/O.</p>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

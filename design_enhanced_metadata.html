@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="design-enhanced-metadata-processing">Design: Enhanced Metadata
 Processing</h1>
 <p>Covers the implementation of decisions DEC-001 through DEC-015 from
@@ -161,17 +159,17 @@ from <code>content</code> as the filter value.</p>
 <h3 id="callers-after-change">Callers after change</h3>
 <table>
 <thead>
-<tr>
-<th>Caller</th>
-<th>Argument passed</th>
+<tr class="header">
+<th scope="col">Caller</th>
+<th scope="col">Argument passed</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>WriteHTML</code> — aggregate page</td>
 <td><code>nil</code> — no single-post front matter</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>WriteHtmlPage</code></td>
 <td><code>frontMatter</code> parameter (forwarded from caller)</td>
 </tr>
@@ -197,25 +195,25 @@ from <code>content</code> as the filter value.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr>
-<th>File</th>
-<th>Function</th>
-<th>Change</th>
+<tr class="header">
+<th scope="col">File</th>
+<th scope="col">Function</th>
+<th scope="col">Change</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>generator.go</code></td>
 <td><code>GeneratePosts</code></td>
 <td>Fix <code>doc.Parse()</code> bug; pass
 <code>doc.FrontMatter</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>schema.go</code></td>
 <td><code>Post()</code></td>
 <td>Pass <code>doc.FrontMatter</code> (already available)</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>page.go</code></td>
 <td><code>Page()</code></td>
 <td>Pass <code>doc.FrontMatter</code> (already available; no Parse
@@ -427,59 +425,62 @@ class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb20
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr>
-<th>File</th>
-<th>Nature of change</th>
+<tr class="header">
+<th scope="col">File</th>
+<th scope="col">Nature of change</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>sql_stmts.go</code></td>
 <td>Add <code>categories</code> to <code>SQLCreateTables</code>,
 <code>SQLUpdateItem</code>, <code>SQLDisplayItems</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>harvest.go</code></td>
 <td>Marshal <code>item.Categories</code>; pass to <code>saveItem</code>
 / <code>updateItem</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>schema.go</code></td>
 <td>Add <code>categories</code> param to <code>updateItem</code>;
 extract from front matter in <code>Post()</code>; update
 <code>WriteHtmlPage</code> call</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>generator.go</code></td>
 <td>Add <code>AllowedMetaFields</code> to <code>Generator</code> struct;
 fix <code>GeneratePosts</code> Parse bug; update
 <code>WriteHtmlPage</code> call</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>cmarkdoc.go</code></td>
 <td>Add <code>GetAttributeStringSlice</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>html.go</code></td>
 <td>Update <code>writeHeadElement</code> signature and body; update
 <code>WriteHtmlPage</code> signature; update <code>WriteItem</code>
 signature and body; update <code>WriteHTML</code> scan and call</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>page.go</code></td>
 <td>Update <code>WriteHtmlPage</code> call to pass
 <code>doc.FrontMatter</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>migrate_categories.bash</code></td>
 <td>New — migration script for Linux/macOS</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>migrate_categories.ps1</code></td>
 <td>New — migration script for Windows</td>
 </tr>
 </tbody>
 </table>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

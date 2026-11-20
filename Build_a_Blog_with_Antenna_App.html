@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="build-a-blog-with-antenna">Build a Blog with Antenna</h1>
 <p>By R. S. Doiel, 2025-09-05</p>
 <p>Antenna is a feed-oriented content management tool. This tutorial
@@ -159,43 +157,43 @@ href="https://pagefind.app">PageFind</a> faceted search. Common useful
 fields:</p>
 <table>
 <thead>
-<tr>
-<th>Field</th>
-<th>Purpose</th>
+<tr class="header">
+<th scope="col">Field</th>
+<th scope="col">Purpose</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>title</code></td>
 <td>Sets the <code>&lt;title&gt;</code> element; not emitted as a
 <code>&lt;meta&gt;</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>description</code></td>
 <td>Short summary for search engines</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>author</code></td>
 <td>Author name</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>keywords</code></td>
 <td>List of tags; each value gets its own <code>&lt;meta&gt;</code>
 pair</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>series</code></td>
 <td>Series name for multi-part posts</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>seriesNumber</code></td>
 <td>Position in the series</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>datePublished</code></td>
 <td>Publication date (<code>YYYY-MM-DD</code>)</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>dateModified</code></td>
 <td>Last-modified date</td>
 </tr>
@@ -259,7 +257,42 @@ whatever tool it provides. For GitHub Pages:</p>
 <pre class="shell"><code>git add -A
 git commit -m &quot;Initial blog posts&quot;
 git push origin main</code></pre>
+<h2 id="adding-a-post-with-blogit">Adding a post with
+<code>blogit</code></h2>
+<p><code>antenna blogit</code> is a shortcut for the steps above. It
+copies a Markdown file into a date directory such as
+<code>blog/2026/11/19/</code>, adds a <code>pubDate</code> and a
+<code>title</code> (from the first heading) when the file has none, and
+posts it:</p>
+<pre class="shell"><code>antenna blogit index.md notes/my-idea.md
+antenna blogit index.md notes/my-idea.md 2026-04-01</code></pre>
+<p>The date is now, or noon on the day you give, in your computer’s time
+zone. When you are travelling, say where you are:
+<code>TZ=Asia/Tokyo antenna blogit index.md notes/my-idea.md</code>.</p>
+<h2 id="publishing-for-markdown-readers">Publishing for Markdown
+readers</h2>
+<p>Readers such as Dave Winer’s BonBon browser show a page’s Markdown,
+not its HTML. Antenna publishes both from the same files. Write links
+between your pages to the <code>.md</code> file
+(<code>[About](about.md)</code>); in the HTML antenna writes them as
+<code>.html</code>. Set <code>base_url</code> in
+<code>antenna.yaml</code> and <code>antenna generate</code> also writes
+<code>.well-known/toc.opml</code>, a table of contents those readers
+use. See <code>antenna help markdown-web</code>.</p>
+<h2 id="checking-your-site">Checking your site</h2>
+<p><code>antenna validate</code> reads your site and reports mistakes,
+such as a post with no date, a link to a page that does not exist, or a
+table of contents that is out of date. It never changes a file.</p>
+<pre class="shell"><code>antenna validate
+antenna validate blog</code></pre>
+<p>If it reports links to <code>.html</code> pages,
+<code>antenna migrate-links</code> shows a diff of the <code>.md</code>
+links to use instead, and <code>antenna migrate-links -w</code> writes
+them.</p>
 <p>Happy blogging!</p>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

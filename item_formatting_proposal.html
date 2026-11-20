@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="design-item-layout-control-in-page.yaml">Design: Item Layout
 Control in <code>page.yaml</code></h1>
 <p>Status: Proposal / Draft Author: (your name) Related project: <a
@@ -324,15 +322,15 @@ emitted in the <code>filters</code> slice (categories,
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr>
-<th>Key</th>
-<th>Type</th>
-<th>Default</th>
-<th>Description</th>
+<tr class="header">
+<th scope="col">Key</th>
+<th scope="col">Type</th>
+<th scope="col">Default</th>
+<th scope="col">Description</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>label_field</code></td>
 <td>string</td>
 <td><code>static</code></td>
@@ -343,7 +341,7 @@ label instead of the raw link URL. Set to <code>link</code> to restore
 the current URL-as-anchor-text behavior; set to <code>title</code> to
 use the item title instead.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>label_fallback</code></td>
 <td>string</td>
 <td><code>"Continue reading"</code></td>
@@ -352,7 +350,7 @@ that field’s value is empty or missing. When
 <code>label_field: static</code> (the default): the literal anchor text
 used for <strong>every</strong> item, unconditionally.</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>required</code></td>
 <td>bool</td>
 <td><code>false</code></td>
@@ -360,7 +358,7 @@ used for <strong>every</strong> item, unconditionally.</td>
 collection generation (hard error) rather than being handled per
 <code>missing</code>.</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>missing</code></td>
 <td>enum: <code>unlinked</code> | <code>omit</code> |
 <code>source_link</code></td>
@@ -702,6 +700,9 @@ finding or constructing a test feed that uses it, so §5.0’s first
 precedence branch has real test coverage rather than only the
 <code>html2md</code>-converted branch?</li>
 </ol>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
+</ul>
+</nav>
+<section id="main-content">
+<h1 id="changes">Changes</h1>
+<h2 id="v0.1.0-2026-11-20">v0.1.0 — 2026-11-20</h2>
+<p>A larger step than the v0.0.x releases: antenna sites now publish for
+the Markdown web (Dave Winer’s BonBon browser and readers like it) from
+the same Markdown they publish as HTML, and two new commands check a
+site and bring older sites up to date. Because the change is this large
+the minor version moves from 0.0 to 0.1.</p>
+<h3 id="added">Added</h3>
+<ul>
+<li><strong>Publishing for Markdown readers.</strong> Write links
+between your pages to the <code>.md</code> file. In the HTML output a
+link to a page, collection or post that antenna renders becomes the
+<code>.html</code> page, and a link to a file it does not render is left
+as written with a warning. <code>antenna help markdown-web</code> is the
+overview.</li>
+<li><strong>Collections as Markdown.</strong> A collection with items
+also gets <code>STEM_items.md</code> beside its HTML page, with front
+matter saying what it is, and the HTML page declares it in its head as
+its Markdown alternate.</li>
+<li><strong>A table of contents for readers.</strong>
+<code>antenna generate</code> writes <code>.well-known/toc.opml</code>:
+the site’s pages, the collections’ items pages and the posts (oldest
+first, by year and month). Pages and posts whose front matter names no
+<code>urlPrev</code> or <code>urlNext</code> get previous and next links
+from it.</li>
+<li><strong><code>subsites</code> in <code>antenna.yaml</code>.</strong>
+The other Markdown sites on the same host (for example
+<code>/opml</code> and <code>/cmarkbrowser</code>) become
+<code>include</code> outlines in the table of contents, which is how
+BonBon, asking only the host root, finds them. Nothing is fetched.</li>
+<li><strong><code>bonbon</code> in <code>antenna.yaml</code>.</strong>
+The content of <code>.well-known/bonbon.json</code>. With no setting no
+file is written and none is removed.</li>
+<li><strong>BonBon front matter.</strong> <code>link</code>,
+<code>urlPrev</code>, <code>urlNext</code>,
+<code>rightMarginImage</code> (with <code>rightMarginImageAlt</code> for
+the HTML) and <code>pubDate</code> in the RSS 2.0 form are understood,
+and <code>{{page.NAME}}</code> macros are expanded in pages and
+posts.</li>
+<li><strong><code>antenna validate [-json] [-online] [PATH]</code>.</strong>
+A read-only check of a file, a directory or the whole site, with stable
+finding codes: front matter, dates, titles, links to <code>.html</code>
+pages, links to missing or unrendered files, raw HTML and SVG, image
+types, missing macro keys, a missing <code>base_url</code>, stale page
+rows, Markdown not published, an out-of-date table of contents, a bad
+<code>bonbon.json</code>, a missing <code>.nojekyll</code> on a GitHub
+Pages site, and with <code>-online</code> a sub-site that does not
+answer. Plain or JSON output; exit 0 when clean, 1 when there are errors
+or warnings.</li>
+<li><strong><code>antenna migrate-links [-w] [PATH]</code>.</strong>
+Rewrites links to <code>.html</code> pages that antenna renders from
+Markdown into <code>.md</code> links in your Markdown. A dry run showing
+a diff unless <code>-w</code> is given; only the link destinations
+change.</li>
+<li><strong>Help topics</strong> <code>markdown-web</code>,
+<code>validate</code> and <code>migrate-links</code>, with manual pages
+and entries in the completion scripts and the interactive menu.</li>
+<li><code>antenna preview</code> serves <code>.md</code> and
+<code>.markdown</code> as <code>text/markdown</code>, serves
+<code>.well-known</code>, and sends Markdown to a client that prefers it
+in <code>Accept</code>.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li><strong><code>antenna blogit</code> makes the post
+publishable.</strong> It adds <code>pubDate</code> (the RSS form, with
+an offset, in the time zone of the computer; set <code>TZ</code> to post
+from another zone) and a <code>title</code> from the first heading when
+the file has none. It never changes a value that is there. Before this a
+blogit post had no date and stayed a draft.</li>
+<li><strong>A date with a zone keeps it.</strong> An RSS
+<code>pubDate</code> such as
+<code>Mon, 30 Nov 2026 21:30:00 -0800</code>, and an unquoted timestamp
+with an offset, are stored with the offset, so a post made late in the
+evening stays on its own day and month in the table of contents, the
+feeds and the page. Dates in GMT, with no zone, or quoted are stored as
+before.</li>
+<li><strong>Generated files are deterministic.</strong> A file is
+rewritten only when its content changes, so regenerating an unchanged
+site touches no file. The first time you regenerate a site made with an
+earlier version, expect one round of differences (attribute and meta
+order, <code>.md</code> links written as <code>.html</code>, previous
+and next links, the Markdown alternate links).</li>
+<li>The minimum Go is 1.27.3, and antenna requires the <code>opml</code>
+module 0.0.12.</li>
+<li>The manual pages (<code>*.7.md</code>) are regenerated from
+<code>antenna help TOPIC</code> by the Makefile, so every topic’s page
+is current.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li><strong><code>antenna unpage</code> exits 1</strong> when no page
+record matches the path (it exited 0). Scripts that relied on 0 for a
+stale path need to expect 1.</li>
+<li>One unreadable item row no longer stops a collection’s HTML page and
+items Markdown from being written; the row is reported and the command
+exits with its class.</li>
+<li>A <code>{{page.title}}</code> inside a link you wrote no longer
+produces a link inside a link.</li>
+<li>An items file left by a collection that became a page index is
+removed.</li>
+</ul>
+<h2 id="v0.0.28-and-earlier">v0.0.28 and earlier</h2>
+<p>See the release notes of each release on <a
+href="https://github.com/rsdoiel/antennaApp/releases">GitHub</a>.</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
+</body>
+</html>

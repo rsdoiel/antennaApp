@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="antenna-app">Antenna App</h1>
 <p><strong>antenna</strong> is a text (terminal) based feed oriented
 content management tool. It let’s you create, curate and render simple
@@ -59,6 +57,17 @@ collection</li>
 </ul></li>
 <li>A preview web service is provided to view the render content in your
 web browser via a localhost URL</li>
+<li>Sites are published for Markdown readers such as Dave Winer’s BonBon
+as well as for web browsers, from the same Markdown
+<ul>
+<li>Links use the <code>.md</code> file, a
+<code>.well-known/toc.opml</code> table of contents is generated, and a
+collection’s items are also published as Markdown</li>
+<li><code>antenna validate</code> checks a site for mistakes and for
+what Markdown readers need, <code>antenna migrate-links</code> brings
+older links up to date, and <code>antenna help markdown-web</code> is
+the overview</li>
+</ul></li>
 <li>Site customization is possible through the use of page generators
 <ul>
 <li>Page generators are YAML files describing basic elements of a page
@@ -100,7 +109,7 @@ href="INSTALL.html">install</a> it on a Raspberry Pi, Linux, macOS or
 Windows computer.</p>
 <p>Requirements top compile the Antenna App from source code.</p>
 <ul>
-<li>Go &gt;= 1.26.2</li>
+<li>Go &gt;= 1.27.3</li>
 </ul>
 <h3 id="software-suggestions">Software Suggestions</h3>
 <p>The following are helpful if you want to develop or customize the
@@ -120,6 +129,7 @@ href="https://www.gnu.org/licenses/agpl-3.0.en.html">LICENSE</a></li>
 <li><a href="INSTALL.html">Installation</a></li>
 <li><a href="user_manual.html">User Manual</a></li>
 <li><a href="about.html">About</a></li>
+<li><a href="CHANGES.html">Changes</a></li>
 </ul>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
@@ -138,6 +148,9 @@ rendered HTML.<a href="#fnref2" class="footnote-back"
 role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

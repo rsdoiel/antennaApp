@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="implementation-plan-enhanced-metadata-processing">Implementation
 Plan: Enhanced Metadata Processing</h1>
 <p>Implements the design in <code>design_enhanced_metadata.md</code>.
@@ -37,39 +35,39 @@ breaks until Phase 4 wires the new signatures into callers.</p>
 <code>TestGetAttributeStringSlice</code> covering:</p>
 <table>
 <thead>
-<tr>
-<th>Case</th>
-<th>Input</th>
-<th>Expected</th>
+<tr class="header">
+<th scope="col">Case</th>
+<th scope="col">Input</th>
+<th scope="col">Expected</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>Key absent</td>
 <td><code>FrontMatter{}</code></td>
 <td><code>nil</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td>Empty string value</td>
 <td><code>{"k": ""}</code></td>
 <td><code>nil</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Non-empty string</td>
 <td><code>{"k": "Oberon"}</code></td>
 <td><code>["Oberon"]</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td>Sequence of strings</td>
 <td><code>{"k": ["a","b"]}</code></td>
 <td><code>["a","b"]</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Sequence with empty entries</td>
 <td><code>{"k": ["a","","b"]}</code></td>
 <td><code>["a","b"]</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td>Non-string/non-slice type</td>
 <td><code>{"k": 42}</code></td>
 <td><code>nil</code></td>
@@ -167,55 +165,55 @@ capture output.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr>
-<th>Case</th>
-<th>Setup</th>
-<th>Must contain</th>
-<th>Must not contain</th>
+<tr class="header">
+<th scope="col">Case</th>
+<th scope="col">Setup</th>
+<th scope="col">Must contain</th>
+<th scope="col">Must not contain</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>nil frontMatter</td>
 <td><code>frontMatter = nil</code></td>
 <td>existing charset/viewport meta</td>
 <td>any <code>data-pagefind-filter</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td>String field</td>
 <td><code>{"author": "R. S. Doiel"}</code></td>
 <td><code>&lt;meta name="author"</code>,
 <code>data-pagefind-filter="author[content]"</code></td>
 <td>—</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Slice field</td>
 <td><code>{"keywords": ["a","b"]}</code></td>
 <td>two <code>name="keywords"</code> elements, two
 <code>data-pagefind-filter</code> elements</td>
 <td>joined string</td>
 </tr>
-<tr>
+<tr class="even">
 <td>Title override</td>
 <td><code>{"title": "My Post"}</code>,
 <code>gen.Title = "Site"</code></td>
 <td><code>&lt;title&gt;My Post&lt;/title&gt;</code></td>
 <td><code>&lt;title&gt;Site&lt;/title&gt;</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Title fallback</td>
 <td><code>gen.Title = "Site"</code>, no frontMatter title</td>
 <td><code>&lt;title&gt;Site&lt;/title&gt;</code></td>
 <td>—</td>
 </tr>
-<tr>
+<tr class="even">
 <td>AllowedMetaFields set</td>
 <td><code>{"author":…,"postPath":…}</code>,
 allowed=<code>["author"]</code></td>
 <td><code>name="author"</code></td>
 <td><code>name="postPath"</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Title key excluded from meta</td>
 <td><code>{"title": "X"}</code></td>
 <td><code>&lt;title&gt;X&lt;/title&gt;</code></td>
@@ -290,54 +288,54 @@ requires Task 4.3 first.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr>
-<th>Case</th>
-<th>Input</th>
-<th><code>data-pagefind-filter</code> must contain</th>
+<tr class="header">
+<th scope="col">Case</th>
+<th scope="col">Input</th>
+<th scope="col"><code>data-pagefind-filter</code> must contain</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>No metadata</td>
 <td>empty categories, nil dcExt, no authors</td>
 <td>attribute absent</td>
 </tr>
-<tr>
+<tr class="even">
 <td>Single category</td>
 <td><code>categories=["Oberon"]</code></td>
 <td><code>category:Oberon</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Multiple categories</td>
 <td><code>categories=["a","b"]</code></td>
 <td><code>category:a</code> and <code>category:b</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td>DC subject</td>
 <td><code>dcExt</code> with <code>Subject: ["S"]</code></td>
 <td><code>dc_subject:S</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>DC creator</td>
 <td><code>dcExt</code> with <code>Creator: ["C"]</code></td>
 <td><code>dc_creator:C</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td>Author</td>
 <td><code>authors=[{Name:"Alice"}]</code></td>
 <td><code>author:Alice</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Label and channel</td>
 <td><code>label="Feed"</code>, <code>channel="https://…"</code></td>
 <td><code>label:Feed</code>, <code>channel:https://…</code></td>
 </tr>
-<tr>
+<tr class="even">
 <td>pubDate</td>
 <td><code>pubDate="2020-01-01"</code></td>
 <td><code>datePublished:2020-01-01</code></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>All combined</td>
 <td>all of the above</td>
 <td>all entries present, comma-separated</td>
@@ -585,6 +583,9 @@ generator YAML.</li>
 Phase 6 (6.1–6.3) ────────────────────────────────────────────────────────┘</code></pre>
 <p>Phase 6 (migration scripts) is independent and can be written any
 time before Phase 7.</p>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

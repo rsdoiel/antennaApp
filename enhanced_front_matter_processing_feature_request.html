@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1 id="enhanced-front-matter-processing-feature-request">Enhanced Front
 Matter Processing Feature Request</h1>
 <h2 id="summary">Summary</h2>
@@ -281,28 +279,28 @@ return all results so readers can browse by filter alone. The
 <col style="width: 57%" />
 </colgroup>
 <thead>
-<tr>
-<th>File</th>
-<th>Change</th>
+<tr class="header">
+<th scope="col">File</th>
+<th scope="col">Change</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td><code>cmarkdoc.go</code></td>
 <td>Add <code>GetAttributeStringSlice</code> helper</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>generator.go</code></td>
 <td>Fix <code>GeneratePosts</code> to call <code>doc.Parse()</code>;
 update <code>WriteHtmlPage</code> call signature</td>
 </tr>
-<tr>
+<tr class="odd">
 <td><code>html.go</code></td>
 <td>Add <code>frontMatter</code> param to <code>writeHeadElement</code>
 and <code>WriteHtmlPage</code>; emit standard and pagefind meta
 elements</td>
 </tr>
-<tr>
+<tr class="even">
 <td><code>page.go</code></td>
 <td>Pass <code>doc.FrontMatter</code> to <code>WriteHtmlPage</code></td>
 </tr>
@@ -310,6 +308,9 @@ elements</td>
 </table>
 <p>No database schema changes are required. No new dependencies are
 needed.</p>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>

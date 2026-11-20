@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-    <title>harvey</title>
-    <link rel="stylesheet" href="css/site.css">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
 <a href="#main-content" class="visually-hidden">skip to main content</a>
 <nav>
 <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="index.html">Harvey</a></li>
+    <li><a href="index.html">Home</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
     <li><a href="user_manual.html">User Manual</a></li>
-    <li><a href="search.html">Search</a></li>
     <li><a href="about.html">About</a></li>
-    <li><a href="https://github.com/rsdoiel/harvey">Code Repository</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
 </ul>
 </nav>
-<main id="main-content">
+<section id="main-content">
 <h1
 id="antenna-app-implementation-plan-html-accessibility-and-aria">Antenna
 App — Implementation Plan: HTML Accessibility and ARIA</h1>
@@ -187,46 +185,46 @@ revert.</p>
 <col style="width: 40%" />
 </colgroup>
 <thead>
-<tr>
-<th>Phase</th>
-<th>Decisions</th>
-<th>Tests</th>
-<th>Production code</th>
+<tr class="header">
+<th scope="col">Phase</th>
+<th scope="col">Decisions</th>
+<th scope="col">Tests</th>
+<th scope="col">Production code</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>1</td>
 <td>DEC-021</td>
 <td><code>TestWriteHeadElement</code> update</td>
 <td><code>html.go</code> typo fix</td>
 </tr>
-<tr>
+<tr class="even">
 <td>2</td>
 <td>DEC-018</td>
 <td><code>TestLang</code> new</td>
 <td><code>generator.go</code> Lang field; <code>html.go</code>
 fmt.Sprintf</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>3</td>
 <td>DEC-016</td>
 <td><code>TestSkipLink</code> new</td>
 <td><code>html.go</code> skip link in both paths</td>
 </tr>
-<tr>
+<tr class="even">
 <td>4</td>
 <td>DEC-017, DEC-019</td>
 <td><code>TestWriteItem</code> updates</td>
 <td><code>html.go</code> WriteItem rewrite</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>5</td>
 <td>DEC-020</td>
 <td><code>TestNoHeaderWarning</code> new</td>
 <td><code>html.go</code> stderr warning</td>
 </tr>
-<tr>
+<tr class="even">
 <td>6</td>
 <td>—</td>
 <td>smoke test</td>
@@ -234,6 +232,9 @@ fmt.Sprintf</td>
 </tr>
 </tbody>
 </table>
-</main>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
 </body>
 </html>
