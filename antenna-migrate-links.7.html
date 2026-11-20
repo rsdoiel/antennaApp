@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
+</ul>
+</nav>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>migrate-links</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna migrate-links [-w] [PATH]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Changes the links in your Markdown that point at an .html page
+antenna renders from Markdown into links to the .md source. A Markdown
+reader such as BonBon follows an .html link to the HTML page (BonBon
+opens it in the system browser); the .md link keeps the reader in
+Markdown. This is the change antenna validate reports as link-html.</p>
+<p>By default it is a dry run: it prints each change as a unified diff
+and changes nothing. Add -w to write the files. Review the diff first,
+and keep your site in git so you can look at what was written.</p>
+<p>With no PATH it works on the Markdown the site’s own data names: the
+pages, the collection source files and the posts. A PATH limits it to
+one file or the Markdown files under one directory.</p>
+<p>What it changes, and what it does not:</p>
+<ul>
+<li>Only a relative link to an .html or .htm page that antenna renders
+from a Markdown file. The fragment (#section) and query (?x=1) are kept.
+A link written from the site root (/blog/post.html) stays rooted
+(/blog/post.md).</li>
+<li>A link to a collection’s page (news.html) becomes its items Markdown
+(news_items.md) when that file exists. If it does not exist yet the link
+is left, and a line says so.</li>
+<li>Inline links, links in angle brackets and reference definitions
+([label]: destination). A title after the destination is kept.</li>
+<li>Never: code spans and code blocks, images, absolute addresses
+(including links to this site’s own address), links to files that are
+not .html, and links to .html files antenna does not render, such as
+pages you wrote by hand.</li>
+<li>Only the bytes of each destination change. The front matter, the
+line endings and everything else are kept exactly. Each changed file is
+replaced by writing a new file beside it and renaming it.</li>
+<li>It does not run generate. The HTML antenna generates writes the .md
+links back as .html, so your pages look the same after the change. A
+post’s stored copy is refreshed the next time you run antenna post on
+it.</li>
+</ul>
+<p>Running it again changes nothing.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-w</dt>
+<dd>
+Write the changes. Without it nothing is written.
+</dd>
+</dl>
+<h1 id="exit-status">EXIT STATUS</h1>
+<dl>
+<dt>0</dt>
+<dd>
+It ran: a dry run, a write, or nothing to migrate.
+</dd>
+<dt>2</dt>
+<dd>
+The command line is wrong (an unknown option, more than one PATH).
+</dd>
+<dt>65</dt>
+<dd>
+A file could not be parsed. It is reported and the other files are still
+done; the exit status is the class of the first failure.
+</dd>
+<dt>66</dt>
+<dd>
+PATH does not exist, or there is no configuration file.
+</dd>
+<dt>74</dt>
+<dd>
+A file could not be written.
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>antenna migrate-links antenna migrate-links blog antenna
+migrate-links -w blog/index.md antenna validate | grep link-html</p>
+<h1 id="see-also">SEE ALSO</h1>
+<p>antenna help validate antenna help markdown-web</p>
+</section>
+<footer>
+<p>AntennaApp</p>
+</footer>
+</body>
+</html>

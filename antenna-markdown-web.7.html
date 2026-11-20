@@ -38,6 +38,9 @@ types and links in code are left alone. A relative .md link to a file
 antenna does not render stays as it is, and generate warns about it.</p>
 <p>A link to a collection’s own file (feeds/tech.md) means the
 collection, and becomes the collection’s items page.</p>
+<p>A site written before this can have many links to .html pages.
+antenna validate finds them (link-html) and antenna migrate-links
+rewrites them to .md, as a dry run first.</p>
 <h1 id="what-generate-publishes">WHAT GENERATE PUBLISHES</h1>
 <p>(see: antenna help generate)</p>
 <ul>

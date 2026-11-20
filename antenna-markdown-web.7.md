@@ -32,6 +32,10 @@ as it is, and generate warns about it.
 A link to a collection's own file (feeds/tech.md) means the collection, and
 becomes the collection's items page.
 
+A site written before this can have many links to .html pages. antenna
+validate finds them (link-html) and antenna migrate-links rewrites them to
+.md, as a dry run first.
+
 # WHAT GENERATE PUBLISHES
 
 (see: antenna help generate)

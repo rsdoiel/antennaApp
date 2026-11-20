@@ -140,6 +140,13 @@ filepath provided. It does not remove the page on disk, just from the
 collection so that it will no longer be used to create a corresponding
 HTML page when the generate action is run.
 </dd>
+<dt>migrate-links [-w] [PATH]</dt>
+<dd>
+In your Markdown, change links to .html pages that antenna renders from
+Markdown into links to the .md source, which is what a Markdown reader
+needs. A dry run showing a diff unless -w is given. See “antenna help
+migrate-links”.
+</dd>
 <dt>validate [-json] [-online] [PATH]</dt>
 <dd>
 Check the site, a directory or one Markdown file for problems, and for

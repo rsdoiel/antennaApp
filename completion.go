@@ -70,6 +70,7 @@ var completionCommands = []CompletionCommand{
 	{Name: "themes"},
 	{Name: "unpage"},
 	{Name: "unpost"},
+	{Name: "migrate-links"},
 	{Name: "validate"},
 }
 

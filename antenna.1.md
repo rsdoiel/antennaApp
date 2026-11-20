@@ -105,6 +105,11 @@ unpage INPUT_PATH
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
+migrate-links [-w] [PATH]
+: In your Markdown, change links to .html pages that antenna renders from
+Markdown into links to the .md source, which is what a Markdown reader needs. A
+dry run showing a diff unless -w is given. See "antenna help migrate-links".
+
 validate [-json] [-online] [PATH]
 : Check the site, a directory or one Markdown file for problems, and for what
 Markdown readers such as BonBon need. It only reads: it never changes a file.

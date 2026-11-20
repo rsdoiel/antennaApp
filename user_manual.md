@@ -25,6 +25,7 @@ title: User Manual
   - [items](antenna-items.7.md)
   - [list](antenna-list.7.md)
   - [page](antenna-page.7.md)
+  - [migrate-links](antenna-migrate-links.7.md)
   - [pages](antenna-pages.7.md)
   - [post](antenna-post.7.md)
   - [posts](antenna-posts.7.md)

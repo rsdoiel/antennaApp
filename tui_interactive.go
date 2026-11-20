@@ -269,6 +269,7 @@ func (s *iSession) showHelp() {
 	fmt.Print(iLine("sitemap", "generate sitemap XML files"))
 	fmt.Print(iLine("preview", "serve the site on localhost for review"))
 	fmt.Print(iLine("validate", "check the site or a file for problems"))
+	fmt.Print(iLine("migrate-links", "rewrite .html links in your Markdown as .md"))
 	fmt.Printf("\n%sThemes%s\n", Bold, Reset)
 	fmt.Print(iLine("themes", "list available themes"))
 	fmt.Print(iLine("apply", "apply a theme to a page generator"))
@@ -306,6 +307,8 @@ func (s *iSession) guide(action string, args []string) error {
 		return s.guideUnpage(args)
 	case "validate":
 		return s.guideValidate(args)
+	case "migrate-links":
+		return s.guideMigrateLinks(args)
 	case "pages":
 		return s.guidePages(args)
 	case "harvest", "fetch":
@@ -1065,4 +1068,32 @@ empty to check the whole site.
 		finalArgs = append(finalArgs, target)
 	}
 	return s.confirmAndRun("validate", finalArgs)
+}
+
+func (s *iSession) guideMigrateLinks(args []string) error {
+	fmt.Printf(`
+%smigrate-links%s — Rewrite .html links in your Markdown as .md
+
+Links to pages that antenna renders from Markdown should point at the .md
+source, which is what a Markdown reader such as BonBon follows. This shows a
+diff of what would change and writes nothing. To write the files run
+"antenna migrate-links -w" from the command line. Leave PATH empty to work on
+the whole site.
+`, Bold+Yellow, Reset)
+
+	pre := ""
+	if len(args) > 0 {
+		pre = args[0]
+	}
+	target, err := iOptionalStep(s.scanner, "PATH",
+		"A Markdown file or a directory. Empty means the whole site.",
+		pre, "")
+	if err != nil {
+		return err
+	}
+	finalArgs := []string{}
+	if target != "" {
+		finalArgs = append(finalArgs, target)
+	}
+	return s.confirmAndRun("migrate-links", finalArgs)
 }

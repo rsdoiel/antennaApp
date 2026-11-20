@@ -124,6 +124,11 @@ unpage INPUT_PATH
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
+migrate-links [-w] [PATH]
+: In your Markdown, change links to .html pages that {app_name} renders from
+Markdown into links to the .md source, which is what a Markdown reader needs. A
+dry run showing a diff unless -w is given. See "{app_name} help migrate-links".
+
 validate [-json] [-online] [PATH]
 : Check the site, a directory or one Markdown file for problems, and for what
 Markdown readers such as BonBon need. It only reads: it never changes a file.
@@ -1398,6 +1403,94 @@ INPUT_PATH
 
 `
 
+	MigrateLinksHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
+% R. S. Doiel
+% {release_date}
+
+# NAME
+
+migrate-links
+
+# SYNOPSIS
+
+{app_name} migrate-links [-w] [PATH]
+
+# DESCRIPTION
+
+Changes the links in your Markdown that point at an .html page {app_name}
+renders from Markdown into links to the .md source. A Markdown reader such as
+BonBon follows an .html link to the HTML page (BonBon opens it in the system
+browser); the .md link keeps the reader in Markdown. This is the change
+{app_name} validate reports as link-html.
+
+By default it is a dry run: it prints each change as a unified diff and
+changes nothing. Add -w to write the files. Review the diff first, and keep your
+site in git so you can look at what was written.
+
+With no PATH it works on the Markdown the site's own data names: the pages, the
+collection source files and the posts. A PATH limits it to one file or the
+Markdown files under one directory.
+
+What it changes, and what it does not:
+
+- Only a relative link to an .html or .htm page that {app_name} renders from a
+  Markdown file. The fragment (#section) and query (?x=1) are kept. A link
+  written from the site root (/blog/post.html) stays rooted (/blog/post.md).
+- A link to a collection's page (news.html) becomes its items Markdown
+  (news_items.md) when that file exists. If it does not exist yet the link is
+  left, and a line says so.
+- Inline links, links in angle brackets and reference definitions
+  ([label]: destination). A title after the destination is kept.
+- Never: code spans and code blocks, images, absolute addresses (including
+  links to this site's own address), links to files that are not .html, and
+  links to .html files {app_name} does not render, such as pages you wrote by
+  hand.
+- Only the bytes of each destination change. The front matter, the line endings
+  and everything else are kept exactly. Each changed file is replaced by writing
+  a new file beside it and renaming it.
+- It does not run generate. The HTML {app_name} generates writes the .md links
+  back as .html, so your pages look the same after the change. A post's stored
+  copy is refreshed the next time you run {app_name} post on it.
+
+Running it again changes nothing.
+
+# OPTIONS
+
+-w
+: Write the changes. Without it nothing is written.
+
+# EXIT STATUS
+
+0
+: It ran: a dry run, a write, or nothing to migrate.
+
+2
+: The command line is wrong (an unknown option, more than one PATH).
+
+65
+: A file could not be parsed. It is reported and the other files are still done;
+the exit status is the class of the first failure.
+
+66
+: PATH does not exist, or there is no configuration file.
+
+74
+: A file could not be written.
+
+# EXAMPLES
+
+{app_name} migrate-links
+{app_name} migrate-links blog
+{app_name} migrate-links -w blog/index.md
+{app_name} validate | grep link-html
+
+# SEE ALSO
+
+{app_name} help validate
+{app_name} help markdown-web
+
+`
+
 	ValidateHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
 % R. S. Doiel
 % {release_date}
@@ -1859,6 +1952,10 @@ as it is, and generate warns about it.
 
 A link to a collection's own file (feeds/tech.md) means the collection, and
 becomes the collection's items page.
+
+A site written before this can have many links to .html pages. {app_name}
+validate finds them (link-html) and {app_name} migrate-links rewrites them to
+.md, as a dry run first.
 
 # WHAT GENERATE PUBLISHES
 

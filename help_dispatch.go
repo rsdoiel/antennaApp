@@ -48,6 +48,7 @@ Commands:
   interactive  Guided action wizard — menu-driven help for any action
   items        List all items stored in a collection database
   list         List all defined collections
+  migrate-links  Rewrite links to .html pages in your Markdown as .md links
   page         Render a Markdown file as a standalone HTML page
   pages        List static pages tracked in the pages collection
   post         Add or update a blog post in a collection
@@ -148,6 +149,8 @@ func PrintHelpTopic(w io.Writer, topic, appName, version, releaseDate, releaseHa
 		text = UnpostHelpText
 	case "validate":
 		text = ValidateHelpText
+	case "migrate-links":
+		text = MigrateLinksHelpText
 	case "accessibility":
 		text = AccessibilityHelpText
 	case "configuration":
