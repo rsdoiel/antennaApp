@@ -57,6 +57,24 @@ var rssZoneOffsets = map[string]string{
  *   t, ok := parseRSSDate("Fri, 23 Oct 2026 17:19:45 +0200") // 2026-10-23 15:19:45 UTC, true
  */
 func parseRSSDate(raw string) (time.Time, bool) {
+	t, ok := parseRSSDateInZone(raw)
+	return t.UTC(), ok
+}
+
+/** parseRSSDateInZone reads an RSS 2.0 date like parseRSSDate but keeps the
+ * zone the author wrote, so the wall-clock day is the author's (DR-0018).
+ *
+ * Parameters:
+ *   raw (string) — the date as written
+ *
+ * Returns:
+ *   time.Time — the instant, with the offset the date carried
+ *   bool — false when raw is not an RSS date
+ *
+ * Example:
+ *   t, ok := parseRSSDateInZone("Mon, 30 Nov 2026 21:30:00 -0800") // 2026-11-30 21:30:00 -0800, true
+ */
+func parseRSSDateInZone(raw string) (time.Time, bool) {
 	s := strings.Join(strings.Fields(raw), " ")
 	if i := strings.LastIndex(s, " "); i > 0 {
 		if off, ok := rssZoneOffsets[strings.ToUpper(s[i+1:])]; ok {
@@ -65,7 +83,7 @@ func parseRSSDate(raw string) (time.Time, bool) {
 	}
 	for _, layout := range rssDateLayouts {
 		if t, err := time.Parse(layout, s); err == nil {
-			return t.UTC(), true
+			return t, true
 		}
 	}
 	return time.Time{}, false
@@ -78,8 +96,11 @@ func parseRSSDate(raw string) (time.Time, bool) {
  *   - a quoted date or datetime in a stored form ("2026-06-27",
  *     "2026-06-27 10:00:00", RFC 3339) is kept exactly as written;
  *   - an unquoted date or timestamp, which YAML reads as a time value, becomes
- *     "2006-01-02" at midnight UTC and "2006-01-02 15:04:05" (UTC) otherwise;
- *   - an RSS 2.0 date becomes "2006-01-02 15:04:05" in UTC;
+ *     "2006-01-02" at midnight UTC and "2006-01-02 15:04:05" (UTC) otherwise,
+ *     except that a timestamp with a non-zero offset keeps it as RFC 3339
+ *     ("2026-11-30T21:30:00-08:00", DR-0018);
+ *   - an RSS 2.0 date with a non-zero offset becomes RFC 3339 with that offset,
+ *     so the author's day is kept; one in GMT becomes "2006-01-02 15:04:05";
  *   - anything else is returned as written with ok false, so the caller can
  *     warn and carry on as before.
  *
@@ -94,11 +115,15 @@ func parseRSSDate(raw string) (time.Time, bool) {
  *   bool — ok: the value is a date antenna can read
  *
  * Example:
- *   stored, found, ok := doc.GetAttributeDate("pubDate") // "2026-10-23 15:19:45", true, true
+ *   stored, found, ok := doc.GetAttributeDate("pubDate") // "2026-10-23 15:19:45", true, true (a GMT date)
  */
 func (doc *CommonMark) GetAttributeDate(key string) (string, bool, bool) {
 	switch v := doc.FrontMatter[key].(type) {
 	case time.Time:
+		// A timestamp that carries a zone keeps it (DR-0018).
+		if _, offset := v.Zone(); offset != 0 {
+			return v.Format(time.RFC3339), true, true
+		}
 		v = v.UTC()
 		if v.Hour() == 0 && v.Minute() == 0 && v.Second() == 0 && v.Nanosecond() == 0 {
 			return v.Format("2006-01-02"), true, true
@@ -114,8 +139,11 @@ func (doc *CommonMark) GetAttributeDate(key string) (string, bool, bool) {
 				return raw, true, true
 			}
 		}
-		if t, ok := parseRSSDate(raw); ok {
-			return t.Format("2006-01-02 15:04:05"), true, true
+		if t, ok := parseRSSDateInZone(raw); ok {
+			if _, offset := t.Zone(); offset != 0 {
+				return t.Format(time.RFC3339), true, true
+			}
+			return t.UTC().Format("2006-01-02 15:04:05"), true, true
 		}
 		return raw, true, false
 	}

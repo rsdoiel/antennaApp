@@ -132,7 +132,7 @@ func blogitFrontMatter(fName string, postDay time.Time, dayGiven bool, now time.
 		stored, _, _ := doc.GetAttributeDate(key)
 		if t, ok := parseStoredDate(stored); ok {
 			want := postDay.Format("2006-01-02")
-			if t.UTC().Format("2006-01-02") != want && t.Local().Format("2006-01-02") != want {
+			if t.Format("2006-01-02") != want && t.UTC().Format("2006-01-02") != want && t.Local().Format("2006-01-02") != want {
 				fmt.Fprintf(warn, "warning: %s: %s %q is not on POST_DATE %s; the file's date is kept and the post is filed under %s\n",
 					fName, key, stored, want, want)
 			}
