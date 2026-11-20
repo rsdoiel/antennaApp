@@ -65,7 +65,7 @@ func StaticRouter(next http.Handler) http.Handler {
 		}
 
 		// If given a dot file path, send forbidden
-		if IsDotPath(r.URL.Path) == true {
+		if IsForbiddenDotPath(r.URL.Path) {
 			http.Error(w, "Forbidden", 403)
 			ResponseLogger(r, 403, fmt.Errorf("Forbidden, requested a dot path"))
 			return
@@ -675,6 +675,11 @@ func ResponseLogger(r *http.Request, status int, err error) {
 func hasDotPrefix(s string) bool {
 	parts := strings.Split(s, "/")
 	for _, p := range parts {
+		// .well-known is the one dot directory the preview serves (DR-0010 1);
+		// every other segment that starts with a dot is refused.
+		if p == ".well-known" {
+			continue
+		}
 		if strings.HasPrefix(p, ".") {
 			return true
 		}
@@ -993,8 +998,7 @@ func (w *WebService) Run() error {
 	}
 
 	//FIXME: Figure out a better way to stack up handlers...
-	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(fs))
+	mux := previewMux(fs)
 
 	// Run the configured services.
 	switch {
@@ -1012,6 +1016,15 @@ func (w *WebService) Run() error {
 	default:
 		return http.ListenAndServe(":8000", RequestLogger(AccessHandler(mux, w.Access)))
 	}
+}
+
+// previewMux is the one place the preview's handler is built, for both servers
+// that serve a site: the files, plus what the Markdown web needs (types, the
+// .well-known directory, Accept negotiation; antennaApp DR-0010).
+func previewMux(fsys http.FileSystem) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.Handle("/", NewPreviewHandler(fsys))
+	return mux
 }
 
 // Preview runs a webserver that will preview the AntennaApp instance's htdocs on the
@@ -1041,8 +1054,7 @@ func (app *AntennaApp) Preview(cfgName string) error {
 	}
 
 	//FIXME: Figure out a better way to stack up handlers...
-	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(fs))
+	mux := previewMux(fs)
 
 	// Run the configured services.
 	switch {

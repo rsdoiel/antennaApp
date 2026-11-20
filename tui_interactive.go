@@ -431,7 +431,7 @@ func startPreviewServer(cfgName string) (*http.Server, string, error) {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", StaticRouter(http.FileServer(http.Dir(htdocs))))
+	mux.Handle("/", StaticRouter(NewPreviewHandler(http.Dir(htdocs))))
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, port)
 	ln, err := net.Listen("tcp", addr)
