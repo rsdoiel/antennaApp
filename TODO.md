@@ -35,7 +35,10 @@ BonBon (https://github.com/scripting/bonBon/) is Dave Winer's browser whose nati
 - [ ] Before merging `bonbon` to `main`: code review of the branch; restore the blog test repo's `base_url: https://rsdoiel.github.io` and drop `host:`; the blog's toc needs an include (antenna writes none).
 - [ ] `antenna generate` with no `base_url` warns and leaves an existing `.well-known/toc.opml` in place (a hand-written one would otherwise be deleted). Decide whether a stale generated one should go; DR-0013 only removes it when there is nothing to list. (code review 2026-11-20)
 - [ ] RSS generation stops at the first unreadable item row (also true on main); HTML and the items Markdown now carry on and report the row at the end.
-- [ ] A one-time migration command for existing sites (same-site `.html` links in the author's Markdown to `.md`), dry-run first (DR-0007 4). Not built.
+- [x] `blogit` adds `pubDate` (RSS form, local numeric offset) and a `title` from the first heading to the post's copy, so a blogit post is published and in the toc (DR-0016, built 2026-11-20).
+- [ ] `antenna validate [PATH]`: read-only site and file checks with stable codes, exit 0/1 (DR-0017). Build second.
+- [ ] `antenna migrate-links [PATH]`: `.html` links to `.md` in the author's Markdown, dry run by default, `-w` writes (DR-0017, DR-0007 4). Build after `validate`.
+- [ ] Posts are stored with their `pubDate` converted to UTC, so a post written late in the evening local time can land in the next day or month in `toc.opml`'s calendar groups (the directory comes from the local day). Seen while building `blogit`; not changed.
 - [ ] "Markdown-clean" check: warn when a post carries raw HTML, SVG images or other things BonBon strips (it allows PNG, JPEG, GIF and WebP only, and no page CSS or JavaScript).
 - [ ] Harvest from BonBon sites: accept a site's `toc.opml` as a feed collection source.
 - [ ] Open question: a Markdown-only collection mode with no theme (only `.md` and `toc.opml`), since the reader picks the look. This changes what a collection is, so write a decision record first.
