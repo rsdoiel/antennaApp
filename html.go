@@ -515,6 +515,13 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 		}
 		fmt.Fprintf(out, "  %s\n", elementFromMap("link", m))
 	}
+	// Previous and next pages named in the front matter (DR-0009 3).
+	navAddrs := pageNavAddresses(frontMatter)
+	for _, nk := range pageNavKeys {
+		if addr, ok := navAddrs[nk.Key]; ok {
+			fmt.Fprintf(out, "  %s\n", elementFromMap("link", map[string]string{"rel": nk.Rel, "href": addr}))
+		}
+	}
 	if gen.Link != nil && len(gen.Link) > 0 {
 		for _, m := range gen.Link {
 			fmt.Fprintf(out, "  %s\n", elementFromMap("link", m))
@@ -538,6 +545,9 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 		for key, val := range frontMatter {
 			if key == "title" {
 				continue // already handled in <title>
+			}
+			if key == "urlPrev" || key == "urlNext" {
+				continue // written as <link rel="prev"> and <link rel="next">
 			}
 			if len(allowed) > 0 && !allowed[key] {
 				continue
@@ -768,22 +778,27 @@ func (gen *Generator) WriteHtmlPage(htmlName string, link string, postPath, pubD
 `, indentText(strings.TrimSpace(gen.TopContent), 4))
 	}
 
+	// Previous and next navigation goes after the page's own content, inside main.
+	navHTML := ""
+	if nav := pageNavHTML(frontMatter); nav != "" {
+		navHTML = "\n    " + indentText(nav, 4)
+	}
 	// Now render our innerHTML
 	if pubDate != "" && link != "" {
 		fmt.Fprintf(out, `
   <main id="main-content" tabindex="-1">
     <article data-published=%q data-link=%q>
       %s
-    </article>
+    </article>%s
   </main>
-`, pubDate, link, indentText(innerHTML, 6))
+`, pubDate, link, indentText(innerHTML, 6), navHTML)
 
 	} else {
 		fmt.Fprintf(out, `
   <main id="main-content" tabindex="-1">
-    %s
+    %s%s
   </main>
-`, indentText(innerHTML, 4))
+`, indentText(innerHTML, 4), navHTML)
 	}
 
 	if gen.BottomContent != "" {

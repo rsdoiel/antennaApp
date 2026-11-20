@@ -171,3 +171,16 @@ func TestDefaultCSS_MainFocusHasNoOutline(t *testing.T) {
 		t.Errorf("expected main:focus rule so the programmatic focus target shows no outline")
 	}
 }
+
+func TestGenerateCSS_StylesPageNavigation(t *testing.T) {
+	tmpDir := t.TempDir()
+	cfg := &AppConfig{Htdocs: tmpDir}
+	var buf bytes.Buffer
+	if err := cfg.GenerateCSS(&buf, "css/site.css"); err != nil {
+		t.Fatalf("GenerateCSS: %s", err)
+	}
+	content, _ := os.ReadFile(filepath.Join(tmpDir, "css", "site.css"))
+	if !strings.Contains(string(content), "nav.page-nav") {
+		t.Errorf("stylesheet does not style the previous and next navigation")
+	}
+}

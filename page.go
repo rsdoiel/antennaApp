@@ -214,7 +214,7 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 	if err := gen.LoadConfig(cfg.Generator); err != nil {
 		return err
 	}
-	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML, doc.FrontMatter); err != nil {
+	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML, doc.htmlFrontMatter()); err != nil {
 		return err
 	}
 	// NOTE: I need to add the page to pages.db

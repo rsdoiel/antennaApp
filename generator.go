@@ -481,7 +481,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 				continue
 			}
 		}
-		err = gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.FrontMatter)
+		err = gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.htmlFrontMatter())
 		if err != nil {
 			fmt.Fprintf(eout, "warning writing HTML for %q: %s\n", postPath, err)
 			err = fmt.Errorf("writing HTML for %q: %w", postPath, err)

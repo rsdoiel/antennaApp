@@ -663,7 +663,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 		if err := gen.LoadConfig(collection.Generator); err != nil {
 			return err
 		}
-		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.FrontMatter); err != nil {
+		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.htmlFrontMatter()); err != nil {
 			return err
 		}
 	}

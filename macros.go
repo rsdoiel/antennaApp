@@ -203,12 +203,19 @@ func (t macroTransformer) titleLink(key string) string {
 		return ""
 	}
 	raw = strings.TrimSpace(raw)
-	u, err := url.Parse(raw)
-	if err != nil || (u.Scheme != "" && u.Scheme != "http" && u.Scheme != "https" && u.Scheme != "mailto") {
+	if !isSafePageAddress(raw) {
 		t.m.warnf("ignoring link %q: only http, https, mailto and relative addresses make the title a link", raw)
 		return ""
 	}
 	return raw
+}
+
+// isSafePageAddress reports whether raw can be used as the address of a link
+// that front matter supplies: an http, https or mailto address, or a relative
+// one. Script and data schemes are refused.
+func isSafePageAddress(raw string) bool {
+	u, err := url.Parse(strings.TrimSpace(raw))
+	return err == nil && (u.Scheme == "" || u.Scheme == "http" || u.Scheme == "https" || u.Scheme == "mailto")
 }
 
 // macroOption returns the parser option for doc's MacroExpander, or nil.

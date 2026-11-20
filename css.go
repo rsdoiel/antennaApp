@@ -201,6 +201,23 @@ nav[aria-label="Site navigation"] a:focus {
   text-decoration: underline;
 }
 
+/* Previous and next page links (urlPrev, urlNext in front matter). The
+   links are ordinary text links so they keep the site's link colours,
+   focus style and underline; only their placement is set here. */
+nav.page-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-card-border);
+}
+
+nav.page-nav a[rel="next"] {
+  margin-left: auto;
+}
+
 /* ------------------------------------------------------------------ */
 /* 7. Articles — shared base                                            */
 /* ------------------------------------------------------------------ */
