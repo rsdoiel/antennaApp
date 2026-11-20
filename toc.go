@@ -63,8 +63,8 @@ type tocEntry struct {
  *     page's front matter, else its name.
  *   - Collections: each collection that has an items page (DR-0008), in
  *     antenna.yaml order. The author's feed list is never listed.
- *   - Posts: the local posts of every collection (DR-0006), newest first,
- *     grouped by year then month, each listed only when its Markdown is
+ *   - Posts: the local posts of every collection (DR-0006), listed oldest
+ *     first (BonBon's arrows read the lines downward), grouped by year then month, each listed only when its Markdown is
  *     published in htdocs.
  *
  * Addresses are absolute, made from base_url, which is required: without one
@@ -159,13 +159,17 @@ func tocGroup(text, base string, entries []tocEntry) *opml.Outline {
 	return g
 }
 
-// tocPostsGroup groups posts, already newest first, by year then month in the
-// shape of Dave Winer's published table of contents: calendarYear and
+// tocPostsGroup groups posts, held newest first and written oldest first, by
+// year then month in the shape of Dave Winer's published table of contents: calendarYear and
 // calendarMonth outlines with a name, and each post a leaf with text and url.
 func tocPostsGroup(base string, posts []tocEntry) *opml.Outline {
 	g := &opml.Outline{Text: "Posts"}
 	var year, month *opml.Outline
-	for _, p := range posts {
+	// Written oldest first, whatever order the caller holds them in: BonBon
+	// reads the lines top to bottom for its own arrows (previous is the line
+	// above), so oldest first makes them agree with ours (DR-0013 amendment).
+	for i := len(posts) - 1; i >= 0; i-- {
+		p := posts[i]
 		if year == nil || year.Text != fmt.Sprintf("%d", p.when.Year()) {
 			year = &opml.Outline{Text: fmt.Sprintf("%d", p.when.Year()), Type: "calendarYear",
 				OtherAttr: opml.CustomAttrs{{Name: xml.Name{Local: "name"}, Value: fmt.Sprintf("%d", p.when.Year())}}}

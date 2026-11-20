@@ -153,28 +153,30 @@ func TestTheTOCListsPagesCollectionsAndPostsInThreeGroups(t *testing.T) {
 	}
 
 	years := find(o.Body.Outline, "Posts").Outline
-	if got := texts(years); strings.Join(got, ",") != "2026,2025" {
-		t.Fatalf("years %v, want newest first", got)
+	// oldest first, so BonBon's own arrows (previous is the line above) agree
+	// with antenna's (DR-0013 amendment, read from BonBon's source 2026-11-19)
+	if got := texts(years); strings.Join(got, ",") != "2025,2026" {
+		t.Fatalf("years %v, want oldest first", got)
 	}
-	if years[0].Type != "calendarYear" || attrValue(years[0], "name") != "2026" {
-		t.Errorf("year outline %+v", years[0])
+	if years[1].Type != "calendarYear" || attrValue(years[1], "name") != "2026" {
+		t.Errorf("year outline %+v", years[1])
 	}
-	months := years[0].Outline
-	if got := texts(months); strings.Join(got, ",") != "November 2026,October 2026" {
+	months := years[1].Outline
+	if got := texts(months); strings.Join(got, ",") != "October 2026,November 2026" {
 		t.Fatalf("months %v", got)
 	}
-	if months[0].Type != "calendarMonth" || attrValue(months[0], "name") != "11" {
-		t.Errorf("month outline %+v", months[0])
+	if months[1].Type != "calendarMonth" || attrValue(months[1], "name") != "11" {
+		t.Errorf("month outline %+v", months[1])
 	}
-	nov := months[0].Outline
-	if len(nov) != 2 || nov[0].Text != "Third November" || nov[1].Text != "Second November" {
-		t.Errorf("posts in a month, newest first: %v", texts(nov))
+	nov := months[1].Outline
+	if len(nov) != 2 || nov[0].Text != "Second November" || nov[1].Text != "Third November" {
+		t.Errorf("posts in a month, oldest first: %v", texts(nov))
 	}
-	if nov[0].URL != "https://example.org/blog/2026/11/19/c.md" || nov[0].Type != "" || len(nov[0].Outline) != 0 {
-		t.Errorf("a post is a leaf with text and url only: %+v", nov[0])
+	if nov[1].URL != "https://example.org/blog/2026/11/19/c.md" || nov[1].Type != "" || len(nov[1].Outline) != 0 {
+		t.Errorf("a post is a leaf with text and url only: %+v", nov[1])
 	}
-	if old := years[1].Outline[0].Outline; len(old) != 1 || old[0].Text != "An old one" {
-		t.Errorf("2025: %+v", years[1])
+	if old := years[0].Outline[0].Outline; len(old) != 1 || old[0].Text != "An old one" {
+		t.Errorf("2025: %+v", years[0])
 	}
 }
 
@@ -286,12 +288,13 @@ func TestTitlesAndPathsAreEscapedForXMLAndAddresses(t *testing.T) {
 		t.Fatal(err)
 	}
 	o, raw := readTOC(t, htdocs)
-	nov := find(find(o.Body.Outline, "Posts").Outline[0].Outline, "November 2026").Outline
-	if nov[0].Text != `Q&A: "quotes" <tags> & more` {
-		t.Errorf("title did not survive: %q\n%s", nov[0].Text, raw)
+	nov := find(find(find(o.Body.Outline, "Posts").Outline, "2026").Outline, "November 2026").Outline
+	last := nov[len(nov)-1] // the newest, and the list is oldest first
+	if last.Text != `Q&A: "quotes" <tags> & more` {
+		t.Errorf("title did not survive: %q\n%s", last.Text, raw)
 	}
-	if nov[0].URL != "https://example.org/blog/2026/11/23/a%20post.md" {
-		t.Errorf("address %q", nov[0].URL)
+	if last.URL != "https://example.org/blog/2026/11/23/a%20post.md" {
+		t.Errorf("address %q", last.URL)
 	}
 }
 
@@ -301,9 +304,9 @@ func TestAnUntitledPostIsListedByItsPath(t *testing.T) {
 	publish(t, htdocs, "blog/2026/11/24/untitled.md")
 	cfg.GenerateTOC(&bytes.Buffer{})
 	o, _ := readTOC(t, htdocs)
-	nov := find(find(o.Body.Outline, "Posts").Outline[0].Outline, "November 2026").Outline
-	if nov[0].Text != "blog/2026/11/24/untitled.md" {
-		t.Errorf("untitled post listed as %q", nov[0].Text)
+	nov := find(find(find(o.Body.Outline, "Posts").Outline, "2026").Outline, "November 2026").Outline
+	if last := nov[len(nov)-1]; last.Text != "blog/2026/11/24/untitled.md" {
+		t.Errorf("untitled post listed as %q", last.Text)
 	}
 }
 

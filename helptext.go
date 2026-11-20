@@ -725,7 +725,7 @@ dates say when the content last changed, not when generate last ran.
 When the whole site is generated (no COLLECTION_NAME), generate also writes a
 table of contents for Markdown readers such as BonBon and cmarkbrowser,
 htdocs/.well-known/toc.opml: one OPML outline with the site's pages, the items
-pages of its collections and its posts (newest first, by year and month). Only
+pages of its collections and its posts (oldest first, by year and month). Only
 pages and posts whose Markdown is published in htdocs are listed. The addresses
 are made from base_url in antenna.yaml, which it needs: without one a warning
 is given and the file is not written. Like the other files it is rewritten only
