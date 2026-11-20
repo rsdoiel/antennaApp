@@ -436,6 +436,9 @@ func formatItemDate(raw string, layout string) string {
 			return t.Format(layout)
 		}
 	}
+	if t, ok := parseRSSDate(raw); ok {
+		return t.Format(layout)
+	}
 	if len(raw) > 10 {
 		return raw[:10]
 	}

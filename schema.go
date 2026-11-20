@@ -537,9 +537,13 @@ func (cfg *AppConfig) PublishPost(cName string, fName string) error {
 		doc.FrontMatter = map[string]interface{}{}
 	}
 	today := time.Now().Format("2006-01-02")
-	pubDate := doc.GetAttributeString("pubDate", "")
-	if pubDate == "" {
-		pubDate = doc.GetAttributeString("datePublished", today)
+	_, pubFound, _ := doc.GetAttributeDate("pubDate")
+	pubDate := postPubDate(doc, fName, os.Stderr)
+	if !pubFound {
+		// As before: no pubDate means datePublished (or today) is written back.
+		if pubDate == "" {
+			pubDate = today
+		}
 		doc.FrontMatter["datePublished"] = pubDate
 		updateMarkdownDoc = true
 	}
@@ -622,10 +626,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 	}
 	link := doc.GetAttributeString("link", "")
 
-	pubDate := doc.GetAttributeString("pubDate", "")
-	if pubDate == "" {
-		pubDate = doc.GetAttributeString("datePublished", "")
-	}
+	pubDate := postPubDate(doc, fName, os.Stderr)
 	status := ""
 	if postPath != "" && pubDate != "" {
 		status = "published"

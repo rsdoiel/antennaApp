@@ -69,7 +69,8 @@ func parseStoredDate(raw string) (time.Time, bool) {
 			return t, true
 		}
 	}
-	return time.Time{}, false
+	// RSS 2.0 dates, which a feed whose date gofeed could not parse leaves as written.
+	return parseRSSDate(raw)
 }
 
 func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
