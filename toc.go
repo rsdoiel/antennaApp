@@ -286,19 +286,10 @@ func (cfg *AppConfig) tocPages(htdocs string, warnf func(string, ...any), tally 
 			for _, row := range pageRows {
 				tally.add(nil)
 				outputPath := row.Output
-				md := markdownPathFor(outputPath)
-				// The Markdown the row records wins (DR-0024).
-				if rec := firstWithExt(row.Outputs, ".md"); rec != "" {
-					md = markdownPathFor(rec)
-					if outputPath == "" {
-						outputPath = rec // a Markdown-only page is keyed by its Markdown
-					}
-				} else if ext := strings.ToLower(path.Ext(row.Input)); ext == ".md" || ext == ".markdown" {
-					// A page made from Markdown has that Markdown, whatever its HTML
-					// is called (bio.md rendered to about.html): DR-0023.
-					if src := markdownPathFor(row.Input); src != "" && published(htdocs, src) {
-						md = src
-					}
+				recorded := firstWithExt(row.Outputs, ".md")
+				md := cfg.pageMarkdown(row.Input, recorded, outputPath)
+				if outputPath == "" && recorded != "" {
+					outputPath = recorded // a Markdown-only page is keyed by its Markdown
 				}
 				if seen[outputPath] {
 					continue

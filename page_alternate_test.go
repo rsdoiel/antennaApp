@@ -180,3 +180,26 @@ func TestTOCListsAPageByItsMarkdownSourceNotItsHTMLName(t *testing.T) {
 		t.Errorf("toc.opml should list bio.md:\n%s", toc)
 	}
 }
+
+// The derived previous and next links are looked up by the page's Markdown in
+// the table of contents. bio.md rendered to about.html is listed as bio.md, so
+// about.html found no neighbours: it had neither link while its neighbours did
+// (rsdoiel.github.io, 2026-11-20).
+func TestDerivedNavigationUsesTheMarkdownTheTOCListsForAPage(t *testing.T) {
+	newWorkspace(t, true)
+	cfgYAML, _ := os.ReadFile("antenna.yaml")
+	os.WriteFile("antenna.yaml", []byte(strings.Replace(string(cfgYAML), "base_url: http://localhost:8000", "base_url: https://example.org", 1)), 0o664)
+	for _, p := range []struct{ src, html string }{{"a.md", "a.html"}, {"bio.md", "b.html"}, {"c.md", "c.html"}} {
+		os.WriteFile(p.src, []byte("---\ntitle: "+p.src+"\n---\n# "+p.src+"\n"), 0o664)
+		if err := runIn(t, "page", p.src, p.html); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := runIn(t, "generate"); err != nil {
+		t.Fatal(err)
+	}
+	prev, next := neighbours(t, "b.html")
+	if prev != "a.html" || next != "c.html" {
+		t.Errorf("b.html (made from bio.md) should have a.html before and c.html after: prev %q next %q", prev, next)
+	}
+}

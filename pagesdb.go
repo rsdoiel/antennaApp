@@ -290,3 +290,40 @@ func pageStale(r pageRow, htdocs string) string {
 	}
 	return ""
 }
+
+/** pageMarkdown returns the Markdown a page is listed and navigated by: the
+ * Markdown copy its row records, else its source when that is Markdown and is
+ * published, else the Markdown named like its HTML (DR-0023, DR-0024). The
+ * table of contents and the derived previous and next links both use it, so
+ * they agree on which entry is the page.
+ *
+ * Parameters:
+ *   input (string) — the page's source file
+ *   recorded (string) — the first .md output the row records, or ""
+ *   html (string) — the page's HTML output, site-relative
+ *
+ * Returns:
+ *   string — a site-relative .md path, or "" when there is none
+ *
+ * Example:
+ *   md := cfg.pageMarkdown("bio.md", "", "about.html") // "bio.md"
+ */
+func (cfg *AppConfig) pageMarkdown(input, recorded, html string) string {
+	if recorded != "" {
+		return markdownPathFor(recorded)
+	}
+	if ext := strings.ToLower(filepath.Ext(input)); ext == ".md" || ext == ".markdown" {
+		if src := markdownPathFor(input); src != "" && published(cfg.htdocsOrDot(), src) {
+			return src
+		}
+	}
+	return markdownPathFor(html)
+}
+
+// htdocsOrDot is the htdocs directory, or the working directory when none is set.
+func (cfg *AppConfig) htdocsOrDot() string {
+	if cfg.Htdocs == "" {
+		return "."
+	}
+	return cfg.Htdocs
+}

@@ -339,7 +339,13 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer, mdAlt s
 	}
 	doc.Links = cfg.rewriterFor(from, eout)
 	doc.Macros = &MacroExpander{From: from, Warn: eout}
-	cfg.attachNav(doc, from)
+	// Neighbours are found by the Markdown the table of contents lists for the
+	// page, which for bio.md rendered to about.html is bio.md, not about.md.
+	navFrom := from
+	if md := cfg.pageMarkdown(fName, mdAlt, oName); md != "" && oName != "" {
+		navFrom = md
+	}
+	cfg.attachNav(doc, navFrom)
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
 		return pageResult{}, err
