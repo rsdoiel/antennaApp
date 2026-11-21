@@ -416,36 +416,25 @@ type tocNeighbours struct{ prev, next string }
 // neighbours in the table of contents.
 type tocNav map[string]tocNeighbours
 
-/** buildTOCNav works out the previous and next page of every page and post the
- * table of contents lists (antennaApp DR-0013 5). In the Pages group, previous
- * is the page above and next the page below. In Posts, which are listed newest
- * first, previous is the older post, which is the next line down, and next is
- * the newer one: the convention of Dave Winer's explicit urlPrev and urlNext,
- * and the reverse of the line order. The first and last entry have only one.
- * Collections have none.
+/** buildTOCNav works out the previous and next post of every post the table of
+ * contents lists (antennaApp DR-0025). Posts are listed newest first, so
+ * previous is the older post, which is the next line down, and next is the
+ * newer one: the convention of Dave Winer's explicit urlPrev and urlNext, and
+ * the reverse of the line order. The first and last post have only one. Pages
+ * and collections have none: file-name order is not a sequence. A declared
+ * sequence (DR-0026) is applied on top of this by computeTOCNav.
  *
  * Parameters:
- *   pages ([]tocEntry) — the Pages group in outline order
  *   posts ([]tocEntry) — the posts, newest first
  *
  * Returns:
- *   tocNav — the neighbours of each listed Markdown page
+ *   tocNav — the neighbours of each listed post
  *
  * Example:
- *   nav := buildTOCNav(pages, posts)
+ *   nav := buildTOCNav(posts)
  */
-func buildTOCNav(pages, posts []tocEntry) tocNav {
+func buildTOCNav(posts []tocEntry) tocNav {
 	nav := tocNav{}
-	for i, p := range pages {
-		var n tocNeighbours
-		if i > 0 {
-			n.prev = pages[i-1].md
-		}
-		if i+1 < len(pages) {
-			n.next = pages[i+1].md
-		}
-		nav[p.md] = n
-	}
 	for i, p := range posts {
 		var n tocNeighbours
 		if i+1 < len(posts) {
@@ -474,7 +463,13 @@ func (cfg *AppConfig) computeTOCNav() tocNav {
 	if tally.err("table of contents") != nil {
 		return nil
 	}
-	return buildTOCNav(pages, posts)
+	nav := buildTOCNav(posts)
+	// A document in a declared sequence takes that sequence's neighbours
+	// instead (DR-0026 5); a page in no sequence has none (DR-0025 2).
+	for md, n := range cfg.sequenceNeighbours(htdocs, append(append([]tocEntry{}, pages...), posts...)) {
+		nav[md] = n
+	}
+	return nav
 }
 
 // attachNav gives doc the site's neighbours, for the page or post at from (its

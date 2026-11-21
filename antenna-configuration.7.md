@@ -41,6 +41,23 @@ descriptionMax
   before it suggests a shorter one; 0 turns that check off. A negative or
   non-numeric value is a configuration error (exit 78)
 
+sequences
+: (optional) the paths that hold a sequence of pages or posts, so previous and
+  next are derived for their members. A list of entries, each with path
+  (required) and order (optional). A path ending in / is a directory: its
+  members are the published Markdown files directly in it, other than
+  index.md, in order name (the default, by file name), date (oldest first, by
+  pubDate or datePublished) or date-desc. A path ending in .md is a list file:
+  its members are the site-local links in its body to published Markdown, in
+  document order, each once; it takes no order. The list file is not a member
+  of its own sequence. A member's previous and next are its neighbours in the
+  sequence; the first has only a next and the last only a previous. A document
+  in two sequences takes the first one listed. The previous and next are
+  written to the HTML and to the generated Markdown copy of a page, never to
+  your own Markdown file. A missing path, an unknown order, an order on a list
+  file, an entry with no path or a path listed twice is a configuration error
+  (exit 78); antenna validate warns about a path that is not there.
+
 subsites
 : (optional) other Markdown sites on the same host, so this site's table of
   contents can point at them. A list of objects, each with url (required: the

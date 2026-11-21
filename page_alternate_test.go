@@ -181,15 +181,16 @@ func TestTOCListsAPageByItsMarkdownSourceNotItsHTMLName(t *testing.T) {
 	}
 }
 
-// The derived previous and next links are looked up by the page's Markdown in
-// the table of contents. bio.md rendered to about.html is listed as bio.md, so
-// about.html found no neighbours: it had neither link while its neighbours did
-// (rsdoiel.github.io, 2026-11-20).
-func TestDerivedNavigationUsesTheMarkdownTheTOCListsForAPage(t *testing.T) {
+// The sequence neighbours are looked up by the page's Markdown, the one the
+// table of contents lists. bio.md rendered to b.html is listed as docs/bio.md,
+// so a lookup by the HTML name (docs/b.md) found nothing: the page had neither
+// link while its neighbours did (rsdoiel.github.io, 2026-11-20).
+func TestNeighboursAreFoundByTheMarkdownTheTOCListsForAPage(t *testing.T) {
 	newWorkspace(t, true)
 	cfgYAML, _ := os.ReadFile("antenna.yaml")
-	os.WriteFile("antenna.yaml", []byte(strings.Replace(string(cfgYAML), "base_url: http://localhost:8000", "base_url: https://example.org", 1)), 0o664)
-	for _, p := range []struct{ src, html string }{{"a.md", "a.html"}, {"bio.md", "b.html"}, {"c.md", "c.html"}} {
+	os.WriteFile("antenna.yaml", []byte(strings.Replace(string(cfgYAML), "base_url: http://localhost:8000", "base_url: https://example.org", 1)+"\nsequences:\n  - path: docs/\n"), 0o664)
+	os.MkdirAll("docs", 0o775)
+	for _, p := range []struct{ src, html string }{{"docs/a.md", "docs/a.html"}, {"docs/bio.md", "docs/b.html"}, {"docs/c.md", "docs/c.html"}} {
 		os.WriteFile(p.src, []byte("---\ntitle: "+p.src+"\n---\n# "+p.src+"\n"), 0o664)
 		if err := runIn(t, "page", p.src, p.html); err != nil {
 			t.Fatal(err)
@@ -198,8 +199,8 @@ func TestDerivedNavigationUsesTheMarkdownTheTOCListsForAPage(t *testing.T) {
 	if err := runIn(t, "generate"); err != nil {
 		t.Fatal(err)
 	}
-	prev, next := neighbours(t, "b.html")
+	prev, next := neighbours(t, "docs/b.html")
 	if prev != "a.html" || next != "c.html" {
-		t.Errorf("b.html (made from bio.md) should have a.html before and c.html after: prev %q next %q", prev, next)
+		t.Errorf("docs/b.html (made from docs/bio.md) should have a.html before and c.html after: prev %q next %q", prev, next)
 	}
 }

@@ -218,8 +218,14 @@ func (cfg *AppConfig) writeMarkdownCopies(fName string, mds []string, eout io.Wr
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", fName, err)
 	}
-	text := cfg.deriveFrontMatter(expanded)
+	// A page in a declared sequence (DR-0026) has neighbours; only generate,
+	// which knows the whole site, has them.
+	var nb tocNeighbours
+	if len(mds) > 0 && cfg.tocNav != nil {
+		nb = cfg.tocNav[markdownPathFor(mds[0])]
+	}
 	for _, o := range mds {
+		text := cfg.deriveFrontMatter(expanded, nb, o)
 		mdName := filepath.Join(cfg.Htdocs, o)
 		if err := os.MkdirAll(filepath.Dir(mdName), 0775); err != nil {
 			return nil, asCreate(err)
@@ -504,20 +510,23 @@ func (cfg *AppConfig) Pages(out io.Writer, onlyStale bool) error {
 /** deriveFrontMatter adds what antenna can derive to the front matter of a
  * generated Markdown copy of a page (DR-0019 6, DR-0021): a title from the
  * first level-1 heading when there is none, and the site-wide author when the
- * document has none. A key the document has is never changed, and a document
- * that needs nothing is returned as it is. Only the copy is changed; the
- * source file is never written.
+ * document has none, and urlPrev and urlNext from the page's neighbours in a
+ * declared sequence (DR-0026 7), as paths relative to the copy. A key the
+ * document has is never changed, and a document that needs nothing is returned
+ * as it is. Only the copy is changed; the source file is never written.
  *
  * Parameters:
  *   text (string) — the page's Markdown, directives already expanded
+ *   nb (tocNeighbours) — the previous and next Markdown of the page, if any
+ *   self (string) — the site-relative path of the copy being written
  *
  * Returns:
  *   string — text with the derived keys added to its front matter
  *
  * Example:
- *   out := cfg.deriveFrontMatter("# Hello\n")
+ *   out := cfg.deriveFrontMatter("# Hello\n", tocNeighbours{}, "hello.md")
  */
-func (cfg *AppConfig) deriveFrontMatter(text string) string {
+func (cfg *AppConfig) deriveFrontMatter(text string, nb tocNeighbours, self string) string {
 	fm, body, err := SplitFrontMatter([]byte(text))
 	if err != nil {
 		return text
@@ -531,6 +540,16 @@ func (cfg *AppConfig) deriveFrontMatter(text string) string {
 	}
 	if site := strings.TrimSpace(cfg.Author); site != "" && !hasAuthor(fm["author"]) {
 		add = append(add, yamlLine("author", site))
+	}
+	given := func(key string) bool {
+		v, _ := fm[key].(string)
+		return strings.TrimSpace(v) != ""
+	}
+	if nb.prev != "" && !given("urlPrev") {
+		add = append(add, yamlLine("urlPrev", relativeMarkdownPath(self, nb.prev)))
+	}
+	if nb.next != "" && !given("urlNext") {
+		add = append(add, yamlLine("urlNext", relativeMarkdownPath(self, nb.next)))
 	}
 	if len(add) == 0 {
 		return text

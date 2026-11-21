@@ -70,6 +70,10 @@ type AppConfig struct {
 	// check off.
 	DescriptionMax *int `json:"descriptionMax,omitempty" yaml:"descriptionMax,omitempty"`
 
+	// Sequences names the paths that hold a sequence of pages or posts, so
+	// previous and next are derived for their members (DR-0026).
+	Sequences []Sequence `json:"sequences,omitempty" yaml:"sequences,omitempty"`
+
 	// Subsites lists the other Markdown sites on this host that the site's
 	// table of contents points at with include outlines (DR-0015 1).
 	Subsites []Subsite `json:"subsites,omitempty" yaml:"subsites,omitempty"`
@@ -329,6 +333,9 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if err := cfg.validateSubsites(); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
+	if err := cfg.validateSequences(); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if cfg.DescriptionMax != nil && *cfg.DescriptionMax < 0 {

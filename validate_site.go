@@ -50,6 +50,7 @@ func (v *validator) checkSite() {
 	}
 	v.checkPageRows()
 	v.checkPageOutputs(htdocs)
+	v.checkSequences(htdocs)
 	v.checkStaticMarkdownAlternates()
 	v.checkTOC(htdocs)
 	v.checkBonbonJSON(htdocs)
@@ -290,6 +291,37 @@ func (v *validator) checkPageOutputs(htdocs string) {
 		if srcs := writers[out]; len(srcs) > 1 {
 			v.add("row-duplicate-output", SeverityWarning, filepath.ToSlash(out), 0,
 				"written by more than one row of the pages table (%s); remove the stale one with antenna unpage", strings.Join(srcs, ", "))
+		}
+	}
+}
+
+// checkSequences reports the sequences of antenna.yaml (DR-0026 9): a path
+// that is not there, a sequence with no members, and a document that two
+// sequences both hold (it takes the first).
+func (v *validator) checkSequences(htdocs string) {
+	if len(v.cfg.Sequences) == 0 {
+		return
+	}
+	quiet := func(string, ...any) {}
+	tally := &failureTally{}
+	pages := v.cfg.tocPages(htdocs, quiet, tally)
+	posts := v.cfg.tocPosts(htdocs, quiet, tally)
+	cfgFile := filepath.ToSlash(v.cfgName)
+	for _, info := range v.cfg.sequenceMembers(htdocs, append(append([]tocEntry{}, pages...), posts...)) {
+		p := info.Sequence.Path
+		switch {
+		case !info.Exists:
+			what := "a published list file"
+			if info.Sequence.isDir() {
+				what = "a directory"
+			}
+			v.add("sequence-path-missing", SeverityWarning, cfgFile, 0, "the sequence path %s is not there; it should be %s under %s", p, what, htdocs)
+		case len(info.Members) == 0 && len(info.Overlaps) == 0:
+			v.add("sequence-empty", SeverityInfo, cfgFile, 0, "the sequence %s has no members", p)
+		}
+		for _, o := range info.Overlaps {
+			v.add("sequence-overlap", SeverityInfo, cfgFile, 0,
+				"%s is in the sequences %s and %s; it takes the neighbours from %s", o.MD, o.First, p, o.First)
 		}
 	}
 }

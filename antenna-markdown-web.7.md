@@ -52,8 +52,10 @@ validate finds them (link-html) and antenna migrate-links rewrites them to
   site of a host needs them; BonBon reads one level.
 - .well-known/bonbon.json, only when the bonbon setting of antenna.yaml has a
   key (see WHAT IS NOT DONE).
-- Previous and next links on pages and posts, taken from that table of contents
-  unless the page sets urlPrev and urlNext itself.
+- Previous and next links on posts, taken from that table of contents (the older
+  post and the newer one), and on the pages and posts of a sequence named in the
+  sequences setting of antenna.yaml, unless the document sets urlPrev and
+  urlNext itself. A page in no sequence gets none.
 - The same files, byte for byte, when nothing changed: generate rewrites a file
   only when its content changes, so a repository kept in git shows only real
   changes.

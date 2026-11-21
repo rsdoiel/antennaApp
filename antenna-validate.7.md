@@ -138,6 +138,16 @@ application/markdown). The list is copied into every page, so the entry names
 the same Markdown for all of them; antenna writes the right one for each page
 (warning).
 
+sequence-path-missing
+: A path in the sequences setting of antenna.yaml is not there (warning).
+
+sequence-empty
+: A sequence has no members (info).
+
+sequence-overlap
+: A document is in more than one sequence and takes the neighbours of the
+first (info).
+
 row-output-missing
 : The pages table records an output that is not there (warning). Run
 antenna generate.

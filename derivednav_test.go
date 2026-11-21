@@ -93,20 +93,17 @@ func neighbours(t *testing.T, file string) (prev, next string) {
 	return prev, next
 }
 
-// DR-0013 5: a page with neither key takes previous and next from the outline.
-func TestPagesGetDerivedPreviousAndNext(t *testing.T) {
+// DR-0025: pages are not a sequence, so none is derived for them; the table of
+// contents lists them in file-name order, which means nothing.
+func TestPagesGetNoDerivedPreviousAndNext(t *testing.T) {
 	htdocs := derivedNavSite(t)
 	if err := runIn(t, "generate"); err != nil {
 		t.Fatalf("generate: %s", err)
 	}
-	for file, want := range map[string][2]string{
-		"a.html": {"", "b.html"},
-		"b.html": {"a.html", "c.html"},
-		"c.html": {"b.html", ""},
-	} {
+	for _, file := range []string{"a.html", "b.html", "c.html"} {
 		prev, next := neighbours(t, filepath.Join(htdocs, file))
-		if prev != want[0] || next != want[1] {
-			t.Errorf("%s: previous %q next %q, want %q and %q", file, prev, next, want[0], want[1])
+		if prev != "" || next != "" {
+			t.Errorf("%s: a page gets no derived arrows, got previous %q next %q", file, prev, next)
 		}
 	}
 }
@@ -130,12 +127,17 @@ func TestPostsGetDerivedPreviousAsOlderAndNextAsNewer(t *testing.T) {
 	}
 }
 
-// The author's own keys always win, and a missing one is still filled in.
-func TestExplicitKeysWinAndTheOtherDirectionIsStillDerived(t *testing.T) {
+// The author's own keys always win, on a page (DR-0025 2) and on a post, and a
+// missing one is still filled in for a post.
+func TestExplicitKeysWinOnAPageAndAPost(t *testing.T) {
 	htdocs := derivedNavSite(t)
-	os.WriteFile("b.md", []byte("---\ntitle: Page b\nurlPrev: https://elsewhere.example/start\n---\n# b\n"), 0o664)
+	os.WriteFile("b.md", []byte("---\ntitle: Page b\nurlPrev: https://elsewhere.example/start\nurlNext: c.html\n---\n# b\n"), 0o664)
 	publish(t, htdocs, "b.md")
 	if err := runIn(t, "page", "b.md", "b.html"); err != nil {
+		t.Fatal(err)
+	}
+	os.WriteFile("post2.md", []byte("---\ntitle: Post B\npostPath: blog/2026/11/02/b.md\npubDate: \"2026-11-02\"\nurlPrev: https://elsewhere.example/before\n---\nBody.\n"), 0o664)
+	if err := runIn(t, "post", "post2.md"); err != nil {
 		t.Fatal(err)
 	}
 	if err := runIn(t, "generate"); err != nil {
@@ -143,7 +145,11 @@ func TestExplicitKeysWinAndTheOtherDirectionIsStillDerived(t *testing.T) {
 	}
 	prev, next := neighbours(t, filepath.Join(htdocs, "b.html"))
 	if prev != "https://elsewhere.example/start" || next != "c.html" {
-		t.Errorf("previous %q next %q: want the explicit previous and the derived next", prev, next)
+		t.Errorf("page: previous %q next %q: want the explicit previous and next", prev, next)
+	}
+	prev, next = neighbours(t, filepath.Join(htdocs, "blog/2026/11/02/b.html"))
+	if prev != "https://elsewhere.example/before" || next != "../19/c.html" {
+		t.Errorf("post: previous %q next %q: want the explicit previous and the derived next", prev, next)
 	}
 }
 
@@ -169,46 +175,56 @@ func TestTheAuthorsMarkdownIsNeverChanged(t *testing.T) {
 	}
 }
 
-// A neighbour whose Markdown is not published is not in the outline, so it is
+// A post whose Markdown is not published is not in the outline, so it is
 // skipped: the arrows jump over it, as the outline does.
-func TestAnUnpublishedNeighbourIsSkipped(t *testing.T) {
+func TestAnUnpublishedPostIsSkipped(t *testing.T) {
 	htdocs := derivedNavSite(t)
-	os.Remove(filepath.Join(htdocs, "b.md"))
+	os.Remove(filepath.Join(htdocs, "blog/2026/11/02/b.md"))
 	if err := runIn(t, "generate"); err != nil {
 		t.Fatal(err)
 	}
-	if prev, next := neighbours(t, filepath.Join(htdocs, "a.html")); prev != "" || next != "c.html" {
+	if prev, next := neighbours(t, filepath.Join(htdocs, "blog/2026/10/30/a.html")); prev != "" || next != "../../11/19/c.html" {
 		t.Errorf("a: previous %q next %q, want it to skip b", prev, next)
 	}
-	if prev, next := neighbours(t, filepath.Join(htdocs, "b.html")); prev != "" || next != "" {
+	if prev, next := neighbours(t, filepath.Join(htdocs, "blog/2026/11/02/b.html")); prev != "" || next != "" {
 		t.Errorf("b is not in the outline, so it has no derived arrows: %q %q", prev, next)
 	}
 }
 
-// Arrows come from generate, which knows the whole site; antenna page alone does not derive them.
+// Arrows come from generate, which knows the whole site; antenna post alone does not derive them.
 func TestOnlyGenerateDerivesTheArrows(t *testing.T) {
 	htdocs := derivedNavSite(t)
-	if prev, next := neighbours(t, filepath.Join(htdocs, "b.html")); prev != "" || next != "" {
-		t.Errorf("antenna page derived arrows: %q %q", prev, next)
+	if prev, next := neighbours(t, filepath.Join(htdocs, "blog/2026/11/02/b.html")); prev != "" || next != "" {
+		t.Errorf("antenna post derived arrows: %q %q", prev, next)
 	}
-	// generate of one collection still gives every page and post its arrows
+	// generate of one collection still gives every post its arrows
 	if err := runIn(t, "generate", "pages.md"); err != nil {
 		t.Fatal(err)
 	}
-	if prev, next := neighbours(t, filepath.Join(htdocs, "b.html")); prev != "a.html" || next != "c.html" {
+	if prev, next := neighbours(t, filepath.Join(htdocs, "blog/2026/11/02/b.html")); prev != "../../10/30/a.html" || next != "../19/c.html" {
 		t.Errorf("generate pages.md: %q %q", prev, next)
 	}
 }
 
-// The outline's own rule, without a site: pages go by line, posts by date.
+// DR-0025 3: a page and a post together do not borrow each other's neighbours.
+func TestAPageAndPostsDoNotShareNeighbours(t *testing.T) {
+	htdocs := derivedNavSite(t)
+	if err := runIn(t, "generate"); err != nil {
+		t.Fatal(err)
+	}
+	if _, next := neighbours(t, filepath.Join(htdocs, "blog/2026/11/19/c.html")); next != "" {
+		t.Errorf("the newest post must not point at a page: %q", next)
+	}
+	if prev, _ := neighbours(t, filepath.Join(htdocs, "blog/2026/10/30/a.html")); prev != "" {
+		t.Errorf("the oldest post must not point at a page: %q", prev)
+	}
+}
+
+// The outline's own rule, without a site: posts by date (DR-0025); pages have none.
 func TestBuildNavFromTheOutlinesOrder(t *testing.T) {
-	pages := []tocEntry{{md: "a.md"}, {md: "b.md"}, {md: "c.md"}}
 	posts := []tocEntry{{md: "new.md"}, {md: "mid.md"}, {md: "old.md"}} // newest first, as in the outline
-	nav := buildTOCNav(pages, posts)
+	nav := buildTOCNav(posts)
 	want := map[string]tocNeighbours{
-		"a.md":   {prev: "", next: "b.md"},
-		"b.md":   {prev: "a.md", next: "c.md"},
-		"c.md":   {prev: "b.md", next: ""},
 		"new.md": {prev: "mid.md", next: ""},
 		"mid.md": {prev: "old.md", next: "new.md"},
 		"old.md": {prev: "", next: "mid.md"},

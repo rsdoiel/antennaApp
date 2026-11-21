@@ -108,10 +108,13 @@ and <link rel="next"> in the head and, after its text, a labelled navigation
 with a Previous and a Next link; only the directions you name are shown. An
 address that is not http, https, mailto or relative is ignored with a warning.
 
-A page or post that gives neither key gets them when the site is generated,
-from the site's table of contents (see antenna help generate): a page's
-neighbours in path order, and for a post the older post as previous and the
-newer as next. A key you write always wins over these.
+A post that gives neither key gets them when the site is generated, from the
+site's table of contents (see antenna help generate): the older post as previous
+and the newer as next. A page gets none, since the table of contents lists pages
+in file-name order, which is not a sequence; a page or post in a sequence named
+in the sequences setting of antenna.yaml gets that sequence's neighbours
+instead (see antenna help configuration). A key you write always wins over
+these.
 
 # MARGIN IMAGE
 

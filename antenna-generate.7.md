@@ -48,12 +48,14 @@ sites. Nothing is fetched. If the bonbon setting of antenna.yaml has a key,
 generate also writes .well-known/bonbon.json from it; with none it writes no
 file and leaves any file you wrote alone. See antenna help configuration.
 
-The same outline gives previous and next links to pages and posts that name
-neither urlPrev nor urlNext in their front matter: for a page the page above and
-below it in path order, for a post the older post as previous and the newer as
-next. The first and last have only one. The author's own keys always win, and
-nothing is written into your Markdown. Only pages and posts listed in the table
-of contents get them.
+The same outline gives previous and next links to the posts it lists that name
+neither urlPrev nor urlNext in their front matter: the older post as previous
+and the newer as next. The first and last have only one. A page gets none from
+the table of contents, because pages are listed in file-name order, which is not
+a sequence. A page or post in a sequence named in the sequences setting of
+antenna.yaml gets that sequence's previous and next instead, and the generated
+Markdown copy of such a page carries them as urlPrev and urlNext. The author's
+own keys always win, and nothing is written into your Markdown.
 
 # PARAMETERS
 

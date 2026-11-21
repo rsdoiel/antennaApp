@@ -774,12 +774,14 @@ sites. Nothing is fetched. If the bonbon setting of antenna.yaml has a key,
 generate also writes .well-known/bonbon.json from it; with none it writes no
 file and leaves any file you wrote alone. See {app_name} help configuration.
 
-The same outline gives previous and next links to pages and posts that name
-neither urlPrev nor urlNext in their front matter: for a page the page above and
-below it in path order, for a post the older post as previous and the newer as
-next. The first and last have only one. The author's own keys always win, and
-nothing is written into your Markdown. Only pages and posts listed in the table
-of contents get them.
+The same outline gives previous and next links to the posts it lists that name
+neither urlPrev nor urlNext in their front matter: the older post as previous
+and the newer as next. The first and last have only one. A page gets none from
+the table of contents, because pages are listed in file-name order, which is not
+a sequence. A page or post in a sequence named in the sequences setting of
+antenna.yaml gets that sequence's previous and next instead, and the generated
+Markdown copy of such a page carries them as urlPrev and urlNext. The author's
+own keys always win, and nothing is written into your Markdown.
 
 # PARAMETERS
 
@@ -1688,6 +1690,16 @@ application/markdown). The list is copied into every page, so the entry names
 the same Markdown for all of them; {app_name} writes the right one for each page
 (warning).
 
+sequence-path-missing
+: A path in the sequences setting of antenna.yaml is not there (warning).
+
+sequence-empty
+: A sequence has no members (info).
+
+sequence-overlap
+: A document is in more than one sequence and takes the neighbours of the
+first (info).
+
 row-output-missing
 : The pages table records an output that is not there (warning). Run
 {app_name} generate.
@@ -1906,6 +1918,23 @@ descriptionMax
   before it suggests a shorter one; 0 turns that check off. A negative or
   non-numeric value is a configuration error (exit 78)
 
+sequences
+: (optional) the paths that hold a sequence of pages or posts, so previous and
+  next are derived for their members. A list of entries, each with path
+  (required) and order (optional). A path ending in / is a directory: its
+  members are the published Markdown files directly in it, other than
+  index.md, in order name (the default, by file name), date (oldest first, by
+  pubDate or datePublished) or date-desc. A path ending in .md is a list file:
+  its members are the site-local links in its body to published Markdown, in
+  document order, each once; it takes no order. The list file is not a member
+  of its own sequence. A member's previous and next are its neighbours in the
+  sequence; the first has only a next and the last only a previous. A document
+  in two sequences takes the first one listed. The previous and next are
+  written to the HTML and to the generated Markdown copy of a page, never to
+  your own Markdown file. A missing path, an unknown order, an order on a list
+  file, an entry with no path or a path listed twice is a configuration error
+  (exit 78); {app_name} validate warns about a path that is not there.
+
 subsites
 : (optional) other Markdown sites on the same host, so this site's table of
   contents can point at them. A list of objects, each with url (required: the
@@ -2090,8 +2119,10 @@ validate finds them (link-html) and {app_name} migrate-links rewrites them to
   site of a host needs them; BonBon reads one level.
 - .well-known/bonbon.json, only when the bonbon setting of antenna.yaml has a
   key (see WHAT IS NOT DONE).
-- Previous and next links on pages and posts, taken from that table of contents
-  unless the page sets urlPrev and urlNext itself.
+- Previous and next links on posts, taken from that table of contents (the older
+  post and the newer one), and on the pages and posts of a sequence named in the
+  sequences setting of antenna.yaml, unless the document sets urlPrev and
+  urlNext itself. A page in no sequence gets none.
 - The same files, byte for byte, when nothing changed: generate rewrites a file
   only when its content changes, so a repository kept in git shows only real
   changes.
@@ -2262,10 +2293,13 @@ and <link rel="next"> in the head and, after its text, a labelled navigation
 with a Previous and a Next link; only the directions you name are shown. An
 address that is not http, https, mailto or relative is ignored with a warning.
 
-A page or post that gives neither key gets them when the site is generated,
-from the site's table of contents (see antenna help generate): a page's
-neighbours in path order, and for a post the older post as previous and the
-newer as next. A key you write always wins over these.
+A post that gives neither key gets them when the site is generated, from the
+site's table of contents (see antenna help generate): the older post as previous
+and the newer as next. A page gets none, since the table of contents lists pages
+in file-name order, which is not a sequence; a page or post in a sequence named
+in the sequences setting of antenna.yaml gets that sequence's neighbours
+instead (see antenna help configuration). A key you write always wins over
+these.
 
 # MARGIN IMAGE
 
