@@ -8,7 +8,7 @@ validate
 
 # SYNOPSIS
 
-antenna validate [-json] [-online] [PATH]
+antenna validate [-json] [-online] [-color WHEN] [PATH]
 
 # DESCRIPTION
 
@@ -40,6 +40,12 @@ written as an object with error, class and code.
 : Also ask each sub-site named in the subsites setting for its table of
 contents, the way BonBon does, and warn about one that does not answer.
 
+-color WHEN
+: Color the report: the severity word (error red, warning yellow, info dim) and
+the PATH:LINE. WHEN is auto (the default: color when standard output is a
+terminal and NO_COLOR is not set), always or never. The text is the same with
+or without color. -json is never colored.
+
 # CHECKS
 
 Each file:
@@ -59,6 +65,21 @@ date-form
 
 no-title
 : No title in the front matter and no level-1 heading (warning).
+
+title-from-heading
+: No title in the front matter, but a level-1 heading the title can come from
+(info). antenna blogit and antenna page use that heading.
+
+no-description
+: No description, or an empty one; the table of contents and search results
+use it (info).
+
+description-long
+: A description longer than descriptionMax characters (info). descriptionMax
+is set in antenna.yaml and is 300 by default; 0 turns the check off.
+
+no-author
+: No author in the front matter and no author set in antenna.yaml (info).
 
 postpath-mismatch
 : postPath names a different file than the one it is in (warning).
@@ -85,6 +106,11 @@ for every reader (info).
 
 raw-html
 : Raw HTML, script or SVG, which Markdown readers strip (warning).
+
+include-directive
+: An @include-text-block or @include-code-block line in a Markdown file, which
+a Markdown reader shows as text. Keep the source as a .txt file and write the
+Markdown with antenna page (warning).
 
 image-type
 : An image that is not PNG, JPEG, GIF or WebP (warning).

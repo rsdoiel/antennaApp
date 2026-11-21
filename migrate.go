@@ -187,30 +187,11 @@ func countLinks(links, files int) string {
 // starts: after the closing --- line of the front matter, or 0 when there is
 // none. A \r before the newline is allowed, so CRLF files work.
 func bodyStartOffset(raw []byte) int {
-	pos := 0
-	first := true
-	for pos < len(raw) {
-		nl := bytes.IndexByte(raw[pos:], '\n')
-		end := len(raw)
-		if nl >= 0 {
-			end = pos + nl
-		}
-		line := strings.TrimRight(string(raw[pos:end]), "\r")
-		next := end + 1
-		if first {
-			if line != "---" {
-				return 0
-			}
-			first = false
-		} else if line == "---" {
-			if next > len(raw) {
-				return len(raw)
-			}
-			return next
-		}
-		pos = next
+	_, at, found, err := frontMatterBlock(raw)
+	if err != nil || !found {
+		return 0
 	}
-	return 0
+	return at
 }
 
 // protectedRanges returns the byte ranges of the body where a "](" is not a

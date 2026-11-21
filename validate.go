@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package antennaApp
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode/utf8"
 )
 
 /** Severity is how serious a validate finding is (DR-0017 2). An error or a
@@ -73,6 +75,7 @@ type validator struct {
 	cfg      *AppConfig  // nil when a file or directory is checked with no antenna.yaml
 	targets  LinkTargets // what antenna renders, nil when cfg is nil
 	online   bool
+	color    bool // wrap severity and location in ANSI escapes (DR-0020 5)
 	files    int
 	findings []Finding
 }
@@ -131,11 +134,11 @@ func (v *validator) sortFindings() {
  *   err := app.Validate(os.Stdout, os.Stderr, "antenna.yaml", []string{"blog"})
  */
 func (app *AntennaApp) Validate(out io.Writer, eout io.Writer, cfgName string, args []string) error {
-	jsonMode, online, target, err := parseValidateArgs(args)
+	jsonMode, online, colorMode, target, err := parseValidateArgs(args)
 	if err != nil {
 		return err
 	}
-	err = app.validate(out, cfgName, target, jsonMode, online)
+	err = app.validate(out, cfgName, target, jsonMode, online, colorMode)
 	var found *findingsError
 	if err != nil && jsonMode && !errors.As(err, &found) {
 		class := ExitCodeFor(err)
@@ -147,31 +150,49 @@ func (app *AntennaApp) Validate(out io.Writer, eout io.Writer, cfgName string, a
 
 // parseValidateArgs reads the flags and the path. Anything that does not parse
 // is a usage error, and the mode is then plain text.
-func parseValidateArgs(args []string) (jsonMode, online bool, target string, err error) {
+func parseValidateArgs(args []string) (jsonMode, online bool, colorMode, target string, err error) {
 	paths := []string{}
-	for _, a := range args {
-		switch a {
-		case "-json", "--json":
+	colorMode = "auto"
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch {
+		case a == "-json" || a == "--json":
 			jsonMode = true
-		case "-online", "--online":
+		case a == "-online" || a == "--online":
 			online = true
+		case a == "-color" || a == "--color" || strings.HasPrefix(a, "-color=") || strings.HasPrefix(a, "--color="):
+			var val string
+			if eq := strings.Index(a, "="); eq >= 0 {
+				val = a[eq+1:]
+			} else if i+1 < len(args) {
+				i++
+				val = args[i]
+			} else {
+				return false, false, "", "", usageErrorf("%s needs auto, always or never; try 'antenna help validate'", a)
+			}
+			switch val {
+			case "auto", "always", "never":
+				colorMode = val
+			default:
+				return false, false, "", "", usageErrorf("-color %q is not auto, always or never; try 'antenna help validate'", val)
+			}
 		default:
 			if strings.HasPrefix(a, "-") && len(a) > 1 {
-				return false, false, "", usageErrorf("unknown option %q; try 'antenna help validate'", a)
+				return false, false, "", "", usageErrorf("unknown option %q; try 'antenna help validate'", a)
 			}
 			paths = append(paths, a)
 		}
 	}
 	if len(paths) > 1 {
-		return false, false, "", usageErrorf("expected at most one PATH, got %d; try 'antenna help validate'", len(paths))
+		return false, false, "", "", usageErrorf("expected at most one PATH, got %d; try 'antenna help validate'", len(paths))
 	}
 	if len(paths) == 1 {
 		target = paths[0]
 	}
-	return jsonMode, online, target, nil
+	return jsonMode, online, colorMode, target, nil
 }
 
-func (app *AntennaApp) validate(out io.Writer, cfgName, target string, jsonMode, online bool) error {
+func (app *AntennaApp) validate(out io.Writer, cfgName, target string, jsonMode, online bool, colorMode string) error {
 	v := &validator{online: online, cfgName: cfgName}
 	cfg := &AppConfig{}
 	cfgErr := cfg.LoadConfig(cfgName)
@@ -208,6 +229,7 @@ func (app *AntennaApp) validate(out io.Writer, cfgName, target string, jsonMode,
 		v.checkFile(f)
 	}
 	v.sortFindings()
+	v.color = !jsonMode && useColor(colorMode, out)
 	return v.report(out, jsonMode)
 }
 
@@ -224,14 +246,17 @@ func (v *validator) report(out io.Writer, jsonMode bool) error {
 		fmt.Fprintln(out, string(b))
 	} else {
 		for _, f := range v.findings {
+			where := f.File
 			if f.Line > 0 {
-				fmt.Fprintf(out, "%s:%d: %s: %s: %s\n", f.File, f.Line, f.Severity, f.Code, f.Message)
-			} else {
-				fmt.Fprintf(out, "%s: %s: %s: %s\n", f.File, f.Severity, f.Code, f.Message)
+				where = fmt.Sprintf("%s:%d", f.File, f.Line)
 			}
+			fmt.Fprintf(out, "%s: %s: %s: %s\n", v.paint("1", where), v.paint(severityColor(f.Severity), string(f.Severity)), f.Code, f.Message)
 		}
-		fmt.Fprintf(out, "checked %d %s: %d errors, %d warnings, %d info\n", v.files,
-			map[bool]string{true: "file", false: "files"}[v.files == 1], errs, warns, infos)
+		fmt.Fprintf(out, "checked %d %s: %s, %s, %s\n", v.files,
+			map[bool]string{true: "file", false: "files"}[v.files == 1],
+			v.paint(countColor(errs, "31"), fmt.Sprintf("%d errors", errs)),
+			v.paint(countColor(warns, "33"), fmt.Sprintf("%d warnings", warns)),
+			v.paint(countColor(infos, "2"), fmt.Sprintf("%d info", infos)))
 	}
 	if errs+warns > 0 {
 		return classedAs(classNegative, &findingsError{errs: errs, warns: warns})
@@ -299,10 +324,11 @@ func siteMarkdownFiles(targets LinkTargets) []string {
 // with key and a colon, or 1 when there is none.
 func keyLine(raw []byte, key string) int {
 	for i, line := range strings.Split(string(raw), "\n") {
+		line = strings.TrimRight(line, "\r")
 		if strings.HasPrefix(line, key+":") {
 			return i + 1
 		}
-		if i > 0 && line == "---" {
+		if i > 0 && (line == "---" || line == "...") {
 			break
 		}
 	}
@@ -312,16 +338,11 @@ func keyLine(raw []byte, key string) int {
 // bodyStartLine returns how many lines of raw come before the Markdown body,
 // that is the front matter block with its two --- lines, or 0 when there is none.
 func bodyStartLine(raw []byte) int {
-	lines := strings.Split(string(raw), "\n")
-	if len(lines) == 0 || lines[0] != "---" {
+	_, at, found, err := frontMatterBlock(raw)
+	if err != nil || !found {
 		return 0
 	}
-	for i := 1; i < len(lines); i++ {
-		if lines[i] == "---" {
-			return i + 1
-		}
-	}
-	return 0
+	return bytes.Count(raw[:at], []byte("\n"))
 }
 
 // checkFile runs the per-file checks on one Markdown file (DR-0017 4).
@@ -369,9 +390,15 @@ func (v *validator) checkFrontMatter(file string, raw []byte, doc *CommonMark) {
 		v.add("date-form", SeverityInfo, file, keyLine(raw, "pubDate"),
 			"pubDate is not in the RSS 2.0 form BonBon expects (for example \"Thu, 19 Nov 2026 12:00:00 -0800\")")
 	}
-	if strings.TrimSpace(doc.GetAttributeString("title", "")) == "" && firstHeadingText(doc.Text) == "" {
-		v.add("no-title", SeverityWarning, file, 1, "no title in the front matter and no level-1 heading")
+	if strings.TrimSpace(doc.GetAttributeString("title", "")) == "" {
+		if heading := firstHeadingText(doc.Text); heading == "" {
+			v.add("no-title", SeverityWarning, file, 1, "no title in the front matter and no level-1 heading")
+		} else {
+			v.add("title-from-heading", SeverityInfo, file, 1,
+				"no title in the front matter; the heading %q would be used (add title, or run antenna page)", heading)
+		}
 	}
+	v.checkSuggestions(file, raw, doc)
 	if postPath != "" {
 		if want := markdownPathFor(postPath); want != "" && want != relativeToWorkDir(file) {
 			v.add("postpath-mismatch", SeverityWarning, file, keyLine(raw, "postPath"),
@@ -409,4 +436,97 @@ func relativeToWorkDir(p string) string {
 		}
 	}
 	return filepath.ToSlash(p)
+}
+
+// outIsTerminal reports whether w is a terminal. A variable so a test can say
+// yes without a pty.
+var outIsTerminal = func(w any) bool {
+	f, ok := w.(*os.File)
+	if !ok {
+		return false
+	}
+	info, err := f.Stat()
+	return err == nil && info.Mode()&os.ModeCharDevice != 0
+}
+
+// useColor decides whether the report is colored (DR-0020 5): always and never
+// are as said; auto is on for a terminal when NO_COLOR is unset or empty.
+func useColor(mode string, out io.Writer) bool {
+	switch mode {
+	case "always":
+		return true
+	case "never":
+		return false
+	}
+	if os.Getenv("NO_COLOR") != "" {
+		return false
+	}
+	return outIsTerminal(out)
+}
+
+// paint wraps s in the ANSI escape for code when the report is colored.
+func (v *validator) paint(code, s string) string {
+	if !v.color || code == "" {
+		return s
+	}
+	return "\x1b[" + code + "m" + s + "\x1b[0m"
+}
+
+// severityColor is the ANSI code for a severity: error red, warning yellow,
+// info dim.
+func severityColor(sev Severity) string {
+	switch sev {
+	case SeverityError:
+		return "31"
+	case SeverityWarning:
+		return "33"
+	}
+	return "2"
+}
+
+// countColor colors a summary count only when it is not zero.
+func countColor(n int, code string) string {
+	if n == 0 {
+		return ""
+	}
+	return code
+}
+
+// checkSuggestions runs the info checks for front matter a page or post could
+// carry (DR-0020 1): description, author, a description that is too long.
+func (v *validator) checkSuggestions(file string, raw []byte, doc *CommonMark) {
+	desc := strings.TrimSpace(doc.GetAttributeString("description", ""))
+	if desc == "" {
+		v.add("no-description", SeverityInfo, file, 1, "no description; the table of contents and search results use it")
+	} else if max := v.descriptionMax(); max > 0 && utf8.RuneCountInString(desc) > max {
+		v.add("description-long", SeverityInfo, file, keyLine(raw, "description"),
+			"description is %d characters, over the %d a feed or table of contents line suits", utf8.RuneCountInString(desc), max)
+	}
+	if !hasAuthor(doc.FrontMatter["author"]) && (v.cfg == nil || strings.TrimSpace(v.cfg.Author) == "") {
+		v.add("no-author", SeverityInfo, file, 1, "no author; add author to the front matter, or set author in antenna.yaml for the whole site")
+	}
+}
+
+// descriptionMax is the longest description before description-long: the
+// descriptionMax of antenna.yaml, else 300. 0 means never.
+func (v *validator) descriptionMax() int {
+	if v.cfg != nil && v.cfg.DescriptionMax != nil {
+		return *v.cfg.DescriptionMax
+	}
+	return 300
+}
+
+// hasAuthor reports whether a front matter author value names someone.
+func hasAuthor(a any) bool {
+	switch x := a.(type) {
+	case nil:
+		return false
+	case string:
+		return strings.TrimSpace(x) != ""
+	case []any:
+		return len(x) > 0
+	case map[string]any:
+		return len(x) > 0
+	}
+	return true
 }

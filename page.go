@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"gopkg.in/yaml.v3"
 	"database/sql"
 	"fmt"
 	"io"
@@ -104,13 +105,100 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	fName, oName := strings.TrimSpace(args[0]), ""
-	if len(args) == 2 {
-		oName = strings.TrimSpace(args[1])
+	fName := strings.TrimSpace(args[0])
+	outputs := make([]string, 0, len(args)-1)
+	for _, o := range args[1:] {
+		outputs = append(outputs, strings.TrimSpace(o))
 	}
-	return cfg.Page(fName, oName)
+	return cfg.PageOutputs(fName, outputs, os.Stderr)
 }
 
+/** PageOutputs renders one source file to each output named, the extension of
+ * an output saying what it is (DR-0019): .html is the HTML page, .md is the
+ * Markdown with the include directives expanded.
+ *
+ * Parameters:
+ *   fName (string) — the source file (Markdown, a text file with directives, or ODT)
+ *   outputs ([]string) — output paths under htdocs; none means the one HTML page as before
+ *   eout (io.Writer) — where warnings about links go
+ *
+ * Returns:
+ *   error — usage (an output that is neither .html nor .md, a Markdown output
+ *   for an ODT source), data (an output that is the source itself), or from reading or writing
+ *
+ * Example:
+ *   err := cfg.PageOutputs("index.txt", []string{"index.md", "index.html"}, os.Stderr)
+ */
+func (cfg *AppConfig) PageOutputs(fName string, outputs []string, eout io.Writer) error {
+	var htmls, mds []string
+	src := filepath.Clean(fName)
+	for _, o := range outputs {
+		if o == "" {
+			continue
+		}
+		if filepath.Clean(o) == src || filepath.Clean(filepath.Join(cfg.Htdocs, o)) == src {
+			return dataErrorf("output %q is the source file; antenna never overwrites a source", o)
+		}
+	}
+	for _, o := range outputs {
+		switch strings.ToLower(filepath.Ext(o)) {
+		case ".html":
+			htmls = append(htmls, o)
+		case ".md":
+			mds = append(mds, o)
+		default:
+			return usageErrorf("output %q must end in .html or .md", o)
+		}
+	}
+	if len(mds) > 0 && isODTFile(fName) {
+		return usageErrorf("a Markdown output needs a text source, not %q", fName)
+	}
+	if len(outputs) == 0 {
+		// One HTML page, as before. A source that is not .md, .odt or .ott
+		// (index.txt) gets a name derived from its own, never its own.
+		name := ""
+		switch ext := filepath.Ext(fName); strings.ToLower(ext) {
+		case ".md", ".odt", ".ott":
+		default:
+			name = strings.TrimSuffix(fName, ext) + ".html"
+		}
+		htmls = append(htmls, name)
+	}
+	if len(mds) > 0 {
+		raw, err := os.ReadFile(fName)
+		if err != nil {
+			return fmt.Errorf("failed to read %q: %w", fName, err)
+		}
+		text := cfg.deriveFrontMatter(expandIncludes(string(raw)))
+		for _, o := range mds {
+			mdName := filepath.Join(cfg.Htdocs, o)
+			if err := os.MkdirAll(filepath.Dir(mdName), 0775); err != nil {
+				return asCreate(err)
+			}
+			if _, err := writeStable(mdName, []byte(text), 0664); err != nil {
+				return fmt.Errorf("failed to write %q, %w", mdName, asCreate(err))
+			}
+		}
+	}
+	for _, h := range htmls {
+		if err := cfg.pageTo(fName, h, eout); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// expandIncludes expands the @include-text-block and @include-code-block
+// directives in text, the same expansion the HTML page gets.
+func expandIncludes(text string) string {
+	if strings.Contains(text, "@include-text-block ") {
+		text = IncludeTextBlock(text)
+	}
+	if strings.Contains(text, "@include-code-block ") {
+		text = IncludeCodeBlock(text)
+	}
+	return text
+}
 
 // Unpage will remove a CommonMark document filePath
 func (app *AntennaApp) Unpage(cfgName string, args []string) error {
@@ -174,12 +262,7 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 	}
 	// NOTE: This is trusted content so I can support commonMarkDoc
 	// processor extensions safely.
-	if strings.Contains(doc.Text, "@include-text-block ") {
-		doc.Text = IncludeTextBlock(doc.Text)
-	}
-	if strings.Contains(doc.Text, "@include-code-block ") {
-		doc.Text = IncludeCodeBlock(doc.Text)
-	}
+	doc.Text = expandIncludes(doc.Text)
 
 	// Convert our document text to HTML
 	// NOTE: Pages are allowed to have "unsafe" embedded HTML because they are
@@ -334,3 +417,61 @@ func (cfg *AppConfig) Pages() error {
 	return tally.err("rows")
 }
 
+
+/** deriveFrontMatter adds what antenna can derive to the front matter of a
+ * generated Markdown copy of a page (DR-0019 6, DR-0021): a title from the
+ * first level-1 heading when there is none, and the site-wide author when the
+ * document has none. A key the document has is never changed, and a document
+ * that needs nothing is returned as it is. Only the copy is changed; the
+ * source file is never written.
+ *
+ * Parameters:
+ *   text (string) — the page's Markdown, directives already expanded
+ *
+ * Returns:
+ *   string — text with the derived keys added to its front matter
+ *
+ * Example:
+ *   out := cfg.deriveFrontMatter("# Hello\n")
+ */
+func (cfg *AppConfig) deriveFrontMatter(text string) string {
+	fm, body, err := SplitFrontMatter([]byte(text))
+	if err != nil {
+		return text
+	}
+	doc := &CommonMark{FrontMatter: fm, Text: body}
+	var add []string
+	if strings.TrimSpace(doc.GetAttributeString("title", "")) == "" {
+		if h := firstHeadingText(body); h != "" {
+			add = append(add, yamlLine("title", h))
+		}
+	}
+	if site := strings.TrimSpace(cfg.Author); site != "" && !hasAuthor(fm["author"]) {
+		add = append(add, yamlLine("author", site))
+	}
+	if len(add) == 0 {
+		return text
+	}
+	block := strings.Join(add, "")
+	if !strings.HasPrefix(text, "---\n") {
+		return "---\n" + block + "---\n" + text
+	}
+	if strings.HasPrefix(text, "---\n---\n") { // an empty block
+		return "---\n" + block + text[4:]
+	}
+	end := strings.Index(text[4:], "\n---")
+	if end < 0 {
+		return text
+	}
+	insertAt := 4 + end + 1
+	return text[:insertAt] + block + text[insertAt:]
+}
+
+// yamlLine writes one front matter line, quoted as YAML needs.
+func yamlLine(key, value string) string {
+	b, err := yaml.Marshal(map[string]string{key: value})
+	if err != nil {
+		return key + ": " + value + "\n"
+	}
+	return string(b)
+}

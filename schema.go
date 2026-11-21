@@ -61,6 +61,15 @@ type AppConfig struct {
 	// Collections holds a list of collections to curate
 	Collections []*Collection `json:"collections,omitempty" yaml:"collections,omitempty"`
 
+	// Author is the site-wide author (DR-0020, DR-0021): what a page or post
+	// with no author of its own gets.
+	Author string `json:"author,omitempty" yaml:"author,omitempty"`
+
+	// DescriptionMax is the longest description antenna validate accepts
+	// before it suggests a shorter one (DR-0020). Nil means 300; 0 turns the
+	// check off.
+	DescriptionMax *int `json:"descriptionMax,omitempty" yaml:"descriptionMax,omitempty"`
+
 	// Subsites lists the other Markdown sites on this host that the site's
 	// table of contents points at with include outlines (DR-0015 1).
 	Subsites []Subsite `json:"subsites,omitempty" yaml:"subsites,omitempty"`
@@ -321,6 +330,9 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 	}
 	if err := cfg.validateSubsites(); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
+	}
+	if cfg.DescriptionMax != nil && *cfg.DescriptionMax < 0 {
+		return configErrorf("%s: descriptionMax is %d; it must be 0 or more", cfgName, *cfg.DescriptionMax)
 	}
 	return nil
 }

@@ -686,6 +686,11 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 				authors = nil
 			}
 		}
+		// The site's own posts have a postPath; a harvested item does not, and
+		// is never given the site's author (DR-0021 3).
+		if len(authors) == 0 && postPath != "" && gen.DefaultAuthor != "" {
+			authors = []*gofeed.Person{{Name: gen.DefaultAuthor}}
+		}
 		if enclosuresSrc != "" {
 			enclosures = []*Enclosure{}
 			if err := json.Unmarshal([]byte(enclosuresSrc), &enclosures); err != nil {

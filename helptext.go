@@ -107,7 +107,7 @@ Markdown (.md) filename as registered with the add action.
 list
 : List the collection filenames defined in the "{app_name}.yaml".
 
-page INPUT_PATH [OUTPUT_PATH]
+page INPUT_PATH [OUTPUT_PATH...]
 : This will create a standalone HTML page in a collection called pages.md. The pages.md
 is the only collection that has pages (hence the name). It is also the default collection
 (created by the init action). It uses the default page generator defined in the
@@ -129,7 +129,7 @@ migrate-links [-w] [PATH]
 Markdown into links to the .md source, which is what a Markdown reader needs. A
 dry run showing a diff unless -w is given. See "{app_name} help migrate-links".
 
-validate [-json] [-online] [PATH]
+validate [-json] [-online] [-color WHEN] [PATH]
 : Check the site, a directory or one Markdown file for problems, and for what
 Markdown readers such as BonBon need. It only reads: it never changes a file.
 With no PATH it checks the whole site named by the configuration. Exit 0 means no
@@ -965,17 +965,40 @@ page
 
 # SYNOPSIS
 
-{app_name} page INPUT_PATH [OUTPUT_PATH]
+{app_name} page INPUT_PATH [OUTPUT_PATH...]
 
 # DESCRIPTION
 
-Renders INPUT_PATH as an HTML file using the page generator YAML. The
-output file is placed next to INPUT_PATH with a .html extension unless
-OUTPUT_PATH is specified. The page is recorded in the pages collection
-(pages.md / pages.db) so it appears in pages output.
+Renders INPUT_PATH to each OUTPUT_PATH named. The extension of an output says
+what it is: .html is an HTML page made with the page generator YAML, and .md
+is the Markdown of the source with its include directives
+(@include-text-block and @include-code-block) expanded. The same expanded text
+is used for both, so they are one document. With no OUTPUT_PATH one HTML page
+is written next to INPUT_PATH with a .html extension.
+
+The source can be a text file with directives (index.txt), which is how a
+page that includes other files publishes both a page and a Markdown copy
+that a reader such as BonBon can use:
+
+    antenna page index.txt index.md index.html
+
+In the Markdown copy the front matter is kept as written, with two keys added
+when the source has none: a title from the first level-1 heading, and the
+site-wide author from antenna.yaml. Links stay as the author wrote them (.md
+links stay .md). The source file is never changed. In the HTML, a link to a Markdown file
+antenna renders becomes a link to its .html page.
+
+An HTML output is recorded in the pages collection (pages.md / pages.db) so
+it appears in pages output. A run that writes only Markdown is not a page and
+is not recorded. A file that is only included into other pages (recent.txt)
+is never given to antenna page.
 
 Pages are excluded from RSS feeds. This action is for static content such
 as About pages, contact pages, and search pages.
+
+An output that is the source file is refused (exit 65) and nothing is written.
+An output that does not end in .html or .md is a usage error (exit 2), and
+nothing is written. A Markdown output needs a text source, not an ODT file.
 
 WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
 Only run this action on files you control and trust.
@@ -983,10 +1006,10 @@ Only run this action on files you control and trust.
 # PARAMETERS
 
 INPUT_PATH
-: path to the source Markdown file
+: path to the source file
 
 OUTPUT_PATH
-: (optional) explicit output HTML path
+: (optional, any number) an output path ending in .html or .md
 
 # EXAMPLES
 
@@ -1501,7 +1524,7 @@ validate
 
 # SYNOPSIS
 
-{app_name} validate [-json] [-online] [PATH]
+{app_name} validate [-json] [-online] [-color WHEN] [PATH]
 
 # DESCRIPTION
 
@@ -1533,6 +1556,12 @@ written as an object with error, class and code.
 : Also ask each sub-site named in the subsites setting for its table of
 contents, the way BonBon does, and warn about one that does not answer.
 
+-color WHEN
+: Color the report: the severity word (error red, warning yellow, info dim) and
+the PATH:LINE. WHEN is auto (the default: color when standard output is a
+terminal and NO_COLOR is not set), always or never. The text is the same with
+or without color. -json is never colored.
+
 # CHECKS
 
 Each file:
@@ -1552,6 +1581,21 @@ date-form
 
 no-title
 : No title in the front matter and no level-1 heading (warning).
+
+title-from-heading
+: No title in the front matter, but a level-1 heading the title can come from
+(info). {app_name} blogit and {app_name} page use that heading.
+
+no-description
+: No description, or an empty one; the table of contents and search results
+use it (info).
+
+description-long
+: A description longer than descriptionMax characters (info). descriptionMax
+is set in antenna.yaml and is 300 by default; 0 turns the check off.
+
+no-author
+: No author in the front matter and no author set in antenna.yaml (info).
 
 postpath-mismatch
 : postPath names a different file than the one it is in (warning).
@@ -1578,6 +1622,11 @@ for every reader (info).
 
 raw-html
 : Raw HTML, script or SVG, which Markdown readers strip (warning).
+
+include-directive
+: An @include-text-block or @include-code-block line in a Markdown file, which
+a Markdown reader shows as text. Keep the source as a .txt file and write the
+Markdown with {app_name} page (warning).
 
 image-type
 : An image that is not PNG, JPEG, GIF or WebP (warning).
@@ -1788,6 +1837,18 @@ base_url
 : (optional) the address the site is published at, with no trailing slash.
   The feeds, the sitemap and the table of contents (.well-known/toc.opml) are
   made from it; without it the table of contents is not written
+
+author
+: (optional) the site-wide author. A page's generated Markdown (antenna page
+  SOURCE OUTPUT.md) and the site's own posts in the collection page get it
+  when they have no author of their own; an author in the document wins, and
+  harvested items never get it. {app_name} validate does not suggest an author
+  for a file when this is set
+
+descriptionMax
+: (optional, default: 300) the longest description {app_name} validate accepts
+  before it suggests a shorter one; 0 turns that check off. A negative or
+  non-numeric value is a configuration error (exit 78)
 
 subsites
 : (optional) other Markdown sites on the same host, so this site's table of

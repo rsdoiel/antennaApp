@@ -29,6 +29,18 @@ base_url
   The feeds, the sitemap and the table of contents (.well-known/toc.opml) are
   made from it; without it the table of contents is not written
 
+author
+: (optional) the site-wide author. A page's generated Markdown (antenna page
+  SOURCE OUTPUT.md) and the site's own posts in the collection page get it
+  when they have no author of their own; an author in the document wins, and
+  harvested items never get it. antenna validate does not suggest an author
+  for a file when this is set
+
+descriptionMax
+: (optional, default: 300) the longest description antenna validate accepts
+  before it suggests a shorter one; 0 turns that check off. A negative or
+  non-numeric value is a configuration error (exit 78)
+
 subsites
 : (optional) other Markdown sites on the same host, so this site's table of
   contents can point at them. A list of objects, each with url (required: the

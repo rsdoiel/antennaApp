@@ -88,7 +88,7 @@ Markdown (.md) filename as registered with the add action.
 list
 : List the collection filenames defined in the "antenna.yaml".
 
-page INPUT_PATH [OUTPUT_PATH]
+page INPUT_PATH [OUTPUT_PATH...]
 : This will create a standalone HTML page in a collection called pages.md. The pages.md
 is the only collection that has pages (hence the name). It is also the default collection
 (created by the init action). It uses the default page generator defined in the
@@ -110,7 +110,7 @@ migrate-links [-w] [PATH]
 Markdown into links to the .md source, which is what a Markdown reader needs. A
 dry run showing a diff unless -w is given. See "antenna help migrate-links".
 
-validate [-json] [-online] [PATH]
+validate [-json] [-online] [-color WHEN] [PATH]
 : Check the site, a directory or one Markdown file for problems, and for what
 Markdown readers such as BonBon need. It only reads: it never changes a file.
 With no PATH it checks the whole site named by the configuration. Exit 0 means no

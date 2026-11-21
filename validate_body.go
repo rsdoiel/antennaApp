@@ -152,6 +152,8 @@ func (v *validator) checkBody(file string, raw []byte, doc *CommonMark) {
 			v.checkLink(file, from, string(node.Destination), lineOf(src, nodeOffset(n, src), before), byHTML)
 		case *ast.AutoLink:
 			v.checkLink(file, from, string(node.URL(src)), lineOf(src, nodeOffset(n, src), before), byHTML)
+		case *ast.Paragraph:
+			v.checkIncludeDirectives(file, node, src, before)
 		case *ast.Image:
 			v.checkImage(file, string(node.Destination), lineOf(src, nodeOffset(n, src), before))
 		case *ast.RawHTML:
@@ -173,6 +175,23 @@ func (v *validator) checkBody(file string, raw []byte, doc *CommonMark) {
 		return ast.WalkContinue, nil
 	})
 	v.checkMacros(file, doc, before)
+}
+
+// includeDirective matches a line that is an include directive and nothing
+// before it: the form antenna expands.
+var includeDirective = regexp.MustCompile(`^\s*@include-(text|code)-block\s+\S`)
+
+// checkIncludeDirectives reports each line of a paragraph that is an include
+// directive (DR-0019). Code spans and blocks are not paragraphs, so a page
+// that shows a directive in code is left alone.
+func (v *validator) checkIncludeDirectives(file string, p *ast.Paragraph, src []byte, before int) {
+	for i := 0; i < p.Lines().Len(); i++ {
+		seg := p.Lines().At(i)
+		if includeDirective.Match(seg.Value(src)) {
+			v.add("include-directive", SeverityWarning, file, lineOf(src, seg.Start, before),
+				"an include directive in a Markdown file is shown as text by a Markdown reader such as BonBon; keep the source as a .txt file and write this one with antenna page SOURCE.txt OUTPUT.md OUTPUT.html")
+		}
+	}
 }
 
 // checkRawHTML reports raw HTML other than a comment or a closing tag.

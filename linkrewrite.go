@@ -188,6 +188,14 @@ func (cfg *AppConfig) LinkTargets() (LinkTargets, error) {
 			continue
 		}
 		targets[path.Clean(filepath.ToSlash(in))] = path.Clean(filepath.ToSlash(out))
+		// A page made from a text source (index.txt) also has a Markdown
+		// copy beside its HTML (DR-0019); a link to the copy lands on the page.
+		if cleanOut := path.Clean(filepath.ToSlash(out)); strings.HasSuffix(cleanOut, ".html") {
+			copyMD := strings.TrimSuffix(cleanOut, ".html") + ".md"
+			if _, taken := targets[copyMD]; !taken {
+				targets[copyMD] = cleanOut
+			}
+		}
 	}
 	for _, col := range cfg.Collections {
 		if col.DbName == "" {

@@ -58,7 +58,7 @@ func write(t *testing.T, name, content string) {
 	}
 }
 
-const goodPost = "---\ntitle: Good\npostPath: blog/2026/11/19/good.md\npubDate: \"Thu, 19 Nov 2026 12:00:00 -0800\"\n---\n\n# Good\n\nBody.\n"
+const goodPost = "---\ntitle: Good\ndescription: A good post.\nauthor: R. S. Doiel\npostPath: blog/2026/11/19/good.md\npubDate: \"Thu, 19 Nov 2026 12:00:00 -0800\"\n---\n\n# Good\n\nBody.\n"
 
 // DR-0017 3: a clean file exits 0 and says so.
 func TestValidateACleanFileIsClean(t *testing.T) {

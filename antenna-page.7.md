@@ -8,17 +8,40 @@ page
 
 # SYNOPSIS
 
-antenna page INPUT_PATH [OUTPUT_PATH]
+antenna page INPUT_PATH [OUTPUT_PATH...]
 
 # DESCRIPTION
 
-Renders INPUT_PATH as an HTML file using the page generator YAML. The
-output file is placed next to INPUT_PATH with a .html extension unless
-OUTPUT_PATH is specified. The page is recorded in the pages collection
-(pages.md / pages.db) so it appears in pages output.
+Renders INPUT_PATH to each OUTPUT_PATH named. The extension of an output says
+what it is: .html is an HTML page made with the page generator YAML, and .md
+is the Markdown of the source with its include directives
+(@include-text-block and @include-code-block) expanded. The same expanded text
+is used for both, so they are one document. With no OUTPUT_PATH one HTML page
+is written next to INPUT_PATH with a .html extension.
+
+The source can be a text file with directives (index.txt), which is how a
+page that includes other files publishes both a page and a Markdown copy
+that a reader such as BonBon can use:
+
+    antenna page index.txt index.md index.html
+
+In the Markdown copy the front matter is kept as written, with two keys added
+when the source has none: a title from the first level-1 heading, and the
+site-wide author from antenna.yaml. Links stay as the author wrote them (.md
+links stay .md). The source file is never changed. In the HTML, a link to a Markdown file
+antenna renders becomes a link to its .html page.
+
+An HTML output is recorded in the pages collection (pages.md / pages.db) so
+it appears in pages output. A run that writes only Markdown is not a page and
+is not recorded. A file that is only included into other pages (recent.txt)
+is never given to antenna page.
 
 Pages are excluded from RSS feeds. This action is for static content such
 as About pages, contact pages, and search pages.
+
+An output that is the source file is refused (exit 65) and nothing is written.
+An output that does not end in .html or .md is a usage error (exit 2), and
+nothing is written. A Markdown output needs a text source, not an ODT file.
 
 WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
 Only run this action on files you control and trust.
@@ -26,10 +49,10 @@ Only run this action on files you control and trust.
 # PARAMETERS
 
 INPUT_PATH
-: path to the source Markdown file
+: path to the source file
 
 OUTPUT_PATH
-: (optional) explicit output HTML path
+: (optional, any number) an output path ending in .html or .md
 
 # EXAMPLES
 

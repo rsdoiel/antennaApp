@@ -45,6 +45,11 @@ type Generator struct {
 	// DbName holds the path to the SQLite3 database
 	DBName string `json:"dbName,omitempty" yaml:"dbName,omitempty"`
 
+	// DefaultAuthor is the site-wide author (antenna.yaml author). The site's
+	// own posts with no author of their own get it; harvested items never do
+	// (DR-0021).
+	DefaultAuthor string `json:"-" yaml:"-"`
+
 	// Title if this is set the title will be included
 	// when generating the markdown of saved items
 	Title string `json:"title,omitempty" yaml:"title,omitempty"`
@@ -584,6 +589,7 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 	if err != nil {
 		return err
 	}
+	gen.DefaultAuthor = strings.TrimSpace(cfg.Author)
 	// Warnings go to the stream the caller gave, not always to os.Stderr.
 	if eout != nil {
 		gen.eout = eout
