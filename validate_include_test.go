@@ -51,3 +51,18 @@ func TestValidateIncludeDirectiveInCodeIsLeftAlone(t *testing.T) {
 		t.Errorf("code and mid-sentence mentions are not directives:\n%s", out)
 	}
 }
+
+// An e-mail address Markdown turns into a link (bare, or in angle brackets) is
+// a mail link, not a file to look for. Seen on resume.md: "Contact: a@b.org"
+// drew "link-missing: a@b.org does not exist".
+func TestValidateAnEmailAutolinkIsNotAMissingFile(t *testing.T) {
+	bodySite(t)
+	write(t, "docs/p.md", bodyDoc("Contact: someone@example.org\n\nOr <other@example.org>.\n\n[gone](missing.md)\n"))
+	out, _ := runValidate(t, "docs/p.md")
+	if strings.Contains(out, "example.org") {
+		t.Errorf("an e-mail address is not a missing file:\n%s", out)
+	}
+	if _, ok := finding(out, "docs/p.md", "warning", "link-missing"); !ok || !strings.Contains(out, "missing.md") {
+		t.Errorf("a real missing link must still be reported:\n%s", out)
+	}
+}

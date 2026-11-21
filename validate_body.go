@@ -151,6 +151,9 @@ func (v *validator) checkBody(file string, raw []byte, doc *CommonMark) {
 		case *ast.Link:
 			v.checkLink(file, from, string(node.Destination), lineOf(src, nodeOffset(n, src), before), byHTML)
 		case *ast.AutoLink:
+			if node.AutoLinkType == ast.AutoLinkEmail {
+				break // a mail address, not a file or a page
+			}
 			v.checkLink(file, from, string(node.URL(src)), lineOf(src, nodeOffset(n, src), before), byHTML)
 		case *ast.Paragraph:
 			v.checkIncludeDirectives(file, node, src, before)
