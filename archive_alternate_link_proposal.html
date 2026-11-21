@@ -121,7 +121,7 @@ enough to keep one API credential out of version control.</li>
 <ul>
 <li><strong><code>Collection</code> struct</strong>
 (<code>schema.go:230-278</code>) already has a
-<code>Filters   []string</code> field populated from
+<code>Filters []string</code> field populated from
 <code>antenna.yaml</code>’s per-collection <code>filters:</code> list,
 and a <code>DbName</code> field naming that collection’s SQLite
 database. A new <code>Archive bool</code> field (or similarly named)
@@ -328,11 +328,11 @@ actually runs.</li>
 <code>"Archived copy"</code> string sufficient for a first version?</li>
 <li>Should <code>archiveLink</code> distinguish “never attempted” from
 “attempted and failed,” so a failed submission can be retried on the
-next <code>antenna    archive</code> run rather than silently never
-being retried again? A <code>''</code>- means-both design (§5.2) is
-simpler but means a permanently-failing URL (e.g. one the Wayback
-Machine’s crawler is blocked from) gets retried forever, burning
-rate-limit budget on every run for a URL that will never succeed.</li>
+next <code>antenna archive</code> run rather than silently never being
+retried again? A <code>''</code>- means-both design (§5.2) is simpler
+but means a permanently-failing URL (e.g. one the Wayback Machine’s
+crawler is blocked from) gets retried forever, burning rate-limit budget
+on every run for a URL that will never succeed.</li>
 <li>Should there be a per-item or per-collection cap on how old an item
 can be and still get archived retroactively (e.g. only archive items
 from the last N days), or should <code>antenna archive</code> always

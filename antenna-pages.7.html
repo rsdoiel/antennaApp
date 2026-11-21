@@ -25,10 +25,36 @@
 <h1 id="name">NAME</h1>
 <p>pages</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<p>antenna pages</p>
+<p>antenna pages [-stale]</p>
 <h1 id="description">DESCRIPTION</h1>
 <p>Prints the page entries tracked in the pages collection (pages.md /
-pages.db) in descending updated-timestamp order.</p>
+pages.db) in descending updated-timestamp order, one per line, with six
+fields separated by tabs:</p>
+<ol type="1">
+<li>the input path, the source file</li>
+<li>the output path, the first .html the page writes. Deprecated: it is
+kept for older tools and will stop being written; use field 4</li>
+<li>updated, when antenna last built the page</li>
+<li>outputs, a JSON array of every file the page writes, in the order
+given to antenna page, for example [“index.md”,“index.html”]</li>
+<li>includes, a JSON array of every file the source includes with <span
+class="citation"
+data-cites="include-text-block">@include-text-block</span> or <span
+class="citation"
+data-cites="include-code-block">@include-code-block</span>, nested ones
+too</li>
+<li>stale, empty for a current page, “stale” when the source or a file
+it includes was changed after the page was last built, “missing” when an
+output file is not there</li>
+</ol>
+<p>The first three fields are what older versions printed. Fields 4 and
+5 are empty for a page built before they were recorded; run antenna
+generate to fill them in. The staleness test compares file times, so it
+is only meaningful in a working copy that was built there, and it does
+not see changes to the generator YAML, the theme or antenna.yaml.</p>
+<p>With -stale only the pages whose sixth field is not empty are
+printed, and the exit status is 1 when there are any, 0 when there are
+none.</p>
 <p>Compare with posts (blog posts in a collection) and items (all items
 in any collection database).</p>
 <h1 id="examples">EXAMPLES</h1>

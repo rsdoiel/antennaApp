@@ -130,28 +130,28 @@ item.</p>
 <col style="width: 57%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Change</th>
 <th scope="col">CSS impact</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Skip link</td>
 <td>New <code>.skip-link</code> / <code>.skip-link:focus</code> rules
 needed in default CSS</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>&lt;address&gt;</code> → <code>&lt;footer&gt;</code></td>
 <td><code>article address</code> selectors must become
 <code>article footer</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Date below heading</td>
 <td><code>article h2</code> selectors may need adjustment if they styled
 inline date text</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>&lt;time&gt;</code> element</td>
 <td>New <code>article footer time</code> or <code>article p time</code>
 selectors for date styling</td>
@@ -168,27 +168,27 @@ page on the website.</p>
 <col style="width: 57%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">File</th>
 <th scope="col">Change</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>html.go</code></td>
 <td>All changes: <code>Generator.Lang</code>, skip link,
 <code>WriteItem</code> structure, typo fix, warning</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>generator.go</code></td>
 <td><code>NewGenerator</code> sets <code>Lang = "en-US"</code>;
 <code>LoadConfig</code> reads <code>lang:</code> key</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>html_test.go</code></td>
 <td>New and updated tests for all changed behaviours</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>website/</code></td>
 <td>Document CSS impact for aggregation lists</td>
 </tr>

@@ -23,13 +23,78 @@
 </nav>
 <section id="main-content">
 <h1 id="changes">Changes</h1>
+<h2 id="v0.1.1-2026-11-20">v0.1.1 — 2026-11-20</h2>
+<p>Page Markdown, previous and next links, and validation grow from the
+first Markdown-web release. Everything here is from the same day-to-day
+use of <code>antenna</code> on a BonBon site (decisions DR-0019 to
+DR-0026).</p>
+<h3 id="added">Added</h3>
+<ul>
+<li><strong><code>antenna page SOURCE [OUTPUT...]</code> writes
+<code>.html</code> and <code>.md</code> by extension.</strong> The
+<code>.md</code> output is the expanded Markdown (macros and includes
+resolved), the copy a Markdown reader gets (DR-0019).</li>
+<li><strong>Pages declare their Markdown alternate.</strong> A page made
+from a text source names the Markdown copy beside it in its head;
+<code>validate</code> warns about a static Markdown alternate left in
+the generator YAML (DR-0023).</li>
+<li><strong>The <code>pages</code> table records what a page wrote and
+includes.</strong> New <code>outputs</code> and <code>includes</code>
+columns (JSON), upgraded in place. <code>antenna pages</code> shows six
+fields and takes <code>-stale</code> to list pages whose output is older
+than their source or includes (exit 1 when there are any, 0 when none).
+Includes may nest: a warning past 3 levels, exit 65 past 5 or for a
+cycle. <code>generate</code> rewrites every recorded output
+(DR-0024).</li>
+<li><strong>Sequences in <code>antenna.yaml</code>.</strong> Name the
+directories or list files whose members are a sequence and each member
+gets previous and next links, in the HTML and in the Markdown copy
+(DR-0026).</li>
+<li><strong><code>antenna.yaml</code> <code>author</code> and
+<code>descriptionMax</code>.</strong> The site author is the default
+author of page Markdown and of your own posts (DR-0021).</li>
+<li><strong>New <code>validate</code> findings.</strong> Info:
+<code>include-directive</code>, <code>no-description</code>,
+<code>no-author</code>, <code>title-from-heading</code>,
+<code>description-long</code> (DR-0020), <code>output-stale</code>
+(DR-0024), <code>sequence-empty</code> and <code>sequence-overlap</code>
+(DR-0026). Warning: <code>row-output-missing</code>,
+<code>row-duplicate-output</code>, <code>include-missing</code>
+(DR-0024) and <code>sequence-path-missing</code> (DR-0026).
+<code>validate -color WHEN</code> (<code>auto</code>,
+<code>always</code> or <code>never</code>) colors the report
+(<code>NO_COLOR</code> is honoured under <code>auto</code>; JSON is
+never colored).</li>
+<li>The documentation site is published for Markdown readers too:
+<code>index.md</code>, <code>.well-known/toc.opml</code> and a Markdown
+alternate on every page.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li><strong>Previous and next links come from the table of contents for
+posts only</strong>; pages get none unless their front matter names them
+or they are in a sequence (DR-0025). A page is listed by the Markdown it
+was made from (for example <code>bio.md</code> rendered to
+<code>about.html</code>), and the neighbours use the same name.</li>
+<li><strong>Front matter is only the block at the top of a
+file.</strong> A <code>---</code> block later in a document is text
+(DR-0022).</li>
+<li>The minimum Go is 1.27.4.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li><code>validate</code> no longer calls an e-mail autolink a missing
+file.</li>
+<li>A directive’s language no longer swallows the first word of the next
+paragraph, and a code block keeps its blank line before it.</li>
+</ul>
 <h2 id="v0.1.0-2026-11-20">v0.1.0 — 2026-11-20</h2>
 <p>A larger step than the v0.0.x releases: antenna sites now publish for
 the Markdown web (Dave Winer’s BonBon browser and readers like it) from
 the same Markdown they publish as HTML, and two new commands check a
 site and bring older sites up to date. Because the change is this large
 the minor version moves from 0.0 to 0.1.</p>
-<h3 id="added">Added</h3>
+<h3 id="added-1">Added</h3>
 <ul>
 <li><strong>Publishing for Markdown readers.</strong> Write links
 between your pages to the <code>.md</code> file. In the HTML output a
@@ -84,7 +149,7 @@ and entries in the completion scripts and the interactive menu.</li>
 <code>.well-known</code>, and sends Markdown to a client that prefers it
 in <code>Accept</code>.</li>
 </ul>
-<h3 id="changed">Changed</h3>
+<h3 id="changed-1">Changed</h3>
 <ul>
 <li><strong><code>antenna blogit</code> makes the post
 publishable.</strong> It adds <code>pubDate</code> (the RSS form, with
@@ -111,7 +176,7 @@ module 0.0.12.</li>
 <code>antenna help TOPIC</code> by the Makefile, so every topic’s page
 is current.</li>
 </ul>
-<h3 id="fixed">Fixed</h3>
+<h3 id="fixed-1">Fixed</h3>
 <ul>
 <li><strong><code>antenna unpage</code> exits 1</strong> when no page
 record matches the path (it exited 0). Scripts that relied on 0 for a

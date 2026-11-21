@@ -23,71 +23,43 @@
 </nav>
 <section id="main-content">
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.1.0">antennaApp 0.1.0</h2>
+<h2 id="antennaapp-0.1.1">antennaApp 0.1.1</h2>
 <ul>
-<li>Antenna sites now publish for the Markdown web (Dave Winer’s BonBon
-browser and readers like it) as well as for HTML browsers, from the same
-Markdown. See <code>antenna help markdown-web</code></li>
-<li>Links between your pages are written to the <code>.md</code> file;
-in the HTML output a link to a page, collection or post that antenna
-renders becomes the <code>.html</code> page, with a warning for a link
-to a file it does not render</li>
-<li>Each collection with items also gets a Markdown rendering of them,
-<code>STEM_items.md</code>, declared in the HTML head as its Markdown
-alternate</li>
-<li><code>antenna generate</code> writes
-<code>.well-known/toc.opml</code>: the site’s pages, collections and
-posts (oldest first, by year and month), with <code>include</code>
-outlines for the other sites on the host named by the new
-<code>subsites</code> list in <code>antenna.yaml</code>; it gives pages
-and posts previous and next links from it when their front matter names
-none</li>
-<li>New <code>bonbon</code> setting in <code>antenna.yaml</code> writes
-<code>.well-known/bonbon.json</code>; with no setting no file is written
-and none is removed</li>
-<li>Front matter keys BonBon reads: <code>link</code>,
-<code>urlPrev</code>, <code>urlNext</code>,
-<code>rightMarginImage</code> (with <code>rightMarginImageAlt</code>),
-<code>pubDate</code> in the RSS 2.0 form, and <code>{{page.NAME}}</code>
-macros in pages and posts</li>
-<li>New <code>antenna validate [-json] [-online] [PATH]</code>: a
-read-only check of a file, a directory or the whole site, with 21 stable
-finding codes (front matter, dates, links, raw HTML, images, macros,
-stale table of contents, <code>.nojekyll</code> on GitHub Pages and
-more); exit 0 when clean, 1 when there are errors or warnings</li>
-<li>New <code>antenna migrate-links [-w] [PATH]</code>: rewrites links
-to <code>.html</code> pages that antenna renders from Markdown into
-<code>.md</code> links in your Markdown; a dry-run diff by default,
-<code>-w</code> writes, and only the link destinations change</li>
-<li><code>antenna blogit</code> now makes the post publishable: it adds
-<code>pubDate</code> (the RSS form, in the zone of your computer,
-<code>TZ</code> overrides it) and a <code>title</code> from the first
-heading when the file has none, and never changes what is there; before
-this a blogit post stayed a draft</li>
-<li>A date with a zone keeps it: an RSS <code>pubDate</code> such as
-<code>Mon, 30 Nov 2026 21:30:00 -0800</code> is stored with its offset,
-so a late evening post stays on its own day and month in the table of
-contents, the feeds and the page</li>
-<li><code>antenna preview</code> serves <code>.md</code> as
-<code>text/markdown</code>, serves <code>.well-known</code>, and sends
-Markdown to a client that asks for it with <code>Accept</code></li>
-<li>Generated files are deterministic: a file is rewritten only when its
-content changes, so regenerating an unchanged site changes no file;
-expect one round of changes in a site you regenerate for the first time
-(attribute order, <code>.md</code> links written as <code>.html</code>,
-previous and next links)</li>
-<li>Breaking for scripts: <code>antenna unpage</code> exits 1 when no
-page record matches the path</li>
-<li>Fixed: one unreadable item row no longer stops a collection’s HTML
-page and items Markdown from being written; <code>{{page.title}}</code>
-inside a link you wrote no longer makes a link inside a link; an items
-file left by a collection that became a page index is removed</li>
-<li>Every help topic’s manual page is regenerated from
-<code>antenna help TOPIC</code> (the Makefile does it), so the
-<code>.7.md</code> pages are current; new topics
-<code>markdown-web</code>, <code>validate</code> and
-<code>migrate-links</code></li>
-<li>Requires Go 1.27.3 and the <code>opml</code> module 0.0.12</li>
+<li><code>antenna page SOURCE [OUTPUT...]</code> writes
+<code>.html</code> and <code>.md</code> by extension; the
+<code>.md</code> is the expanded Markdown a Markdown reader gets, and
+the page declares it as its Markdown alternate</li>
+<li>New <code>sequences</code> setting in <code>antenna.yaml</code>:
+directories or list files whose members get previous and next links, in
+the HTML and the Markdown copy; the table of contents gives previous and
+next to posts only, and pages only through front matter or a
+sequence</li>
+<li>The <code>pages</code> table records each page’s outputs and
+includes (upgraded in place); <code>antenna pages</code> shows six
+fields and <code>-stale</code> lists pages older than their source (exit
+1 when there are any); <code>generate</code> rewrites every recorded
+output</li>
+<li>Includes nest: a warning past 3 levels, exit 65 past 5 or for a
+cycle</li>
+<li><code>antenna.yaml</code> <code>author</code> is the default author
+of page Markdown and your own posts; <code>descriptionMax</code> sets
+the length <code>validate</code> flags</li>
+<li><code>antenna validate</code> has new findings
+(<code>include-directive</code>, <code>no-description</code>,
+<code>no-author</code>, <code>title-from-heading</code>,
+<code>description-long</code>, <code>output-stale</code>,
+<code>row-output-missing</code>, <code>row-duplicate-output</code>,
+<code>include-missing</code>, <code>sequence-path-missing</code>,
+<code>sequence-empty</code>, <code>sequence-overlap</code>) and
+<code>-color WHEN</code></li>
+<li>Front matter is only the block at the top of a file</li>
+<li>Fixed: a directive’s language no longer swallows the next
+paragraph’s first word; a code block keeps its blank line before it;
+<code>validate</code> no longer calls an e-mail autolink a missing
+file</li>
+<li>The documentation site is published for Markdown readers too:
+<code>index.md</code>, <code>.well-known/toc.opml</code> and a Markdown
+alternate on every page</li>
 </ul>
 <h2 id="authors">Authors</h2>
 <ul>
@@ -144,11 +116,11 @@ Tracker</a></li>
 </ul>
 <h2 id="programming-languages">Programming languages</h2>
 <ul>
-<li>Go &gt;= 1.27.3</li>
+<li>Go &gt;= 1.27.4</li>
 </ul>
 <h2 id="software-requirements">Software Requirements</h2>
 <ul>
-<li>Go &gt;= 1.27.3</li>
+<li>Go &gt;= 1.27.4</li>
 <li>github.com/rsdoiel/opml &gt;= 0.0.12</li>
 <li>github.com/rsdoiel/stylefrom &gt;= 0.0.2</li>
 <li>github.com/rsdoiel/termlib &gt;= 0.0.10</li>

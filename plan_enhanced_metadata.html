@@ -40,39 +40,39 @@ breaks until Phase 4 wires the new signatures into callers.</p>
 <code>TestGetAttributeStringSlice</code> covering:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Input</th>
 <th scope="col">Expected</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Key absent</td>
 <td><code>FrontMatter{}</code></td>
 <td><code>nil</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Empty string value</td>
 <td><code>{"k": ""}</code></td>
 <td><code>nil</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Non-empty string</td>
 <td><code>{"k": "Oberon"}</code></td>
 <td><code>["Oberon"]</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Sequence of strings</td>
 <td><code>{"k": ["a","b"]}</code></td>
 <td><code>["a","b"]</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Sequence with empty entries</td>
 <td><code>{"k": ["a","","b"]}</code></td>
 <td><code>["a","b"]</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Non-string/non-slice type</td>
 <td><code>{"k": 42}</code></td>
 <td><code>nil</code></td>
@@ -170,7 +170,7 @@ capture output.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Setup</th>
 <th scope="col">Must contain</th>
@@ -178,47 +178,47 @@ capture output.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>nil frontMatter</td>
 <td><code>frontMatter = nil</code></td>
 <td>existing charset/viewport meta</td>
 <td>any <code>data-pagefind-filter</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>String field</td>
 <td><code>{"author": "R. S. Doiel"}</code></td>
 <td><code>&lt;meta name="author"</code>,
 <code>data-pagefind-filter="author[content]"</code></td>
 <td>—</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Slice field</td>
 <td><code>{"keywords": ["a","b"]}</code></td>
 <td>two <code>name="keywords"</code> elements, two
 <code>data-pagefind-filter</code> elements</td>
 <td>joined string</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Title override</td>
 <td><code>{"title": "My Post"}</code>,
 <code>gen.Title = "Site"</code></td>
 <td><code>&lt;title&gt;My Post&lt;/title&gt;</code></td>
 <td><code>&lt;title&gt;Site&lt;/title&gt;</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Title fallback</td>
 <td><code>gen.Title = "Site"</code>, no frontMatter title</td>
 <td><code>&lt;title&gt;Site&lt;/title&gt;</code></td>
 <td>—</td>
 </tr>
-<tr class="even">
+<tr>
 <td>AllowedMetaFields set</td>
 <td><code>{"author":…,"postPath":…}</code>,
 allowed=<code>["author"]</code></td>
 <td><code>name="author"</code></td>
 <td><code>name="postPath"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Title key excluded from meta</td>
 <td><code>{"title": "X"}</code></td>
 <td><code>&lt;title&gt;X&lt;/title&gt;</code></td>
@@ -293,54 +293,54 @@ requires Task 4.3 first.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Input</th>
 <th scope="col"><code>data-pagefind-filter</code> must contain</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>No metadata</td>
 <td>empty categories, nil dcExt, no authors</td>
 <td>attribute absent</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Single category</td>
 <td><code>categories=["Oberon"]</code></td>
 <td><code>category:Oberon</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Multiple categories</td>
 <td><code>categories=["a","b"]</code></td>
 <td><code>category:a</code> and <code>category:b</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>DC subject</td>
 <td><code>dcExt</code> with <code>Subject: ["S"]</code></td>
 <td><code>dc_subject:S</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>DC creator</td>
 <td><code>dcExt</code> with <code>Creator: ["C"]</code></td>
 <td><code>dc_creator:C</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Author</td>
 <td><code>authors=[{Name:"Alice"}]</code></td>
 <td><code>author:Alice</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Label and channel</td>
 <td><code>label="Feed"</code>, <code>channel="https://…"</code></td>
 <td><code>label:Feed</code>, <code>channel:https://…</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>pubDate</td>
 <td><code>pubDate="2020-01-01"</code></td>
 <td><code>datePublished:2020-01-01</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>All combined</td>
 <td>all of the above</td>
 <td>all entries present, comma-separated</td>

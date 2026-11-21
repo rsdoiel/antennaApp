@@ -123,7 +123,7 @@ the Markdown (.md) filename as registered with the add action.
 <dd>
 List the collection filenames defined in the “antenna.yaml”.
 </dd>
-<dt>page INPUT_PATH [OUTPUT_PATH]</dt>
+<dt>page INPUT_PATH [OUTPUT_PATH…]</dt>
 <dd>
 This will create a standalone HTML page in a collection called pages.md.
 The pages.md is the only collection that has pages (hence the name). It
@@ -152,7 +152,7 @@ Markdown into links to the .md source, which is what a Markdown reader
 needs. A dry run showing a diff unless -w is given. See “antenna help
 migrate-links”.
 </dd>
-<dt>validate [-json] [-online] [PATH]</dt>
+<dt>validate [-json] [-online] [-color WHEN] [PATH]</dt>
 <dd>
 Check the site, a directory or one Markdown file for problems, and for
 what Markdown readers such as BonBon need. It only reads: it never
@@ -160,10 +160,12 @@ changes a file. With no PATH it checks the whole site named by the
 configuration. Exit 0 means no errors or warnings, 1 means there are
 some. See “antenna help validate”.
 </dd>
-<dt>pages</dt>
+<dt>pages [-stale]</dt>
 <dd>
-List the page entries in the pages.md collection. Pages are ordered by
-descending updated timestamp.
+List the page entries in the pages.md collection, newest first, one per
+line with six tab-separated fields: input path, output path
+(deprecated), updated, outputs, includes and stale. -stale lists only
+the pages that are out of date.
 </dd>
 <dt>post [COLLECTION_NAME] FILEPATH</dt>
 <dd>
@@ -421,79 +423,79 @@ went wrong from the number alone.</p>
 <col style="width: 40%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th style="text-align: right;" scope="col">Code</th>
 <th scope="col">Class</th>
 <th scope="col">Meaning</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td style="text-align: right;">0</td>
 <td>ok</td>
 <td>Success. A listing that matches nothing (posts, items, pages) is
 still 0.</td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: right;">1</td>
 <td>negative</td>
 <td>The command ran and the answer is no: the named collection is not in
 the configuration, an action you cancelled.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: right;">2</td>
 <td>usage</td>
 <td>The command line is wrong and nothing was attempted: unknown action,
 flag or help topic, a missing or surplus argument, a bad date or
 count.</td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: right;">65</td>
 <td>data</td>
 <td>Content that was read is wrong: a document with unclosed front
 matter, a file that is not a valid ODT, a feed that does not parse, a
 damaged database.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: right;">66</td>
 <td>no_input</td>
 <td>A named file or the workspace is missing: no antenna.yaml, no such
 Markdown file.</td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: right;">69</td>
 <td>unavailable</td>
 <td>A feed or service could not be reached, or answered with an
 error.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: right;">70</td>
 <td>internal</td>
 <td>A bug, or an error nothing classified. Please report it.</td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: right;">73</td>
 <td>cant_create</td>
 <td>An output could not be created: the file or directory is in the way,
 or its directory cannot be made.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: right;">74</td>
 <td>io</td>
 <td>A read or write failed part way.</td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: right;">75</td>
 <td>temp_fail</td>
 <td>Trying again later may work: a locked database, a port already in
 use.</td>
 </tr>
-<tr class="odd">
+<tr>
 <td style="text-align: right;">77</td>
 <td>no_permission</td>
 <td>The operating system refused access.</td>
 </tr>
-<tr class="even">
+<tr>
 <td style="text-align: right;">78</td>
 <td>config</td>
 <td>A configuration file is present but wrong: antenna.yaml or a

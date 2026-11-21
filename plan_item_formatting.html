@@ -48,14 +48,14 @@ unmarshaling and defaults</h3>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Input YAML</th>
 <th scope="col">Expected after <code>applyDefaults()</code></th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Empty block</td>
 <td><code>items: {}</code></td>
 <td><code>Fields=[title,source,pubDate,content]</code>,
@@ -65,17 +65,17 @@ unmarshaling and defaults</h3>
 <code>DateFormat="2006-01-02"</code>, <code>ShowSource=true</code>,
 <code>HTML="strip"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Partial override</td>
 <td><code>items: {html: unsafe}</code></td>
 <td>only <code>HTML="unsafe"</code> differs from defaults</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>show_source: false</code> explicit</td>
 <td><code>items: {show_source: false}</code></td>
 <td><code>ShowSource=false</code> (not overwritten back to true)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>No <code>items:</code> key at all</td>
 <td><code>page.yaml</code> omits <code>items:</code></td>
 <td><code>Generator.Items</code> zero value;
@@ -95,24 +95,24 @@ empty-block case</td>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Input</th>
 <th scope="col">Expected</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>html: bogus</code></td>
 <td>invalid enum</td>
 <td>error mentioning <code>items.html</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>link.missing: bogus</code></td>
 <td>invalid enum</td>
 <td>error mentioning <code>items.link.missing</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>All valid enum values</td>
 <td><code>strip</code>/<code>escape</code>/<code>unsafe</code>,
 <code>unlinked</code>/<code>omit</code>/<code>source_link</code></td>
@@ -147,7 +147,7 @@ Phases 3–4.</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Input</th>
 <th scope="col">maxLen</th>
@@ -155,26 +155,26 @@ Phases 3–4.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Shorter than max</td>
 <td><code>"hello"</code></td>
 <td>10</td>
 <td><code>"hello"</code> (unchanged)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Exact length</td>
 <td><code>"hello"</code></td>
 <td>5</td>
 <td><code>"hello"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Mid-word cut avoided</td>
 <td><code>"the quick brown fox"</code></td>
 <td>12</td>
 <td><code>"the quick"</code> (backs off to last space before/at 12, not
 <code>"the quick br"</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>No whitespace before limit</td>
 <td><code>"supercalifragilistic"</code></td>
 <td>5</td>
@@ -194,29 +194,29 @@ no-good-boundary case)</td>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Input</th>
 <th scope="col">Expected</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Plain text</td>
 <td><code>"hello"</code></td>
 <td><code>"hello"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Simple tags</td>
 <td><code>"&lt;p&gt;hello&lt;/p&gt;"</code></td>
 <td><code>"hello"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Nested tags</td>
 <td><code>"&lt;div&gt;&lt;b&gt;hi&lt;/b&gt; there&lt;/div&gt;"</code></td>
 <td><code>"hi there"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Unclosed/malformed tag</td>
 <td><code>"&lt;p&gt;hi"</code></td>
 <td><code>"hi"</code> (document limitation: not a full parser)</td>
@@ -236,7 +236,7 @@ no-good-boundary case)</td>
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col"><code>description</code></th>
 <th scope="col"><code>sourceMarkdown</code></th>
@@ -245,7 +245,7 @@ no-good-boundary case)</td>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Markdown present, default</td>
 <td><code>&lt;p&gt;raw&lt;/p&gt;</code></td>
 <td><code>**bold**</code></td>
@@ -254,7 +254,7 @@ no-good-boundary case)</td>
 <code>&lt;strong&gt;bold&lt;/strong&gt;</code>-ish,
 <code>&lt;p&gt;raw&lt;/p&gt;</code> never used</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Markdown present, unsafe</td>
 <td>any</td>
 <td><code>&lt;script&gt;x&lt;/script&gt;</code></td>
@@ -262,7 +262,7 @@ no-good-boundary case)</td>
 <td>rendered via <code>ToUnsafeHTML()</code>, raw
 <code>&lt;script&gt;</code> passes through</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>No Markdown, default</td>
 <td><code>&lt;p&gt;raw &amp; unsafe&lt;/p&gt;</code></td>
 <td><code>""</code></td>
@@ -270,21 +270,21 @@ no-good-boundary case)</td>
 <td>tags stripped: <code>"raw &amp; unsafe"</code> (entity handling per
 <code>stripTags</code>)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>No Markdown, escape</td>
 <td><code>&lt;b&gt;hi&lt;/b&gt;</code></td>
 <td><code>""</code></td>
 <td><code>escape</code></td>
 <td><code>"&amp;lt;b&amp;gt;hi&amp;lt;/b&amp;gt;"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>No Markdown, unsafe</td>
 <td><code>&lt;b&gt;hi&lt;/b&gt;</code></td>
 <td><code>""</code></td>
 <td><code>unsafe</code></td>
 <td><code>"&lt;b&gt;hi&lt;/b&gt;"</code> unchanged</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Truncation applied pre-render</td>
 <td>long <code>sourceMarkdown</code></td>
 <td>—</td>
@@ -318,7 +318,7 @@ must pass (green).</p>
 <col style="width: 16%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col"><code>link</code></th>
 <th scope="col"><code>title</code></th>
@@ -328,7 +328,7 @@ must pass (green).</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Normal, default label (DEC-026)</td>
 <td><code>"https://x"</code></td>
 <td><code>"T"</code></td>
@@ -339,7 +339,7 @@ must pass (green).</p>
 <td><code>Href="https://x"</code>, <code>Label="Continue reading"</code>
 regardless of title/link</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>label_field: link</code> (explicit opt-out)</td>
 <td><code>"https://x"</code></td>
 <td><code>"T"</code></td>
@@ -347,7 +347,7 @@ regardless of title/link</td>
 <td><code>label_field: link</code></td>
 <td><code>Label="https://x"</code> (restores pre-DEC-026 behavior)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>label_field: title</code></td>
 <td><code>"https://x"</code></td>
 <td><code>"T"</code></td>
@@ -355,7 +355,7 @@ regardless of title/link</td>
 <td><code>label_field: title</code></td>
 <td><code>Label="T"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>label_field: static</code>, custom fallback</td>
 <td><code>"https://x"</code></td>
 <td><code>"T"</code></td>
@@ -363,7 +363,7 @@ regardless of title/link</td>
 <td><code>label_field: static, label_fallback: "read me"</code></td>
 <td><code>Label="read me"</code> regardless of title/link</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Empty field falls back</td>
 <td><code>"https://x"</code></td>
 <td><code>""</code></td>
@@ -371,7 +371,7 @@ regardless of title/link</td>
 <td><code>label_field: title, label_fallback: "Read more"</code></td>
 <td><code>Label="Read more"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Missing link, default</td>
 <td><code>""</code></td>
 <td><code>"T"</code></td>
@@ -380,7 +380,7 @@ regardless of title/link</td>
 <td><code>AsPlainText=true</code>,
 <code>Label="Continue reading"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Missing link, omit</td>
 <td><code>""</code></td>
 <td>—</td>
@@ -388,7 +388,7 @@ regardless of title/link</td>
 <td><code>missing: omit</code></td>
 <td><code>Omit=true</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Missing link, source_link with channel</td>
 <td><code>""</code></td>
 <td>—</td>
@@ -396,7 +396,7 @@ regardless of title/link</td>
 <td><code>missing: source_link</code></td>
 <td><code>Href="https://chan"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Missing link, source_link, channel also empty</td>
 <td><code>""</code></td>
 <td>—</td>
@@ -404,7 +404,7 @@ regardless of title/link</td>
 <td><code>missing: source_link</code></td>
 <td>falls back to <code>AsPlainText=true</code> (DEC-027)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Missing link, required</td>
 <td><code>""</code></td>
 <td>—</td>
@@ -435,7 +435,7 @@ id="task-3.2-implement-resolveitemlink-and-linkresolution-in-html.go">Task
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col"><code>raw</code></th>
 <th scope="col"><code>layout</code></th>
@@ -443,32 +443,32 @@ id="task-3.2-implement-resolveitemlink-and-linkresolution-in-html.go">Task
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Parseable, custom layout</td>
 <td><code>"2020-04-11 00:00:00"</code></td>
 <td><code>"Jan 2, 2006"</code></td>
 <td><code>"Apr 11, 2020"</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Parseable, default layout</td>
 <td><code>"2020-04-11 00:00:00"</code></td>
 <td><code>"2006-01-02"</code></td>
 <td><code>"2020-04-11"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Unparseable, longer than 10 chars (raw feed string)</td>
 <td><code>"Sat, 11 Apr 2020"</code></td>
 <td><code>"Jan 2, 2006"</code></td>
 <td><code>"Sat, 11 Ap"</code> (first 10 characters — matches current
 <code>WriteItem</code> truncation exactly, DEC-028)</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Unparseable, 10 chars or shorter</td>
 <td><code>"bad-date"</code></td>
 <td>any</td>
 <td><code>"bad-date"</code> unchanged (nothing to truncate)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Empty</td>
 <td><code>""</code></td>
 <td>any</td>
@@ -526,42 +526,42 @@ named exceptions above.</p>
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col"><code>cfg</code></th>
 <th scope="col">Expected</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>fields</code> restricts sections</td>
 <td><code>Fields: ["title", "content"]</code></td>
 <td>date and footer/link sections absent from output</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>show_source: false</code></td>
 <td>—</td>
 <td>source/label block absent</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Omitted item</td>
 <td><code>link=""</code>, <code>missing: omit</code></td>
 <td><code>WriteItem</code> writes nothing, returns
 <code>(true, nil)</code> or equivalent omit signal</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Default label is accessible (DEC-026)</td>
 <td>defaults, no <code>items:</code> override</td>
 <td>anchor text is <code>"Continue reading"</code>, <code>href</code>
 still the item link</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Opt back into URL-as-label</td>
 <td><code>label_field: link</code></td>
 <td>anchor text is the item’s URL again, matching pre-DEC-026
 output</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Custom static label</td>
 <td><code>label_fallback: "read me"</code> (label_field left at default
 <code>static</code>)</td>
@@ -621,25 +621,25 @@ Add <code>"items.yaml"</code> to <code>isTargetFile</code> in
 <col style="width: 33%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">Case</th>
 <th scope="col">Setup</th>
 <th scope="col">Expected</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>No <code>items.yaml</code> present</td>
 <td>empty theme dir</td>
 <td><code>(false, nil)</code>, <code>gen.Items</code> unchanged</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>items.yaml</code> present</td>
 <td>valid YAML per the worked example in the design doc</td>
 <td><code>(true, nil)</code>, <code>gen.Items</code> matches the parsed
 content</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Malformed <code>items.yaml</code></td>
 <td>invalid YAML</td>
 <td>non-nil error</td>

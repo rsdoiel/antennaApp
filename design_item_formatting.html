@@ -179,7 +179,7 @@ special defaulting, since it has no default other than empty):</p>
 <code>sourceMarkdown == ""</code>,
 <code>source, usedMarkdown = description, false</code>.</li>
 <li>If <code>cfg.ContentMaxLength &gt; 0</code>,
-<code>source = truncateWords(source,    cfg.ContentMaxLength)</code>.</li>
+<code>source = truncateWords(source, cfg.ContentMaxLength)</code>.</li>
 <li>If <code>usedMarkdown</code>:
 <ul>
 <li><code>doc := &amp;CommonMark{Text: source}</code></li>
@@ -423,19 +423,19 @@ using this theme.</p>
 <col style="width: 50%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th scope="col">File</th>
 <th scope="col">Nature of change</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>generator.go</code></td>
 <td>Add <code>Items ItemsConfig</code> to <code>Generator</code>; define
 <code>ItemsConfig</code>, <code>LinkConfig</code>,
 <code>applyDefaults()</code>, <code>validate()</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>html.go</code></td>
 <td>Add <code>resolveItemContent</code>, <code>truncateWords</code>,
 <code>stripTags</code>, <code>formatItemDate</code>,
@@ -444,20 +444,20 @@ using this theme.</p>
 to call <code>applyDefaults()</code>/<code>validate()</code> and pass
 <code>gen.Items</code> through</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>themes.go</code></td>
 <td>Add <code>"items.yaml"</code> to <code>isTargetFile</code>; add
 <code>updateItemsElement</code>; wire into <code>ApplyTheme</code></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>items_test.go</code> / <code>html_test.go</code></td>
 <td>New tests per <code>plan_item_formatting.md</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>item_formatting_proposal.md</code></td>
 <td>Finalized reference document (no further change expected)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>decisions.md</code></td>
 <td>DEC-022 through DEC-031 (already recorded)</td>
 </tr>

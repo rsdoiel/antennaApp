@@ -25,7 +25,7 @@
 <h1 id="name">NAME</h1>
 <p>validate</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<p>antenna validate [-json] [-online] [PATH]</p>
+<p>antenna validate [-json] [-online] [-color WHEN] [PATH]</p>
 <h1 id="description">DESCRIPTION</h1>
 <p>Checks Markdown for mistakes and for what Markdown readers such as
 BonBon need, and reports each finding as one line:</p>
@@ -54,6 +54,13 @@ also written as an object with error, class and code.
 Also ask each sub-site named in the subsites setting for its table of
 contents, the way BonBon does, and warn about one that does not answer.
 </dd>
+<dt>-color WHEN</dt>
+<dd>
+Color the report: the severity word (error red, warning yellow, info
+dim) and the PATH:LINE. WHEN is auto (the default: color when standard
+output is a terminal and NO_COLOR is not set), always or never. The text
+is the same with or without color. -json is never colored.
+</dd>
 </dl>
 <h1 id="checks">CHECKS</h1>
 <p>Each file:</p>
@@ -78,6 +85,26 @@ pubDate is not the RSS 2.0 form BonBon expects (info).
 <dt>no-title</dt>
 <dd>
 No title in the front matter and no level-1 heading (warning).
+</dd>
+<dt>title-from-heading</dt>
+<dd>
+No title in the front matter, but a level-1 heading the title can come
+from (info). antenna blogit and antenna page use that heading.
+</dd>
+<dt>no-description</dt>
+<dd>
+No description, or an empty one; the table of contents and search
+results use it (info).
+</dd>
+<dt>description-long</dt>
+<dd>
+A description longer than descriptionMax characters (info).
+descriptionMax is set in antenna.yaml and is 300 by default; 0 turns the
+check off.
+</dd>
+<dt>no-author</dt>
+<dd>
+No author in the front matter and no author set in antenna.yaml (info).
 </dd>
 <dt>postpath-mismatch</dt>
 <dd>
@@ -113,6 +140,15 @@ works for every reader (info).
 <dd>
 Raw HTML, script or SVG, which Markdown readers strip (warning).
 </dd>
+<dt>include-directive</dt>
+<dd>
+An <span class="citation"
+data-cites="include-text-block">@include-text-block</span> or <span
+class="citation"
+data-cites="include-code-block">@include-code-block</span> line in a
+Markdown file, which a Markdown reader shows as text. Keep the source as
+a .txt file and write the Markdown with antenna page (warning).
+</dd>
 <dt>image-type</dt>
 <dd>
 An image that is not PNG, JPEG, GIF or WebP (warning).
@@ -137,6 +173,46 @@ htdocs is not a directory (error).
 <dd>
 The pages table has a row for a file that does not exist (error). Remove
 it with antenna unpage.
+</dd>
+<dt>alternate-static</dt>
+<dd>
+The generator YAML’s link list holds a Markdown alternate (text/markdown
+or application/markdown). The list is copied into every page, so the
+entry names the same Markdown for all of them; antenna writes the right
+one for each page (warning).
+</dd>
+<dt>sequence-path-missing</dt>
+<dd>
+A path in the sequences setting of antenna.yaml is not there (warning).
+</dd>
+<dt>sequence-empty</dt>
+<dd>
+A sequence has no members (info).
+</dd>
+<dt>sequence-overlap</dt>
+<dd>
+A document is in more than one sequence and takes the neighbours of the
+first (info).
+</dd>
+<dt>row-output-missing</dt>
+<dd>
+The pages table records an output that is not there (warning). Run
+antenna generate.
+</dd>
+<dt>row-duplicate-output</dt>
+<dd>
+Two rows of the pages table write the same output, as after a rename
+(warning). Remove the stale one with antenna unpage.
+</dd>
+<dt>include-missing</dt>
+<dd>
+A page’s source includes a file that does not exist (warning). The
+directive is left in the page as written.
+</dd>
+<dt>output-stale</dt>
+<dd>
+An output is older than its source or a file it includes (info). Run
+antenna generate.
 </dd>
 <dt>not-published</dt>
 <dd>
