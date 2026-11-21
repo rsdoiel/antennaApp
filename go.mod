@@ -1,6 +1,6 @@
 module github.com/rsdoiel/AntennaApp
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0

@@ -6,13 +6,13 @@ import (
 
 const (
     // Version number of release
-    Version = "0.1.0"
+    Version = "0.1.1"
 
     // ReleaseDate, the date version.go was generated
     ReleaseDate = "2026-11-20"
 
     // ReleaseHash, the Git hash when version.go was generated
-    ReleaseHash = "f9d2bc2"
+    ReleaseHash = "930fbba"
     LicenseText = `
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007

@@ -38,11 +38,11 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.1.0
+version: 0.1.1
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
-  - Go >= 1.27.3
+  - Go >= 1.27.4
 
 keywords:
   - RSS
@@ -56,24 +56,17 @@ date_released: 2026-11-20
 About this software
 ===================
 
-## antennaApp 0.1.0
+## antennaApp 0.1.1
 
-- Antenna sites now publish for the Markdown web (Dave Winer's BonBon browser and readers like it) as well as for HTML browsers, from the same Markdown. See `antenna help markdown-web`
-- Links between your pages are written to the `.md` file; in the HTML output a link to a page, collection or post that antenna renders becomes the `.html` page, with a warning for a link to a file it does not render
-- Each collection with items also gets a Markdown rendering of them, `STEM_items.md`, declared in the HTML head as its Markdown alternate
-- `antenna generate` writes `.well-known/toc.opml`: the site's pages, collections and posts (oldest first, by year and month), with `include` outlines for the other sites on the host named by the new `subsites` list in `antenna.yaml`; it gives pages and posts previous and next links from it when their front matter names none
-- New `bonbon` setting in `antenna.yaml` writes `.well-known/bonbon.json`; with no setting no file is written and none is removed
-- Front matter keys BonBon reads: `link`, `urlPrev`, `urlNext`, `rightMarginImage` (with `rightMarginImageAlt`), `pubDate` in the RSS 2.0 form, and `{{page.NAME}}` macros in pages and posts
-- New `antenna validate [-json] [-online] [PATH]`: a read-only check of a file, a directory or the whole site, with 21 stable finding codes (front matter, dates, links, raw HTML, images, macros, stale table of contents, `.nojekyll` on GitHub Pages and more); exit 0 when clean, 1 when there are errors or warnings
-- New `antenna migrate-links [-w] [PATH]`: rewrites links to `.html` pages that antenna renders from Markdown into `.md` links in your Markdown; a dry-run diff by default, `-w` writes, and only the link destinations change
-- `antenna blogit` now makes the post publishable: it adds `pubDate` (the RSS form, in the zone of your computer, `TZ` overrides it) and a `title` from the first heading when the file has none, and never changes what is there; before this a blogit post stayed a draft
-- A date with a zone keeps it: an RSS `pubDate` such as `Mon, 30 Nov 2026 21:30:00 -0800` is stored with its offset, so a late evening post stays on its own day and month in the table of contents, the feeds and the page
-- `antenna preview` serves `.md` as `text/markdown`, serves `.well-known`, and sends Markdown to a client that asks for it with `Accept`
-- Generated files are deterministic: a file is rewritten only when its content changes, so regenerating an unchanged site changes no file; expect one round of changes in a site you regenerate for the first time (attribute order, `.md` links written as `.html`, previous and next links)
-- Breaking for scripts: `antenna unpage` exits 1 when no page record matches the path
-- Fixed: one unreadable item row no longer stops a collection's HTML page and items Markdown from being written; `{{page.title}}` inside a link you wrote no longer makes a link inside a link; an items file left by a collection that became a page index is removed
-- Every help topic's manual page is regenerated from `antenna help TOPIC` (the Makefile does it), so the `.7.md` pages are current; new topics `markdown-web`, `validate` and `migrate-links`
-- Requires Go 1.27.3 and the `opml` module 0.0.12
+- `antenna page SOURCE [OUTPUT...]` writes `.html` and `.md` by extension; the `.md` is the expanded Markdown a Markdown reader gets, and the page declares it as its Markdown alternate
+- New `sequences` setting in `antenna.yaml`: directories or list files whose members get previous and next links, in the HTML and the Markdown copy; the table of contents gives previous and next to posts only, and pages only through front matter or a sequence
+- The `pages` table records each page's outputs and includes (upgraded in place); `antenna pages` shows six fields and `-stale` lists pages older than their source (exit 1 when there are any); `generate` rewrites every recorded output
+- Includes nest: a warning past 3 levels, exit 65 past 5 or for a cycle
+- `antenna.yaml` `author` is the default author of page Markdown and your own posts; `descriptionMax` sets the length `validate` flags
+- `antenna validate` has new findings (`include-directive`, `no-description`, `no-author`, `title-from-heading`, `description-long`, `output-stale`, `row-output-missing`, `row-duplicate-output`, `include-missing`, `sequence-path-missing`, `sequence-empty`, `sequence-overlap`) and `-color WHEN`
+- Front matter is only the block at the top of a file
+- Fixed: a directive's language no longer swallows the next paragraph's first word; a code block keeps its blank line before it; `validate` no longer calls an e-mail autolink a missing file
+- The documentation site is published for Markdown readers too: `index.md`, `.well-known/toc.opml` and a Markdown alternate on every page
 
 ## Authors
 
@@ -120,14 +113,14 @@ Features:
 
 ## Programming languages
 
-- Go >= 1.27.3
+- Go >= 1.27.4
 
 
 
 
 ## Software Requirements
 
-- Go >= 1.27.3
+- Go >= 1.27.4
 - github.com/rsdoiel/opml >= 0.0.12
 - github.com/rsdoiel/stylefrom >= 0.0.2
 - github.com/rsdoiel/termlib >= 0.0.10

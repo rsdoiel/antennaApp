@@ -65,7 +65,7 @@ Installing from source
 
 ### Required software
 
-- Go >= 1.27.3
+- Go >= 1.27.4
 - CMTools >= 0.0.45b
 
 ### Steps

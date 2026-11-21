@@ -1,5 +1,55 @@
 # Changes
 
+## v0.1.1 — 2026-11-20
+
+Page Markdown, previous and next links, and validation grow from the first
+Markdown-web release. Everything here is from the same day-to-day use of
+`antenna` on a BonBon site (decisions DR-0019 to DR-0026).
+
+### Added
+
+- **`antenna page SOURCE [OUTPUT...]` writes `.html` and `.md` by extension.**
+  The `.md` output is the expanded Markdown (macros and includes resolved),
+  the copy a Markdown reader gets (DR-0019).
+- **Pages declare their Markdown alternate.** A page made from a text source
+  names the Markdown copy beside it in its head; `validate` warns about a
+  static Markdown alternate left in the generator YAML (DR-0023).
+- **The `pages` table records what a page wrote and includes.** New
+  `outputs` and `includes` columns (JSON), upgraded in place. `antenna pages`
+  shows six fields and takes `-stale` to list pages whose output is older than
+  their source or includes (exit 1 when there are any, 0 when none). Includes may nest: a warning past 3 levels, exit 65
+  past 5 or for a cycle. `generate` rewrites every recorded output (DR-0024).
+- **Sequences in `antenna.yaml`.** Name the directories or list files whose
+  members are a sequence and each member gets previous and next links, in the
+  HTML and in the Markdown copy (DR-0026).
+- **`antenna.yaml` `author` and `descriptionMax`.** The site author is the
+  default author of page Markdown and of your own posts (DR-0021).
+- **New `validate` findings.** Info: `include-directive`,
+  `no-description`, `no-author`, `title-from-heading`, `description-long`
+  (DR-0020), `output-stale` (DR-0024), `sequence-empty` and `sequence-overlap`
+  (DR-0026). Warning: `row-output-missing`, `row-duplicate-output`,
+  `include-missing` (DR-0024) and `sequence-path-missing` (DR-0026).
+  `validate -color WHEN` (`auto`, `always` or `never`) colors the report (`NO_COLOR` is honoured under `auto`; JSON is never colored).
+- The documentation site is published for Markdown readers too: `index.md`,
+  `.well-known/toc.opml` and a Markdown alternate on every page.
+
+### Changed
+
+- **Previous and next links come from the table of contents for posts only**;
+  pages get none unless their front matter names them or they are in a
+  sequence (DR-0025). A page is listed by the Markdown it was made from (for
+  example `bio.md` rendered to `about.html`), and the neighbours use the same
+  name.
+- **Front matter is only the block at the top of a file.** A `---` block later
+  in a document is text (DR-0022).
+- The minimum Go is 1.27.4.
+
+### Fixed
+
+- `validate` no longer calls an e-mail autolink a missing file.
+- A directive's language no longer swallows the first word of the next
+  paragraph, and a code block keeps its blank line before it.
+
 ## v0.1.0 — 2026-11-20
 
 A larger step than the v0.0.x releases: antenna sites now publish for the
