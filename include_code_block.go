@@ -16,80 +16,30 @@ You should have received a copy of the GNU Affero General Public License
 */
 package antennaApp
 
-import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
-)
+import "os"
 
-// IncludeCodeBlock takes a text string and replaces the code blocks
-// based on the file path included in the line and the language name.
-// The generated code block uses the `~~~` sequence to delimit the block
-// with the language name provided in the opening delimiter.
-//
-// Parameters:
-//
-//	text (string): the text to be transformed
-//
-// Returns:
-//
-//	string: the transformed text
+/** IncludeCodeBlock expands the @include-code-block directives in text, and only
+ * those. It is kept for callers of the package; antenna itself uses
+ * expandIncludesReport, which expands both kinds, follows nested text includes
+ * and reports what was included (DR-0024 12). A cycle, or nesting deeper than
+ * five levels, leaves the text as it was and reports the problem on standard
+ * error.
+ *
+ * Parameters:
+ *   text (string) — the text to be transformed
+ *
+ * Returns:
+ *   string — the transformed text
+ *
+ * Example:
+ *   out := IncludeCodeBlock("Top.\n\n@include-code-block file.txt\n")
+ */
 func IncludeCodeBlock(text string) string {
-	// Find the include-code-block directive in the page.
-	insertBlockRegExp := regexp.MustCompile(`\s+@include-code-block\s+([^\s]+)(?:\s+(\w+))?`)
-	// Insert the code blocks
-	return insertBlockRegExp.ReplaceAllStringFunc(text, replaceCodeBlock)
-}
-
-// replaceCodeBlock does the actual replacement work with the result
-// of the matched RegExp.
-//
-// Parameters:
-//
-//	fullMatch (string): the full matched string
-//
-// Returns:
-//
-//	string: the replacement string
-func replaceCodeBlock(fullMatch string) string {
-	// Extract filePath and language from the matched string
-	matches := regexp.MustCompile(`@include-code-block\s+([^\s]+)(?:\s+(\w+))?`).FindStringSubmatch(fullMatch)
-	if len(matches) < 2 {
-		return fullMatch // return original if no match
+	st := &includeState{eout: os.Stderr, only: "code", seen: map[string]bool{}}
+	out := st.expand(text, nil)
+	if st.err != nil {
+		os.Stderr.WriteString(st.err.Error() + "\n")
+		return text
 	}
-	filePath := matches[1]
-	language := ""
-	if len(matches) > 2 {
-		language = matches[2]
-	}
-
-	// Security: Prevent path traversal attacks
-	// Clean the path and ensure it's relative and safe
-	cleanPath := filepath.Clean(filePath)
-	if filepath.IsAbs(cleanPath) || strings.HasPrefix(cleanPath, "..") {
-		fmt.Printf("Error: include-code-block path '%s' attempts directory traversal, using original text\n", filePath)
-		return fullMatch
-	}
-
-	// Check if file exists and is a regular file (not directory or symlink)
-	fileInfo, err := os.Stat(cleanPath)
-	if err != nil {
-		fmt.Printf("Error inserting code block from %s: %v\n", cleanPath, err)
-		return fullMatch
-	}
-	if fileInfo.IsDir() {
-		fmt.Printf("Error: include-code-block path '%s' is a directory, not a file\n", cleanPath)
-		return fullMatch
-	}
-
-	fileContent, err := ioutil.ReadFile(cleanPath)
-	if err != nil {
-		fmt.Printf("Error reading code block from %s: %v\n", cleanPath, err)
-		return fullMatch
-	}
-
-	return fmt.Sprintf("~~~%s\n%s\n~~~", language, string(fileContent))
+	return out
 }

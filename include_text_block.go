@@ -16,81 +16,30 @@ You should have received a copy of the GNU Affero General Public License
 */
 package antennaApp
 
-import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
-)
+import "os"
 
-// IncludeTextBlock takes a text string and replaces the text blocks
-// based on the file path included in the line.
-//
-// Parameters:
-//
-//	text (string): the text to be transformed
-//
-// Returns:
-//
-//	string: the transformed text
+/** IncludeTextBlock expands the @include-text-block directives in text, and only
+ * those. It is kept for callers of the package; antenna itself uses
+ * expandIncludesReport, which expands both kinds, follows nested text includes
+ * and reports what was included (DR-0024 12). A cycle, or nesting deeper than
+ * five levels, leaves the text as it was and reports the problem on standard
+ * error.
+ *
+ * Parameters:
+ *   text (string) — the text to be transformed
+ *
+ * Returns:
+ *   string — the transformed text
+ *
+ * Example:
+ *   out := IncludeTextBlock("Top.\n\n@include-text-block file.txt\n")
+ */
 func IncludeTextBlock(text string) string {
-	// Find the include-text-block directive in the page.
-	insertBlockRegExp := regexp.MustCompile(`\s+@include-text-block\s+([^\s]+)(?:\s+(\w+))?`)
-	// Insert the text blocks
-	return insertBlockRegExp.ReplaceAllStringFunc(text, replaceTextBlock)
-}
-
-// replaceTextBlock does the actual replacement work with the result
-// of the matched RegExp.
-//
-// Parameters:
-//
-//	fullMatch (string): the full matched string
-//
-// Returns:
-//
-//	string: the replacement string
-func replaceTextBlock(fullMatch string) string {
-	// Extract filePath from the matched string
-	matches := regexp.MustCompile(`\s+@include-text-block\s+([^\s]+)(?:\s+(\w+))?`).FindStringSubmatch(fullMatch)
-	if len(matches) < 2 {
-		return fullMatch // return original if no match
+	st := &includeState{eout: os.Stderr, only: "text", seen: map[string]bool{}}
+	out := st.expand(text, nil)
+	if st.err != nil {
+		os.Stderr.WriteString(st.err.Error() + "\n")
+		return text
 	}
-	filePath := matches[1]
-
-	// Security: Prevent path traversal attacks
-	// Clean the path and ensure it's relative and safe
-	cleanPath := filepath.Clean(filePath)
-	if filepath.IsAbs(cleanPath) || strings.HasPrefix(cleanPath, "..") {
-		fmt.Printf("Error: include-text-block path '%s' attempts directory traversal, using original text\n", filePath)
-		return fullMatch
-	}
-
-	// Check if file exists and is a regular file (not directory or symlink)
-	fileInfo, err := os.Stat(cleanPath)
-	if err != nil {
-		fmt.Printf("Error inserting text block from %s: %v\n", cleanPath, err)
-		return fullMatch
-	}
-	if fileInfo.IsDir() {
-		fmt.Printf("Error: include-text-block path '%s' is a directory, not a file\n", cleanPath)
-		return fullMatch
-	}
-
-	src, err := ioutil.ReadFile(cleanPath)
-	if err != nil {
-		fmt.Printf("Error reading text block from %s: %v\n", cleanPath, err)
-		return fullMatch
-	}
-	var fileContent string
-	// Split off front matter before including content
-	doc := &CommonMark{}
-	if err := doc.Parse(src); err == nil {
-		fileContent = "\n" + doc.Text + "\n"
-	} else {
-		fileContent = fmt.Sprintf("\n%s\n", src)
-	}
-	return fileContent
+	return out
 }

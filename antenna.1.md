@@ -116,9 +116,10 @@ Markdown readers such as BonBon need. It only reads: it never changes a file.
 With no PATH it checks the whole site named by the configuration. Exit 0 means no
 errors or warnings, 1 means there are some. See "antenna help validate".
 
-pages
-: List the page entries in the pages.md collection. Pages are ordered by
-descending updated timestamp.
+pages [-stale]
+: List the page entries in the pages.md collection, newest first, one per line
+with six tab-separated fields: input path, output path (deprecated), updated,
+outputs, includes and stale. -stale lists only the pages that are out of date.
 
 
 post [COLLECTION_NAME] FILEPATH

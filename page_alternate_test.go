@@ -80,10 +80,10 @@ func TestPageWithNoMarkdownCopyDeclaresNothing(t *testing.T) {
 	}
 }
 
-// The link names a copy beside the page (same folder, same stem), so that
-// antenna generate, which knows only the page and its HTML, writes the same
-// link as antenna page did. A copy somewhere else is not declared.
-func TestPageDeclaresOnlyACopyBesideIt(t *testing.T) {
+// DR-0024 4: the row records the copy, so generate knows it, and a copy in
+// another folder is declared relative to the HTML (DR-0023 1 declared only a
+// copy beside the page because generate could not know better).
+func TestPageDeclaresAMarkdownCopyInAnotherFolderRelatively(t *testing.T) {
 	markdownPageSite(t)
 	os.MkdirAll("site/docs", 0o775)
 	if err := runIn(t, "page", "index.txt", "site/docs/home.md", "site/docs/home.html"); err != nil {
@@ -96,8 +96,9 @@ func TestPageDeclaresOnlyACopyBesideIt(t *testing.T) {
 	if err := runIn(t, "page", "index.txt", "site/other.md", "site/docs/other.html"); err != nil {
 		t.Fatal(err)
 	}
-	if hrefs, _ = markdownAlternates(readText(t, "site/docs/other.html")); len(hrefs) != 0 {
-		t.Errorf("a copy in another folder is not declared: %v", hrefs)
+	hrefs, _ = markdownAlternates(readText(t, "site/docs/other.html"))
+	if len(hrefs) != 1 || hrefs[0] != "../other.md" {
+		t.Errorf("another folder, relative: %v", hrefs)
 	}
 }
 

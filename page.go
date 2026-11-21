@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"encoding/json"
 	"gopkg.in/yaml.v3"
 	"database/sql"
 	"fmt"
@@ -25,7 +26,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -164,40 +164,79 @@ func (cfg *AppConfig) PageOutputs(fName string, outputs []string, eout io.Writer
 		}
 		htmls = append(htmls, name)
 	}
+	var includes []string
 	if len(mds) > 0 {
-		raw, err := os.ReadFile(fName)
+		inc, err := cfg.writeMarkdownCopies(fName, mds, eout)
 		if err != nil {
-			return fmt.Errorf("failed to read %q: %w", fName, err)
-		}
-		text := cfg.deriveFrontMatter(expandIncludes(string(raw)))
-		for _, o := range mds {
-			mdName := filepath.Join(cfg.Htdocs, o)
-			if err := os.MkdirAll(filepath.Dir(mdName), 0775); err != nil {
-				return asCreate(err)
-			}
-			if _, err := writeStable(mdName, []byte(text), 0664); err != nil {
-				return fmt.Errorf("failed to write %q, %w", mdName, asCreate(err))
-			}
-		}
-	}
-	for _, h := range htmls {
-		if err := cfg.pageTo(fName, h, eout); err != nil {
 			return err
 		}
+		includes = inc
 	}
-	return nil
+	mdAlt := ""
+	if len(mds) > 0 {
+		mdAlt = mds[0]
+	}
+	recorded := append([]string{}, outputs...)
+	for i, h := range htmls {
+		res, err := cfg.pageTo(fName, h, eout, mdAlt)
+		if err != nil {
+			return err
+		}
+		if len(mds) == 0 {
+			includes = res.Includes
+		}
+		if len(outputs) == 0 && i == 0 {
+			recorded = []string{res.Output} // the name pageTo chose
+		}
+	}
+	return cfg.recordPage(fName, recorded, includes)
 }
 
-// expandIncludes expands the @include-text-block and @include-code-block
-// directives in text, the same expansion the HTML page gets.
-func expandIncludes(text string) string {
-	if strings.Contains(text, "@include-text-block ") {
-		text = IncludeTextBlock(text)
+/** writeMarkdownCopies writes the Markdown copy of a page to each path in mds
+ * (under htdocs): the source with its include directives expanded and the
+ * derived front matter. An output that would not change is left alone.
+ *
+ * Parameters:
+ *   fName (string) — the source file
+ *   mds ([]string) — the .md output paths, under htdocs
+ *   eout (io.Writer) — warnings
+ *
+ * Returns:
+ *   []string — every file the source includes, nested ones too
+ *   error — from reading the source, expanding it (a data error for a cycle or
+ *     nesting deeper than five levels) or writing a copy
+ *
+ * Example:
+ *   includes, err := cfg.writeMarkdownCopies("index.txt", []string{"index.md"}, os.Stderr)
+ */
+func (cfg *AppConfig) writeMarkdownCopies(fName string, mds []string, eout io.Writer) ([]string, error) {
+	raw, err := os.ReadFile(fName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %q: %w", fName, err)
 	}
-	if strings.Contains(text, "@include-code-block ") {
-		text = IncludeCodeBlock(text)
+	expanded, includes, err := expandIncludes(string(raw), eout)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", fName, err)
 	}
-	return text
+	text := cfg.deriveFrontMatter(expanded)
+	for _, o := range mds {
+		mdName := filepath.Join(cfg.Htdocs, o)
+		if err := os.MkdirAll(filepath.Dir(mdName), 0775); err != nil {
+			return nil, asCreate(err)
+		}
+		if _, err := writeStable(mdName, []byte(text), 0664); err != nil {
+			return nil, fmt.Errorf("failed to write %q, %w", mdName, asCreate(err))
+		}
+	}
+	return includes, nil
+}
+
+// expandIncludes expands the include directives in text, the same expansion
+// the HTML page and the Markdown copy get (DR-0024 12). It returns the text,
+// every file the directives reached, and a data error for a cycle or for
+// nesting deeper than five levels. What it could not read is reported on eout.
+func expandIncludes(text string, eout io.Writer) (string, []string, error) {
+	return expandIncludesReport(text, eout)
 }
 
 // Unpage will remove a CommonMark document filePath
@@ -214,12 +253,21 @@ func (app *AntennaApp) Unpage(cfgName string, args []string) error {
 }
 
 // Pages will list the pages in the pages collection
-func (app *AntennaApp) Pages(cfgName string, args []string) error {
+func (app *AntennaApp) Pages(out io.Writer, cfgName string, args []string) error {
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig(cfgName); err != nil {
 		return err
 	}
-	return cfg.Pages()
+	onlyStale := false
+	for _, a := range args {
+		switch a {
+		case "-stale", "--stale":
+			onlyStale = true
+		default:
+			return usageErrorf("unexpected argument %q; try 'antenna help pages'", a)
+		}
+	}
+	return cfg.Pages(out, onlyStale)
 }
 
 
@@ -251,18 +299,36 @@ func (cfg *AppConfig) Unpage(fName string) error {
 }
 
 func (cfg *AppConfig) Page(fName string, oName string) error {
-	return cfg.pageTo(fName, oName, os.Stderr)
+	var outputs []string
+	if oName != "" {
+		outputs = []string{oName}
+	}
+	return cfg.PageOutputs(fName, outputs, os.Stderr)
 }
 
-// pageTo renders one page; warnings about links go to eout.
-func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
+// pageResult is what rendering one page's HTML found out: the output name used
+// (relative to htdocs) and every file the source includes.
+type pageResult struct {
+	Output   string
+	Includes []string
+}
+
+// pageTo renders one page's HTML; warnings about links go to eout. mdAlt is the
+// site-relative path of the page's Markdown copy, or "" when none is recorded,
+// in which case the copy beside the HTML is declared when it exists (DR-0023).
+// The pages row is written by the caller, not here.
+func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer, mdAlt string) (pageResult, error) {
 	doc, err := LoadCommonMark(fName)
 	if err != nil {
-		return err
+		return pageResult{}, err
 	}
 	// NOTE: This is trusted content so I can support commonMarkDoc
 	// processor extensions safely.
-	doc.Text = expandIncludes(doc.Text)
+	expanded, includes, err := expandIncludes(doc.Text, eout)
+	if err != nil {
+		return pageResult{}, fmt.Errorf("%s: %w", fName, err)
+	}
+	doc.Text = expanded
 
 	// Convert our document text to HTML
 	// NOTE: Pages are allowed to have "unsafe" embedded HTML because they are
@@ -276,7 +342,7 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 	cfg.attachNav(doc, from)
 	innerHTML, err := doc.ToUnsafeHTML()
 	if err != nil {
-		return err
+		return pageResult{}, err
 	}
 	postPath := doc.GetAttributeString("postPath", fName)
 	htmlName := filepath.Join(cfg.Htdocs, postPath)
@@ -293,138 +359,141 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 	dName := filepath.Dir(htmlName)
 	if _, err := os.Stat(dName); err != nil {
 		if err := os.MkdirAll(dName, 0775); err != nil {
-			return err
+			return pageResult{}, err
 		}
 	}
 	gen, err := NewGenerator(path.Base(os.Args[0]), cfg.BaseURL)
 	if err != nil {
-		return err
+		return pageResult{}, err
 	}
 	if err := gen.LoadConfig(cfg.Generator); err != nil {
-		return err
+		return pageResult{}, err
 	}
-	// A page made from a text source declares the Markdown copy beside its HTML
-	// (DR-0023); a page whose source is .md declares the source, as before.
-	if !strings.HasSuffix(postPath, ".md") {
+	// The Markdown copy the row records is declared, as a path relative to the
+	// HTML; with none recorded, a page made from a text source declares the
+	// copy beside its HTML when it exists, and a page whose source is .md
+	// declares the source (DR-0023, DR-0024).
+	if mdAlt != "" {
+		if rel, err := filepath.Rel(filepath.Dir(htmlName), filepath.Join(cfg.Htdocs, mdAlt)); err == nil {
+			gen.MarkdownAlt = filepath.ToSlash(rel)
+		}
+	} else if !strings.HasSuffix(postPath, ".md") {
 		copyMD := strings.TrimSuffix(htmlName, filepath.Ext(htmlName)) + ".md"
 		if info, err := os.Stat(copyMD); err == nil && !info.IsDir() {
 			gen.MarkdownAlt = filepath.Base(copyMD)
 		}
 	}
 	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML, doc.htmlFrontMatter()); err != nil {
-		return err
+		return pageResult{}, err
 	}
-	// NOTE: I need to add the page to pages.db
-	// NOTE: remove the page from pages table.
-	// NOTE: remove the page from pages table.
-	collection, err := cfg.GetCollection("pages.md")
+	return pageResult{Output: oName, Includes: includes}, nil
+}
+
+// GetPages returns a list of page maps for a collection: inputPath,
+// outputPath (deprecated), updated, and outputs and includes as the compact
+// JSON arrays (empty when none). A table made before DR-0024 is read as it is.
+func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
+	rows, err := cfg.GetPageRows()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
+	pages := []map[string]string{}
+	for _, r := range rows {
+		outJSON, _ := json.Marshal(r.Outputs)
+		incJSON := ""
+		if len(r.Includes) > 0 {
+			b, _ := json.Marshal(r.Includes)
+			incJSON = string(b)
+		}
+		if len(r.Outputs) == 0 {
+			outJSON = nil
+		}
+		pages = append(pages, map[string]string{
+			"inputPath":  r.Input,
+			"outputPath": r.Output,
+			"updated":    r.Updated,
+			"outputs":    string(outJSON),
+			"includes":   incJSON,
+		})
+	}
+	// No pages is an empty list, not an error (DR-0003).
+	return pages, nil
+}
+
+// GetPageRows returns the rows of the pages table, by inputPath. A missing
+// pages collection or database is the error GetCollection or sql gives.
+func (cfg *AppConfig) GetPageRows() ([]pageRow, error) {
+	db, dsn, err := cfg.openPagesDB()
 	if err != nil {
-		return fmt.Errorf("failed to open %s, %w", dsn, err)
+		return nil, err
 	}
 	defer db.Close()
-	timestamp := time.Now().Format(time.RFC3339)
-	if _, err := db.Exec(SQLUpdatePage, fName, oName, timestamp); err != nil {
+	rows, err := queryPageRows(db, "inputPath, updated DESC")
+	if err != nil {
+		if class, _ := classify(err); class == classData {
+			return nil, err
+		}
+		return nil, fmt.Errorf("%s\n%s, %w", SQLListItems, dsn, err)
+	}
+	return rows, nil
+}
+
+/** Pages writes the pages table to out, one page a line, newest first (DR-0024
+ * 7, 13): input path, output path (deprecated), updated, outputs, includes and
+ * stale, separated by tabs. outputs and includes are the JSON arrays as
+ * stored, or empty. stale is empty for a current page, "stale" when an output
+ * is older than its source or an include, "missing" when an output is absent.
+ * With -stale only the pages whose stale is not empty are written, and the
+ * result is a negative-class error (exit 1) when there are any.
+ *
+ * Parameters:
+ *   out (io.Writer) — the listing
+ *   stale (bool) — list only stale or missing pages
+ *
+ * Returns:
+ *   error — nil, a negative error for -stale with something to report, or from
+ *   the database (a data error for a bad JSON column)
+ *
+ * Example:
+ *   err := cfg.Pages(os.Stdout, false)
+ */
+func (cfg *AppConfig) Pages(out io.Writer, onlyStale bool) error {
+	db, dsn, err := cfg.openPagesDB()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	rows, err := queryPageRows(db, "updated DESC")
+	if err != nil {
+		if class, _ := classify(err); class == classData {
+			return err
+		}
 		return fmt.Errorf("%s, %w", dsn, err)
+	}
+	stale := 0
+	for _, r := range rows {
+		state := pageStale(r, cfg.Htdocs)
+		if state != "" {
+			stale++
+		} else if onlyStale {
+			continue
+		}
+		outJSON, incJSON := "", ""
+		if len(r.Outputs) > 0 {
+			b, _ := json.Marshal(r.Outputs)
+			outJSON = string(b)
+		}
+		if len(r.Includes) > 0 {
+			b, _ := json.Marshal(r.Includes)
+			incJSON = string(b)
+		}
+		fmt.Fprintf(out, "%s\t%s\t%s\t%s\t%s\t%s\n", r.Input, r.Output, r.Updated, outJSON, incJSON, state)
+	}
+	if onlyStale && stale > 0 {
+		return negativef("%d pages are stale or have a missing output", stale)
 	}
 	return nil
 }
-
-// GetPages returns a list of page maps for a collection
-func (cfg *AppConfig) GetPages() ([]map[string]string, error) {
-	collection, err := cfg.GetCollection("pages.md")
-	if err != nil {
-		return nil, err
-	}
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	var (
-		rows *sql.Rows
-	)
-	rows, err = db.Query(SQLListPages)
-	if err != nil {
-		return nil, fmt.Errorf("%s\n%s, %w", SQLListItems, dsn, err)
-	}
-	if rows != nil {
-		defer rows.Close()
-	}
-
-	i := 0
-	pages := []map[string]string{}
-	tally := &failureTally{}
-	for rows.Next() {
-		var (
-			inputPath  string
-			outputPath string
-			updated    string
-		)
-		if err = rows.Scan(&inputPath, &outputPath, &updated); err != nil {
-			displayErrorStatus("failed to read row (%d), %s\n", i, err)
-			tally.add(dataErrorf("failed to read row (%d): %w", i, err))
-			continue
-		}
-		tally.add(nil)
-		if i == 0 {
-			i++
-		}
-		page := map[string]string{
-			"inputPath":  inputPath,
-			"outputPath": outputPath,
-			"updated":    updated,
-		}
-		pages = append(pages, page)
-	}
-	// No pages is an empty list, not an error (DR-0003).
-	return pages, tally.err("rows")
-}
-
-// Pages diplays a page information to standard output
-func (cfg *AppConfig) Pages() error {
-	// NOTE: remove the page from pages table.
-	collection, err := cfg.GetCollection("pages.md")
-	if err != nil {
-		return err
-	}
-	dsn := collection.DbName
-	db, err := sql.Open("sqlite", dsn)
-	if err != nil {
-		return fmt.Errorf("failed to open %s, %w", dsn, err)
-	}
-	defer db.Close()
-
-	rows, err := db.Query(SQLDisplayPage)
-	if err != nil {
-		return fmt.Errorf("%s, %w", dsn, err)
-	}
-	defer rows.Close()
-
-	tally := &failureTally{}
-	for rows.Next() {
-		var (
-			iName   string
-			oName   string
-			updated string
-		)
-		if err := rows.Scan(&iName, &oName, &updated); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to read row, %s\n", err)
-			tally.add(dataErrorf("failed to read row: %w", err))
-			continue
-		}
-		tally.add(nil)
-		fmt.Printf("%s\t%s\t%s\n", iName, oName, updated)
-	}
-	return tally.err("rows")
-}
-
 
 /** deriveFrontMatter adds what antenna can derive to the front matter of a
  * generated Markdown copy of a page (DR-0019 6, DR-0021): a title from the

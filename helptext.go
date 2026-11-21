@@ -135,9 +135,10 @@ Markdown readers such as BonBon need. It only reads: it never changes a file.
 With no PATH it checks the whole site named by the configuration. Exit 0 means no
 errors or warnings, 1 means there are some. See "{app_name} help validate".
 
-pages
-: List the page entries in the pages.md collection. Pages are ordered by
-descending updated timestamp.
+pages [-stale]
+: List the page entries in the pages.md collection, newest first, one per line
+with six tab-separated fields: input path, output path (deprecated), updated,
+outputs, includes and stale. -stale lists only the pages that are out of date.
 
 
 post [COLLECTION_NAME] FILEPATH
@@ -991,10 +992,18 @@ type="text/markdown">, so a reader that cannot ask a server for Markdown can
 find it. In the HTML, a link to a Markdown file
 antenna renders becomes a link to its .html page.
 
-An HTML output is recorded in the pages collection (pages.md / pages.db) so
-it appears in pages output. A run that writes only Markdown is not a page and
-is not recorded. A file that is only included into other pages (recent.txt)
-is never given to antenna page.
+Every run is recorded in the pages collection (pages.md / pages.db): the
+outputs it wrote, in order, and the files the source includes, nested ones too.
+{app_name} pages shows them and {app_name} generate rebuilds from them. A run
+that writes only Markdown is recorded too. A run replaces what the last run
+recorded for the same source, so name every output in one command. A file that
+is only included into other pages (recent.txt) is never given to antenna page.
+
+An include is expanded where its directive starts a line. An
+@include-text-block file is expanded in turn, so it can include others; nesting
+deeper than three levels draws a warning, and deeper than five levels, or a file
+that includes itself, is an error (exit 65). An @include-code-block file is
+shown as it is and never expanded.
 
 Pages are excluded from RSS feeds. This action is for static content such
 as About pages, contact pages, and search pages.
@@ -1031,12 +1040,34 @@ pages
 
 # SYNOPSIS
 
-{app_name} pages
+{app_name} pages [-stale]
 
 # DESCRIPTION
 
 Prints the page entries tracked in the pages collection (pages.md / pages.db)
-in descending updated-timestamp order.
+in descending updated-timestamp order, one per line, with six fields separated
+by tabs:
+
+1. the input path, the source file
+2. the output path, the first .html the page writes. Deprecated: it is kept
+   for older tools and will stop being written; use field 4
+3. updated, when {app_name} last built the page
+4. outputs, a JSON array of every file the page writes, in the order given to
+   {app_name} page, for example ["index.md","index.html"]
+5. includes, a JSON array of every file the source includes with
+   @include-text-block or @include-code-block, nested ones too
+6. stale, empty for a current page, "stale" when the source or a file it
+   includes was changed after the page was last built, "missing" when an output
+   file is not there
+
+The first three fields are what older versions printed. Fields 4 and 5 are
+empty for a page built before they were recorded; run {app_name} generate to
+fill them in. The staleness test compares file times, so it is only meaningful
+in a working copy that was built there, and it does not see changes to the
+generator YAML, the theme or antenna.yaml.
+
+With -stale only the pages whose sixth field is not empty are printed, and the
+exit status is 1 when there are any, 0 when there are none.
 
 Compare with posts (blog posts in a collection) and items (all items
 in any collection database).
@@ -1656,6 +1687,22 @@ alternate-static
 application/markdown). The list is copied into every page, so the entry names
 the same Markdown for all of them; {app_name} writes the right one for each page
 (warning).
+
+row-output-missing
+: The pages table records an output that is not there (warning). Run
+{app_name} generate.
+
+row-duplicate-output
+: Two rows of the pages table write the same output, as after a rename
+(warning). Remove the stale one with {app_name} unpage.
+
+include-missing
+: A page's source includes a file that does not exist (warning). The directive
+is left in the page as written.
+
+output-stale
+: An output is older than its source or a file it includes (info). Run
+{app_name} generate.
 
 not-published
 : A page's or post's Markdown is not in htdocs, so the table of contents leaves

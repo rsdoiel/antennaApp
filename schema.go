@@ -627,12 +627,11 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 
 	// NOTE: This is trusted content so I can support commonMarkDoc
 	// processor extensions safely.
-	if strings.Contains(doc.Text, "@include-text-block") {
-		doc.Text = IncludeTextBlock(doc.Text)
+	expanded, _, ierr := expandIncludes(doc.Text, os.Stderr)
+	if ierr != nil {
+		return fmt.Errorf("%s: %w", fName, ierr)
 	}
-	if strings.Contains(doc.Text, "@include-code-block") {
-		doc.Text = IncludeCodeBlock(doc.Text)
-	}
+	doc.Text = expanded
 
 	// Convert our document text to HTML
 	doc.Links = cfg.rewriterFor(postPath, os.Stderr)

@@ -34,10 +34,18 @@ type="text/markdown">, so a reader that cannot ask a server for Markdown can
 find it. In the HTML, a link to a Markdown file
 antenna renders becomes a link to its .html page.
 
-An HTML output is recorded in the pages collection (pages.md / pages.db) so
-it appears in pages output. A run that writes only Markdown is not a page and
-is not recorded. A file that is only included into other pages (recent.txt)
-is never given to antenna page.
+Every run is recorded in the pages collection (pages.md / pages.db): the
+outputs it wrote, in order, and the files the source includes, nested ones too.
+antenna pages shows them and antenna generate rebuilds from them. A run
+that writes only Markdown is recorded too. A run replaces what the last run
+recorded for the same source, so name every output in one command. A file that
+is only included into other pages (recent.txt) is never given to antenna page.
+
+An include is expanded where its directive starts a line. An
+@include-text-block file is expanded in turn, so it can include others; nesting
+deeper than three levels draws a warning, and deeper than five levels, or a file
+that includes itself, is an error (exit 65). An @include-code-block file is
+shown as it is and never expanded.
 
 Pages are excluded from RSS feeds. This action is for static content such
 as About pages, contact pages, and search pages.

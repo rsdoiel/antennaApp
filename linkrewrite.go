@@ -174,7 +174,7 @@ func (cfg *AppConfig) LinkTargets() (LinkTargets, error) {
 		targets[stem+".md"] = stem + ".html"
 		targets[stem+"_items.md"] = stem + ".html"
 	}
-	pages, err := cfg.GetPages()
+	pages, err := cfg.GetPageRows()
 	if err != nil {
 		// No pages collection, or a pages database that does not exist yet,
 		// means no pages.
@@ -183,17 +183,29 @@ func (cfg *AppConfig) LinkTargets() (LinkTargets, error) {
 		}
 	}
 	for _, page := range pages {
-		in, out := page["inputPath"], page["outputPath"]
-		if in == "" || out == "" {
+		html := firstWithExt(page.Outputs, ".html")
+		if html == "" {
+			html = page.Output
+		}
+		if page.Input == "" || html == "" {
 			continue
 		}
-		targets[path.Clean(filepath.ToSlash(in))] = path.Clean(filepath.ToSlash(out))
-		// A page made from a text source (index.txt) also has a Markdown
-		// copy beside its HTML (DR-0019); a link to the copy lands on the page.
-		if cleanOut := path.Clean(filepath.ToSlash(out)); strings.HasSuffix(cleanOut, ".html") {
-			copyMD := strings.TrimSuffix(cleanOut, ".html") + ".md"
+		html = path.Clean(filepath.ToSlash(html))
+		targets[path.Clean(filepath.ToSlash(page.Input))] = html
+		// Every Markdown output of the page is the page (DR-0024). With none
+		// recorded, a page made from a text source has the copy named like its
+		// HTML (DR-0019).
+		recorded := false
+		for _, o := range page.Outputs {
+			if strings.EqualFold(filepath.Ext(o), ".md") {
+				targets[path.Clean(filepath.ToSlash(o))] = html
+				recorded = true
+			}
+		}
+		if !recorded && strings.HasSuffix(html, ".html") {
+			copyMD := strings.TrimSuffix(html, ".html") + ".md"
 			if _, taken := targets[copyMD]; !taken {
-				targets[copyMD] = cleanOut
+				targets[copyMD] = html
 			}
 		}
 	}

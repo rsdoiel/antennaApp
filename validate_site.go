@@ -49,6 +49,7 @@ func (v *validator) checkSite() {
 		}
 	}
 	v.checkPageRows()
+	v.checkPageOutputs(htdocs)
 	v.checkStaticMarkdownAlternates()
 	v.checkTOC(htdocs)
 	v.checkBonbonJSON(htdocs)
@@ -244,6 +245,51 @@ func (v *validator) checkStaticMarkdownAlternates() {
 			}
 			v.add("alternate-static", SeverityWarning, filepath.ToSlash(name), keyLine(append([]byte("---\n"), src...), "link"),
 				"a Markdown alternate (%s, href %q) in the link list is copied into every page, so it names the same Markdown for all of them; remove it, antenna writes the right one for each page", typ, l["href"])
+		}
+	}
+}
+
+// checkPageOutputs runs the checks on what the pages table records (DR-0024 9):
+// an output that is not there, two rows that write the same output (as after a
+// rename), a file a source includes that does not exist, and an output that is
+// older than its source or an include.
+func (v *validator) checkPageOutputs(htdocs string) {
+	rows, err := v.cfg.GetPageRows()
+	if err != nil {
+		return
+	}
+	writers := map[string][]string{}
+	var order []string
+	for _, r := range rows {
+		if r.Input == "" {
+			continue
+		}
+		in := filepath.ToSlash(r.Input)
+		for _, out := range r.Outputs {
+			if _, err := os.Stat(filepath.Join(htdocs, filepath.FromSlash(out))); err != nil {
+				v.add("row-output-missing", SeverityWarning, in, 0,
+					"the pages table records the output %s but it is not there; run antenna generate", out)
+			}
+			if _, seen := writers[out]; !seen {
+				order = append(order, out)
+			}
+			writers[out] = append(writers[out], in)
+		}
+		for _, inc := range r.Includes {
+			if _, err := os.Stat(filepath.FromSlash(inc)); err != nil {
+				v.add("include-missing", SeverityWarning, in, 0,
+					"includes %s, which does not exist; the directive is left in the page as written", inc)
+			}
+		}
+		if pageStale(r, htdocs) == "stale" {
+			v.add("output-stale", SeverityInfo, in, 0,
+				"an output is older than this source or a file it includes; run antenna generate")
+		}
+	}
+	for _, out := range order {
+		if srcs := writers[out]; len(srcs) > 1 {
+			v.add("row-duplicate-output", SeverityWarning, filepath.ToSlash(out), 0,
+				"written by more than one row of the pages table (%s); remove the stale one with antenna unpage", strings.Join(srcs, ", "))
 		}
 	}
 }

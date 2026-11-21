@@ -63,7 +63,9 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE TABLE IF NOT EXISTS pages (
   inputPath PRIMARY KEY,
   outputPath TEXT DEFAULT '',
-  updated DATETIME
+  updated DATETIME,
+  outputs TEXT DEFAULT '',
+  includes TEXT DEFAULT ''
 );
 `
 
@@ -250,12 +252,12 @@ WHERE link = ?`
 
 	// Update a feed item in the items table
 	SQLUpdatePage = `INSERT INTO pages (
-	inputPath, outputPath, updated
+	inputPath, outputPath, updated, outputs, includes
 ) VALUES (
-	?1, ?2, ?3
+	?1, ?2, ?3, ?4, ?5
 ) ON CONFLICT (inputPath) DO
   UPDATE SET 
-  	outputPath = ?2, updated = ?3;`
+  	outputPath = ?2, updated = ?3, outputs = ?4, includes = ?5;`
 
 	// SQLCountPage returns a list of items in the items table
 	SQLCountPage = `SELECT COUNT(*) FROM pages;`

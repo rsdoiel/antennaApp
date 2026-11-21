@@ -493,12 +493,13 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 			// malformed front matter — treat entire source as body text
 			doc.Text = sourceMarkdown
 		}
-		if strings.Contains(doc.Text, "@include-text-block") {
-			doc.Text = IncludeTextBlock(doc.Text)
+		expanded, _, ierr := expandIncludes(doc.Text, eout)
+		if ierr != nil {
+			fmt.Fprintf(eout, "warning rendering markdown for %q: %s\n", postPath, ierr)
+			tally.add(fmt.Errorf("%s: %w", postPath, ierr))
+			continue
 		}
-		if strings.Contains(doc.Text, "@include-code-block") {
-			doc.Text = IncludeCodeBlock(doc.Text)
-		}
+		doc.Text = expanded
 		doc.Links = cfg.rewriterFor(postPath, eout)
 		doc.Macros = &MacroExpander{From: postPath, Warn: eout}
 		cfg.attachNav(doc, postPath)
@@ -546,7 +547,7 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
  *   err := cfg.GeneratePages(os.Stderr)
  */
 func (cfg *AppConfig) GeneratePages(eout io.Writer) error {
-	pages, err := cfg.GetPages()
+	pages, err := cfg.GetPageRows()
 	if err != nil {
 		// No pages collection is not an error during generate; a database
 		// that cannot be read is.
@@ -558,19 +559,61 @@ func (cfg *AppConfig) GeneratePages(eout io.Writer) error {
 	defer cfg.holdLinkTargets(eout)()
 	tally := &failureTally{}
 	for _, page := range pages {
-		inputPath := page["inputPath"]
-		outputPath := page["outputPath"]
-		if inputPath == "" {
+		if page.Input == "" {
 			continue
 		}
-		err := cfg.pageTo(inputPath, outputPath, eout)
+		err := cfg.generatePage(page, eout)
 		if err != nil {
-			fmt.Fprintf(eout, "warning generating page %q: %s\n", inputPath, err)
-			err = fmt.Errorf("%s: %w", inputPath, err)
+			fmt.Fprintf(eout, "warning generating page %q: %s\n", page.Input, err)
+			err = fmt.Errorf("%s: %w", page.Input, err)
 		}
 		tally.add(err)
 	}
 	return tally.err("pages")
+}
+
+// generatePage re-writes every output the row records, the Markdown copies
+// from the source with its includes expanded and the HTML pages rendered, and
+// refreshes the row's includes (DR-0024 6).
+func (cfg *AppConfig) generatePage(page pageRow, eout io.Writer) error {
+	var htmls, mds []string
+	for _, o := range page.Outputs {
+		switch strings.ToLower(filepath.Ext(o)) {
+		case ".md":
+			mds = append(mds, o)
+		default:
+			htmls = append(htmls, o)
+		}
+	}
+	if len(htmls) == 0 && len(mds) == 0 {
+		htmls = []string{page.Output} // an old row with no recorded output: the default HTML
+	}
+	var includes []string
+	if len(mds) > 0 {
+		inc, err := cfg.writeMarkdownCopies(page.Input, mds, eout)
+		if err != nil {
+			return err
+		}
+		includes = inc
+	}
+	mdAlt := ""
+	if len(mds) > 0 {
+		mdAlt = mds[0]
+	}
+	recorded := append([]string{}, page.Outputs...)
+	for i, h := range htmls {
+		res, err := cfg.pageTo(page.Input, h, eout, mdAlt)
+		if err != nil {
+			return err
+		}
+		if len(mds) == 0 {
+			includes = res.Includes
+		}
+		if len(recorded) == 0 && i == 0 {
+			recorded = []string{res.Output}
+		}
+	}
+	return cfg.recordPage(page.Input, recorded, includes)
 }
 
 func (collection *Collection) ApplyFilters(db *sql.DB) error {

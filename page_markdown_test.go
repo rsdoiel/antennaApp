@@ -126,7 +126,8 @@ func TestPageMarkdownOnly(t *testing.T) {
 	if _, err := os.Stat("index.html"); err == nil {
 		t.Errorf("index.html was written but not asked for")
 	}
-	// A Markdown only run is not a page: no pages.db record (DR-0019 4).
+	// DR-0024 4 amends DR-0019 4: a Markdown only run is recorded, with its
+	// one output, and no outputPath.
 	cfg := &AppConfig{}
 	if err := cfg.LoadConfig("antenna.yaml"); err != nil {
 		t.Fatal(err)
@@ -135,10 +136,17 @@ func TestPageMarkdownOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	found := false
 	for _, p := range pages {
 		if p["inputPath"] == "index.txt" {
-			t.Errorf("index.txt was recorded as a page: %v", p)
+			found = true
+			if p["outputs"] != `["index.md"]` || p["outputPath"] != "" {
+				t.Errorf("a Markdown only row: %v", p)
+			}
 		}
+	}
+	if !found {
+		t.Errorf("a Markdown only run should be recorded: %v", pages)
 	}
 }
 

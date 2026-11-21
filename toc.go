@@ -277,25 +277,26 @@ func (cfg *AppConfig) tocPages(htdocs string, warnf func(string, ...any), tally 
 			if err := db.QueryRow(SQLHasPagesTable).Scan(&n); err != nil || n == 0 {
 				return
 			}
-			rows, err := db.Query(SQLTocListPages)
+			pageRows, err := queryPageRows(db, "outputPath, inputPath")
 			if err != nil {
 				tally.add(fmt.Errorf("listing pages in %s: %w", col.DbName, err))
 				return
 			}
-			defer rows.Close()
 			seen := map[string]bool{} // two rows can make one page (index.md and index.txt)
-			for rows.Next() {
-				var inputPath, outputPath string
-				if err := rows.Scan(&inputPath, &outputPath); err != nil {
-					tally.add(dataErrorf("reading a page row in %s: %w", col.DbName, err))
-					continue
-				}
+			for _, row := range pageRows {
 				tally.add(nil)
+				outputPath := row.Output
 				md := markdownPathFor(outputPath)
-				// A page made from Markdown has that Markdown, whatever its HTML
-				// is called (bio.md rendered to about.html): DR-0023.
-				if ext := strings.ToLower(path.Ext(inputPath)); ext == ".md" || ext == ".markdown" {
-					if src := markdownPathFor(inputPath); src != "" && published(htdocs, src) {
+				// The Markdown the row records wins (DR-0024).
+				if rec := firstWithExt(row.Outputs, ".md"); rec != "" {
+					md = markdownPathFor(rec)
+					if outputPath == "" {
+						outputPath = rec // a Markdown-only page is keyed by its Markdown
+					}
+				} else if ext := strings.ToLower(path.Ext(row.Input)); ext == ".md" || ext == ".markdown" {
+					// A page made from Markdown has that Markdown, whatever its HTML
+					// is called (bio.md rendered to about.html): DR-0023.
+					if src := markdownPathFor(row.Input); src != "" && published(htdocs, src) {
 						md = src
 					}
 				}
@@ -307,8 +308,8 @@ func (cfg *AppConfig) tocPages(htdocs string, warnf func(string, ...any), tally 
 					warnf("page %s is not listed: its Markdown %s is not published in %s", outputPath, md, htdocs)
 					continue
 				}
-				title := pageDisplayName(inputPath)
-				if doc, err := LoadCommonMark(inputPath); err == nil {
+				title := pageDisplayName(row.Input)
+				if doc, err := LoadCommonMark(row.Input); err == nil {
 					if t := strings.Join(strings.Fields(doc.GetAttributeString("title", "")), " "); t != "" {
 						title = t
 					}

@@ -138,6 +138,22 @@ application/markdown). The list is copied into every page, so the entry names
 the same Markdown for all of them; antenna writes the right one for each page
 (warning).
 
+row-output-missing
+: The pages table records an output that is not there (warning). Run
+antenna generate.
+
+row-duplicate-output
+: Two rows of the pages table write the same output, as after a rename
+(warning). Remove the stale one with antenna unpage.
+
+include-missing
+: A page's source includes a file that does not exist (warning). The directive
+is left in the page as written.
+
+output-stale
+: An output is older than its source or a file it includes (info). Run
+antenna generate.
+
 not-published
 : A page's or post's Markdown is not in htdocs, so the table of contents leaves
 it out (warning).
