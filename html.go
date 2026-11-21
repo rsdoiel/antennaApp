@@ -527,9 +527,14 @@ func (gen *Generator) writeHeadElement(out io.Writer, postPath string, frontMatt
 		fmt.Fprintf(out, "  <title>%s</title>\n", pageTitle)
 	}
 	// Write out RSS alt link for Markdown if postPath is not empty string
+	postLink := ""
 	if postPath != "" && strings.HasSuffix(postPath, ".md") {
 		// NOTE: Posts are written next to the HTML page so the link to the Markdown can be relative
-		postLink := filepath.Base(postPath)
+		postLink = filepath.Base(postPath)
+	} else if gen.MarkdownAlt != "" {
+		postLink = gen.MarkdownAlt
+	}
+	if postLink != "" {
 		m = map[string]string{
 			"title": pageTitle,
 			"rel":   "alternate",

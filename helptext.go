@@ -985,7 +985,10 @@ that a reader such as BonBon can use:
 In the Markdown copy the front matter is kept as written, with two keys added
 when the source has none: a title from the first level-1 heading, and the
 site-wide author from antenna.yaml. Links stay as the author wrote them (.md
-links stay .md). The source file is never changed. In the HTML, a link to a Markdown file
+links stay .md). The source file is never changed. The HTML page declares the Markdown copy
+beside it (same folder, same stem) with <link rel="alternate"
+type="text/markdown">, so a reader that cannot ask a server for Markdown can
+find it. In the HTML, a link to a Markdown file
 antenna renders becomes a link to its .html page.
 
 An HTML output is recorded in the pages collection (pages.md / pages.db) so
@@ -1647,6 +1650,12 @@ htdocs-missing
 row-source-missing
 : The pages table has a row for a file that does not exist (error). Remove it
 with {app_name} unpage.
+
+alternate-static
+: The generator YAML's link list holds a Markdown alternate (text/markdown or
+application/markdown). The list is copied into every page, so the entry names
+the same Markdown for all of them; {app_name} writes the right one for each page
+(warning).
 
 not-published
 : A page's or post's Markdown is not in htdocs, so the table of contents leaves

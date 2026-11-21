@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"os"
@@ -48,6 +49,7 @@ func (v *validator) checkSite() {
 		}
 	}
 	v.checkPageRows()
+	v.checkStaticMarkdownAlternates()
 	v.checkTOC(htdocs)
 	v.checkBonbonJSON(htdocs)
 	v.checkNoJekyll(htdocs)
@@ -202,6 +204,46 @@ func (v *validator) checkSubsites(cfgFile string) {
 		if resp.StatusCode != http.StatusOK {
 			v.add("subsite-unreachable", SeverityWarning, cfgFile, 0,
 				"sub-site %s: %s answered %d; BonBon leaves an include it cannot read as an empty node", sub.root(), address, resp.StatusCode)
+		}
+	}
+}
+
+// checkStaticMarkdownAlternates reports a Markdown alternate written in a
+// generator YAML's link list (DR-0023): the list is copied into every page, so
+// the entry names the same Markdown for all of them, and antenna already writes
+// the right one per page.
+func (v *validator) checkStaticMarkdownAlternates() {
+	seen := map[string]bool{}
+	names := []string{v.cfg.Generator}
+	for _, col := range v.cfg.Collections {
+		names = append(names, col.Generator)
+	}
+	for _, name := range names {
+		if name == "" || seen[name] {
+			continue
+		}
+		seen[name] = true
+		src, err := os.ReadFile(name)
+		if err != nil {
+			continue
+		}
+		var gen struct {
+			Link []map[string]string `yaml:"link"`
+		}
+		if err := yaml.Unmarshal(src, &gen); err != nil {
+			continue
+		}
+		for _, l := range gen.Link {
+			typ := strings.ToLower(strings.TrimSpace(l["type"]))
+			isAlt := false
+			for _, w := range strings.Fields(strings.ToLower(l["rel"])) {
+				isAlt = isAlt || w == "alternate"
+			}
+			if !isAlt || (typ != "text/markdown" && typ != "application/markdown") {
+				continue
+			}
+			v.add("alternate-static", SeverityWarning, filepath.ToSlash(name), keyLine(append([]byte("---\n"), src...), "link"),
+				"a Markdown alternate (%s, href %q) in the link list is copied into every page, so it names the same Markdown for all of them; remove it, antenna writes the right one for each page", typ, l["href"])
 		}
 	}
 }

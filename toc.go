@@ -292,6 +292,13 @@ func (cfg *AppConfig) tocPages(htdocs string, warnf func(string, ...any), tally 
 				}
 				tally.add(nil)
 				md := markdownPathFor(outputPath)
+				// A page made from Markdown has that Markdown, whatever its HTML
+				// is called (bio.md rendered to about.html): DR-0023.
+				if ext := strings.ToLower(path.Ext(inputPath)); ext == ".md" || ext == ".markdown" {
+					if src := markdownPathFor(inputPath); src != "" && published(htdocs, src) {
+						md = src
+					}
+				}
 				if seen[outputPath] {
 					continue
 				}

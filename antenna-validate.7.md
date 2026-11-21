@@ -132,6 +132,12 @@ row-source-missing
 : The pages table has a row for a file that does not exist (error). Remove it
 with antenna unpage.
 
+alternate-static
+: The generator YAML's link list holds a Markdown alternate (text/markdown or
+application/markdown). The list is copied into every page, so the entry names
+the same Markdown for all of them; antenna writes the right one for each page
+(warning).
+
 not-published
 : A page's or post's Markdown is not in htdocs, so the table of contents leaves
 it out (warning).

@@ -28,7 +28,10 @@ that a reader such as BonBon can use:
 In the Markdown copy the front matter is kept as written, with two keys added
 when the source has none: a title from the first level-1 heading, and the
 site-wide author from antenna.yaml. Links stay as the author wrote them (.md
-links stay .md). The source file is never changed. In the HTML, a link to a Markdown file
+links stay .md). The source file is never changed. The HTML page declares the Markdown copy
+beside it (same folder, same stem) with <link rel="alternate"
+type="text/markdown">, so a reader that cannot ask a server for Markdown can
+find it. In the HTML, a link to a Markdown file
 antenna renders becomes a link to its .html page.
 
 An HTML output is recorded in the pages collection (pages.md / pages.db) so

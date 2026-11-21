@@ -50,6 +50,10 @@ type Generator struct {
 	// (DR-0021).
 	DefaultAuthor string `json:"-" yaml:"-"`
 
+	// MarkdownAlt is the Markdown copy beside the page being written, declared
+	// in its head when the page's own source is not Markdown (DR-0023).
+	MarkdownAlt string `json:"-" yaml:"-"`
+
 	// Title if this is set the title will be included
 	// when generating the markdown of saved items
 	Title string `json:"title,omitempty" yaml:"title,omitempty"`

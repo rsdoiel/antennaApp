@@ -303,6 +303,14 @@ func (cfg *AppConfig) pageTo(fName string, oName string, eout io.Writer) error {
 	if err := gen.LoadConfig(cfg.Generator); err != nil {
 		return err
 	}
+	// A page made from a text source declares the Markdown copy beside its HTML
+	// (DR-0023); a page whose source is .md declares the source, as before.
+	if !strings.HasSuffix(postPath, ".md") {
+		copyMD := strings.TrimSuffix(htmlName, filepath.Ext(htmlName)) + ".md"
+		if info, err := os.Stat(copyMD); err == nil && !info.IsDir() {
+			gen.MarkdownAlt = filepath.Base(copyMD)
+		}
+	}
 	if err := gen.WriteHtmlPage(htmlName, "", postPath, "", innerHTML, doc.htmlFrontMatter()); err != nil {
 		return err
 	}

@@ -18,6 +18,8 @@ Ideas, not quite a roadmap
 
 - [ ] A way to remove a page completely. `unpage` only deletes the row in `pages.db`; the generated HTML and the published Markdown stay on disk, so a removed page lingers in the site, the sitemap and any hand-run `rm` is the only cleanup. Options: `unpage --files` (delete the output files too), or a `prune` verb that drops rows whose input file is gone. Found 2026-11-20 on the test blog, where a stale `index.md` row made `generate` exit 66. Also list `unpage` where authors look for it (`pages` help should point to it).
 
+- [ ] Deprecate the `pages.outputPath` column (antennaApp DR-0024). `outputs` (a JSON array of every file a page writes) replaces it; step 1 backfills `outputs` from `outputPath` and keeps `outputPath` as a mirror of the first `.html`; a later release announces it will stop being written; a release after that stops writing it and fills field 2 of `antenna pages` from `outputs`. Dropping the column is a separate, major-version decision. Add to the release notes of each step.
+
 ### BonBon and the Markdown web (built on branch `bonbon`, not yet merged)
 
 BonBon (https://github.com/scripting/bonBon/) is Dave Winer's browser whose native format is Markdown. Design brief, plan and records are in agents/projects/antennaApp/ (DR-0007 to DR-0014). User documentation: `antenna help markdown-web`.
