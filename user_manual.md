@@ -30,6 +30,7 @@ title: User Manual
   - [post](antenna-post.7.md)
   - [posts](antenna-posts.7.md)
   - [preview](antenna-preview.7.md)
+  - [prune](antenna-prune.7.md)
   - [quote](antenna-quote.7.md)
   - [rss](antenna-rss.7.md)
   - [sitemap](antenna-sitemap.7.md)

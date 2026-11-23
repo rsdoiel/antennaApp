@@ -124,6 +124,10 @@ unpage INPUT_PATH
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
+prune [-w] [-all]
+: Remove the pages whose source file is gone: the pages record and the output
+files it lists. A dry run listing them unless -w is given. See "{app_name} help prune".
+
 migrate-links [-w] [PATH]
 : In your Markdown, change links to .html pages that {app_name} renders from
 Markdown into links to the .md source, which is what a Markdown reader needs. A
@@ -1463,6 +1467,76 @@ INPUT_PATH
 
 `
 
+	PruneHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
+% R. S. Doiel
+% {release_date}
+
+# NAME
+
+prune
+
+# SYNOPSIS
+
+{app_name} prune [-w] [-all]
+
+# DESCRIPTION
+
+Finds the pages in the pages collection whose source file no longer exists, as
+after an rm or mv, and removes them. With -w it deletes each page's record and
+the output files the record lists (the HTML, and the Markdown copy when there is
+one). Without -w it only lists them and changes nothing. unpage removes just
+the record; prune is the clean-up for pages you have deleted.
+
+The source file is never touched (it is gone), nor are files it included. An
+output is kept, and reported on standard error, when another page still writes
+it or when it is outside htdocs. The sitemap and toc.opml drop a pruned page the
+next time you run {app_name} generate.
+
+When the source of every page is missing, -w refuses, because that usually means
+you are in the wrong directory or a drive is not mounted. Add -all to prune them
+anyway.
+
+# OPTIONS
+
+-w
+: delete the records and output files; without it prune is a dry run
+
+-all
+: with -w, prune even when every page's source is missing
+
+# EXIT STATUS
+
+0
+: nothing to prune, or -w pruned the pages
+
+1
+: dry run found pages to prune, or -w refused because every source is missing
+
+2
+: unknown option or extra argument
+
+66
+: no pages collection or configuration found
+
+74
+: a file could not be deleted (the others are still pruned)
+
+78
+: the configuration is wrong
+
+# EXAMPLES
+
+Remove an old page, then see what prune would do, then do it:
+
+~~~shell
+rm old.md
+{app_name} prune
+{app_name} prune -w
+{app_name} generate
+~~~
+
+`
+
 	MigrateLinksHelpText = `%{app_name}(7) user manual | version {version} {release_hash}
 % R. S. Doiel
 % {release_date}
@@ -1683,7 +1757,7 @@ htdocs-missing
 
 row-source-missing
 : The pages table has a row for a file that does not exist (error). Remove it
-with {app_name} unpage.
+with {app_name} unpage, or all of them with {app_name} prune.
 
 alternate-static
 : The generator YAML's link list holds a Markdown alternate (text/markdown or
@@ -1707,7 +1781,7 @@ row-output-missing
 
 row-duplicate-output
 : Two rows of the pages table write the same output, as after a rename
-(warning). Remove the stale one with {app_name} unpage.
+(warning). Remove the stale one with {app_name} unpage, or all of them with {app_name} prune.
 
 include-missing
 : A page's source includes a file that does not exist (warning). The directive

@@ -63,6 +63,7 @@ var completionCommands = []CompletionCommand{
 	{Name: "post"},
 	{Name: "posts"},
 	{Name: "preview"},
+	{Name: "prune"},
 	{Name: "quote", Aliases: []string{"reply"}},
 	{Name: "rss"},
 	{Name: "sitemap"},

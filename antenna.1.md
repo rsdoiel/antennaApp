@@ -105,6 +105,10 @@ unpage INPUT_PATH
 It does not remove the page on disk, just from the collection so that it will no longer
 be used to create a corresponding HTML page when the generate action is run.
 
+prune [-w] [-all]
+: Remove the pages whose source file is gone: the pages record and the output
+files it lists. A dry run listing them unless -w is given. See "antenna help prune".
+
 migrate-links [-w] [PATH]
 : In your Markdown, change links to .html pages that antenna renders from
 Markdown into links to the .md source, which is what a Markdown reader needs. A

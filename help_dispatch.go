@@ -53,6 +53,7 @@ Commands:
   pages        List static pages tracked in the pages collection
   post         Add or update a blog post in a collection
   posts        List posts in a collection (with optional count or date range)
+  prune        Remove pages whose source file is gone, and their output files
   preview      Serve the site on localhost for browser review
   quote        Convert a text-fragment URL into a Markdown excerpt
   rss          Generate an RSS feed file from posts in a collection
@@ -143,6 +144,8 @@ func PrintHelpTopic(w io.Writer, topic, appName, version, releaseDate, releaseHa
 		text = StylefromHelpText
 	case "themes", "themes new":
 		text = ThemeHelpText
+	case "prune":
+		text = PruneHelpText
 	case "unpage":
 		text = UnpageHelpText
 	case "unpost":

@@ -290,6 +290,9 @@ ORDER BY postPath;`
 	// predates it.
 	SQLHasPagesTable = `SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'pages';`
 
+	// SQLDeletePageByInput removes the pages row of one source (prune).
+	SQLDeletePageByInput = `DELETE FROM pages WHERE inputPath = ?1;`
+
 	// SQLDeletePageByPath removes a page by either input or output paths.
 	SQLDeletePageByPath = `DELETE
 FROM pages

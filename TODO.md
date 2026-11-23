@@ -9,6 +9,7 @@ Ideas, not quite a roadmap
 
 ## Bugs
 
+- [x] Front matter of a harvested post's `source:markdown` showed in the item text of `columns.html` and `columns_items.md`; stripped at render time (2d58c51, 2026-11-23). `columns.xml` keeps the source as harvested.
 - [x] `antenna unpage` exits 1 when no page record matches the path (was 0; DR-0003). Test `TestRun_UnpageNoMatchIsNegative`. (2026-11-20)
 
 - [x] The skip link class is `skip-link` (code, CSS, tests and DR-0002 all agree); no rename needed. (2026-10-05)
@@ -16,7 +17,7 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
-- [ ] A way to remove a page completely. `unpage` only deletes the row in `pages.db`; the generated HTML and the published Markdown stay on disk, so a removed page lingers in the site, the sitemap and any hand-run `rm` is the only cleanup. Options: `unpage --files` (delete the output files too), or a `prune` verb that drops rows whose input file is gone. Found 2026-11-20 on the test blog, where a stale `index.md` row made `generate` exit 66. Also list `unpage` where authors look for it (`pages` help should point to it).
+- [x] A way to remove a page completely: `antenna prune [-w] [-all]` removes the pages whose source is gone, with their recorded outputs; dry run by default (antennaApp DR-0028, built 2026-11-23). `unpage` is unchanged. Left: interactive-mode guide for `prune`.
 
 - [ ] Deprecate the `pages.outputPath` column (antennaApp DR-0024). `outputs` (a JSON array of every file a page writes) replaces it; step 1 backfills `outputs` from `outputPath` and keeps `outputPath` as a mirror of the first `.html`; a later release announces it will stop being written; a release after that stops writing it and fills field 2 of `antenna pages` from `outputs`. Dropping the column is a separate, major-version decision. Add to the release notes of each step.
 
