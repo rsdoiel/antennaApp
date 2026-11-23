@@ -317,7 +317,7 @@ func truncateWords(s string, maxLen int) string {
 // elements, and re-wrapping it produces invalid nested markup that
 // browsers silently mangle by auto-closing the outer <p>.
 func resolveItemContent(description, sourceMarkdown string, cfg ItemsConfig) (content string, isBlockHTML bool, err error) {
-	source := sourceMarkdown
+	source := strings.TrimSpace(stripFrontMatter(sourceMarkdown))
 	usedMarkdown := true
 	if source == "" {
 		source = description

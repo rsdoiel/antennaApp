@@ -283,6 +283,7 @@ func (gen *Generator) writeItemMarkdown(out io.Writer, link, title, description 
 		parts = append(parts, strings.Join(meta, " · "))
 	}
 	if showField("content") {
+		sourceMarkdown = strings.TrimSpace(stripFrontMatter(sourceMarkdown))
 		source := sourceMarkdown
 		if source == "" {
 			source = description
@@ -426,4 +427,27 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
 		return 0, err
 	}
 	return count, partial(tally.err("rows"))
+}
+
+/** stripFrontMatter drops a YAML front matter block at the very top of a
+ * harvested item's Markdown. A feed that carries a post's whole source in
+ * source:markdown includes the block; the feed already supplies the title,
+ * description and dates, so the block is not item text. A document with no
+ * block, or with an unclosed one, is returned unchanged.
+ *
+ * Parameters:
+ *   s (string) — the item's sourceMarkdown
+ *
+ * Returns:
+ *   string — s without its leading front matter block
+ *
+ * Example:
+ *   stripFrontMatter("---\na: b\n---\nBody\n") // "Body\n"
+ */
+func stripFrontMatter(s string) string {
+	_, bodyAt, found, err := frontMatterBlock([]byte(s))
+	if err != nil || !found {
+		return s
+	}
+	return s[bodyAt:]
 }

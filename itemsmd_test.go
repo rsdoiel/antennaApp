@@ -288,3 +288,59 @@ func TestItemsMarkdownDemotesHeadingsInItemText(t *testing.T) {
 		t.Errorf("a heading already deep enough was changed:\n%s", src)
 	}
 }
+
+// A harvested post whose feed carries its whole source in source:markdown
+// starts with a YAML front matter block. The block is metadata the feed
+// already supplies; it must not show up as item text in either output (found
+// on the live columns collection, 2026-11-23: "The Markdown Web").
+const frontMatterSource = "---\nauthor: R. S. Doiel\ndateCreated: 2026-11-22T00:00:00Z\n" +
+	"description: \"First impressions. \\n\"\ntitle: The Markdown Web\n\n---\n\n\n" +
+	"### The Markdown Web\n\nDave Winer implements interesting software.\n"
+
+func TestItemsMarkdownDropsFrontMatterOfSourceMarkdown(t *testing.T) {
+	_, htdocs := itemsMDSite(t, harvestedSource("https://a.example/one", "One", "d",
+		frontMatterSource, "2026-11-18 10:00:00", "published", "Feed A"))
+	src, err := os.ReadFile(filepath.Join(htdocs, "news_items.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, bad := range []string{"author: R. S. Doiel", "dateCreated:", "title: The Markdown Web"} {
+		if strings.Contains(string(src), bad) {
+			t.Errorf("front matter %q leaked into item text:\n%s", bad, src)
+		}
+	}
+	if !strings.Contains(string(src), "Dave Winer implements interesting software.") {
+		t.Errorf("item body lost:\n%s", src)
+	}
+}
+
+func TestItemsHTMLDropsFrontMatterOfSourceMarkdown(t *testing.T) {
+	_, htdocs := itemsMDSite(t, harvestedSource("https://a.example/one", "One", "d",
+		frontMatterSource, "2026-11-18 10:00:00", "published", "Feed A"))
+	src, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, bad := range []string{"author: R. S. Doiel", "dateCreated:", "title: The Markdown Web"} {
+		if strings.Contains(string(src), bad) {
+			t.Errorf("front matter %q leaked into item text:\n%s", bad, src)
+		}
+	}
+	if !strings.Contains(string(src), "Dave Winer implements interesting software.") {
+		t.Errorf("item body lost:\n%s", src)
+	}
+}
+
+func TestStripFrontMatter(t *testing.T) {
+	for name, c := range map[string]struct{ in, want string }{
+		"none":     {"Plain text\n", "Plain text\n"},
+		"block":    {"---\na: b\n---\nBody\n", "Body\n"},
+		"unclosed": {"---\na: b\nBody\n", "---\na: b\nBody\n"},
+		"hr later": {"Intro\n\n---\n\nMore\n", "Intro\n\n---\n\nMore\n"},
+		"empty":    {"", ""},
+	} {
+		if got := stripFrontMatter(c.in); got != c.want {
+			t.Errorf("%s: got %q, want %q", name, got, c.want)
+		}
+	}
+}
