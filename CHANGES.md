@@ -1,5 +1,33 @@
 # Changes
 
+## Unreleased
+
+### Added
+
+- **`antenna prune [-w] [-all]`** removes the pages whose source file is gone,
+  with the output files their records list. A dry run unless `-w` is given
+  (exit 1 when there is something to prune). It keeps an output another page
+  still writes or one outside htdocs, and refuses to prune every page unless
+  `-all` is given (DR-0028).
+- **`markdownItems`** per collection in `antenna.yaml` switches a collection's
+  `STEM_items.md` on or off; the pages collection gets none by default. A
+  `.md` link into a `subsites` path becomes `.html` in the HTML (DR-0027).
+
+### Fixed
+
+- A harvested post whose feed carries its whole source (with YAML front matter)
+  in `source:markdown` no longer shows the front matter in the item text of the
+  collection's HTML page or its `_items.md`. The aggregated feed still carries
+  the source as harvested.
+
+### Deprecated
+
+- **The `pages.outputPath` column will stop being written** in a later release.
+  Use `outputs` (field 4 of `antenna pages`), which lists every file a page
+  writes. Field 2 of `antenna pages` will then be filled from `outputs`, so the
+  listing does not change. Scripts that read the column from `pages.db`
+  directly should switch to `outputs` now (DR-0024 10).
+
 ## v0.1.1 — 2026-11-20
 
 Page Markdown, previous and next links, and validation grow from the first

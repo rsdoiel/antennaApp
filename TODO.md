@@ -19,7 +19,7 @@ Ideas, not quite a roadmap
 
 - [x] A way to remove a page completely: `antenna prune [-w] [-all]` removes the pages whose source is gone, with their recorded outputs; dry run by default (antennaApp DR-0028, built 2026-11-23). `unpage` is unchanged. Left: interactive-mode guide for `prune`.
 
-- [ ] Deprecate the `pages.outputPath` column (antennaApp DR-0024). `outputs` (a JSON array of every file a page writes) replaces it; step 1 backfills `outputs` from `outputPath` and keeps `outputPath` as a mirror of the first `.html`; a later release announces it will stop being written; a release after that stops writing it and fills field 2 of `antenna pages` from `outputs`. Dropping the column is a separate, major-version decision. Add to the release notes of each step.
+- [ ] Deprecate the `pages.outputPath` column (antennaApp DR-0024 10), in steps. Done: `outputs` authoritative and `outputPath` a mirror (v0.1.1); help and `pages` manual say it will stop being written; the deprecation is in the Unreleased notes in CHANGES.md (copy it into codemeta.json `releaseNotes` at release prep). Left: a later release stops writing it and fills field 2 of `antenna pages` from `outputs`; dropping the column is a major-version decision.
 
 ### BonBon and the Markdown web (built on branch `bonbon`, not yet merged)
 
