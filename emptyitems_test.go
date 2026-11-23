@@ -203,3 +203,34 @@ func TestAStaleItemsFileIsRemovedWhenTheCollectionBecomesAPageIndex(t *testing.T
 		t.Error("the stale news_items.md is still there")
 	}
 }
+
+// The RSS feed, like the HTML page, is written from the rows that can be read.
+// A row that cannot be scanned used to end the feed at that row, so the items
+// after it were missing from news.xml; generate must still report the row.
+func TestAnUnreadableItemRowDoesNotCutTheRSSFeedShort(t *testing.T) {
+	cfg := sitemapSite(t, "news.md")
+	htdocs := filepath.Join(t.TempDir(), "htdocs")
+	if err := os.MkdirAll(htdocs, 0775); err != nil {
+		t.Fatal(err)
+	}
+	cfg.Htdocs = htdocs
+	col := cfg.Collections[0]
+	col.Title = "News"
+	sitemapExec(t, "news.db",
+		harvested("https://example.org/new", "Newest item", "d", "2026-11-19 10:00:00", "published", "Feed"),
+		// authors is NULL, which the row reader cannot scan into a string
+		`INSERT INTO items (link, title, description, status, pubDate) VALUES ('https://example.org/bad', 'Bad item', 'd', 'published', '2026-11-18 10:00:00')`,
+		harvested("https://example.org/old", "Oldest item", "d", "2026-11-17 10:00:00", "published", "Feed"))
+	var buf bytes.Buffer
+	err := col.Generate(&buf, &buf, "antenna", cfg)
+	wantClass(t, "generate with one unreadable row", err, classData)
+	b, rerr := os.ReadFile(filepath.Join(htdocs, "news.xml"))
+	if rerr != nil {
+		t.Fatalf("news.xml was not written: %s", rerr)
+	}
+	for _, want := range []string{"Newest item", "Oldest item"} {
+		if !strings.Contains(string(b), want) {
+			t.Errorf("news.xml lacks %q, the feed stopped at the unreadable row:\n%s", want, b)
+		}
+	}
+}

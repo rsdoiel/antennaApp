@@ -218,7 +218,9 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 		return err
 	}
 	defer rows.Close()
-	// Setup and write out the body
+	// Setup and write out the body. A row that cannot be read is counted and
+	// reported at the end; the rows after it are still written.
+	tally := &failureTally{}
 	for rows.Next() {
 		var (
 			link           string
@@ -243,8 +245,11 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 			&enclosuresSrc, &guid, &pubDate, &dcExt,
 			&channel, &status, &updated, &label, &postPath, &sourceMarkdown,
 			&categories); err != nil {
-			return dataErrorf("reading item row: %w", err)
+			fmt.Fprintf(gen.eout, "error (reading item row): %s\n", err)
+			tally.add(dataErrorf("reading item row: %w", err))
+			continue
 		}
+		tally.add(nil)
 		if authorsSrc != "" {
 			// Do we have a JSON object?
 			authors = []*gofeed.Person{}
@@ -296,5 +301,5 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 		return err
 	}
 	// Close the body via defer
-	return nil
+	return partial(tally.err("rows"))
 }

@@ -15,6 +15,9 @@
 
 ### Fixed
 
+- `antenna generate` writes the RSS feed and OPML from the readable rows when an
+  item row cannot be read, and exits 65 with the counts, as the HTML page and
+  the items Markdown already did. Before, the feed was not written at all.
 - A harvested post whose feed carries its whole source (with YAML front matter)
   in `source:markdown` no longer shows the front matter in the item text of the
   collection's HTML page or its `_items.md`. The aggregated feed still carries

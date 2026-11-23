@@ -787,7 +787,12 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	// The RSS feed
 	var rssBuf bytes.Buffer
 	if err := gen.WriteRSS(&rssBuf, db, appName, collection); err != nil {
-		return err
+		if !isPartial(err) {
+			return err
+		}
+		if rowsErr == nil {
+			rowsErr = err
+		}
 	}
 	if _, err := writeStable(rssName, rssBuf.Bytes(), 0o666, rssStamps...); err != nil {
 		return err
