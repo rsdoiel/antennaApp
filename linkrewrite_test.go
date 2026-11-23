@@ -216,3 +216,94 @@ func TestGeneratePagesRewritesMarkdownLinks(t *testing.T) {
 		t.Errorf("no warning for gone.md: %q", eout.String())
 	}
 }
+
+// A directory key (ending in "/") in LinkTargets stands for a whole subsite
+// (antennaApp DR-0027 2): a .md link under it becomes its .html twin, with no
+// lookup and no warning.
+func TestRewriteDestinationIntoASubsite(t *testing.T) {
+	targets := testTargets()
+	targets["antenna/"] = ""
+	cases := []struct {
+		name, from, dest, want, warn string
+	}{
+		{"site-root path", "index.md", "/antenna/index.md", "/antenna/index.html", ""},
+		{"fragment kept", "index.md", "/antenna/about.md#x", "/antenna/about.html#x", ""},
+		{"nested page", "index.md", "/antenna/a/b.md", "/antenna/a/b.html", ""},
+		{"relative path", "index.md", "antenna/index.md", "antenna/index.html", ""},
+		{"relative from a subdirectory", "docs/guide.md", "../antenna/index.md", "../antenna/index.html", ""},
+		{"the directory itself is untouched", "index.md", "/antenna/", "/antenna/", ""},
+		{"a sibling with the same prefix is not the subsite", "index.md", "/antenna2/x.md", "/antenna2/x.md", "antenna2/x.md"},
+		{"outside every subsite still warns", "index.md", "missing.md", "missing.md", "missing.md"},
+		{"a page of the site still wins", "index.md", "about.md", "about.html", ""},
+	}
+	for _, c := range cases {
+		got, warn := RewriteDestination(c.from, c.dest, targets)
+		if got != c.want {
+			t.Errorf("%s: %q from %q = %q, want %q", c.name, c.dest, c.from, got, c.want)
+		}
+		if (c.warn == "") != (warn == "") || !strings.Contains(warn, c.warn) {
+			t.Errorf("%s: warning %q, want one containing %q", c.name, warn, c.warn)
+		}
+	}
+}
+
+// Subsites on the site's own host, with a path, become directory targets. A
+// subsite on another host, or at the root of the host, does not.
+func TestLinkTargetsHoldSameHostSubsiteDirectories(t *testing.T) {
+	cfg := sitemapSite(t, "pages.md")
+	cfg.BaseURL = "https://example.org"
+	cfg.Subsites = []Subsite{
+		{URL: "https://example.org/antenna"},
+		{URL: "https://example.org/deep/er/"},
+		{URL: "https://other.example/blog"},
+		{URL: "https://example.org"},
+	}
+	targets, err := cfg.LinkTargets()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, k := range []string{"antenna/", "deep/er/"} {
+		if _, ok := targets[k]; !ok {
+			t.Errorf("no directory target %q in %v", k, targets)
+		}
+	}
+	for k := range targets {
+		if strings.HasSuffix(k, "/") && k != "antenna/" && k != "deep/er/" {
+			t.Errorf("unexpected directory target %q", k)
+		}
+	}
+}
+
+// The real path: GeneratePages writes the subsite link as .html without a
+// warning, and a same-host .md link outside every subsite still warns.
+func TestGeneratePagesRewritesSubsiteLinks(t *testing.T) {
+	cfg := sitemapSite(t, "pages.md")
+	cfg.Htdocs = "htdocs"
+	cfg.Generator = "page.yaml"
+	cfg.BaseURL = "https://example.org"
+	cfg.Subsites = []Subsite{{URL: "https://example.org/antenna"}}
+	if err := os.WriteFile("page.yaml", []byte("header: |\n  <h1>Test</h1>\n"), 0664); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(cfg.Htdocs, 0775); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("index.md", []byte("---\ntitle: Home\n---\n# Home\n\n[Antenna](/antenna/index.md) and [Elsewhere](/other/x.md).\n"), 0664); err != nil {
+		t.Fatal(err)
+	}
+	addPage(t, "pages.db", "index.html")
+	var eout bytes.Buffer
+	if err := cfg.GeneratePages(&eout); err != nil {
+		t.Fatalf("GeneratePages: %s\n%s", err, eout.String())
+	}
+	index, _ := os.ReadFile(filepath.Join("htdocs", "index.html"))
+	if !strings.Contains(string(index), `href="/antenna/index.html"`) || !strings.Contains(string(index), `href="/other/x.md"`) {
+		t.Errorf("index.html links:\n%s", index)
+	}
+	if strings.Contains(eout.String(), "/antenna/index.md") {
+		t.Errorf("warning for a subsite link: %q", eout.String())
+	}
+	if !strings.Contains(eout.String(), "/other/x.md") {
+		t.Errorf("no warning for the link outside the subsite: %q", eout.String())
+	}
+}

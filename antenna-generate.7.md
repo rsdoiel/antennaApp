@@ -21,7 +21,8 @@ a per-collection override). Front matter from each item is emitted as
 meta elements in the generated HTML.
 
 A collection with items to show also gets a Markdown rendering of them,
-STEM_items.md, beside its HTML page, and the page declares it in its head as
+STEM_items.md, beside its HTML page (not the pages collection, nor one with
+markdownItems: false; markdownItems: true turns it on for pages), and the page declares it in its head as
 its Markdown alternate. A collection with nothing to show has neither, and a
 file left by an earlier run is removed.
 

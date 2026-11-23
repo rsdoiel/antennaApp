@@ -70,7 +70,12 @@ subsites
   the sub-site's own pages are published (same scheme and host). Nothing is
   fetched: generate does not check that a sub-site exists. A missing or
   relative url, a duplicate, or an entry that is not a list of objects is a
-  configuration error (exit 78)
+  configuration error (exit 78).
+  A relative .md link in a page or post that points into a sub-site on this
+  host (one whose url has a path and the same host as base_url) is written
+  into the HTML as the sub-site's .html page of the same name, for example
+  /antenna/index.md becomes /antenna/index.html, with no warning. A sub-site
+  is taken to publish an .html page beside each .md page.
 
 bonbon
 : (optional) the content of .well-known/bonbon.json, a mapping of keys to
@@ -102,6 +107,13 @@ Each collection object:
   : (optional) rendering mode: "aggregate" (default) or "page-index"
      "aggregate"  feed-item cards from the items table (default)
      "page-index" simple <ul> link list from the pages table
+
+  markdownItems
+  : (optional) true or false: whether generate writes STEM_items.md, the
+     Markdown rendering of the collection's items. Default: true for every
+     collection except pages.md, whose items are the site's own pages. false
+     turns it off (the HTML, RSS and OPML are unchanged and a stale file is
+     removed); true turns it on for pages.md.
 
 Example antenna.yaml:
 

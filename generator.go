@@ -694,7 +694,8 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	// rowsErr is the first error that left output partial; it is returned
 	// after every file that can be written has been.
 	var rowsErr error
-	if collection.Mode != "page-index" {
+	wantItemsMD := collection.Mode != "page-index" && collection.WantsItemsMarkdown()
+	if wantItemsMD {
 		mdCount, err = gen.WriteItemsMarkdown(&mdBuf, db, collection, clock())
 		if err != nil {
 			if !isPartial(err) {
@@ -768,7 +769,7 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 
 	// The items file sits beside the HTML page. It is generated output, replaced
 	// when it changes, and removed when the collection has nothing to show now.
-	if collection.Mode != "page-index" {
+	if wantItemsMD {
 		mdName := filepath.Join(cfg.Htdocs, itemsMarkdownName(collection.File))
 		if mdCount > 0 {
 			if _, err := writeStable(mdName, mdBuf.Bytes(), 0o664, itemsMDStamps...); err != nil {
@@ -778,8 +779,8 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 			return err
 		}
 	} else if err := os.Remove(filepath.Join(cfg.Htdocs, itemsMarkdownName(collection.File))); err != nil && !errors.Is(err, os.ErrNotExist) {
-		// A page index shows no items; an items file from an earlier aggregate
-		// run would be served stale.
+		// A page index, or a collection with markdownItems off, writes no items
+		// file; one from an earlier run would be served stale.
 		return err
 	}
 

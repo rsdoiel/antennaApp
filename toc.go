@@ -315,7 +315,7 @@ func (cfg *AppConfig) tocPages(htdocs string, warnf func(string, ...any), tally 
 func (cfg *AppConfig) tocCollections(htdocs string) []tocEntry {
 	var out []tocEntry
 	for _, col := range cfg.Collections {
-		if isPagesCollection(col) || col.Mode == "page-index" {
+		if col.Mode == "page-index" || (isPagesCollection(col) && col.MarkdownItems == nil) {
 			continue
 		}
 		name := itemsMarkdownName(col.File)

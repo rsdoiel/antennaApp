@@ -305,6 +305,31 @@ type Collection struct {
 	// "aggregate" (default) renders feed-item cards from the items table.
 	// "page-index" renders a simple link list from the pages table.
 	Mode string `json:"mode,omitempty" yaml:"mode,omitempty"`
+
+	// MarkdownItems says whether generate writes the collection's Markdown
+	// rendering of its items (STEM_items.md) and declares it in the HTML head
+	// (antennaApp DR-0008). Unset, every collection gets one except the pages
+	// collection, whose items are the site's own pages. true turns it on for
+	// the pages collection, false turns it off for any collection.
+	MarkdownItems *bool `json:"markdownItems,omitempty" yaml:"markdownItems,omitempty"`
+}
+
+// WantsItemsMarkdown reports whether generate should write the collection's
+// STEM_items.md file: the markdownItems setting when it is given, otherwise
+// true for every collection but the pages collection.
+//
+// Returns:
+//
+//	bool — true when the items file is wanted
+//
+// Example:
+//
+//	if col.WantsItemsMarkdown() { /* render STEM_items.md */ }
+func (col *Collection) WantsItemsMarkdown() bool {
+	if col.MarkdownItems != nil {
+		return *col.MarkdownItems
+	}
+	return !isPagesCollection(col)
 }
 
 // Name returns the collection basename used for the collection

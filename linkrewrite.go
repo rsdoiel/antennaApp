@@ -38,6 +38,10 @@ import (
  * the HTML page it renders to ("docs/guide.html"). It is what antenna knows
  * about the site from its own data (DR-0007 5, 6): the pages table, the
  * collections in antenna.yaml and the posts.
+ *
+ * A key that ends in "/" is a directory, not a file: it stands for a subsite
+ * on this host (the subsites setting, antennaApp DR-0027 2), and any .md path
+ * under it maps to the .html twin of the same name. The value is unused.
  */
 type LinkTargets map[string]string
 
@@ -85,6 +89,9 @@ func RewriteDestination(from, dest string, targets LinkTargets) (string, string)
 	// Only the extension is case-folded; file names are exact.
 	site = strings.TrimSuffix(site, ext) + ".md"
 	out, ok := targets[site]
+	if !ok && site != ".." && !strings.HasPrefix(site, "../") && inSubsite(targets, site) {
+		out, ok = strings.TrimSuffix(site, ".md")+".html", true
+	}
 	if !ok || site == ".." || strings.HasPrefix(site, "../") {
 		return dest, fmt.Sprintf("link to %s on %s: antenna does not render that file, so the link is left as Markdown", dest, from)
 	}
@@ -99,6 +106,17 @@ func RewriteDestination(from, dest string, targets LinkTargets) (string, string)
 	}
 	u.RawPath = ""
 	return u.String(), ""
+}
+
+// inSubsite reports whether the site-relative path lies under one of the
+// directory keys (those ending in "/") of targets.
+func inSubsite(targets LinkTargets, site string) bool {
+	for k := range targets {
+		if strings.HasSuffix(k, "/") && strings.HasPrefix(site, k) {
+			return true
+		}
+	}
+	return false
 }
 
 /** LinkRewriter rewrites the links of one page while it is rendered to HTML.
@@ -173,6 +191,20 @@ func (cfg *AppConfig) LinkTargets() (LinkTargets, error) {
 		stem := strings.TrimSuffix(path.Clean(filepath.ToSlash(col.File)), ".md")
 		targets[stem+".md"] = stem + ".html"
 		targets[stem+"_items.md"] = stem + ".html"
+	}
+	// A subsite on this host with a path is a directory whose .md pages have
+	// .html twins (DR-0027 2). One on another host, or at the root of this
+	// one, is not: the root would take in the site's own unrendered pages.
+	if base, err := url.Parse(cfg.BaseURL); err == nil && base.Host != "" {
+		for _, sub := range cfg.Subsites {
+			u, err := url.Parse(sub.root())
+			if err != nil || !strings.EqualFold(u.Host, base.Host) {
+				continue
+			}
+			if dir := strings.Trim(path.Clean("/"+u.Path), "/"); dir != "" {
+				targets[dir+"/"] = ""
+			}
+		}
 	}
 	pages, err := cfg.GetPageRows()
 	if err != nil {
