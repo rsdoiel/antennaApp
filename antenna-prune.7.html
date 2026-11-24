@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AntennaApp</title>
+    <link rel="stylesheet" href="css/site.css">
+    <link rel="alternate" type="text/markdown" href="antenna-prune.7.md">
+</head>
+<body>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="getting_started.html">Getting Started</a></li>
+    <li><a href="CHANGES.html">Changes</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/rsdoiel/AntennaApp">Code Repository</a></li>
+</ul>
+</nav>
+<section id="main-content">
+<h1 id="name">NAME</h1>
+<p>prune</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>antenna prune [-w] [-all]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Finds the pages in the pages collection whose source file no longer
+exists, as after an rm or mv, and removes them. With -w it deletes each
+page’s record and the output files the record lists (the HTML, and the
+Markdown copy when there is one). Without -w it only lists them and
+changes nothing. unpage removes just the record; prune is the clean-up
+for pages you have deleted.</p>
+<p>The source file is never touched (it is gone), nor are files it
+included. An output is kept, and reported on standard error, when
+another page still writes it or when it is outside htdocs. The sitemap
+and toc.opml drop a pruned page the next time you run antenna
+generate.</p>
+<p>When the source of every page is missing, -w refuses, because that
+usually means you are in the wrong directory or a drive is not mounted.
+Add -all to prune them anyway.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-w</dt>
+<dd>
+delete the records and output files; without it prune is a dry run
+</dd>
+<dt>-all</dt>
+<dd>
+with -w, prune even when every page’s source is missing
+</dd>
+</dl>
+<h1 id="exit-status">EXIT STATUS</h1>
+<dl>
+<dt>0</dt>
+<dd>
+nothing to prune, or -w pruned the pages
+</dd>
+<dt>1</dt>
+<dd>
+dry run found pages to prune, or -w refused because every source is
+missing
+</dd>
+<dt>2</dt>
+<dd>
+unknown option or extra argument
+</dd>
+<dt>66</dt>
+<dd>
+no pages collection or configuration found
+</dd>
+<dt>74</dt>
+<dd>
+a file could not be deleted (the others are still pruned)
+</dd>
+<dt>78</dt>
+<dd>
+the configuration is wrong
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>Remove an old page, then see what prune would do, then do it:</p>
+<pre class="shell"><code>rm old.md
+antenna prune
+antenna prune -w
+antenna generate</code></pre>
+</section>
+<footer>
+<p>AntennaApp. This page is also published as <a href="antenna-prune.7.md">Markdown</a>.</p>
+</footer>
+</body>
+</html>
