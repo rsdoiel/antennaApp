@@ -76,6 +76,17 @@ func parseStoredDate(raw string) (time.Time, bool) {
 func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, description string, authors []*gofeed.Person,
 	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
 	channel string, status string, updated string, label string, sourceMarkdown string, categories string) error {
+	return gen.writeItemRSS(out, false, link, title, description, authors, enclosures, guid, pubDate, dcExt,
+		channel, status, updated, label, sourceMarkdown, categories)
+}
+
+// writeItemRSS writes one RSS item. own says the item is antenna's own post, not
+// a harvested one: its guid is its link when it has none of its own, written as
+// a permalink, because the link is unique and a URL, and is what readers that
+// had no guid already used to tell the item apart.
+func (gen *Generator) writeItemRSS(out io.Writer, own bool, link string, title string, description string, authors []*gofeed.Person,
+	enclosures []*Enclosure, guid string, pubDate string, dcExt string,
+	channel string, status string, updated string, label string, sourceMarkdown string, categories string) error {
 	// Setup expressing update time.
 	pressTime := pubDate
 	if len(pressTime) > 10 {
@@ -135,7 +146,10 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 				toXMLString(strings.TrimSpace(enclosure.Type)))
 		}
 	}
-	if guid != "" {
+	switch {
+	case own && link != "" && (guid == "" || guid == link):
+		fmt.Fprintf(out, "      <guid isPermaLink=\"true\">%s</guid>\n", strings.TrimSpace(toXMLString(link)))
+	case guid != "":
 		fmt.Fprintf(out, "      <guid isPermaLink=\"false\">cid://%s</guid>\n", strings.TrimSpace(toXMLString(guid)))
 	}
 	if categories != "" {
@@ -299,7 +313,7 @@ func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, 
 				}
 			}
 		}
-		if err := gen.WriteItemRSS(out, link, title, description, authors,
+		if err := gen.writeItemRSS(out, postPath != "", link, title, description, authors,
 			enclosures, guid, pubDate, dcExt,
 			channel, status, updated, label, sourceMarkdown, categories); err != nil {
 			return err

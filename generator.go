@@ -437,6 +437,11 @@ func (collection *Collection) GeneratePosts(eout io.Writer, appName string, cfg 
 	if collection.DbName == "" {
 		return nil
 	}
+	if !collection.WantsHTML() {
+		// A Markdown-only collection writes no post HTML (DR-0031 4, 5); say
+		// how much from before the switch is left, and leave it.
+		return collection.reportLeftoverPostHTML(eout, cfg)
+	}
 	db, err := sql.Open("sqlite", collection.DbName)
 	if err != nil {
 		return err
@@ -694,7 +699,9 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	// rowsErr is the first error that left output partial; it is returned
 	// after every file that can be written has been.
 	var rowsErr error
-	wantItemsMD := collection.Mode != "page-index" && collection.WantsItemsMarkdown()
+	// A Markdown-only collection always has its items file: it is the only
+	// rendering of the items left (DR-0031 2).
+	wantItemsMD := collection.Mode != "page-index" && (collection.WantsItemsMarkdown() || !collection.WantsHTML())
 	if wantItemsMD {
 		mdCount, err = gen.WriteItemsMarkdown(&mdBuf, db, collection, clock())
 		if err != nil {
@@ -725,45 +732,51 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 
 	// Write out HTML page — mode: page-index renders a simple link list from
 	// the pages table; the default "aggregate" mode renders feed item cards.
-	var out bytes.Buffer
-	if collection.Mode == "page-index" {
-		// Wrap the link list in a full HTML shell using the same header/nav/footer
-		// as the aggregate mode, but replace <main> content with WritePageIndex.
-		fmt.Fprintf(&out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
-		gen.writeHeadElement(&out, "", nil)
-		fmt.Fprintln(&out, "<body>")
-		fmt.Fprintln(&out, `  <a href="#main-content" class="skip-link">Skip to main content</a>`)
-		if gen.Header != "" {
-			fmt.Fprintf(&out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
-		}
-		if gen.Nav != "" {
-			fmt.Fprintf(&out, "  <nav aria-label=\"Site navigation\">\n    %s\n  </nav>\n", indentText(strings.TrimSpace(gen.Nav), 4))
-		}
-		if gen.TopContent != "" {
-			fmt.Fprintf(&out, "\n    %s\n", indentText(strings.TrimSpace(gen.TopContent), 2))
-		}
-		if err := gen.WritePageIndex(&out, db); err != nil {
-			return err
-		}
-		if gen.BottomContent != "" {
-			fmt.Fprintf(&out, "\n    %s\n", indentText(strings.TrimSpace(gen.BottomContent), 2))
-		}
-		if gen.Footer != "" {
-			fmt.Fprintf(&out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
-		}
-		fmt.Fprintln(&out, "</body>")
-		fmt.Fprintln(&out, "</html>")
-	} else {
-		if err := gen.WriteHTML(&out, db, appName, collection); err != nil {
-			if !isPartial(err) {
+	if collection.WantsHTML() {
+		var out bytes.Buffer
+		if collection.Mode == "page-index" {
+			// Wrap the link list in a full HTML shell using the same header/nav/footer
+			// as the aggregate mode, but replace <main> content with WritePageIndex.
+			fmt.Fprintf(&out, "<!doctype html>\n<html lang=%q>\n", gen.Lang)
+			gen.writeHeadElement(&out, "", nil)
+			fmt.Fprintln(&out, "<body>")
+			fmt.Fprintln(&out, `  <a href="#main-content" class="skip-link">Skip to main content</a>`)
+			if gen.Header != "" {
+				fmt.Fprintf(&out, "  <header>\n    %s\n  </header>\n", indentText(strings.TrimSpace(gen.Header), 4))
+			}
+			if gen.Nav != "" {
+				fmt.Fprintf(&out, "  <nav aria-label=\"Site navigation\">\n    %s\n  </nav>\n", indentText(strings.TrimSpace(gen.Nav), 4))
+			}
+			if gen.TopContent != "" {
+				fmt.Fprintf(&out, "\n    %s\n", indentText(strings.TrimSpace(gen.TopContent), 2))
+			}
+			if err := gen.WritePageIndex(&out, db); err != nil {
 				return err
 			}
-			if rowsErr == nil {
-				rowsErr = err
+			if gen.BottomContent != "" {
+				fmt.Fprintf(&out, "\n    %s\n", indentText(strings.TrimSpace(gen.BottomContent), 2))
+			}
+			if gen.Footer != "" {
+				fmt.Fprintf(&out, "  <footer>\n    %s\n  </footer>\n", indentText(strings.TrimSpace(gen.Footer), 4))
+			}
+			fmt.Fprintln(&out, "</body>")
+			fmt.Fprintln(&out, "</html>")
+		} else {
+			if err := gen.WriteHTML(&out, db, appName, collection); err != nil {
+				if !isPartial(err) {
+					return err
+				}
+				if rowsErr == nil {
+					rowsErr = err
+				}
 			}
 		}
-	}
-	if _, err := writeStable(htmlName, out.Bytes(), 0o666, htmlStamps...); err != nil {
+		if _, err := writeStable(htmlName, out.Bytes(), 0o666, htmlStamps...); err != nil {
+			return err
+		}
+	} else if err := os.Remove(htmlName); err != nil && !errors.Is(err, os.ErrNotExist) {
+		// A Markdown-only collection (DR-0031 5): the page written before the
+		// switch is removed; it would be served stale.
 		return err
 	}
 
@@ -809,4 +822,53 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		}
 	}
 	return rowsErr
+}
+
+/** reportLeftoverPostHTML warns once when a Markdown-only collection still has
+ * post HTML files from before it was switched (DR-0031 5). It deletes nothing:
+ * other pages and readers may link to them.
+ *
+ * Parameters:
+ *   eout (io.Writer)   — where the warning goes
+ *   cfg  (*AppConfig)  — the loaded configuration, for htdocs
+ *
+ * Returns:
+ *   error — from reading the collection's database
+ *
+ * Example:
+ *   err := col.reportLeftoverPostHTML(os.Stderr, cfg)
+ */
+func (collection *Collection) reportLeftoverPostHTML(eout io.Writer, cfg *AppConfig) error {
+	db, err := sql.Open("sqlite", collection.DbName)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	rows, err := db.Query(`SELECT postPath FROM items WHERE postPath IS NOT NULL AND postPath != ''`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	var left []string
+	for rows.Next() {
+		var postPath string
+		if err := rows.Scan(&postPath); err != nil {
+			return err
+		}
+		name := normalizeToHTMLExt(filepath.Join(cfg.Htdocs, postPath))
+		if name == filepath.Join(cfg.Htdocs, postPath) {
+			continue // not a source that has an HTML twin
+		}
+		if _, err := os.Stat(name); err == nil {
+			left = append(left, name)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	if len(left) > 0 {
+		fmt.Fprintf(eout, "warning: %s is Markdown-only; %d post HTML file(s) from before remain, no longer updated (for example %s); delete them when nothing links to them\n",
+			collection.File, len(left), left[0])
+	}
+	return nil
 }

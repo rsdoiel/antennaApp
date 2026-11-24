@@ -101,7 +101,7 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
  */
 func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetcher) error {
 	userAgent := f.userAgent
-	// LoadCommonMark accepts Markdown (.md) or ODT/OTT collection files.
+	// LoadCommonMark reads the collection file, Markdown (.md).
 	doc, err := LoadCommonMark(collection.File)
 	if err != nil {
 		return err

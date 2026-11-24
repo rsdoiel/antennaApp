@@ -52,6 +52,7 @@ func (v *validator) checkSite() {
 	v.checkPageOutputs(htdocs)
 	v.checkSequences(htdocs)
 	v.checkStaticMarkdownAlternates()
+	v.checkMarkdownOnlyCollections(cfgFile)
 	v.checkTOC(htdocs)
 	v.checkBonbonJSON(htdocs)
 	v.checkNoJekyll(htdocs)
@@ -322,6 +323,18 @@ func (v *validator) checkSequences(htdocs string) {
 		for _, o := range info.Overlaps {
 			v.add("sequence-overlap", SeverityInfo, cfgFile, 0,
 				"%s is in the sequences %s and %s; it takes the neighbours from %s", o.MD, o.First, p, o.First)
+		}
+	}
+}
+
+// checkMarkdownOnlyCollections warns about a Markdown-only collection (html:
+// false, DR-0031) that names a generator: the theme is not used because no HTML
+// is written for the collection.
+func (v *validator) checkMarkdownOnlyCollections(cfgFile string) {
+	for _, col := range v.cfg.Collections {
+		if col != nil && !col.WantsHTML() && col.Generator != "" {
+			v.add("markdown-only-generator", SeverityWarning, cfgFile, 0,
+				"the collection %s is Markdown-only (html: false), so its generator %s is not used; remove the generator line", col.File, col.Generator)
 		}
 	}
 }

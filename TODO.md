@@ -48,7 +48,7 @@ BonBon (https://github.com/scripting/bonBon/) is Dave Winer's browser whose nati
 - [x] Harvest from BonBon sites: discover a site's feed from the address listed (feed, toc `rss` outline, HTML autodiscovery, common paths), store it in `channels.discovered_link`, and respect `robots.txt` (antennaApp DR-0030, built 2026-11-23, uncommitted). A feed made from a `toc.opml`, a sitemap or a page of links, and search, are not antenna's job in this release (a later tool; cmarkfind); notes in agents/projects/antennaApp/design/harvest-for-search-note.md.
 - [ ] Harvest: a site whose root `toc.opml` is only an `include` (https://dave.writersweb.org/) has no feed to find at the root; its feed is in the included folder (`/scripting/rss.xml`). Listing the folder works. Whether discovery should probe each include's folder (up to eight requests per include) is deferred to a later release (decided 2026-11-23).
 - [ ] Harvest: `antenna help harvest` in interactive mode (`guideHarvest`) does not mention site addresses or robots.txt.
-- [ ] Open question: a Markdown-only collection mode with no theme (only `.md` and `toc.opml`), since the reader picks the look. This changes what a collection is, so write a decision record first.
+- [x] A Markdown-only collection mode: `html: false` on a collection (antennaApp DR-0031, built 2026-11-23, uncommitted). Left: a Markdown-only sub-site (DR-0027 rewrites `.md` links into a `subsites` path to `.html`, which such a sub-site does not have); a site-wide default for `html`.
 - [x] Textcasting alignment (https://textcasting.org/, antennaApp DR-0029, built 2026-11-23): titles optional (no invented heading; thematic break and link line in `_items.md`), links and styling for description-only items, name-only authors as `dc:creator`, `isPermaLink="false"`. Enclosures, length and edits needed no change.
   - [ ] Pass through feed elements antenna does not itself use (an item's other extension elements are not stored). Needs a new column and a rule per namespace; count what the live feeds carry first, then a record.
   - [ ] DR-0029 consequences should say that an untitled item in `_items.md` starts at a `---` line (found when reading the real output; the record is accepted, so the author decides whether to amend it).
@@ -68,3 +68,5 @@ To match the workspace standard (knowledge and opml are the models; Go 1.27.3 ac
 - [x] release.bash: matches fountain's apart from the generated-by header.
 - [x] release.ps1: take knowledge's (existing-draft check, checksums).
 - [x] website.mak, page.tmpl, add-col-scope.lua, website.ps1: take knowledge's (check `NO_PUBLISH` and nav links).
+
+- [x] ODT support removed (antennaApp DR-0032, 2026-11-23, uncommitted). Open: whether `antenna stylefrom` should stop accepting `.odt` (it uses the separate `stylefrom` package).

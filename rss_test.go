@@ -285,3 +285,66 @@ func TestRSSAuthorWithNothingIsOmitted(t *testing.T) {
 		t.Errorf("an empty author was written:\n%s", out)
 	}
 }
+
+// feedForRow writes the feed of one item row with the given link, guid and
+// postPath.
+func feedForRow(t *testing.T, link, guid, postPath string) string {
+	t.Helper()
+	db := newTestItemsDB(t)
+	defer db.Close()
+	if _, err := db.Exec(`INSERT INTO items
+		(link, title, description, authors, enclosures, guid, pubDate,
+		 dcExt, channel, status, updated, label, postPath, sourceMarkdown, categories)
+		VALUES (?, 'T', 'd', '', '', ?, '2026-06-27',
+		 '', '', 'published', '', '', ?, '', '')`, link, guid, postPath); err != nil {
+		t.Fatalf("insert item: %s", err)
+	}
+	gen := &Generator{eout: io.Discard}
+	col := &Collection{Title: "Feed", File: "test.md"}
+	var buf bytes.Buffer
+	if err := gen.WriteCustomRSS(&buf, db, SQLDisplayItems, "http://example.com/test.xml", "antenna", col); err != nil {
+		t.Fatalf("WriteCustomRSS: %s", err)
+	}
+	return buf.String()
+}
+
+// A post antenna produces has a guid that is unique and a URL: its own
+// address, written as a permalink. A post stored with no guid (made before)
+// gets the same at output time, so readers that key on the link see no change.
+func TestRSSPostWithNoGuidGetsItsLinkAsAPermalink(t *testing.T) {
+	out := feedForRow(t, "http://example.com/blog/one.html", "", "blog/one.md")
+	want := `<guid isPermaLink="true">http://example.com/blog/one.html</guid>`
+	if !strings.Contains(out, want) {
+		t.Errorf("feed lacks %q:\n%s", want, out)
+	}
+}
+
+func TestRSSPostWhoseGuidIsItsLinkIsAPermalink(t *testing.T) {
+	out := feedForRow(t, "http://example.com/blog/one.md", "http://example.com/blog/one.md", "blog/one.md")
+	if want := `<guid isPermaLink="true">http://example.com/blog/one.md</guid>`; !strings.Contains(out, want) {
+		t.Errorf("feed lacks %q:\n%s", want, out)
+	}
+	if strings.Contains(out, "cid://") {
+		t.Errorf("the link was wrapped as a content id:\n%s", out)
+	}
+}
+
+// An author's own guid in a post's front matter is kept as it always was.
+func TestRSSPostWithItsOwnGuidKeepsIt(t *testing.T) {
+	out := feedForRow(t, "http://example.com/blog/one.html", "my-own-guid", "blog/one.md")
+	if want := `<guid isPermaLink="false">cid://my-own-guid</guid>`; !strings.Contains(out, want) {
+		t.Errorf("feed lacks %q:\n%s", want, out)
+	}
+}
+
+// A harvested item is not antenna's own: one with no guid gets none, and one
+// whose guid equals its link keeps the text it had.
+func TestRSSHarvestedItemsKeepTheirGuidHandling(t *testing.T) {
+	if out := feedForRow(t, "http://other.example/a", "", ""); strings.Contains(out, "<guid") {
+		t.Errorf("a harvested item with no guid was given one:\n%s", out)
+	}
+	out := feedForRow(t, "http://other.example/a", "http://other.example/a", "")
+	if want := `<guid isPermaLink="false">cid://http://other.example/a</guid>`; !strings.Contains(out, want) {
+		t.Errorf("a harvested item's guid text changed:\n%s", out)
+	}
+}

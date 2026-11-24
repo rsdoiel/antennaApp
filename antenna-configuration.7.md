@@ -118,6 +118,20 @@ Each collection object:
      "aggregate"  feed-item cards from the items table (default)
      "page-index" simple <ul> link list from the pages table
 
+  html
+  : (optional) true or false: whether antenna writes HTML for the collection,
+     its page and its posts. Default: true. false makes the collection
+     Markdown-only: generate writes STEM_items.md (always, whatever
+     markdownItems says), the RSS and the feed-list OPML and no HTML, and
+     removes a STEM.html left by an earlier run. Post HTML from before is left
+     (generate says how many files remain). A post made later is stored with
+     its .md address as its link, and the sitemap lists it that way. A link to
+     such a post or to the collection's own files stays a .md link. The
+     collection's generator is not used (validate warns). html: false with
+     markdownItems: false, or with mode: page-index, is a configuration error
+     (exit 78). Readers that are not Markdown aware show a Markdown-only site as
+     plain text, so use it for BonBon and cmarkbrowser.
+
   markdownItems
   : (optional) true or false: whether generate writes STEM_items.md, the
      Markdown rendering of the collection's items. Default: true for every

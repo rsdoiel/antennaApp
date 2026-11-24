@@ -130,9 +130,7 @@ func (cfg *AppConfig) AddCollection(cfgName string, cName string) error {
 	if filepath.Ext(cName) == "" {
 		cName = cName + ".md"
 	}
-	// Load the collection definition — accepts Markdown (.md) or ODT/OTT files.
-	// For ODT/OTT files document properties become front matter and hyperlinks
-	// in the document body become the feed link list.
+	// Load the collection definition, a Markdown (.md) file.
 	doc, err := LoadCommonMark(cName)
 	if err != nil {
 		return err
@@ -315,6 +313,42 @@ type Collection struct {
 	// collection, whose items are the site's own pages. true turns it on for
 	// the pages collection, false turns it off for any collection.
 	MarkdownItems *bool `json:"markdownItems,omitempty" yaml:"markdownItems,omitempty"`
+	// HTML says whether antenna writes HTML for the collection: its page and
+	// its posts. Unset or true is as always. false makes the collection
+	// Markdown-only: the items Markdown, the RSS and the feed-list OPML are
+	// written and no HTML is (antennaApp DR-0031).
+	HTML *bool `json:"html,omitempty" yaml:"html,omitempty"`
+}
+
+// WantsHTML reports whether antenna writes HTML for the collection: false only
+// when html: false is set (DR-0031).
+//
+// Returns:
+//
+//	bool — false for a Markdown-only collection
+//
+// Example:
+//
+//	if col.WantsHTML() { /* write the collection page and post pages */ }
+func (col *Collection) WantsHTML() bool {
+	return col.HTML == nil || *col.HTML
+}
+
+// validateCollections checks the collection entries when antenna.yaml is
+// read; each problem is a configuration error (DR-0031 3).
+func (cfg *AppConfig) validateCollections() error {
+	for _, col := range cfg.Collections {
+		if col == nil || col.WantsHTML() {
+			continue
+		}
+		if col.MarkdownItems != nil && !*col.MarkdownItems {
+			return fmt.Errorf("collection %s: html is false and markdownItems is false, so nothing would be written to show its items", col.File)
+		}
+		if col.Mode == "page-index" {
+			return fmt.Errorf("collection %s: html is false and mode is page-index; a page index exists only as HTML", col.File)
+		}
+	}
+	return nil
 }
 
 // WantsItemsMarkdown reports whether generate should write the collection's
@@ -364,6 +398,9 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if err := cfg.validateSequences(); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
+	if err := cfg.validateCollections(); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if err := cfg.validateHarvest(); err != nil {
@@ -656,8 +693,7 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 		doc.FrontMatter["dateModified"] = today
 		updateMarkdownDoc = true
 	}
-	// ODT files are not written back — their metadata is read-only from the archive.
-	if updateMarkdownDoc && !isODTFile(fName) {
+	if updateMarkdownDoc {
 		if err = saveMarkdown(fName, doc); err != nil {
 			return fmt.Errorf("unable to save %s, %w", fName, err)
 		}
@@ -713,22 +749,34 @@ func (cfg *AppConfig) Post(cName string, fName string) error {
 	if postPath != "" {
 		if link == "" {
 			if cfg.BaseURL != "" {
-				link = cfg.BaseURL + "/" + normalizeToHTMLExt(postPath)
+				pubPath := normalizeToHTMLExt(postPath)
+				if !collection.WantsHTML() {
+					// No HTML page exists: the post is its Markdown (DR-0031 4).
+					pubPath = postPath
+				}
+				link = cfg.BaseURL + "/" + pubPath
 			} else {
 				return configErrorf("missing base_url in antenna YAML, could not form link using postPath %q", postPath)
 			}
 		}
-		// Write out an HTML page to the postPath, normalizing source extension to .html
-		htmlName := normalizeToHTMLExt(filepath.Join(cfg.Htdocs, postPath))
-		gen, err := NewGenerator(path.Base(os.Args[0]), cfg.BaseURL)
-		if err != nil {
-			return err
+		// A post antenna produces always has a guid, and it must be unique and a
+		// URL: with none of its own, the post's link (the item key) is it.
+		if guid == "" {
+			guid = link
 		}
-		if err := gen.LoadConfig(collection.Generator); err != nil {
-			return err
-		}
-		if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.htmlFrontMatter()); err != nil {
-			return err
+		if collection.WantsHTML() {
+			// Write out an HTML page to the postPath, normalizing source extension to .html
+			htmlName := normalizeToHTMLExt(filepath.Join(cfg.Htdocs, postPath))
+			gen, err := NewGenerator(path.Base(os.Args[0]), cfg.BaseURL)
+			if err != nil {
+				return err
+			}
+			if err := gen.LoadConfig(collection.Generator); err != nil {
+				return err
+			}
+			if err := gen.WriteHtmlPage(htmlName, link, postPath, pubDate, innerHTML, doc.htmlFrontMatter()); err != nil {
+				return err
+			}
 		}
 	}
 	// FIXME: Need to handle getting enclosures and publishing them to posts tree

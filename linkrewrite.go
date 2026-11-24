@@ -185,7 +185,9 @@ func (doc *CommonMark) parserOptions() []parser.Option {
 func (cfg *AppConfig) LinkTargets() (LinkTargets, error) {
 	targets := LinkTargets{}
 	for _, col := range cfg.Collections {
-		if col.File == "" || col.File == "pages.md" {
+		if col.File == "" || col.File == "pages.md" || !col.WantsHTML() {
+			// A Markdown-only collection has no HTML page for its source or
+			// its items to become (DR-0031).
 			continue
 		}
 		stem := strings.TrimSuffix(path.Clean(filepath.ToSlash(col.File)), ".md")
@@ -242,7 +244,7 @@ func (cfg *AppConfig) LinkTargets() (LinkTargets, error) {
 		}
 	}
 	for _, col := range cfg.Collections {
-		if col.DbName == "" {
+		if col.DbName == "" || !col.WantsHTML() {
 			continue
 		}
 		if _, err := os.Stat(col.DbName); err != nil {

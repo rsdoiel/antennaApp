@@ -19,7 +19,8 @@ package antennaApp
 import (
 	"bytes"
 	"fmt"
-	//"os"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -415,4 +416,52 @@ func (doc *CommonMark) ToUnsafeHTML() (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+// isODTFile reports whether fName has an ODT or OTT file extension. antenna
+// does not read them (DR-0032); the name is only used to refuse one.
+func isODTFile(fName string) bool {
+	switch strings.ToLower(filepath.Ext(fName)) {
+	case ".odt", ".ott":
+		return true
+	}
+	return false
+}
+
+// odtUnsupported is the message for an ODT or OTT file (DR-0032).
+const odtUnsupported = "ODT is not supported; save the document as Markdown"
+
+// normalizeToHTMLExt replaces the .md extension of a source document with
+// .html. A name with any other extension is returned unchanged.
+//
+// Example:
+//
+//	normalizeToHTMLExt("blog/2026/04/12/post.md") // "blog/2026/04/12/post.html"
+func normalizeToHTMLExt(name string) string {
+	if strings.ToLower(filepath.Ext(name)) == ".md" {
+		return strings.TrimSuffix(name, filepath.Ext(name)) + ".html"
+	}
+	return name
+}
+
+// LoadCommonMark reads a Markdown source document file and returns a
+// *CommonMark, with its YAML front matter parsed. An ODT or OTT file is
+// refused with a data error (DR-0032).
+//
+// Example:
+//
+//	doc, err := LoadCommonMark("post.md")
+func LoadCommonMark(fName string) (*CommonMark, error) {
+	if isODTFile(fName) {
+		return nil, dataErrorf("%s: %s", fName, odtUnsupported)
+	}
+	src, err := os.ReadFile(fName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %q: %w", fName, err)
+	}
+	doc := &CommonMark{}
+	if err := doc.Parse(src); err != nil {
+		return nil, fmt.Errorf("failed to parse %q: %w", fName, err)
+	}
+	return doc, nil
 }

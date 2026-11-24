@@ -96,6 +96,13 @@ preview address to see the site as it will read once published. A static host
 cannot negotiate content, so on the published site a reader depends on the
 declared alternate, the table of contents and the .md links themselves.
 
+# A SITE WITH NO HTML
+
+A collection with html: false in antenna.yaml publishes only Markdown: the items
+file, the RSS and OPML feeds and, with the table of contents, what a Markdown
+reader needs. antenna page writes no HTML when you name only .md outputs. See
+antenna help configuration for the setting and what it changes.
+
 # COLLECTING A MARKDOWN SITE
 
 A Markdown site may publish no feed. Put its address in a collection's list of

@@ -26,6 +26,12 @@ markdownItems: false; markdownItems: true turns it on for pages), and the page d
 its Markdown alternate. A collection with nothing to show has neither, and a
 file left by an earlier run is removed.
 
+A collection with html: false in antenna.yaml is Markdown-only: generate writes
+its items Markdown, RSS and feed-list OPML and no HTML, neither the collection
+page nor its posts, and removes a collection page left by an earlier run. Post
+HTML from before the switch is left alone; generate says how many files remain.
+See antenna help configuration.
+
 Output is the same every time it is generated from the same data. A file is
 rewritten only when its content changes. The lines that record when it was
 built (the date meta element of an HTML page, dateModified in an items file,

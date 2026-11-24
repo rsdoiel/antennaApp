@@ -29,6 +29,16 @@ Recommended additional fields:
 
 After posting, run generate to rebuild the collection HTML and RSS feed.
 
+A post made by antenna always has a guid, which must be unique and a URL: a
+guid in the front matter is kept, otherwise it is the post's link, and the feed
+writes it as a permalink (isPermaLink="true"). A post stored before this with
+no guid is given the same at output time, so readers that tell items apart by
+link see no change.
+
+When the collection has html: false (Markdown-only), post writes no HTML and
+the item's link is the post's own address, base_url plus the postPath, which
+ends .md. A post made before the collection was switched keeps the link it has.
+
 WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
 Only run this action on files you control and trust.
 

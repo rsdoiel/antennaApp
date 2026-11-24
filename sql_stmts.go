@@ -287,6 +287,14 @@ WHERE postPath IS NOT NULL AND postPath != ""
   AND pubDate IS NOT NULL AND pubDate != ""
 ORDER BY postPath;`
 
+	// SQLSitemapListMarkdownPosts lists the posts of a Markdown-only collection
+	// (DR-0031 6): no HTML twin exists, so the post is listed by its own path.
+	SQLSitemapListMarkdownPosts = `SELECT postPath AS outputPath, updated
+FROM items
+WHERE postPath IS NOT NULL AND postPath != ""
+  AND pubDate IS NOT NULL AND pubDate != ""
+ORDER BY postPath;`
+
 	// SQLHasPagesTable counts the pages table: 0 for an older database that
 	// predates it.
 	SQLHasPagesTable = `SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'pages';`

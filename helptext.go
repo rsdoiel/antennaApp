@@ -361,7 +361,7 @@ wrong from the number alone.
 | 0 | ok | Success. A listing that matches nothing (posts, items, pages) is still 0. |
 | 1 | negative | The command ran and the answer is no: the named collection is not in the configuration, an action you cancelled. |
 | 2 | usage | The command line is wrong and nothing was attempted: unknown action, flag or help topic, a missing or surplus argument, a bad date or count. |
-| 65 | data | Content that was read is wrong: a document with unclosed front matter, a file that is not a valid ODT, a feed that does not parse, a damaged database. |
+| 65 | data | Content that was read is wrong: a document with unclosed front matter, an ODT file, which is not supported, a feed that does not parse, a damaged database. |
 | 66 | no_input | A named file or the workspace is missing: no antenna.yaml, no such Markdown file. |
 | 69 | unavailable | A feed or service could not be reached, or answered with an error. |
 | 70 | internal | A bug, or an error nothing classified. Please report it. |
@@ -756,6 +756,12 @@ markdownItems: false; markdownItems: true turns it on for pages), and the page d
 its Markdown alternate. A collection with nothing to show has neither, and a
 file left by an earlier run is removed.
 
+A collection with html: false in antenna.yaml is Markdown-only: generate writes
+its items Markdown, RSS and feed-list OPML and no HTML, neither the collection
+page nor its posts, and removes a collection page left by an earlier run. Post
+HTML from before the switch is left alone; generate says how many files remain.
+See {app_name} help configuration.
+
 Output is the same every time it is generated from the same data. A file is
 rewritten only when its content changes. The lines that record when it was
 built (the date meta element of an HTML page, dateModified in an items file,
@@ -1076,7 +1082,7 @@ as About pages, contact pages, and search pages.
 
 An output that is the source file is refused (exit 65) and nothing is written.
 An output that does not end in .html or .md is a usage error (exit 2), and
-nothing is written. A Markdown output needs a text source, not an ODT file.
+nothing is written. An ODT source is not supported (exit 2).
 
 WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
 Only run this action on files you control and trust.
@@ -1174,6 +1180,16 @@ Recommended additional fields:
   keywords    list of tags
 
 After posting, run generate to rebuild the collection HTML and RSS feed.
+
+A post made by {app_name} always has a guid, which must be unique and a URL: a
+guid in the front matter is kept, otherwise it is the post's link, and the feed
+writes it as a permalink (isPermaLink="true"). A post stored before this with
+no guid is given the same at output time, so readers that tell items apart by
+link see no change.
+
+When the collection has html: false (Markdown-only), post writes no HTML and
+the item's link is the post's own address, base_url plus the postPath, which
+ends .md. A post made before the collection was switched keeps the link it has.
 
 WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
 Only run this action on files you control and trust.
@@ -1818,6 +1834,10 @@ row-source-missing
 : The pages table has a row for a file that does not exist (error). Remove it
 with {app_name} unpage, or all of them with {app_name} prune.
 
+markdown-only-generator
+: A collection with html: false names a generator. No HTML is written for the
+collection, so the theme is not used (warning).
+
 alternate-static
 : The generator YAML's link list holds a Markdown alternate (text/markdown or
 application/markdown). The list is copied into every page, so the entry names
@@ -2129,6 +2149,20 @@ Each collection object:
      "aggregate"  feed-item cards from the items table (default)
      "page-index" simple <ul> link list from the pages table
 
+  html
+  : (optional) true or false: whether antenna writes HTML for the collection,
+     its page and its posts. Default: true. false makes the collection
+     Markdown-only: generate writes STEM_items.md (always, whatever
+     markdownItems says), the RSS and the feed-list OPML and no HTML, and
+     removes a STEM.html left by an earlier run. Post HTML from before is left
+     (generate says how many files remain). A post made later is stored with
+     its .md address as its link, and the sitemap lists it that way. A link to
+     such a post or to the collection's own files stays a .md link. The
+     collection's generator is not used (validate warns). html: false with
+     markdownItems: false, or with mode: page-index, is a configuration error
+     (exit 78). Readers that are not Markdown aware show a Markdown-only site as
+     plain text, so use it for BonBon and cmarkbrowser.
+
   markdownItems
   : (optional) true or false: whether generate writes STEM_items.md, the
      Markdown rendering of the collection's items. Default: true for every
@@ -2318,6 +2352,13 @@ sends the page's Markdown instead of its HTML. Point a Markdown reader at the
 preview address to see the site as it will read once published. A static host
 cannot negotiate content, so on the published site a reader depends on the
 declared alternate, the table of contents and the .md links themselves.
+
+# A SITE WITH NO HTML
+
+A collection with html: false in antenna.yaml publishes only Markdown: the items
+file, the RSS and OPML feeds and, with the table of contents, what a Markdown
+reader needs. {app_name} page writes no HTML when you name only .md outputs. See
+{app_name} help configuration for the setting and what it changes.
 
 # COLLECTING A MARKDOWN SITE
 

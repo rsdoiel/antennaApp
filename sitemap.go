@@ -290,7 +290,11 @@ func collectionURLs(cfg *AppConfig, col *Collection) ([]URL, error) {
 			urls = append(urls, pageURLs...)
 		}
 	}
-	postURLs, err := processSitemapRows(cfg, col.DbName, db, SQLSitemapListPosts)
+	postsStmt := SQLSitemapListPosts
+	if !col.WantsHTML() {
+		postsStmt = SQLSitemapListMarkdownPosts
+	}
+	postURLs, err := processSitemapRows(cfg, col.DbName, db, postsStmt)
 	if err != nil {
 		return urls, err
 	}

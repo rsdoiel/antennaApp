@@ -118,13 +118,13 @@ func (app *AntennaApp) Page(cfgName string, args []string) error {
  * Markdown with the include directives expanded.
  *
  * Parameters:
- *   fName (string) — the source file (Markdown, a text file with directives, or ODT)
+ *   fName (string) — the source file (Markdown or a text file with directives)
  *   outputs ([]string) — output paths under htdocs; none means the one HTML page as before
  *   eout (io.Writer) — where warnings about links go
  *
  * Returns:
  *   error — usage (an output that is neither .html nor .md, a Markdown output
- *   for an ODT source), data (an output that is the source itself), or from reading or writing
+ *   for an ODT source, which is not supported), data (an output that is the source itself), or from reading or writing
  *
  * Example:
  *   err := cfg.PageOutputs("index.txt", []string{"index.md", "index.html"}, os.Stderr)
@@ -150,15 +150,15 @@ func (cfg *AppConfig) PageOutputs(fName string, outputs []string, eout io.Writer
 			return usageErrorf("output %q must end in .html or .md", o)
 		}
 	}
-	if len(mds) > 0 && isODTFile(fName) {
-		return usageErrorf("a Markdown output needs a text source, not %q", fName)
+	if isODTFile(fName) {
+		return usageErrorf("%s: %s", fName, odtUnsupported)
 	}
 	if len(outputs) == 0 {
-		// One HTML page, as before. A source that is not .md, .odt or .ott
+		// One HTML page, as before. A source that is not .md
 		// (index.txt) gets a name derived from its own, never its own.
 		name := ""
 		switch ext := filepath.Ext(fName); strings.ToLower(ext) {
-		case ".md", ".odt", ".ott":
+		case ".md":
 		default:
 			name = strings.TrimSuffix(fName, ext) + ".html"
 		}

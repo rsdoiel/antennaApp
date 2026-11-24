@@ -130,7 +130,11 @@ htdocs-missing
 
 row-source-missing
 : The pages table has a row for a file that does not exist (error). Remove it
-with antenna unpage.
+with antenna unpage, or all of them with antenna prune.
+
+markdown-only-generator
+: A collection with html: false names a generator. No HTML is written for the
+collection, so the theme is not used (warning).
 
 alternate-static
 : The generator YAML's link list holds a Markdown alternate (text/markdown or
@@ -154,7 +158,7 @@ antenna generate.
 
 row-duplicate-output
 : Two rows of the pages table write the same output, as after a rename
-(warning). Remove the stale one with antenna unpage.
+(warning). Remove the stale one with antenna unpage, or all of them with antenna prune.
 
 include-missing
 : A page's source includes a file that does not exist (warning). The directive

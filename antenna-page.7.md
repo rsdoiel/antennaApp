@@ -52,7 +52,7 @@ as About pages, contact pages, and search pages.
 
 An output that is the source file is refused (exit 65) and nothing is written.
 An output that does not end in .html or .md is a usage error (exit 2), and
-nothing is written. A Markdown output needs a text source, not an ODT file.
+nothing is written. An ODT source is not supported (exit 2).
 
 WARNING: HTML in the Markdown source passes through unchanged (unsafe mode).
 Only run this action on files you control and trust.

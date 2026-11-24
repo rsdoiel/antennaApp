@@ -7,9 +7,9 @@
 Antenna App's Features:
 
 - An interactive text and scriptable command line interfaces
-- Pages and posts are written using Markdown or LibreOffice Writer ODT files
+- Pages and posts are written using Markdown
 - Posts are automatically included in an RSS feed for your site
-- Aggregations of feeds can be included by providing Markdown or ODT file with a list of links to RSS, Atom and JSON feeds
+- Aggregations of feeds can be included by providing a Markdown file with a list of links to RSS, Atom and JSON feeds
 - Pages, posts and aggregations __can include__ metadata expressed as YAML front matter[^1]
 - Local posts can be added to curated feed collection (introducing a distributed option for __opt in__ conversations)
 - You can have multiple collections of feeds

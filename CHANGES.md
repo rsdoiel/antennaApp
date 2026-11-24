@@ -13,6 +13,15 @@
   `STEM_items.md` on or off; the pages collection gets none by default. A
   `.md` link into a `subsites` path becomes `.html` in the HTML (DR-0027).
 
+- **`html: false` on a collection makes it Markdown-only** (DR-0031). `generate`
+  writes the collection's items Markdown, RSS and feed-list OPML and no HTML,
+  neither its page nor its posts, and removes a collection page left from before;
+  post HTML from before is left and counted in a warning. `antenna post` into it
+  writes no HTML and stores the post's `.md` address as its link (earlier posts
+  keep theirs); the sitemap lists such posts by that address; a link to them stays
+  a `.md` link; `validate` warns when the collection names a generator
+  (`markdown-only-generator`). `html: false` with `markdownItems: false` or
+  `mode: page-index` is a configuration error (78).
 - **Harvest finds a site's feed** (DR-0030). A link in a collection may be a
   site address as well as a feed: harvest tries the address, an `rss` outline
   in the site's `toc.opml`, the page's `<link rel="alternate">`, and up to
@@ -48,6 +57,12 @@
 
 ### Fixed
 
+- A post made by antenna now always has a guid: the one in its front matter, else
+  its link (unique, and a URL), written as `<guid isPermaLink="true">`. Before,
+  a post with none had no `<guid>` in the RSS and the code that meant to default
+  it ran before the link existed. A post stored earlier with no guid gets its
+  link at output time, so a reader that tells items apart by link sees the same
+  identity. Harvested items are untouched.
 - Harvest follows redirects. `webget` stopped at every one (its redirect
   handler always refused), so a feed that moved from http to https or from
   `/feed` to `/feed/` failed with `http error: 301`.
@@ -58,6 +73,14 @@
   in `source:markdown` no longer shows the front matter in the item text of the
   collection's HTML page or its `_items.md`. The aggregated feed still carries
   the source as harvested.
+
+### Removed
+
+- **ODT support** (DR-0032). antenna no longer reads ODT or OTT files: not as a
+  collection, a page source, a post or `blogit` input. Such a file is refused
+  with a message to save it as Markdown (exit 65, or 2 for `antenna page`).
+  `antenna stylefrom` is unchanged: its ODT input belongs to the separate
+  `stylefrom` package.
 
 ### Deprecated
 

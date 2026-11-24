@@ -245,7 +245,7 @@ func published(htdocs, md string) bool {
 
 // markdownPathFor returns the published Markdown path for an output or post
 // path: x.html and x.htm become x.md, x.md and x.markdown stay, anything else
-// (an ODT post, say) has none.
+// (a post that is not Markdown) has none.
 func markdownPathFor(p string) string {
 	p = strings.TrimPrefix(path.Clean("/"+filepath.ToSlash(p)), "/")
 	switch strings.ToLower(path.Ext(p)) {
