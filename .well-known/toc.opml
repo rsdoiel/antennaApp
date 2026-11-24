@@ -2,7 +2,7 @@
 <opml version="2.0">
 	<head>
 		<title>antennaApp</title>
-		<dateModified>Fri, 20 Nov 2026 21:42:10 -0800</dateModified>
+		<dateModified>Mon, 23 Nov 2026 20:33:37 -0800</dateModified>
 	</head>
 	<body>
 		<outline text="Pages">
@@ -54,6 +54,7 @@
 			<outline text="antenna post" url="https://rsdoiel.github.io/antennaApp/antenna-post.7.md"></outline>
 			<outline text="antenna posts" url="https://rsdoiel.github.io/antennaApp/antenna-posts.7.md"></outline>
 			<outline text="antenna preview" url="https://rsdoiel.github.io/antennaApp/antenna-preview.7.md"></outline>
+			<outline text="antenna prune" url="https://rsdoiel.github.io/antennaApp/antenna-prune.7.md"></outline>
 			<outline text="antenna quote" url="https://rsdoiel.github.io/antennaApp/antenna-quote.7.md"></outline>
 			<outline text="antenna rss" url="https://rsdoiel.github.io/antennaApp/antenna-rss.7.md"></outline>
 			<outline text="antenna sitemap" url="https://rsdoiel.github.io/antennaApp/antenna-sitemap.7.md"></outline>

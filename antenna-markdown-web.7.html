@@ -101,6 +101,21 @@ Markdown reader at the preview address to see the site as it will read
 once published. A static host cannot negotiate content, so on the
 published site a reader depends on the declared alternate, the table of
 contents and the .md links themselves.</p>
+<h1 id="a-site-with-no-html">A SITE WITH NO HTML</h1>
+<p>A collection with html: false in antenna.yaml publishes only
+Markdown: the items file, the RSS and OPML feeds and, with the table of
+contents, what a Markdown reader needs. antenna page writes no HTML when
+you name only .md outputs. See antenna help configuration for the
+setting and what it changes.</p>
+<h1 id="collecting-a-markdown-site">COLLECTING A MARKDOWN SITE</h1>
+<p>A Markdown site may publish no feed. Put its address in a
+collection’s list of links and antenna harvest looks for the feed: in
+the site’s table of contents (an outline with type rss and an xmlUrl),
+in the page’s link tags, and at common paths. When it finds one it uses
+the feed alone and remembers where it was. A site that has only a table
+of contents of pages is not collected, because that would mean one
+request for every page it lists; harvest reports the link and goes on.
+antenna harvest respects robots.txt; see antenna help harvest.</p>
 <h1 id="what-is-not-done">WHAT IS NOT DONE</h1>
 <p>antenna runs no search service, update socket or mirror. Those need a
 server, which a static site does not have. By default it writes no

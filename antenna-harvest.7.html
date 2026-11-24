@@ -27,9 +27,32 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <p>antenna harvest [COLLECTION_NAME]</p>
 <h1 id="description">DESCRIPTION</h1>
-<p>Retrieves RSS/Atom feed content for all collections (or only
-COLLECTION_NAME) and stores harvested items in each collection’s SQLite3
-database. Run generate afterwards to rebuild the HTML pages.</p>
+<p>Retrieves RSS, Atom and JSON feed content for all collections (or
+only COLLECTION_NAME) and stores harvested items in each collection’s
+SQLite3 database. Run generate afterwards to rebuild the HTML pages.</p>
+<p>A link in a collection’s Markdown file may be the feed itself or the
+address of a site. For a site, harvest finds the feed, trying in this
+order: the address itself; an rss outline (xmlUrl) in a table of
+contents (.well-known/toc.opml); a link tag in an HTML page that names a
+feed; and up to eight common paths (feed, feed/, rss, rss.xml, feed.xml,
+atom.xml, index.xml, feeds/posts/default). The address it finds is
+remembered in the collection’s database, so later runs go straight to it
+and make no guesses. A site that has only a table of contents of pages
+and no feed cannot be collected: harvest says so for that link and
+carries on with the others. It never fetches the pages a table of
+contents lists.</p>
+<p>Harvest reads each host’s robots.txt first and obeys it for every
+request, including the guesses. A URL it forbids is not requested and is
+reported once; that is not a failure. A missing robots.txt means the
+site may be harvested, and one with a mistake in it (a Crawl-delay line
+before the first User-agent line, say) is read as far as it can be. A
+robots.txt that answers with a server error or does not answer is asked
+for twice more, a second and two seconds apart; if it still fails the
+host is not requested in that run and the link fails as unavailable. A
+Crawl-delay is honored up to 30 seconds; a host that asks for more is
+skipped for the run. Requests to one host are made one at a time with a
+pause between them, 500 ms unless the harvest setting in antenna.yaml
+says otherwise.</p>
 <h1 id="parameters">PARAMETERS</h1>
 <dl>
 <dt>COLLECTION_NAME</dt>
@@ -37,10 +60,55 @@ database. Run generate afterwards to rebuild the HTML pages.</p>
 (optional) harvest only this collection
 </dd>
 </dl>
+<h1 id="exit-status">EXIT STATUS</h1>
+<dl>
+<dt>0</dt>
+<dd>
+every feed was harvested, or left alone because robots.txt forbids it
+</dd>
+<dt>2</dt>
+<dd>
+unknown option or extra argument
+</dd>
+<dt>65</dt>
+<dd>
+a feed, table of contents or page could not be parsed, or a site has no
+feed to find
+</dd>
+<dt>66</dt>
+<dd>
+the configuration or a collection file is missing
+</dd>
+<dt>69</dt>
+<dd>
+a feed, or a host’s robots.txt, could not be reached or answered with an
+error
+</dd>
+<dt>74</dt>
+<dd>
+reading a response failed part way
+</dd>
+<dt>78</dt>
+<dd>
+the configuration is wrong, for example a harvest pause that is not a
+duration
+</dd>
+</dl>
+<p>When some feeds fail the others are still harvested, and harvest
+exits with the class of the first failure, after saying how many
+failed.</p>
 <h1 id="aliases">ALIASES</h1>
 <p>fetch</p>
 <h1 id="examples">EXAMPLES</h1>
 <p>antenna harvest antenna harvest feeds/tech.md</p>
+<p>A collection file may list a site and let harvest find its feed:</p>
+<ul>
+<li><a href="https://dave.writersweb.org/">Dave Winer</a></li>
+<li><a href="https://example.org/">A WordPress blog</a></li>
+</ul>
+<h1 id="see-also">SEE ALSO</h1>
+<p>antenna help configuration (the harvest setting), antenna help
+markdown-web</p>
 </section>
 <footer>
 <p>AntennaApp. This page is also published as <a href="antenna-harvest.7.md">Markdown</a>.</p>

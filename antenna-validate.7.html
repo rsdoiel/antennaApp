@@ -172,7 +172,12 @@ htdocs is not a directory (error).
 <dt>row-source-missing</dt>
 <dd>
 The pages table has a row for a file that does not exist (error). Remove
-it with antenna unpage.
+it with antenna unpage, or all of them with antenna prune.
+</dd>
+<dt>markdown-only-generator</dt>
+<dd>
+A collection with html: false names a generator. No HTML is written for
+the collection, so the theme is not used (warning).
 </dd>
 <dt>alternate-static</dt>
 <dd>
@@ -202,7 +207,8 @@ antenna generate.
 <dt>row-duplicate-output</dt>
 <dd>
 Two rows of the pages table write the same output, as after a rename
-(warning). Remove the stale one with antenna unpage.
+(warning). Remove the stale one with antenna unpage, or all of them with
+antenna prune.
 </dd>
 <dt>include-missing</dt>
 <dd>

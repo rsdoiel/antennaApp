@@ -98,7 +98,11 @@ site’s antenna.yaml. Write the address as the sub-site’s own pages are
 published (same scheme and host). Nothing is fetched: generate does not
 check that a sub-site exists. A missing or relative url, a duplicate, or
 an entry that is not a list of objects is a configuration error (exit
-78)
+78). A relative .md link in a page or post that points into a sub-site
+on this host (one whose url has a path and the same host as base_url) is
+written into the HTML as the sub-site’s .html page of the same name, for
+example /antenna/index.md becomes /antenna/index.html, with no warning.
+A sub-site is taken to publish an .html page beside each .md page.
 </dd>
 <dt>bonbon</dt>
 <dd>
@@ -113,6 +117,15 @@ address: leave a key out instead of blanking it. With no bonbon setting
 antenna writes no file and never removes one, so a file you wrote by
 hand is safe; if you take the setting out, delete the file yourself.
 antenna runs no search or update service; see antenna help markdown-web
+</dd>
+<dt>harvest</dt>
+<dd>
+(optional) settings for the harvest verb. pause is the wait between two
+requests to one host, a duration such as 500ms or 2s (default 500ms; 0s
+turns it off). A host’s Crawl-delay in robots.txt is honored as well and
+wins when longer. A value that is not a duration, or is negative, is a
+configuration error (exit 78).
+harvest: pause: 1s
 </dd>
 <dt>collections</dt>
 <dd>
@@ -137,6 +150,30 @@ Markdown document</p>
 simple
 <ul>
 link list from the pages table
+</dd>
+<dt>html</dt>
+<dd>
+(optional) true or false: whether antenna writes HTML for the
+collection, its page and its posts. Default: true. false makes the
+collection Markdown-only: generate writes STEM_items.md (always,
+whatever markdownItems says), the RSS and the feed-list OPML and no
+HTML, and removes a STEM.html left by an earlier run. Post HTML from
+before is left (generate says how many files remain). A post made later
+is stored with its .md address as its link, and the sitemap lists it
+that way. A link to such a post or to the collection’s own files stays a
+.md link. The collection’s generator is not used (validate warns). html:
+false with markdownItems: false, or with mode: page-index, is a
+configuration error (exit 78). Readers that are not Markdown aware show
+a Markdown-only site as plain text, so use it for BonBon and
+cmarkbrowser.
+</dd>
+<dt>markdownItems</dt>
+<dd>
+(optional) true or false: whether generate writes STEM_items.md, the
+Markdown rendering of the collection’s items. Default: true for every
+collection except pages.md, whose items are the site’s own pages. false
+turns it off (the HTML, RSS and OPML are unchanged and a stale file is
+removed); true turns it on for pages.md.
 </dd>
 </dl>
 <p>Example antenna.yaml:</p>

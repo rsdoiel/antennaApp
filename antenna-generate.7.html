@@ -34,9 +34,16 @@ written to the htdocs directory configured in antenna.yaml.</p>
 (page.yaml or a per-collection override). Front matter from each item is
 emitted as meta elements in the generated HTML.</p>
 <p>A collection with items to show also gets a Markdown rendering of
-them, STEM_items.md, beside its HTML page, and the page declares it in
-its head as its Markdown alternate. A collection with nothing to show
-has neither, and a file left by an earlier run is removed.</p>
+them, STEM_items.md, beside its HTML page (not the pages collection, nor
+one with markdownItems: false; markdownItems: true turns it on for
+pages), and the page declares it in its head as its Markdown alternate.
+A collection with nothing to show has neither, and a file left by an
+earlier run is removed.</p>
+<p>A collection with html: false in antenna.yaml is Markdown-only:
+generate writes its items Markdown, RSS and feed-list OPML and no HTML,
+neither the collection page nor its posts, and removes a collection page
+left by an earlier run. Post HTML from before the switch is left alone;
+generate says how many files remain. See antenna help configuration.</p>
 <p>Output is the same every time it is generated from the same data. A
 file is rewritten only when its content changes. The lines that record
 when it was built (the date meta element of an HTML page, dateModified

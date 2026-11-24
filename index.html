@@ -41,18 +41,19 @@ Antenna App.</p>
 <p>Antenna App’s Features:</p>
 <ul>
 <li>An interactive text and scriptable command line interfaces</li>
-<li>Pages and posts are written using Markdown or LibreOffice Writer ODT
-files</li>
+<li>Pages and posts are written using Markdown</li>
 <li>Posts are automatically included in an RSS feed for your site</li>
-<li>Aggregations of feeds can be included by providing Markdown or ODT
-file with a list of links to RSS, Atom and JSON feeds</li>
+<li>Aggregations of feeds can be included by providing a Markdown file
+with a list of links to RSS, Atom and JSON feeds</li>
 <li>Pages, posts and aggregations <strong>can include</strong> metadata
 expressed as YAML front matter<a href="#fn1" class="footnote-ref"
 id="fnref1" role="doc-noteref"><sup>1</sup></a></li>
 <li>Local posts can be added to curated feed collection (introducing a
 distributed option for <strong>opt in</strong> conversations)</li>
 <li>You can have multiple collections of feeds</li>
-<li>Feed collections can be harvested individually or collectively</li>
+<li>Feed collections can be harvested individually or collectively; a
+link may be a site’s address and harvest finds its feed, obeying the
+site’s <code>robots.txt</code></li>
 <li>The managed content is stored in SQLite3 database(s)</li>
 <li>HTML, RSS 2.0, OPML and sitemap.xml documents are automatically
 generated without additional configuration
@@ -68,6 +69,8 @@ as well as for web browsers, from the same Markdown
 <li>Links use the <code>.md</code> file, a
 <code>.well-known/toc.opml</code> table of contents is generated, and a
 collection’s items are also published as Markdown</li>
+<li>A collection can be Markdown-only (<code>html: false</code>): its
+items, feeds and posts are published with no HTML at all</li>
 <li><code>antenna validate</code> checks a site for mistakes and for
 what Markdown readers need, <code>antenna migrate-links</code> brings
 older links up to date, and <code>antenna help markdown-web</code> is

@@ -23,12 +23,125 @@
 </nav>
 <section id="main-content">
 <h1 id="changes">Changes</h1>
+<h2 id="v0.1.2-2026-11-23">v0.1.2 — 2026-11-23</h2>
+<h3 id="added">Added</h3>
+<ul>
+<li><strong><code>antenna prune [-w] [-all]</code></strong> removes the
+pages whose source file is gone, with the output files their records
+list. A dry run unless <code>-w</code> is given (exit 1 when there is
+something to prune). It keeps an output another page still writes or one
+outside htdocs, and refuses to prune every page unless <code>-all</code>
+is given (DR-0028).</li>
+<li><strong><code>markdownItems</code></strong> per collection in
+<code>antenna.yaml</code> switches a collection’s
+<code>STEM_items.md</code> on or off; the pages collection gets none by
+default. A <code>.md</code> link into a <code>subsites</code> path
+becomes <code>.html</code> in the HTML (DR-0027).</li>
+<li><strong><code>html: false</code> on a collection makes it
+Markdown-only</strong> (DR-0031). <code>generate</code> writes the
+collection’s items Markdown, RSS and feed-list OPML and no HTML, neither
+its page nor its posts, and removes a collection page left from before;
+post HTML from before is left and counted in a warning.
+<code>antenna post</code> into it writes no HTML and stores the post’s
+<code>.md</code> address as its link (earlier posts keep theirs); the
+sitemap lists such posts by that address; a link to them stays a
+<code>.md</code> link; <code>validate</code> warns when the collection
+names a generator (<code>markdown-only-generator</code>).
+<code>html: false</code> with <code>markdownItems: false</code> or
+<code>mode: page-index</code> is a configuration error (78).</li>
+<li><strong>Harvest finds a site’s feed</strong> (DR-0030). A link in a
+collection may be a site address as well as a feed: harvest tries the
+address, an <code>rss</code> outline in the site’s
+<code>toc.opml</code>, the page’s
+<code>&lt;link rel="alternate"&gt;</code>, and up to eight common paths
+(<code>feed</code>, <code>feed/</code>, <code>rss</code>,
+<code>rss.xml</code>, <code>feed.xml</code>, <code>atom.xml</code>,
+<code>index.xml</code>, <code>feeds/posts/default</code>), remembers the
+answer in the new <code>channels.discovered_link</code> column (added to
+an existing database on the next harvest, rows kept) and uses it first
+next time. A Markdown site with only a table of contents of pages and no
+feed is reported for that link; harvest never fetches the pages a table
+of contents lists.</li>
+<li><strong>Harvest obeys <code>robots.txt</code></strong> (new
+dependency <code>github.com/temoto/robotstxt</code>). Each host’s file
+is read once per run and applies to every request, including the
+guesses. A forbidden URL is skipped and reported, not failed; a missing
+file allows the site and one with a mistake in it is read as far as it
+can be; one that answers 5xx or cannot be reached is asked for twice
+more, then skips the host for the run and fails the link as unavailable
+(69); a <code>Crawl-delay</code> is honored up to 30 s. Requests to a
+host are one at a time with a pause (500 ms), set with
+<code>harvest: pause:</code> in <code>antenna.yaml</code> (a bad value
+is exit 78).</li>
+</ul>
+<h3 id="changed-textcasting-alignment-dr-0029">Changed (Textcasting
+alignment, DR-0029)</h3>
+<ul>
+<li><strong>An item with no title has no heading.</strong> The HTML page
+no longer shows a placeholder <code>@Source</code> heading (the
+<code>&lt;article&gt;</code> gets an <code>aria-label</code> from the
+source and date) and <code>_items.md</code> has no
+<code>## [@Source](link)</code> line; the item starts at a thematic
+break and its link is on a line of its own.</li>
+<li><strong>Links, bold and italic reach every item.</strong> A feed
+item with an HTML description and no stored Markdown is converted to
+Markdown when it is rendered, so its links and emphasis are kept.
+Nothing is written to the database, and <code>items.html: escape</code>
+and <code>unsafe</code> keep their meaning.</li>
+<li><strong>RSS passes more through.</strong> A name-only author is
+written as <code>&lt;dc:creator&gt;</code>, and
+<code>&lt;guid&gt;</code> says <code>isPermaLink="false"</code> (its
+text is unchanged, so no reader sees a new identity; closes #23). Every
+feed is rewritten once.</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li>A post made by antenna now always has a guid: the one in its front
+matter, else its link (unique, and a URL), written as
+<code>&lt;guid isPermaLink="true"&gt;</code>. Before, a post with none
+had no <code>&lt;guid&gt;</code> in the RSS and the code that meant to
+default it ran before the link existed. A post stored earlier with no
+guid gets its link at output time, so a reader that tells items apart by
+link sees the same identity. Harvested items are untouched.</li>
+<li>Harvest follows redirects. <code>webget</code> stopped at every one
+(its redirect handler always refused), so a feed that moved from http to
+https or from <code>/feed</code> to <code>/feed/</code> failed with
+<code>http error: 301</code>.</li>
+<li><code>antenna generate</code> writes the RSS feed and OPML from the
+readable rows when an item row cannot be read, and exits 65 with the
+counts, as the HTML page and the items Markdown already did. Before, the
+feed was not written at all.</li>
+<li>A harvested post whose feed carries its whole source (with YAML
+front matter) in <code>source:markdown</code> no longer shows the front
+matter in the item text of the collection’s HTML page or its
+<code>_items.md</code>. The aggregated feed still carries the source as
+harvested.</li>
+</ul>
+<h3 id="removed">Removed</h3>
+<ul>
+<li><strong>ODT support</strong> (DR-0032). antenna no longer reads ODT
+or OTT files: not as a collection, a page source, a post or
+<code>blogit</code> input. Such a file is refused with a message to save
+it as Markdown (exit 65, or 2 for <code>antenna page</code>).
+<code>antenna stylefrom</code> is unchanged: its ODT input belongs to
+the separate <code>stylefrom</code> package.</li>
+</ul>
+<h3 id="deprecated">Deprecated</h3>
+<ul>
+<li><strong>The <code>pages.outputPath</code> column will stop being
+written</strong> in a later release. Use <code>outputs</code> (field 4
+of <code>antenna pages</code>), which lists every file a page writes.
+Field 2 of <code>antenna pages</code> will then be filled from
+<code>outputs</code>, so the listing does not change. Scripts that read
+the column from <code>pages.db</code> directly should switch to
+<code>outputs</code> now (DR-0024 10).</li>
+</ul>
 <h2 id="v0.1.1-2026-11-20">v0.1.1 — 2026-11-20</h2>
 <p>Page Markdown, previous and next links, and validation grow from the
 first Markdown-web release. Everything here is from the same day-to-day
 use of <code>antenna</code> on a BonBon site (decisions DR-0019 to
 DR-0026).</p>
-<h3 id="added">Added</h3>
+<h3 id="added-1">Added</h3>
 <ul>
 <li><strong><code>antenna page SOURCE [OUTPUT...]</code> writes
 <code>.html</code> and <code>.md</code> by extension.</strong> The
@@ -81,7 +194,7 @@ file.</strong> A <code>---</code> block later in a document is text
 (DR-0022).</li>
 <li>The minimum Go is 1.27.4.</li>
 </ul>
-<h3 id="fixed">Fixed</h3>
+<h3 id="fixed-1">Fixed</h3>
 <ul>
 <li><code>validate</code> no longer calls an e-mail autolink a missing
 file.</li>
@@ -94,7 +207,7 @@ the Markdown web (Dave Winer’s BonBon browser and readers like it) from
 the same Markdown they publish as HTML, and two new commands check a
 site and bring older sites up to date. Because the change is this large
 the minor version moves from 0.0 to 0.1.</p>
-<h3 id="added-1">Added</h3>
+<h3 id="added-2">Added</h3>
 <ul>
 <li><strong>Publishing for Markdown readers.</strong> Write links
 between your pages to the <code>.md</code> file. In the HTML output a
@@ -176,7 +289,7 @@ module 0.0.12.</li>
 <code>antenna help TOPIC</code> by the Makefile, so every topic’s page
 is current.</li>
 </ul>
-<h3 id="fixed-1">Fixed</h3>
+<h3 id="fixed-2">Fixed</h3>
 <ul>
 <li><strong><code>antenna unpage</code> exits 1</strong> when no page
 record matches the path (it exited 0). Scripts that relied on 0 for a
