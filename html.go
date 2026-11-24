@@ -139,10 +139,22 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	// before being embedded — otherwise a title like "Q&A: ..." breaks
 	// the page's markup. htmlEscapeFeedText also normalizes titles some
 	// feeds have already (over-)escaped, rather than double-escaping them.
-	var headingHTML string
+	// An item with no title has no heading: antenna does not invent one
+	// (Textcasting, DR-0029 1). It keeps an accessible name from its source
+	// and date instead, set on the <article> below.
+	var headingHTML, ariaLabel string
 	if showField("title") {
-		if title == "" {
-			headingHTML = fmt.Sprintf("<h2>@%s</h2>", htmlEscapeFeedText(label))
+		if strings.TrimSpace(title) == "" {
+			var names []string
+			if label != "" {
+				names = append(names, label)
+			}
+			if d := formatItemDate(pubDate, "2006-01-02"); d != "" {
+				names = append(names, d)
+			}
+			if len(names) > 0 {
+				ariaLabel = fmt.Sprintf(` aria-label="%s"`, html.EscapeString(strings.Join(names, ", ")))
+			}
 		} else {
 			headingHTML = fmt.Sprintf("<h2>%s</h2>", htmlEscapeFeedText(title))
 		}
@@ -243,16 +255,16 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 	// the attribute value.
 	if len(filters) > 0 {
 		fmt.Fprintf(out, `
-    <article data-published="%s" data-link="%s" data-pagefind-filter="%s">
+    <article%s data-published="%s" data-link="%s" data-pagefind-filter="%s">
       %s
     </article>
-`, html.EscapeString(pubDate), html.EscapeString(linkRes.Href), html.EscapeString(strings.Join(filters, ", ")), bodyHTML)
+`, ariaLabel, html.EscapeString(pubDate), html.EscapeString(linkRes.Href), html.EscapeString(strings.Join(filters, ", ")), bodyHTML)
 	} else {
 		fmt.Fprintf(out, `
-    <article data-published="%s" data-link="%s">
+    <article%s data-published="%s" data-link="%s">
       %s
     </article>
-`, html.EscapeString(pubDate), html.EscapeString(linkRes.Href), bodyHTML)
+`, ariaLabel, html.EscapeString(pubDate), html.EscapeString(linkRes.Href), bodyHTML)
 	}
 	return false, nil
 }
@@ -317,7 +329,7 @@ func truncateWords(s string, maxLen int) string {
 // elements, and re-wrapping it produces invalid nested markup that
 // browsers silently mangle by auto-closing the outer <p>.
 func resolveItemContent(description, sourceMarkdown string, cfg ItemsConfig) (content string, isBlockHTML bool, err error) {
-	source := strings.TrimSpace(stripFrontMatter(sourceMarkdown))
+	source := strings.TrimSpace(stripFrontMatter(markdownForItem(description, sourceMarkdown, cfg)))
 	usedMarkdown := true
 	if source == "" {
 		source = description

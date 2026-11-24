@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	html2md "github.com/JohannesKaufmann/html-to-markdown"
 	"html"
 	"io"
 	"regexp"
@@ -248,11 +249,15 @@ func (gen *Generator) writeItemMarkdown(out io.Writer, link, title, description 
 	}
 	var parts []string
 	linkShown := false
-	if showField("title") {
+	// No title, no heading (DR-0029 1): the link goes on a line of its own
+	// below, as for any link the heading did not carry.
+	if showField("title") && strings.TrimSpace(title) == "" {
+		// A thematic break stands where the heading would have started the
+		// item, so a reader can tell where the previous item ends.
+		parts = append(parts, "---")
+	}
+	if showField("title") && strings.TrimSpace(title) != "" {
 		text := title
-		if text == "" {
-			text = "@" + label
-		}
 		heading := mdEscapeInline(text)
 		if heading == "" {
 			heading = mdEscapeInline(linkRes.Label)
@@ -283,7 +288,7 @@ func (gen *Generator) writeItemMarkdown(out io.Writer, link, title, description 
 		parts = append(parts, strings.Join(meta, " · "))
 	}
 	if showField("content") {
-		sourceMarkdown = strings.TrimSpace(stripFrontMatter(sourceMarkdown))
+		sourceMarkdown = strings.TrimSpace(stripFrontMatter(markdownForItem(description, sourceMarkdown, cfg)))
 		source := sourceMarkdown
 		if source == "" {
 			source = description
@@ -450,4 +455,42 @@ func stripFrontMatter(s string) string {
 		return s
 	}
 	return s[bodyAt:]
+}
+
+// descriptionMarkup finds an HTML tag in a feed description.
+var descriptionMarkup = regexp.MustCompile(`<[A-Za-z/][^>]*>`)
+
+// descriptionConverter turns a feed's HTML description into Markdown, the
+// converter harvest uses for the same purpose.
+var descriptionConverter = html2md.NewConverter("", true, nil)
+
+/** markdownForItem returns the Markdown an item is rendered from: its stored
+ * sourceMarkdown, else its HTML description converted to Markdown so links and
+ * bold and italic survive (DR-0029 2). Nothing is written back. A description
+ * with no tags, a conversion that fails, and a collection whose items.html
+ * setting is "escape" or "unsafe" keep today's path and return "".
+ *
+ * Parameters:
+ *   description (string) — the feed's description
+ *   sourceMarkdown (string) — the stored Markdown, possibly empty
+ *   cfg (ItemsConfig) — the collection's items configuration
+ *
+ * Returns:
+ *   string — the Markdown to render, or "" when the item has none
+ *
+ * Example:
+ *   md := markdownForItem("See <b>this</b>", "", cfg) // "See **this**"
+ */
+func markdownForItem(description, sourceMarkdown string, cfg ItemsConfig) string {
+	if strings.TrimSpace(sourceMarkdown) != "" {
+		return sourceMarkdown
+	}
+	if (cfg.HTML != "" && cfg.HTML != "strip") || !descriptionMarkup.MatchString(description) {
+		return ""
+	}
+	md, err := descriptionConverter.ConvertString(description)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(md)
 }

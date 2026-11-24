@@ -344,3 +344,133 @@ func TestStripFrontMatter(t *testing.T) {
 		}
 	}
 }
+
+// DR-0029 1: an item with no title has no invented heading, in the HTML page
+// and in the items Markdown; its link and source are still there, and a titled
+// item is written as before.
+func untitledSite(t *testing.T) (html, md string) {
+	t.Helper()
+	_, htdocs := itemsMDSite(t,
+		harvestedSource("https://a.example/titled", "A real title", "d", "Titled body.", "2026-11-18 10:00:00", "published", "Feed A"),
+		harvestedSource("https://a.example/empty", "", "d", "Empty-title body.", "2026-11-17 10:00:00", "published", "Feed B"),
+		harvestedSource("https://a.example/blank", "   ", "d", "Blank-title body.", "2026-11-16 10:00:00", "published", "Feed C"))
+	h, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, err := os.ReadFile(filepath.Join(htdocs, "news_items.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(h), string(m)
+}
+
+func TestUntitledItemHTMLHasNoInventedHeading(t *testing.T) {
+	h, _ := untitledSite(t)
+	if strings.Contains(h, "<h2>@") {
+		t.Errorf("a placeholder @label heading was written:\n%s", h)
+	}
+	if n := strings.Count(h, "<h2>"); n != 1 {
+		t.Errorf("want one <h2> (the titled item), got %d", n)
+	}
+	for _, want := range []string{
+		`<h2>A real title</h2>`,
+		`aria-label="Feed B, 2026-11-17"`,
+		`aria-label="Feed C, 2026-11-16"`,
+		`<a href="https://a.example/empty">`,
+		"Empty-title body.",
+	} {
+		if !strings.Contains(h, want) {
+			t.Errorf("HTML lacks %q:\n%s", want, h)
+		}
+	}
+	if strings.Contains(h, `aria-label="Feed A`) {
+		t.Errorf("a titled item got an aria-label")
+	}
+}
+
+func TestUntitledItemMarkdownHasNoInventedHeading(t *testing.T) {
+	_, m := untitledSite(t)
+	if strings.Contains(m, "@Feed") {
+		t.Errorf("a placeholder @label heading was written:\n%s", m)
+	}
+	if n := strings.Count(m, "\n## "); n != 1 {
+		t.Errorf("want one ## line (the titled item), got %d:\n%s", n, m)
+	}
+	for _, want := range []string{
+		"## [A real title](https://a.example/titled)",
+		"Empty-title body.",
+		"(https://a.example/empty)",
+		"(https://a.example/blank)",
+		"via Feed B",
+	} {
+		if !strings.Contains(m, want) {
+			t.Errorf("Markdown lacks %q:\n%s", want, m)
+		}
+	}
+	// With no heading to start it, an untitled item starts at a thematic
+	// break, so a reader can tell where the previous item ends.
+	if n := strings.Count(m, "\n---\n\nvia Feed"); n != 2 {
+		t.Errorf("want a thematic break before each of the 2 untitled items, got %d:\n%s", n, m)
+	}
+}
+
+// DR-0029 2: a row that has no stored Markdown but an HTML description keeps
+// its links and its bold and italic in both outputs; a plain description is
+// unchanged; raw HTML is still not passed through.
+func descriptionOnlySite(t *testing.T) (html, md string) {
+	t.Helper()
+	_, htdocs := itemsMDSite(t,
+		harvestedSource("https://a.example/rich", "Rich", `<p>See <a href="https://x.example/a">the page</a>, <b>bold</b> and <em>italic</em>.</p><script>evil()</script><div onclick="x()">block</div>`,
+			"", "2026-11-18 10:00:00", "published", "Feed A"),
+		harvestedSource("https://a.example/plain", "Plain", "Just words & more words.",
+			"", "2026-11-17 10:00:00", "published", "Feed B"))
+	h, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, err := os.ReadFile(filepath.Join(htdocs, "news_items.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(h), string(m)
+}
+
+func TestDescriptionOnlyItemKeepsLinksAndStylingInHTML(t *testing.T) {
+	h, _ := descriptionOnlySite(t)
+	for _, want := range []string{
+		`<a href="https://x.example/a">the page</a>`,
+		`<strong>bold</strong>`,
+		`<em>italic</em>`,
+		"Just words",
+	} {
+		if !strings.Contains(h, want) {
+			t.Errorf("HTML lacks %q:\n%s", want, h)
+		}
+	}
+	for _, bad := range []string{"<script", "onclick"} {
+		if strings.Contains(h, bad) {
+			t.Errorf("HTML passes through %q:\n%s", bad, h)
+		}
+	}
+}
+
+func TestDescriptionOnlyItemKeepsLinksAndStylingInMarkdown(t *testing.T) {
+	_, m := descriptionOnlySite(t)
+	for _, want := range []string{
+		"[the page](https://x.example/a)",
+		"**bold**",
+		"_italic_",
+		"Just words",
+	} {
+		if !strings.Contains(m, want) {
+			t.Errorf("Markdown lacks %q:\n%s", want, m)
+		}
+	}
+	if _, hasHTML := parseMarkdownLinks([]byte(m)); hasHTML {
+		t.Errorf("raw HTML in the Markdown:\n%s", m)
+	}
+	if strings.Contains(m, "evil()") && strings.Contains(m, "<script") {
+		t.Errorf("script survived:\n%s", m)
+	}
+}

@@ -216,3 +216,72 @@ func TestWriteItemRSS_UnparsablePubDateIsOmitted(t *testing.T) {
 		t.Errorf("expected no pubDate for unparsable value, got:\n%s", out)
 	}
 }
+
+// rssFeedFor writes a whole feed for one stored item with the given authors
+// JSON and guid, and returns it.
+func rssFeedFor(t *testing.T, authorsJSON, guid string) string {
+	t.Helper()
+	db := newTestItemsDB(t)
+	defer db.Close()
+	if _, err := db.Exec(`INSERT INTO items
+		(link, title, description, authors, enclosures, guid, pubDate,
+		 dcExt, channel, status, updated, label, postPath, sourceMarkdown, categories)
+		VALUES ('http://example.com/1', 'T', 'd', ?, '', ?, '2026-06-27',
+		 '', '', 'published', '', '', '', '', '')`, authorsJSON, guid); err != nil {
+		t.Fatalf("insert item: %s", err)
+	}
+	gen := &Generator{eout: io.Discard}
+	col := &Collection{Title: "Feed", File: "test.md"}
+	var buf bytes.Buffer
+	if err := gen.WriteCustomRSS(&buf, db, SQLDisplayItems, "http://example.com/test.xml", "antenna", col); err != nil {
+		t.Fatalf("WriteCustomRSS: %s", err)
+	}
+	return buf.String()
+}
+
+// DR-0029 4: the guid keeps its text and says it is not a permalink (#23).
+func TestRSSGuidIsNotAPermalink(t *testing.T) {
+	out := rssFeedFor(t, "", "abc-123")
+	if !strings.Contains(out, `<guid isPermaLink="false">cid://abc-123</guid>`) {
+		t.Errorf("guid is not written with isPermaLink=\"false\" and the unchanged text:\n%s", out)
+	}
+}
+
+// DR-0029 3: a name-only author passes through as dc:creator; an author with
+// an e-mail stays an <author>; the feed declares the dc namespace and every
+// prefix it uses is declared.
+func TestRSSAuthorsPassThrough(t *testing.T) {
+	out := rssFeedFor(t, `[{"name":"Ann Name"},{"name":"Bo Both","email":"bo@example.com"},{"email":"cy@example.com"}]`, "g")
+	for _, want := range []string{
+		`<dc:creator>Ann Name</dc:creator>`,
+		`<author>bo@example.com (Bo Both)</author>`,
+		`<author>cy@example.com</author>`,
+		`xmlns:dc="http://purl.org/dc/elements/1.1/"`,
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("feed lacks %q:\n%s", want, out)
+		}
+	}
+	// Decode namespace-aware: an undeclared prefix shows up as a bare "dc" space.
+	d := xml.NewDecoder(strings.NewReader(out))
+	for {
+		tok, err := d.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("feed is not well-formed: %s", err)
+		}
+		if se, ok := tok.(xml.StartElement); ok && se.Name.Space == "dc" {
+			t.Errorf("element <dc:%s> uses an undeclared prefix", se.Name.Local)
+		}
+	}
+}
+
+// An author whose name is empty and e-mail is empty writes nothing.
+func TestRSSAuthorWithNothingIsOmitted(t *testing.T) {
+	out := rssFeedFor(t, `[{"name":"  "}]`, "g")
+	if strings.Contains(out, "<author>") || strings.Contains(out, "dc:creator") {
+		t.Errorf("an empty author was written:\n%s", out)
+	}
+}

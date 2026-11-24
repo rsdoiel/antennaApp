@@ -47,12 +47,9 @@ BonBon (https://github.com/scripting/bonBon/) is Dave Winer's browser whose nati
 - [x] "Markdown-clean" check: already built in DR-0017 as `validate` findings `raw-html` (script, style, svg, iframe, any raw tag) and `image-type` (not PNG, JPEG, GIF or WebP); tests in validate_body_test.go. Checked 2026-11-23. Not covered: `javascript:` links, CSS in front matter.
 - [ ] Harvest from BonBon sites: accept a site's `toc.opml` as a feed collection source.
 - [ ] Open question: a Markdown-only collection mode with no theme (only `.md` and `toc.opml`), since the reader picks the look. This changes what a collection is, so write a decision record first.
-- [ ] Textcasting alignment (https://textcasting.org/): audit what antenna passes through unchanged.
-  - [ ] Titles optional on any post; no generated placeholder title.
-  - [ ] Enclosures kept on inbound and outbound items (see #22, RSS enclosure escaping).
-  - [ ] No length limit on posts; summaries may truncate, the full text stays.
-  - [ ] Edits to a post reach the feed and the generated pages (changed items are republished, not left stale).
-  - [ ] Pass through feed elements antenna does not itself use.
+- [x] Textcasting alignment (https://textcasting.org/, antennaApp DR-0029, built 2026-11-23): titles optional (no invented heading; thematic break and link line in `_items.md`), links and styling for description-only items, name-only authors as `dc:creator`, `isPermaLink="false"`. Enclosures, length and edits needed no change.
+  - [ ] Pass through feed elements antenna does not itself use (an item's other extension elements are not stored). Needs a new column and a rule per namespace; count what the live feeds carry first, then a record.
+  - [ ] DR-0029 consequences should say that an untitled item in `_items.md` starts at a `---` line (found when reading the real output; the record is accepted, so the author decides whether to amend it).
 - [ ] Re-read https://this.how/standards/ (rules for standards-makers) when writing the next design brief.
 
 

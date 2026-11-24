@@ -109,8 +109,16 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 	}
 	if authors != nil {
 		for _, author := range authors {
-			if author.Email != "" && author.Name != "" {
-				fmt.Fprintf(out, "      <author>%s (%s)</author>\n", author.Email, author.Name)
+			name, email := strings.TrimSpace(author.Name), strings.TrimSpace(author.Email)
+			switch {
+			case email != "" && name != "":
+				fmt.Fprintf(out, "      <author>%s (%s)</author>\n", toXMLString(email), toXMLString(name))
+			case email != "":
+				fmt.Fprintf(out, "      <author>%s</author>\n", toXMLString(email))
+			case name != "":
+				// RSS 2.0 <author> must be an e-mail address; a name passes
+				// through as Dublin Core (DR-0029 3).
+				fmt.Fprintf(out, "      <dc:creator>%s</dc:creator>\n", toXMLString(name))
 			}
 		}
 	}
@@ -128,7 +136,7 @@ func (gen *Generator) WriteItemRSS(out io.Writer, link string, title string, des
 		}
 	}
 	if guid != "" {
-		fmt.Fprintf(out, "      <guid>cid://%s</guid>\n", strings.TrimSpace(toXMLString(guid)))
+		fmt.Fprintf(out, "      <guid isPermaLink=\"false\">cid://%s</guid>\n", strings.TrimSpace(toXMLString(guid)))
 	}
 	if categories != "" {
 		var cats []string
@@ -166,7 +174,7 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 // WriteCustomRSS generates a custom RSS feed given a SQL statement
 func (gen *Generator) WriteCustomRSS(out io.Writer, db *sql.DB, sqlStmt string, feedLink string, appName string, collection *Collection, args ...any) error {
 	fmt.Fprintf(out, `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:source="https://source.scripting.com/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:source="https://source.scripting.com/" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <atom:link href=%q rel="self" type="application/rss+xml" />
   <channel>
 `, feedLink)

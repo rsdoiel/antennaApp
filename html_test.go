@@ -831,17 +831,36 @@ func TestResolveItemContent(t *testing.T) {
 		}
 	})
 
-	t.Run("no markdown, default strip", func(t *testing.T) {
+	t.Run("no markdown, plain description, default strip", func(t *testing.T) {
 		cfg := ItemsConfig{HTML: "strip"}
-		got, isBlockHTML, err := resolveItemContent("<p>raw &amp; unsafe</p>", "", cfg)
+		got, isBlockHTML, err := resolveItemContent("plain &amp; simple", "", cfg)
 		if err != nil {
 			t.Fatalf("resolveItemContent: %s", err)
 		}
-		if strings.Contains(got, "<p>") {
-			t.Errorf("expected tags stripped, got %q", got)
+		if strings.Contains(got, "<") {
+			t.Errorf("expected plain text, got %q", got)
 		}
 		if isBlockHTML {
-			t.Errorf("stripped plain text must not be reported as block HTML")
+			t.Errorf("plain text must not be reported as block HTML")
+		}
+	})
+
+	// DR-0029 2: an HTML description with no stored Markdown is converted, so
+	// its links and styling survive; raw markup is still not passed through.
+	t.Run("no markdown, HTML description, default strip", func(t *testing.T) {
+		cfg := ItemsConfig{HTML: "strip"}
+		got, isBlockHTML, err := resolveItemContent(`<p>See <a href="https://x.example/">it</a> <b>now</b></p><script>x()</script>`, "", cfg)
+		if err != nil {
+			t.Fatalf("resolveItemContent: %s", err)
+		}
+		if !strings.Contains(got, `<a href="https://x.example/">it</a>`) || !strings.Contains(got, "<strong>now</strong>") {
+			t.Errorf("expected the link and bold kept, got %q", got)
+		}
+		if strings.Contains(got, "<script") {
+			t.Errorf("script passed through: %q", got)
+		}
+		if !isBlockHTML {
+			t.Errorf("converted Markdown must be reported as block HTML")
 		}
 	})
 

@@ -13,6 +13,21 @@
   `STEM_items.md` on or off; the pages collection gets none by default. A
   `.md` link into a `subsites` path becomes `.html` in the HTML (DR-0027).
 
+### Changed (Textcasting alignment, DR-0029)
+
+- **An item with no title has no heading.** The HTML page no longer shows a
+  placeholder `@Source` heading (the `<article>` gets an `aria-label` from the
+  source and date) and `_items.md` has no `## [@Source](link)` line; the item
+  starts at a thematic break and its link is on a line of its own.
+- **Links, bold and italic reach every item.** A feed item with an HTML
+  description and no stored Markdown is converted to Markdown when it is
+  rendered, so its links and emphasis are kept. Nothing is written to the
+  database, and `items.html: escape` and `unsafe` keep their meaning.
+- **RSS passes more through.** A name-only author is written as
+  `<dc:creator>`, and `<guid>` says `isPermaLink="false"` (its text is
+  unchanged, so no reader sees a new identity; closes #23). Every feed is
+  rewritten once.
+
 ### Fixed
 
 - `antenna generate` writes the RSS feed and OPML from the readable rows when an
