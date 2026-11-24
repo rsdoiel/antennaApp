@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## v0.1.2 — 2026-11-23
 
 ### Added
 
@@ -12,7 +12,6 @@
 - **`markdownItems`** per collection in `antenna.yaml` switches a collection's
   `STEM_items.md` on or off; the pages collection gets none by default. A
   `.md` link into a `subsites` path becomes `.html` in the HTML (DR-0027).
-
 - **`html: false` on a collection makes it Markdown-only** (DR-0031). `generate`
   writes the collection's items Markdown, RSS and feed-list OPML and no HTML,
   neither its page nor its posts, and removes a collection page left from before;
@@ -37,8 +36,9 @@
   a missing file allows the site and one with a mistake in it is read as far as
   it can be; one that answers 5xx or cannot be reached is asked for twice more,
   then skips the host for the run and fails the link as unavailable (69); a
-  `Crawl-delay` is honored up to 30 s. Requests to a host are one at a time with a pause (500 ms), set with
-  `harvest: pause:` in `antenna.yaml` (a bad value is exit 78).
+  `Crawl-delay` is honored up to 30 s. Requests to a host are one at a time
+  with a pause (500 ms), set with `harvest: pause:` in `antenna.yaml` (a bad
+  value is exit 78).
 
 ### Changed (Textcasting alignment, DR-0029)
 

@@ -259,8 +259,8 @@ func TestAGroupWithNothingInItIsLeftOut(t *testing.T) {
 func TestPostsThatCannotBeListedAreSkippedWithAWarning(t *testing.T) {
 	cfg, htdocs := tocSite(t)
 	tocPost(t, "blog.db", "A post that is not Markdown", "blog/2026/11/20/not-markdown.odt", "2026-11-20 09:00:00") // no Markdown page
-	tocPost(t, "blog.db", "Bad date", "blog/2026/11/21/bad.md", "next Tuesday")            // date antenna cannot read
-	tocPost(t, "blog.db", "Unpublished", "blog/2026/11/22/nope.md", "2026-11-22 09:00:00") // Markdown not in htdocs
+	tocPost(t, "blog.db", "Bad date", "blog/2026/11/21/bad.md", "next Tuesday")                                     // date antenna cannot read
+	tocPost(t, "blog.db", "Unpublished", "blog/2026/11/22/nope.md", "2026-11-22 09:00:00")                          // Markdown not in htdocs
 	publish(t, htdocs, "blog/2026/11/21/bad.md")
 	var eout bytes.Buffer
 	if err := cfg.GenerateTOC(&eout); err != nil {

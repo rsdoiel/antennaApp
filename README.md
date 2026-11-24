@@ -13,13 +13,14 @@ Antenna App's Features:
 - Pages, posts and aggregations __can include__ metadata expressed as YAML front matter[^1]
 - Local posts can be added to curated feed collection (introducing a distributed option for __opt in__ conversations)
 - You can have multiple collections of feeds
-- Feed collections can be harvested individually or collectively
+- Feed collections can be harvested individually or collectively; a link may be a site's address and harvest finds its feed, obeying the site's `robots.txt`
 - The managed content is stored in SQLite3 database(s)
 - HTML, RSS 2.0, OPML and sitemap.xml documents are automatically generated without additional configuration
   - HTML files are generated for each post, page and aggregation in each collection 
 - A preview web service is provided to view the render content in your web browser via a localhost URL
 - Sites are published for Markdown readers such as Dave Winer's BonBon as well as for web browsers, from the same Markdown
   - Links use the `.md` file, a `.well-known/toc.opml` table of contents is generated, and a collection's items are also published as Markdown
+  - A collection can be Markdown-only (`html: false`): its items, feeds and posts are published with no HTML at all
   - `antenna validate` checks a site for mistakes and for what Markdown readers need, `antenna migrate-links` brings older links up to date, and `antenna help markdown-web` is the overview
 - Site customization is possible through the use of page generators
   - Page generators are YAML files describing basic elements of a page like  header, navigation, before/after content section, footer

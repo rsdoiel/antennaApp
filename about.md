@@ -38,7 +38,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.1.1
+version: 0.1.2
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -50,23 +50,21 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-11-20
+date_released: 2026-11-23
 ---
 
 About this software
 ===================
 
-## antennaApp 0.1.1
+## antennaApp 0.1.2
 
-- `antenna page SOURCE [OUTPUT...]` writes `.html` and `.md` by extension; the `.md` is the expanded Markdown a Markdown reader gets, and the page declares it as its Markdown alternate
-- New `sequences` setting in `antenna.yaml`: directories or list files whose members get previous and next links, in the HTML and the Markdown copy; the table of contents gives previous and next to posts only, and pages only through front matter or a sequence
-- The `pages` table records each page's outputs and includes (upgraded in place); `antenna pages` shows six fields and `-stale` lists pages older than their source (exit 1 when there are any); `generate` rewrites every recorded output
-- Includes nest: a warning past 3 levels, exit 65 past 5 or for a cycle
-- `antenna.yaml` `author` is the default author of page Markdown and your own posts; `descriptionMax` sets the length `validate` flags
-- `antenna validate` has new findings (`include-directive`, `no-description`, `no-author`, `title-from-heading`, `description-long`, `output-stale`, `row-output-missing`, `row-duplicate-output`, `include-missing`, `sequence-path-missing`, `sequence-empty`, `sequence-overlap`) and `-color WHEN`
-- Front matter is only the block at the top of a file
-- Fixed: a directive's language no longer swallows the next paragraph's first word; a code block keeps its blank line before it; `validate` no longer calls an e-mail autolink a missing file
-- The documentation site is published for Markdown readers too: `index.md`, `.well-known/toc.opml` and a Markdown alternate on every page
+- `antenna harvest` finds a site's feed from the address you list (the address itself, an `rss` outline in its `toc.opml`, its `<link rel="alternate">`, or a common path such as `feed/`), remembers it in `channels.discovered_link`, and obeys each host's `robots.txt` with a polite pause (`harvest: pause:` in `antenna.yaml`); redirects are now followed
+- `html: false` on a collection makes it Markdown-only: items Markdown, RSS and posts, no HTML; `markdownItems` switches a collection's `_items.md` on or off
+- `antenna prune [-w] [-all]` removes the pages whose source file is gone, with their recorded outputs
+- Textcasting alignment: an untitled item has no placeholder heading, links and emphasis reach every item, a name-only author is `<dc:creator>`, every `<guid>` says `isPermaLink`, and a post made by antenna always has a guid (its front matter's, else its link)
+- Fixed: front matter in a harvested `source:markdown` no longer shows in the collection page or `_items.md`; `generate` writes the RSS and OPML from the readable rows when one cannot be read
+- Removed: ODT and OTT support (such a file is refused with a message to save it as Markdown)
+- Deprecated: the `pages.outputPath` column will stop being written; use `outputs`
 
 ## Authors
 
