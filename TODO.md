@@ -9,6 +9,8 @@ Ideas, not quite a roadmap
 
 ## Bugs
 
+- [ ] Root-relative links and images in harvested item bodies are kept as written, so they resolve against the antenna site, not the site the item came from, and break. Found 2026-11-23 on the antenna site (v0.2.0): `columns_items.html` has 94 such links (`/images/bluecore-editor.png`, `/2026/08/02/games-at-the-press-of-a-button-the-rip-o-bot/`), `pacific_items.html` 21 (`/ascc-career-fair`, `/behavioral-health`), `retro_computing_items.html` 12, `writing_items.html` 2. The same holds in `*_items.md` and, if the feed carries the HTML, in `STEM.xml`. Wanted: when rendering an item, resolve a relative `href` or `src` (root-relative, and page-relative) against the item's `link` (or the feed's `xml:base` when it has one), in the HTML and the items Markdown; leave absolute, `mailto:`, `#fragment` and `data:` URLs alone. Decide whether the stored item keeps the original text and only the rendering rewrites it (as the `source:markdown` front matter fix does). Needs a record first, since it changes what readers see for every collection. Reproduce through `harvest` and `generate` with a feed whose item body has `<img src="/images/x.png">` and a link `/a/b`, not by calling the renderer alone.
+
 - [x] Front matter of a harvested post's `source:markdown` showed in the item text of `columns.html` and `columns_items.md`; stripped at render time (2d58c51, 2026-11-23). `columns.xml` keeps the source as harvested.
 - [x] `antenna unpage` exits 1 when no page record matches the path (was 0; DR-0003). Test `TestRun_UnpageNoMatchIsNegative`. (2026-11-20)
 
