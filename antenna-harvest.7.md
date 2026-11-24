@@ -27,17 +27,11 @@ A site that has only a table of contents of pages and no feed cannot be
 collected: harvest says so for that link and carries on with the others. It
 never fetches the pages a table of contents lists.
 
-Harvest reads each host's robots.txt first and obeys it for every request,
-including the guesses. A URL it forbids is not requested and is reported once;
-that is not a failure. A missing robots.txt means the site may be harvested,
-and one with a mistake in it (a Crawl-delay line before the first User-agent
-line, say) is read as far as it can be. A robots.txt that answers with a server
-error or does not answer is asked for twice more, a second and two seconds
-apart; if it still fails the host is not requested in that run and the link
-fails as unavailable. A
-Crawl-delay is honored up to 30 seconds; a host that asks for more is skipped
-for the run. Requests to one host are made one at a time with a pause between
-them, 500 ms unless the harvest setting in antenna.yaml says otherwise.
+Harvest does not read robots.txt: it fetches feeds that sites publish for
+subscription, and the guessed feed addresses are bounded (eight at most, once
+per listed address per run). Requests to one host are made one at a time with a
+pause between them, 500 ms unless the harvest setting in antenna.yaml says
+otherwise, and each carries the User-Agent so a site can see who is asking.
 
 # PARAMETERS
 
@@ -47,7 +41,7 @@ COLLECTION_NAME
 # EXIT STATUS
 
 0
-: every feed was harvested, or left alone because robots.txt forbids it
+: every feed was harvested
 
 2
 : unknown option or extra argument
@@ -60,7 +54,7 @@ COLLECTION_NAME
 : the configuration or a collection file is missing
 
 69
-: a feed, or a host's robots.txt, could not be reached or answered with an error
+: a feed could not be reached or answered with an error
 
 74
 : reading a response failed part way

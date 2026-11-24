@@ -73,7 +73,7 @@ func TestMigrateLinksWriteChangesOnlyTheDestinations(t *testing.T) {
 		"[ref link][r] and [other][o].\n\n" +
 		"[r]: ../about.html\n" +
 		"[o]: https://other.example/about.html\n\n" +
-		"[collection](../news.html)\n\n" +
+		"[collection](../news_items.html)\n\n" +
 		"Untouched: [external](https://example.org/about.html), [feed](../index.xml), ![image](../about.html), `[code](../about.html)`,\n" +
 		"[md already](../about.md), [dir](../series/), [frag](#top), [unknown](../handwritten.html).\n\n" +
 		"```\n[fenced](../about.html)\n```\n\n" +
@@ -93,7 +93,7 @@ func TestMigrateLinksWriteChangesOnlyTheDestinations(t *testing.T) {
 		{"[titled](../about.html \"The title\")", "[titled](../about.md \"The title\")"},
 		{"[angle](<../about.html>)", "[angle](<../about.md>)"},
 		{"[r]: ../about.html", "[r]: ../about.md"},
-		{"[collection](../news.html)", "[collection](../news_items.md)"},
+		{"[collection](../news_items.html)", "[collection](../news_items.md)"},
 	} {
 		if !strings.Contains(want, r[0]) {
 			t.Fatalf("test bug: %q not in the source", r[0])
@@ -146,7 +146,7 @@ func TestMigrateLinksIsIdempotent(t *testing.T) {
 func TestMigrateLinksLeavesACollectionWithNoItemsFileAndSaysSo(t *testing.T) {
 	bodySite(t)
 	os.Remove("news_items.md")
-	src := migrateDoc("[News](../news.html)\n")
+	src := migrateDoc("[News](../news_items.html)\n")
 	write(t, "docs/p.md", src)
 	out, err := runMigrate(t, "-w", "docs/p.md")
 	if err != nil {
@@ -155,7 +155,7 @@ func TestMigrateLinksLeavesACollectionWithNoItemsFileAndSaysSo(t *testing.T) {
 	if readFile(t, "docs/p.md") != src {
 		t.Error("a link with no Markdown to point at was changed")
 	}
-	if !strings.Contains(out, "news.html") || !strings.Contains(out, "left") {
+	if !strings.Contains(out, "news_items.html") || !strings.Contains(out, "left") {
 		t.Errorf("the left link is not reported:\n%s", out)
 	}
 }
@@ -241,7 +241,7 @@ func TestMigrateLinksFailedWriteIsIO(t *testing.T) {
 // The pair works together: after -w, validate has no link-html left.
 func TestMigrateLinksClearsWhatValidateFound(t *testing.T) {
 	bodySite(t)
-	write(t, "docs/p.md", migrateDoc("[About](../about.html) and [News](../news.html)\n"))
+	write(t, "docs/p.md", migrateDoc("[About](../about.html) and [News](../news_items.html)\n"))
 	out, _ := runValidate(t, "docs/p.md")
 	if strings.Count(out, "link-html") != 2 {
 		t.Fatalf("validate should find two link-html:\n%s", out)

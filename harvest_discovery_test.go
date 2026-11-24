@@ -198,26 +198,27 @@ func TestHarvest_SiteWithNoFeedFailsThatLinkOnly(t *testing.T) {
 	}
 }
 
-func TestHarvest_RobotsDisallowedFeedIsSkippedNotFailed(t *testing.T) {
+// DR-0035: harvest does not read robots.txt, so a feed on a site whose
+// robots.txt forbids everything is harvested and robots.txt is never asked for.
+func TestHarvest_IgnoresRobotsTxt(t *testing.T) {
 	srv, hits := fakeSite(map[string]route{
-		"/robots.txt":  {"text/plain", "User-agent: *\nDisallow: /private\n"},
+		"/robots.txt":  {"text/plain", "User-agent: *\nDisallow: /\n"},
 		"/private/rss": {"application/rss+xml", selfLinkRSS},
-		"/good":        {"application/rss+xml", selfLinkRSS},
 	})
 	defer srv.Close()
-	harvestSite(t, "[Private]("+srv.URL+"/private/rss)", "[Good]("+srv.URL+"/good)")
+	harvestSite(t, "[Private]("+srv.URL+"/private/rss)")
 	_, eout, err := runCapture(t, "harvest", "news.md")
 	if err != nil {
-		t.Fatalf("a robots.txt skip made harvest fail: %v", err)
+		t.Fatalf("harvest: %v\n%s", err, eout)
 	}
-	if hits.count("/private/rss") != 0 {
-		t.Error("a disallowed feed was requested")
-	}
-	if !strings.Contains(eout, "robots.txt") {
-		t.Errorf("the skip was not reported:\n%s", eout)
+	if hits.count("/robots.txt") != 0 {
+		t.Error("robots.txt was requested")
 	}
 	if itemCount(t) != 1 {
-		t.Errorf("items = %d, want the allowed feed harvested", itemCount(t))
+		t.Errorf("items = %d, want the feed harvested", itemCount(t))
+	}
+	if strings.Contains(eout, "robots") {
+		t.Errorf("harvest mentioned robots.txt:\n%s", eout)
 	}
 }
 

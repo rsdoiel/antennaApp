@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	_ "github.com/glebarez/go-sqlite"
 )
@@ -263,7 +264,8 @@ func isPagesCollection(col *Collection) bool {
 }
 
 // collectionURLs returns the sitemap URLs for one collection: its pages (the
-// pages collection only) and its local posts. A database file that does not
+// pages collection only), its items page (an aggregate collection only) and
+// its local posts. A database file that does not
 // exist is reported as an error and is never created by looking at it.
 func collectionURLs(cfg *AppConfig, col *Collection) ([]URL, error) {
 	if _, err := os.Stat(col.DbName); err != nil {
@@ -283,11 +285,29 @@ func collectionURLs(cfg *AppConfig, col *Collection) ([]URL, error) {
 			return nil, fmt.Errorf("failed to inspect %s: %w", col.DbName, err)
 		}
 		if n > 0 {
-			pageURLs, err := processSitemapRows(cfg, col.DbName, db, SQLSitemapListPages)
+			pageURLs, err := pageSitemapURLs(cfg, db)
 			if err != nil {
 				return urls, err
 			}
 			urls = append(urls, pageURLs...)
+		}
+	}
+	// A collection's own HTML page (an aggregate collection's STEM_items.html,
+	// a page-index collection's STEM.html) is a page of this site: listed when
+	// it has been written, with the file's date as lastmod.
+	if page := collectionPageName(col); page != "" {
+		if info, err := os.Stat(filepath.Join(cfg.Htdocs, page)); err == nil && !info.IsDir() {
+			u := URL{
+				Loc:     fmt.Sprintf("%s/%s", cfg.BaseURL, page),
+				LastMod: info.ModTime().Format("2006-01-02"),
+			}
+			if f := longestPrefixRule(cfg.FreqRules, page, cfg.DefaultFreq); f != "" {
+				u.ChangeFreq = f
+			}
+			if p := longestPrefixRule(cfg.PriRules, page, cfg.DefaultPri); p != "" {
+				u.Priority = p
+			}
+			urls = append(urls, u)
 		}
 	}
 	postsStmt := SQLSitemapListPosts
@@ -355,4 +375,53 @@ func longestPrefixRule(rules map[string]string, outputPath, def string) string {
 		}
 	}
 	return best
+}
+
+// collectionPageName is the HTML page a collection renders itself to, or ""
+// when it has none: STEM_items.html for an aggregate collection (DR-0034 1),
+// STEM.html for the pages collection and a page-index collection, nothing for
+// a Markdown-only collection.
+func collectionPageName(col *Collection) string {
+	if col.File == "" || !col.WantsHTML() {
+		return ""
+	}
+	base := filepath.Base(col.File)
+	stem := strings.TrimSuffix(base, filepath.Ext(base))
+	if col.Mode == "page-index" || isPagesCollection(col) {
+		return stem + ".html"
+	}
+	return stem + "_items.html"
+}
+
+// pageSitemapURLs lists every HTML output of every row of the pages table: a
+// page may write more than one HTML file, and a row whose outputs are not HTML
+// (a text page) is not a page of the sitemap.
+func pageSitemapURLs(cfg *AppConfig, db *sql.DB) ([]URL, error) {
+	rows, err := queryPageRows(db, "outputPath, inputPath")
+	if err != nil {
+		return nil, err
+	}
+	var urls []URL
+	for _, r := range rows {
+		for _, out := range rowOutputs(r) {
+			if ext := strings.ToLower(filepath.Ext(out)); ext != ".html" && ext != ".htm" {
+				continue
+			}
+			out = filepath.ToSlash(out)
+			u := URL{Loc: fmt.Sprintf("%s/%s", cfg.BaseURL, out)}
+			if len(r.Updated) >= 10 {
+				if _, err := time.Parse("2006-01-02", r.Updated[:10]); err == nil {
+					u.LastMod = r.Updated[:10]
+				}
+			}
+			if f := longestPrefixRule(cfg.FreqRules, out, cfg.DefaultFreq); f != "" {
+				u.ChangeFreq = f
+			}
+			if p := longestPrefixRule(cfg.PriRules, out, cfg.DefaultPri); p != "" {
+				u.Priority = p
+			}
+			urls = append(urls, u)
+		}
+	}
+	return urls, nil
 }

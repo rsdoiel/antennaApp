@@ -485,7 +485,7 @@ func harvestCollection(scanner *bufio.Scanner, options []string, cfgName string,
 		}
 		term.Printf("Harvesting %s\n", cName)
 		// Harvest the collection
-		if err := col.HarvestWith(os.Stdout, os.Stderr, cfg.harvestFetcher(os.Stderr)); err != nil {
+		if err := col.HarvestWith(os.Stdout, os.Stderr, cfg.harvestFetcher()); err != nil {
 			displayErrorStatus("warning %s: %s\n", col.File, err)
 		}
 	}

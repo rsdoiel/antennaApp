@@ -41,7 +41,7 @@ validate finds them (link-html) and antenna migrate-links rewrites them to
 (see: antenna help generate)
 
 - A Markdown rendering of each collection's items, STEM_items.md, beside its
-  HTML page, with front matter saying what it is. The HTML page declares it in
+  items page STEM_items.html, with front matter saying what it is. The HTML page declares it in
   its head as <link rel="alternate" type="text/markdown">.
 - A table of contents, .well-known/toc.opml under htdocs, listing the site's
   pages, collection items pages and posts. A reader finds it at that fixed
@@ -111,8 +111,7 @@ contents (an outline with type rss and an xmlUrl), in the page's link tags,
 and at common paths. When it finds one it uses the feed alone and remembers
 where it was. A site that has only a table of contents of pages is not
 collected, because that would mean one request for every page it lists; harvest
-reports the link and goes on. antenna harvest respects robots.txt; see
-antenna help harvest.
+reports the link and goes on. See antenna help harvest.
 
 # WHAT IS NOT DONE
 

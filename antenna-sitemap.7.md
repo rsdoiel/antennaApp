@@ -17,9 +17,12 @@ in the htdocs directory so search engines can discover your content.
 
 The sitemap lists the pages of your site, which come from the pages
 collection (pages.md), and your local posts, which are the items with a
-postPath in any collection. Items harvested from feeds are not pages of your
-site and are never listed, so a site that only aggregates feeds has no
-sitemap. When there is nothing to list, antenna says so on standard error,
+postPath in any collection. Every HTML output of a page is listed (a page
+may write more than one), and so is each collection's own HTML page once
+generate has written it: STEM_items.html for an aggregate collection, STEM.html
+for a page-index collection. Items harvested
+from feeds are not pages of your site and are never listed one by one. When
+there is nothing to list, antenna says so on standard error,
 writes no files and exits 0. A collection whose database file is missing is
 reported and the others are still mapped, then the command exits 66.
 

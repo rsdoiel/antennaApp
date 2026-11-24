@@ -170,9 +170,10 @@ func (doc *CommonMark) parserOptions() []parser.Option {
 
 /** LinkTargets reads what antenna renders from the site's own data: the rows
  * of the pages table in the pages collection (DR-0006 says pages come only
- * from there), each collection's source file and its items page (a link to
- * either means the collection's HTML page, DR-0007 6), and every item with a
- * postPath. A collection whose database file does not exist, or has no table
+ * from there), each aggregate collection's items file (a link to it means
+ * its STEM_items.html, DR-0034 3; the feed list STEM.md has no HTML page), a
+ * page-index collection's source file and items file (both mean STEM.html),
+ * and every item with a postPath. A collection whose database file does not exist, or has no table
  * for something, contributes nothing and is not an error.
  *
  * Returns:
@@ -191,8 +192,15 @@ func (cfg *AppConfig) LinkTargets() (LinkTargets, error) {
 			continue
 		}
 		stem := strings.TrimSuffix(path.Clean(filepath.ToSlash(col.File)), ".md")
-		targets[stem+".md"] = stem + ".html"
-		targets[stem+"_items.md"] = stem + ".html"
+		if col.Mode == "page-index" {
+			// A page-index collection keeps its plain page (DR-0034 3).
+			targets[stem+".md"] = stem + ".html"
+			targets[stem+"_items.md"] = stem + ".html"
+			continue
+		}
+		// An aggregate collection renders its items to STEM_items.html; the
+		// author's STEM.md has no HTML page (DR-0034 2, 3).
+		targets[stem+"_items.md"] = stem + "_items.html"
 	}
 	// A subsite on this host with a path is a directory whose .md pages have
 	// .html twins (DR-0027 2). One on another host, or at the root of this

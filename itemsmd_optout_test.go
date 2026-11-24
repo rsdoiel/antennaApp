@@ -89,12 +89,12 @@ func TestMarkdownItemsFalseSkipsACollection(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(htdocs, name)); err == nil {
 		t.Errorf("%s was written although markdownItems is false", name)
 	}
-	for _, f := range []string{"news.html", "news.xml"} {
+	for _, f := range []string{"news_items.html", "news.xml"} {
 		if _, err := os.Stat(filepath.Join(htdocs, f)); err != nil {
 			t.Errorf("%s: %s", f, err)
 		}
 	}
-	html, _ := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	html, _ := os.ReadFile(filepath.Join(htdocs, "news_items.html"))
 	if l := markdownAlternate(string(html)); l != "" {
 		t.Errorf("alternate link: %s", l)
 	}

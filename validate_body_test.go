@@ -50,7 +50,7 @@ func bodyDoc(body string) string {
 
 func TestValidateLinkHTMLNamesTheMarkdownToLinkTo(t *testing.T) {
 	bodySite(t)
-	write(t, "docs/p.md", bodyDoc("[About](../about.html#team)\n\n[News](../news.html)\n\n[Elsewhere](https://other.example/x.html)\n\n[feed](../index.xml)\n\n```\n[code](../about.html)\n```\n\n`[span](../about.html)`\n"))
+	write(t, "docs/p.md", bodyDoc("[About](../about.html#team)\n\n[News](../news_items.html)\n\n[Elsewhere](https://other.example/x.html)\n\n[feed](../index.xml)\n\n```\n[code](../about.html)\n```\n\n`[span](../about.html)`\n"))
 	out, err := runValidate(t, "docs/p.md")
 	wantClass(t, "link-html findings", err, classNegative)
 	line, ok := finding(out, "docs/p.md", "warning", "link-html")
@@ -68,7 +68,7 @@ func TestValidateLinkHTMLNamesTheMarkdownToLinkTo(t *testing.T) {
 func TestValidateLinkHTMLToACollectionWithNoItemsFileIsLeftAlone(t *testing.T) {
 	bodySite(t)
 	os.Remove("news_items.md")
-	write(t, "docs/p.md", bodyDoc("[News](../news.html)\n"))
+	write(t, "docs/p.md", bodyDoc("[News](../news_items.html)\n"))
 	out, _ := runValidate(t, "docs/p.md")
 	if strings.Contains(out, "link-html") {
 		t.Errorf("no items Markdown exists, so there is nothing to link to:\n%s", out)

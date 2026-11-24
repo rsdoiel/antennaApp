@@ -149,7 +149,7 @@ func TestGenerateLeavesUnchangedFilesAloneAndRewritesChangedOnes(t *testing.T) {
 		`INSERT INTO channels (link, title, description, feed_link, links, updated, published, authors, language, copyright, generator, categories, feed_type, feed_version)
 		 VALUES ('https://a.example/', 'A', 'a', 'https://a.example/feed', '[]', '2026-11-18 10:00:00', '2026-11-18 10:00:00', '[]', 'en', '', '', '[]', 'rss', '2.0')`)
 	generateTwice(t, cfg, col)
-	files := []string{"news.html", "news_items.md", "news.xml", "news.opml"}
+	files := []string{"news_items.html", "news_items.md", "news.xml", "news.opml"}
 	for _, f := range files {
 		p := filepath.Join(htdocs, f)
 		if _, err := os.Stat(p); err != nil {
@@ -175,7 +175,7 @@ func TestGenerateLeavesUnchangedFilesAloneAndRewritesChangedOnes(t *testing.T) {
 	// a new item changes the page, the items file and the feed, but not the channels list
 	sitemapExec(t, "news.db", harvested("https://a.example/two", "Two", "d", "2026-11-19 10:00:00", "published", "Feed A"))
 	generateTwice(t, cfg, col)
-	for _, f := range []string{"news.html", "news_items.md", "news.xml"} {
+	for _, f := range []string{"news_items.html", "news_items.md", "news.xml"} {
 		if !mtime(t, filepath.Join(htdocs, f)).After(past) {
 			t.Errorf("%s was not rewritten after a new item", f)
 		}

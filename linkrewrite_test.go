@@ -34,8 +34,7 @@ func testTargets() LinkTargets {
 		"about.md":                  "about.html",
 		"README.md":                 "README.html",
 		"docs/guide.md":             "docs/guide.html",
-		"socal_north.md":            "socal_north.html",
-		"socal_north_items.md":      "socal_north.html",
+		"socal_north_items.md":      "socal_north_items.html",
 		"blog/2026/06/30/a-post.md": "blog/2026/06/30/a-post.html",
 	}
 }
@@ -52,8 +51,8 @@ func TestRewriteDestination(t *testing.T) {
 		{"parent directory", "docs/guide.md", "../about.md", "../about.html", ""},
 		{"same directory from a subdirectory", "docs/other.md", "guide.md", "guide.html", ""},
 		{"site-root path", "docs/guide.md", "/about.md", "/about.html", ""},
-		{"collection source means the collection page", "index.md", "socal_north.md", "socal_north.html", ""},
-		{"collection items file is the same page", "index.md", "socal_north_items.md", "socal_north.html", ""},
+		{"collection source has no HTML page", "index.md", "socal_north.md", "socal_north.md", "socal_north.md"},
+		{"collection items file is its items page", "index.md", "socal_north_items.md", "socal_north_items.html", ""},
 		{"post", "index.md", "blog/2026/06/30/a-post.md", "blog/2026/06/30/a-post.html", ""},
 		{"dot slash", "index.md", "./about.md", "about.html", ""},
 		{"absolute URL", "index.md", "https://example.org/x.md", "https://example.org/x.md", ""},
@@ -139,7 +138,8 @@ func TestRenderWithoutARewriterChangesNothing(t *testing.T) {
 // What antenna renders is known from its own data: the pages table, the
 // collections in antenna.yaml and the posts (DR-0007 5, 6).
 func TestLinkTargetsComeFromThePagesCollectionsAndPosts(t *testing.T) {
-	cfg := sitemapSite(t, "pages.md", "socal_north.md", "columns.md")
+	cfg := sitemapSite(t, "pages.md", "socal_north.md", "columns.md", "toc.md")
+	cfg.Collections[3].Mode = "page-index"
 	addPage(t, "pages.db", "index.html")
 	addPage(t, "pages.db", "docs/guide.html")
 	addPost(t, "columns.db", "blog/2026/06/30/a-post.md")
@@ -150,15 +150,20 @@ func TestLinkTargetsComeFromThePagesCollectionsAndPosts(t *testing.T) {
 	want := map[string]string{
 		"index.md":                  "index.html",
 		"docs/guide.md":             "docs/guide.html",
-		"socal_north.md":            "socal_north.html",
-		"socal_north_items.md":      "socal_north.html",
-		"columns.md":                "columns.html",
-		"columns_items.md":          "columns.html",
+		"socal_north_items.md":      "socal_north_items.html",
+		"columns_items.md":          "columns_items.html",
 		"blog/2026/06/30/a-post.md": "blog/2026/06/30/a-post.html",
+		// a page-index collection keeps its plain page (DR-0034 3)
+		"toc.md": "toc.html",
 	}
 	for k, v := range want {
 		if targets[k] != v {
 			t.Errorf("targets[%q] = %q, want %q", k, targets[k], v)
+		}
+	}
+	for _, gone := range []string{"socal_north.md", "columns.md"} {
+		if v, ok := targets[gone]; ok {
+			t.Errorf("targets[%q] = %q: an aggregate collection's feed list has no HTML page (DR-0034 2)", gone, v)
 		}
 	}
 	if _, ok := targets["pages.md"]; ok {

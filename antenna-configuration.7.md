@@ -93,8 +93,7 @@ bonbon
 harvest
 : (optional) settings for the harvest verb. pause is the wait between two
   requests to one host, a duration such as 500ms or 2s (default 500ms; 0s turns
-  it off). A host's Crawl-delay in robots.txt is honored as well and wins when
-  longer. A value that is not a duration, or is negative, is a configuration
+  it off). A value that is not a duration, or is negative, is a configuration
   error (exit 78).
 
   harvest:
@@ -115,15 +114,17 @@ Each collection object:
 
   mode
   : (optional) rendering mode: "aggregate" (default) or "page-index"
-     "aggregate"  feed-item cards from the items table (default)
-     "page-index" simple <ul> link list from the pages table
+     "aggregate"  feed-item cards from the items table (default), written to
+                  STEM_items.html
+     "page-index" simple <ul> link list from the pages table, written to
+                  STEM.html
 
   html
   : (optional) true or false: whether antenna writes HTML for the collection,
      its page and its posts. Default: true. false makes the collection
      Markdown-only: generate writes STEM_items.md (always, whatever
      markdownItems says), the RSS and the feed-list OPML and no HTML, and
-     removes a STEM.html left by an earlier run. Post HTML from before is left
+     removes a STEM_items.html left by an earlier run. Post HTML from before is left
      (generate says how many files remain). A post made later is stored with
      its .md address as its link, and the sitemap lists it that way. A link to
      such a post or to the collection's own files stays a .md link. The

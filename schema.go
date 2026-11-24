@@ -93,6 +93,12 @@ type AppConfig struct {
 	// site's table of contents, for the duration of one generate (DR-0013 5).
 	tocNav tocNav
 
+	// retiredItemsPages collects, during one generate run over several
+	// collections, the stems of the old items pages removed (DR-0034 4), so the
+	// run can say so once. Nil outside such a run: a single collection's
+	// Generate then writes its own note.
+	retiredItemsPages *[]string
+
 	// Sitemap settings, these should get sane defaults in the sitemap action
 	ChunkSize   int
 	DefaultFreq string

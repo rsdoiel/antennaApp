@@ -1,5 +1,50 @@
 # Changes
 
+## Unreleased
+
+### Changed: generated file names (DR-0034, amends DR-0033)
+
+This is a breaking change to generated file names, so the next release is a
+minor one at least.
+
+- **The aggregated items page is `STEM_items.html`**, beside `STEM_items.md`
+  (it was `STEM.html`). The author's `STEM.md`, the feed list, has no HTML
+  page. A collection in `mode: page-index` and the pages collection keep
+  `STEM.html`; a Markdown-only collection still writes no HTML.
+- **A collection with nothing to show writes no items page**, and a stale
+  `STEM_items.html` is removed (it used to write an empty `STEM.html`).
+- **The `STEM.html` an earlier release wrote is removed** on the first
+  `generate`, with one note on standard error, when it carries antenna's
+  generator tag and no pages row records it. A page rendered from `STEM.md`
+  with `antenna page` is kept; a `STEM.html` that is not antenna's is kept with
+  a warning. Links and bookmarks to `STEM.html` now fail; the RSS and OPML
+  addresses do not move.
+- **The link rewriter** maps `STEM_items.md` to `STEM_items.html`. A link to
+  `STEM.md` of an aggregate collection is left as Markdown with the warning for
+  a file antenna does not render. `validate` and `migrate-links` follow it.
+  `antenna help generate`, `configuration`, `markdown-web` and `sitemap` say so,
+  and `antenna help generate` now has an EXIT STATUS section.
+
+### Fixed: the sitemap
+
+- **The sitemap lists every page, post and items page written as HTML**:
+  `STEM_items.html` of each aggregate collection and `STEM.html` of a
+  page-index collection (once generated), and every HTML output of a page (a
+  page that writes `a.html` and `b.html` lists both). A pages row with no HTML
+  output (`antenna page c.txt c.md`) was listed as the site root and no longer
+  is.
+
+### Changed (DR-0035)
+
+- **Harvest no longer reads `robots.txt`.** antenna fetches feeds that sites
+  publish for subscription, so it does not fetch a host's `robots.txt`, skips
+  no feed because of it and ignores `Crawl-delay`. The dependency
+  `github.com/temoto/robotstxt` is removed. The pause between requests to one
+  host (500 ms, `harvest: pause:`) and the User-Agent stay. This changes
+  behavior: feeds that a `robots.txt` used to forbid (for example
+  `news.un.org`, whose `Disallow: */news/` matched its own feed addresses) are
+  now harvested. A site that wants antenna gone has to block its User-Agent.
+
 ## v0.1.2 — 2026-11-23
 
 ### Added

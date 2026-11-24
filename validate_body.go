@@ -121,6 +121,11 @@ func (v *validator) markdownFor(htmlSite string, byHTML map[string][]string) str
 	case 0:
 		return ""
 	case 1:
+		// A collection's items file is generated; with no file there is
+		// nothing to link to (DR-0034 3).
+		if strings.HasSuffix(strings.TrimSuffix(sources[0], path.Ext(sources[0])), "_items") && !v.existsInSite(sources[0]) {
+			return ""
+		}
 		return sources[0]
 	}
 	for _, s := range sources {
@@ -247,7 +252,7 @@ func (v *validator) migrationFor(from string, u *url.URL, site string, byHTML ma
 	htmlSite := path.Clean(strings.TrimSuffix(site, path.Ext(site)) + ".html")
 	target := v.markdownFor(htmlSite, byHTML)
 	if target == "" {
-		if len(byHTML[htmlSite]) > 1 {
+		if len(byHTML[htmlSite]) > 0 {
 			return "", migLeft
 		}
 		return "", migNone

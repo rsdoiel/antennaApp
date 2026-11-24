@@ -70,12 +70,12 @@ func TestNoItemsMeansNoItemsFileLinkOrWarning(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(htdocs, "news_items.md")); err == nil {
 		t.Error("news_items.md was written for a collection with no items")
 	}
-	html, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if l := markdownAlternate(string(html)); l != "" {
-		t.Errorf("the page declares a Markdown alternate that does not exist: %s", l)
+	// DR-0034 5: nothing to show, so no items page either, and so no
+	// alternate link to a file that was never written.
+	for _, name := range []string{"news_items.html", "news.html"} {
+		if _, err := os.Stat(filepath.Join(htdocs, name)); err == nil {
+			t.Errorf("%s was written for a collection with no items", name)
+		}
 	}
 	if strings.Contains(eout, "news_items.md") {
 		t.Errorf("warning about a file that is not written: %q", eout)
@@ -101,9 +101,8 @@ func TestItemsAllOmittedMeansNoItemsFile(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(htdocs, "news_items.md")); err == nil {
 		t.Error("news_items.md was written although every item was omitted")
 	}
-	html, _ := os.ReadFile(filepath.Join(htdocs, "news.html"))
-	if l := markdownAlternate(string(html)); l != "" {
-		t.Errorf("alternate link for nothing: %s", l)
+	if _, err := os.Stat(filepath.Join(htdocs, "news_items.html")); err == nil {
+		t.Error("news_items.html was written although every item was omitted")
 	}
 }
 
@@ -114,7 +113,7 @@ func TestAnItemsFileStillComesWithItems(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(htdocs, "news_items.md")); err != nil {
 		t.Fatalf("no items file: %s", err)
 	}
-	html, _ := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	html, _ := os.ReadFile(filepath.Join(htdocs, "news_items.html"))
 	if l := markdownAlternate(string(html)); !strings.Contains(l, `href="news_items.md"`) {
 		t.Errorf("alternate link: %q", l)
 	}
@@ -167,7 +166,7 @@ func TestAnUnreadableItemRowDoesNotStopTheOtherOutput(t *testing.T) {
 	var buf bytes.Buffer
 	err := col.Generate(&buf, &buf, "antenna", cfg)
 	wantClass(t, "generate with one unreadable row", err, classData)
-	for _, name := range []string{"news.html", "news_items.md"} {
+	for _, name := range []string{"news_items.html", "news_items.md"} {
 		b, rerr := os.ReadFile(filepath.Join(htdocs, name))
 		if rerr != nil {
 			t.Errorf("%s was not written: %s", name, rerr)

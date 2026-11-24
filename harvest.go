@@ -41,9 +41,8 @@ func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, arg
 			args = append(args, col.File)
 		}
 	}
-	// One fetcher for the whole run: each host's robots.txt is read once and
-	// the pause between requests to a host holds across collections.
-	f := cfg.harvestFetcher(eout)
+	// One fetcher for the whole run: the pause between requests to a host holds across collections.
+	f := cfg.harvestFetcher()
 	// Harvest every collection asked for, then report: a failed collection
 	// does not stop the rest, and does not let the command exit 0 either.
 	tally := &failureTally{}
@@ -58,14 +57,11 @@ func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, arg
 		}
 		tally.add(err)
 	}
-	if f.skipped > 0 {
-		fmt.Fprintf(eout, "%d request(s) left alone because of robots.txt\n", f.skipped)
-	}
 	return tally.err("collections")
 }
 
 /** Harvest fetches every feed the collection lists, with its own fetcher
- * (one robots.txt read per host, the default pause).
+ * (the default pause).
  *
  * Parameters:
  *   out       (io.Writer) — progress
@@ -79,14 +75,13 @@ func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, arg
  *   err := col.Harvest(os.Stdout, os.Stderr, cfg.UserAgent)
  */
 func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent string) error {
-	return collection.HarvestWith(out, eout, newFetcher(userAgent, defaultHarvestPause, eout))
+	return collection.HarvestWith(out, eout, newFetcher(userAgent, defaultHarvestPause))
 }
 
 /** HarvestWith fetches every feed the collection lists through f. A listed
  * address may be a feed or a site: discovery finds the feed (DR-0030 1) and
  * the address it found is stored in the channel's discovered_link, so later
- * runs go straight to it. A link that robots.txt forbids is skipped, not
- * failed; a site with no feed is a data error for that link alone.
+ * runs go straight to it. A site with no feed is a data error for that link alone.
  *
  * Parameters:
  *   out  (io.Writer) — progress
@@ -97,7 +92,7 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
  *   error — the first failure's class when any link failed, else nil
  *
  * Example:
- *   err := col.HarvestWith(os.Stdout, os.Stderr, cfg.harvestFetcher(os.Stderr))
+ *   err := col.HarvestWith(os.Stdout, os.Stderr, cfg.harvestFetcher())
  */
 func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetcher) error {
 	userAgent := f.userAgent
@@ -129,11 +124,6 @@ func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetc
 		// whose feed discovery finds (DR-0030 1).
 		got, err := resolveFeed(f, link.URL, rememberedFeed(db, link.URL))
 		if err != nil {
-			if isSkip(err) {
-				// Already reported once by the fetcher; not a failure.
-				tally.add(nil)
-				continue
-			}
 			fmt.Fprintf(eout, "warning (%s %s): %s\n", link.Label, link.URL, err)
 			tally.add(fmt.Errorf("%s %s: %w", link.Label, link.URL, err))
 			continue
@@ -187,12 +177,12 @@ func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetc
 }
 
 // webget retrieves the feed at href and parses it. It is the one-request
-// helper: no discovery and no robots.txt (a harvest run uses resolveFeed on
+// helper: no discovery (a harvest run uses resolveFeed on
 // a shared fetcher). Redirects are followed.
 // Uses mmcdole's gofeed, see docs at https://pkg.go.dev/github.com/mmcdole/gofeed
 func webget(userAgent string, href string) (*gofeed.Feed, error) {
-	f := newFetcher(userAgent, 0, io.Discard)
-	res, err := f.fetch(href, feedAccept, false)
+	f := newFetcher(userAgent, 0)
+	res, err := f.get(href, feedAccept)
 	if err != nil {
 		return nil, err
 	}

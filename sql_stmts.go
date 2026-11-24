@@ -269,12 +269,6 @@ FROM pages
 ORDER BY updated desc
 ;`
 
-	// SQLSitemapListPages returns a list of pages by outputPath
-	SQLSitemapListPages = `SELECT outputPath, updated
-FROM pages
-ORDER BY outputPath
-;`
-
 	// SQLListPosts will list all posts by post path
 	SQLSitemapListPosts = `SELECT 
 	 CASE

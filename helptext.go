@@ -743,22 +743,32 @@ generate
 # DESCRIPTION
 
 Processes all collections (or only COLLECTION_NAME if provided), rendering
-an HTML page and RSS 2.0 feed for each. Output files are written to the
-htdocs directory configured in antenna.yaml.
+an HTML page and RSS 2.0 feed for each. The HTML page of a collection that
+aggregates items is STEM_items.html, beside its Markdown rendering
+STEM_items.md; your own STEM.md, the list of feeds, has no HTML page. A
+collection in page-index mode and the pages collection keep STEM.html. Output
+files are written to the htdocs directory configured in antenna.yaml.
 
 The HTML structure is controlled by the page generator YAML (page.yaml or
 a per-collection override). Front matter from each item is emitted as
 meta elements in the generated HTML.
 
 A collection with items to show also gets a Markdown rendering of them,
-STEM_items.md, beside its HTML page (not the pages collection, nor one with
-markdownItems: false; markdownItems: true turns it on for pages), and the page declares it in its head as
-its Markdown alternate. A collection with nothing to show has neither, and a
-file left by an earlier run is removed.
+STEM_items.md, beside STEM_items.html (not the pages collection, nor one with
+markdownItems: false; markdownItems: true turns it on for pages), and the page
+declares it in its head as its Markdown alternate. A collection with nothing to
+show has neither file, and a file left by an earlier run is removed.
+
+Earlier releases wrote the items page at STEM.html. The first generate that
+writes STEM_items.html removes that old page, when antenna's generator tag is
+in it and no pages row records it (a page you rendered from STEM.md with
+antenna page is kept), and says so once on standard error: links to STEM.html
+now fail, and the items are at STEM_items.html. A STEM.html that is not
+antenna's is left alone with a warning. Removing the old page is not a failure.
 
 A collection with html: false in antenna.yaml is Markdown-only: generate writes
-its items Markdown, RSS and feed-list OPML and no HTML, neither the collection
-page nor its posts, and removes a collection page left by an earlier run. Post
+its items Markdown, RSS and feed-list OPML and no HTML, neither the items page
+nor its posts, and removes an items page left by an earlier run. Post
 HTML from before the switch is left alone; generate says how many files remain.
 See {app_name} help configuration.
 
@@ -798,6 +808,29 @@ own keys always win, and nothing is written into your Markdown.
 
 COLLECTION_NAME
 : (optional) process only this collection
+
+# EXIT STATUS
+
+0
+: every collection was generated
+
+2
+: unknown option or extra argument
+
+65
+: an item row could not be read; every file that could be written was written
+  and the failure is reported after them
+
+66
+: the configuration or a collection file is missing
+
+74
+: a file could not be read or written part way, including an old page that
+  could not be removed
+
+78
+: the configuration is wrong, for example items.html with an unknown value or
+  html: false with markdownItems: false
 
 # ALIASES
 
@@ -839,17 +872,11 @@ A site that has only a table of contents of pages and no feed cannot be
 collected: harvest says so for that link and carries on with the others. It
 never fetches the pages a table of contents lists.
 
-Harvest reads each host's robots.txt first and obeys it for every request,
-including the guesses. A URL it forbids is not requested and is reported once;
-that is not a failure. A missing robots.txt means the site may be harvested,
-and one with a mistake in it (a Crawl-delay line before the first User-agent
-line, say) is read as far as it can be. A robots.txt that answers with a server
-error or does not answer is asked for twice more, a second and two seconds
-apart; if it still fails the host is not requested in that run and the link
-fails as unavailable. A
-Crawl-delay is honored up to 30 seconds; a host that asks for more is skipped
-for the run. Requests to one host are made one at a time with a pause between
-them, 500 ms unless the harvest setting in {app_name}.yaml says otherwise.
+Harvest does not read robots.txt: it fetches feeds that sites publish for
+subscription, and the guessed feed addresses are bounded (eight at most, once
+per listed address per run). Requests to one host are made one at a time with a
+pause between them, 500 ms unless the harvest setting in antenna.yaml says
+otherwise, and each carries the User-Agent so a site can see who is asking.
 
 # PARAMETERS
 
@@ -859,7 +886,7 @@ COLLECTION_NAME
 # EXIT STATUS
 
 0
-: every feed was harvested, or left alone because robots.txt forbids it
+: every feed was harvested
 
 2
 : unknown option or extra argument
@@ -872,7 +899,7 @@ COLLECTION_NAME
 : the configuration or a collection file is missing
 
 69
-: a feed, or a host's robots.txt, could not be reached or answered with an error
+: a feed could not be reached or answered with an error
 
 74
 : reading a response failed part way
@@ -1397,9 +1424,12 @@ in the htdocs directory so search engines can discover your content.
 
 The sitemap lists the pages of your site, which come from the pages
 collection (pages.md), and your local posts, which are the items with a
-postPath in any collection. Items harvested from feeds are not pages of your
-site and are never listed, so a site that only aggregates feeds has no
-sitemap. When there is nothing to list, {app_name} says so on standard error,
+postPath in any collection. Every HTML output of a page is listed (a page
+may write more than one), and so is each collection's own HTML page once
+generate has written it: STEM_items.html for an aggregate collection, STEM.html
+for a page-index collection. Items harvested
+from feeds are not pages of your site and are never listed one by one. When
+there is nothing to list, {app_name} says so on standard error,
 writes no files and exits 0. A collection whose database file is missing is
 reported and the others are still mapped, then the command exits 66.
 
@@ -2124,8 +2154,7 @@ bonbon
 harvest
 : (optional) settings for the harvest verb. pause is the wait between two
   requests to one host, a duration such as 500ms or 2s (default 500ms; 0s turns
-  it off). A host's Crawl-delay in robots.txt is honored as well and wins when
-  longer. A value that is not a duration, or is negative, is a configuration
+  it off). A value that is not a duration, or is negative, is a configuration
   error (exit 78).
 
   harvest:
@@ -2146,15 +2175,17 @@ Each collection object:
 
   mode
   : (optional) rendering mode: "aggregate" (default) or "page-index"
-     "aggregate"  feed-item cards from the items table (default)
-     "page-index" simple <ul> link list from the pages table
+     "aggregate"  feed-item cards from the items table (default), written to
+                  STEM_items.html
+     "page-index" simple <ul> link list from the pages table, written to
+                  STEM.html
 
   html
   : (optional) true or false: whether antenna writes HTML for the collection,
      its page and its posts. Default: true. false makes the collection
      Markdown-only: generate writes STEM_items.md (always, whatever
      markdownItems says), the RSS and the feed-list OPML and no HTML, and
-     removes a STEM.html left by an earlier run. Post HTML from before is left
+     removes a STEM_items.html left by an earlier run. Post HTML from before is left
      (generate says how many files remain). A post made later is stored with
      its .md address as its link, and the sitemap lists it that way. A link to
      such a post or to the collection's own files stays a .md link. The
@@ -2298,7 +2329,7 @@ validate finds them (link-html) and {app_name} migrate-links rewrites them to
 (see: {app_name} help generate)
 
 - A Markdown rendering of each collection's items, STEM_items.md, beside its
-  HTML page, with front matter saying what it is. The HTML page declares it in
+  items page STEM_items.html, with front matter saying what it is. The HTML page declares it in
   its head as <link rel="alternate" type="text/markdown">.
 - A table of contents, .well-known/toc.opml under htdocs, listing the site's
   pages, collection items pages and posts. A reader finds it at that fixed
@@ -2368,8 +2399,7 @@ contents (an outline with type rss and an xmlUrl), in the page's link tags,
 and at common paths. When it finds one it uses the feed alone and remembers
 where it was. A site that has only a table of contents of pages is not
 collected, because that would mean one request for every page it lists; harvest
-reports the link and goes on. {app_name} harvest respects robots.txt; see
-{app_name} help harvest.
+reports the link and goes on. See {app_name} help harvest.
 
 # WHAT IS NOT DONE
 

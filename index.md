@@ -13,7 +13,7 @@ Antenna App's Features:
 - Pages, posts and aggregations __can include__ metadata expressed as YAML front matter[^1]
 - Local posts can be added to curated feed collection (introducing a distributed option for __opt in__ conversations)
 - You can have multiple collections of feeds
-- Feed collections can be harvested individually or collectively; a link may be a site's address and harvest finds its feed, obeying the site's `robots.txt`
+- Feed collections can be harvested individually or collectively; a link may be a site's address and harvest finds its feed
 - The managed content is stored in SQLite3 database(s)
 - HTML, RSS 2.0, OPML and sitemap.xml documents are automatically generated without additional configuration
   - HTML files are generated for each post, page and aggregation in each collection 

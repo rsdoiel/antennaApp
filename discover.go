@@ -19,7 +19,6 @@ package antennaApp
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -106,18 +105,6 @@ func readFeed(f *fetcher, addr string) (*resolvedFeed, error) {
 		return nil, err
 	}
 	return &resolvedFeed{feed: feed, address: addr}, nil
-}
-
-// hostStopped reports whether err ends all requests to a host for this run.
-func hostStopped(err error) bool {
-	return errors.Is(err, errHostSkipped) || errors.Is(err, errRobotsUnreadable)
-}
-
-// isSkip reports whether err is a quiet skip: the request was not made
-// because the host's robots.txt or Crawl-delay says so. An unreadable
-// robots.txt is not a skip; it is a failure.
-func isSkip(err error) bool {
-	return errors.Is(err, errRobotsDisallowed) || errors.Is(err, errHostSkipped)
 }
 
 // bodyKind says what a response body is, by its content.
@@ -281,15 +268,11 @@ func probeCandidates(listed string) []string {
 }
 
 // probe tries the guessed feed addresses and returns the first that parses
-// as a feed, or nil. A host that is skipped ends the search with its error;
-// a disallowed address or a miss goes on to the next.
+// as a feed, or nil. A miss or a failed request goes on to the next.
 func probe(f *fetcher, listed string) (*resolvedFeed, error) {
 	for _, cand := range probeCandidates(listed) {
 		res, err := f.get(cand, feedAccept)
 		if err != nil {
-			if hostStopped(err) {
-				return nil, err
-			}
 			continue
 		}
 		if res.status != http.StatusOK {
@@ -309,15 +292,14 @@ func probe(f *fetcher, listed string) (*resolvedFeed, error) {
  * first. No page that a table of contents lists is ever requested.
  *
  * Parameters:
- *   f          (*fetcher) — makes the requests, honoring robots.txt
+ *   f          (*fetcher) — makes the requests
  *   listed     (string)   — the address the author listed
  *   remembered (string)   — the feed address found on an earlier run, or ""
  *
  * Returns:
  *   *resolvedFeed — the feed and the address it was read from
- *   error         — errRobotsDisallowed or errHostSkipped for a skip, a data
- *                   error naming the link when no feed is found, else the
- *                   failure of the request
+ *   error         — a data error naming the link when no feed is found, else
+ *                   the failure of the request
  *
  * Example:
  *   got, err := resolveFeed(f, "https://example.org/", "")
@@ -328,9 +310,6 @@ func resolveFeed(f *fetcher, listed, remembered string) (*resolvedFeed, error) {
 		got, err := readFeed(f, remembered)
 		if err == nil {
 			return got, nil
-		}
-		if isSkip(err) {
-			return nil, err
 		}
 	}
 	res, err := f.get(listed, feedAccept)
@@ -366,9 +345,6 @@ func resolveFeed(f *fetcher, listed, remembered string) (*resolvedFeed, error) {
 			if err == nil {
 				return got, nil
 			}
-			if hostStopped(err) {
-				return nil, err
-			}
 		}
 		why = "the page names no feed"
 	default:
@@ -377,9 +353,6 @@ func resolveFeed(f *fetcher, listed, remembered string) (*resolvedFeed, error) {
 			tocURL := base + ".well-known/toc.opml"
 			tres, err := f.get(tocURL, "text/x-opml, text/xml, application/xml, */*;q=0.5")
 			if err != nil {
-				if hostStopped(err) {
-					return nil, err
-				}
 				continue
 			}
 			if tres.status != http.StatusOK || sniff(tres) != kindOPML {

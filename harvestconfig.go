@@ -19,7 +19,6 @@ package antennaApp
 
 import (
 	"fmt"
-	"io"
 	"time"
 )
 
@@ -29,7 +28,7 @@ import (
  * Fields:
  *   Pause (string) — the wait between two requests to one host, a Go
  *                    duration such as "500ms" or "2s"; "0s" turns it off.
- *                    Absent means 500ms. A host's Crawl-delay still applies.
+ *                    Absent means 500ms.
  *
  * Example:
  *   harvest:
@@ -70,6 +69,6 @@ func (cfg *AppConfig) validateHarvest() error {
 
 // harvestFetcher returns the fetcher for one harvest run, with the
 // configured User-Agent and pause.
-func (cfg *AppConfig) harvestFetcher(eout io.Writer) *fetcher {
-	return newFetcher(cfg.UserAgent, cfg.harvestPause(), eout)
+func (cfg *AppConfig) harvestFetcher() *fetcher {
+	return newFetcher(cfg.UserAgent, cfg.harvestPause())
 }

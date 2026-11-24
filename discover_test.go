@@ -18,7 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package antennaApp
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -60,7 +59,7 @@ func tocWith(body string) route {
 func TestResolveFeed_ListedAddressIsAFeed(t *testing.T) {
 	srv, hits := fakeSite(map[string]route{"/rss": rssRoute()})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	got, err := resolveFeed(f, srv.URL+"/rss", "")
 	if err != nil {
 		t.Fatal(err)
@@ -80,7 +79,7 @@ func TestResolveFeed_TocWithRSSOutlineGivesItsFeed(t *testing.T) {
 		"/p/one.md":             {"text/markdown", "# one"},
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	got, err := resolveFeed(f, srv.URL+"/.well-known/toc.opml", "")
 	if err != nil {
 		t.Fatal(err)
@@ -100,7 +99,7 @@ func TestResolveFeed_TocWithOnlyPagesIsNoFeedAndFetchesNoPage(t *testing.T) {
 		"/p/two.md":             {"text/markdown", "# two"},
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	_, err := resolveFeed(f, srv.URL+"/.well-known/toc.opml", "")
 	if err == nil || !strings.Contains(err.Error(), "no feed") {
 		t.Fatalf("err = %v, want a no-feed error", err)
@@ -121,7 +120,7 @@ func TestResolveFeed_FeedListOPMLIsADataError(t *testing.T) {
 		"/list.opml": tocWith(`<outline text="A" type="rss" xmlUrl="https://a.example/feed" url="https://a.example/feed"/><outline text="B" type="rss" xmlUrl="https://b.example/feed" url="https://b.example/feed"/>`),
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	_, err := resolveFeed(f, srv.URL+"/list.opml", "")
 	if err == nil || !strings.Contains(err.Error(), "feed list") {
 		t.Fatalf("err = %v, want it to say this is a feed list", err)
@@ -142,7 +141,7 @@ func TestResolveFeed_HTMLAutodiscovery(t *testing.T) {
 		"/rss-feed":  rssRoute(),
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	got, err := resolveFeed(f, srv.URL+"/", "")
 	if err != nil {
 		t.Fatal(err)
@@ -162,7 +161,7 @@ func TestResolveFeed_ProbesCommonPathsInOrderAndStops(t *testing.T) {
 		"/rss.xml": rssRoute(),
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	got, err := resolveFeed(f, srv.URL+"/", "")
 	if err != nil {
 		t.Fatal(err)
@@ -181,7 +180,7 @@ func TestResolveFeed_ProbesCommonPathsInOrderAndStops(t *testing.T) {
 func TestResolveFeed_AtMostEightProbes(t *testing.T) {
 	srv, hits := fakeSite(map[string]route{"/": {"text/html", "<html><body>x</body></html>"}})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	_, err := resolveFeed(f, srv.URL+"/", "")
 	if err == nil || !strings.Contains(err.Error(), "no feed") {
 		t.Fatalf("err = %v, want a no-feed error", err)
@@ -200,26 +199,6 @@ func TestResolveFeed_AtMostEightProbes(t *testing.T) {
 	}
 }
 
-func TestResolveFeed_ProbesAreCheckedAgainstRobots(t *testing.T) {
-	srv, hits := fakeSite(map[string]route{
-		"/":           {"text/html", "<html><body>x</body></html>"},
-		"/robots.txt": {"text/plain", "User-agent: *\nDisallow: /feed\n"},
-		"/rss":        rssRoute(),
-	})
-	defer srv.Close()
-	f, _, _ := testFetcher(0)
-	got, err := resolveFeed(f, srv.URL+"/", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.address != srv.URL+"/rss" {
-		t.Errorf("address %q, want /rss once /feed and /feed/ are refused", got.address)
-	}
-	if hits.count("/feed") != 0 || hits.count("/feed/") != 0 {
-		t.Error("probed a path robots.txt disallows")
-	}
-}
-
 // A Markdown site's root is not HTML and has no autodiscovery tag; its table
 // of contents may name the feed.
 func TestResolveFeed_MarkdownRootTriesTheOriginsToc(t *testing.T) {
@@ -229,7 +208,7 @@ func TestResolveFeed_MarkdownRootTriesTheOriginsToc(t *testing.T) {
 		"/scripting.xml":        rssRoute(),
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	got, err := resolveFeed(f, srv.URL+"/", "")
 	if err != nil {
 		t.Fatal(err)
@@ -246,7 +225,7 @@ func TestResolveFeed_MarkdownSiteWithNoFeedIsAnErrorThatNamesTheLink(t *testing.
 		"/one.md":               {"text/markdown", "# one"},
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	_, err := resolveFeed(f, srv.URL+"/", "")
 	if err == nil || !strings.Contains(err.Error(), "no feed") || !strings.Contains(err.Error(), srv.URL+"/") {
 		t.Fatalf("err = %v", err)
@@ -263,7 +242,7 @@ func TestResolveFeed_RememberedAddressIsTriedFirst(t *testing.T) {
 		"/feed.xml": rssRoute(),
 	})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	got, err := resolveFeed(f, srv.URL+"/", srv.URL+"/feed.xml")
 	if err != nil {
 		t.Fatal(err)
@@ -279,7 +258,7 @@ func TestResolveFeed_RememberedAddressIsTriedFirst(t *testing.T) {
 func TestResolveFeed_RememberedAddressThatFailsIsDiscoveredAgain(t *testing.T) {
 	srv, _ := fakeSite(map[string]route{"/": {"text/html", "<html><body>x</body></html>"}, "/rss": rssRoute()})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	got, err := resolveFeed(f, srv.URL+"/", srv.URL+"/gone.xml")
 	if err != nil {
 		t.Fatal(err)
@@ -289,28 +268,12 @@ func TestResolveFeed_RememberedAddressThatFailsIsDiscoveredAgain(t *testing.T) {
 	}
 }
 
-func TestResolveFeed_DisallowedListedAddressIsASkip(t *testing.T) {
-	srv, hits := fakeSite(map[string]route{
-		"/robots.txt": {"text/plain", "User-agent: *\nDisallow: /\n"},
-		"/rss":        rssRoute(),
-	})
-	defer srv.Close()
-	f, _, _ := testFetcher(0)
-	_, err := resolveFeed(f, srv.URL+"/rss", "")
-	if !errors.Is(err, errRobotsDisallowed) {
-		t.Fatalf("err = %v, want errRobotsDisallowed", err)
-	}
-	if hits.count("/rss") != 0 {
-		t.Error("requested a disallowed feed")
-	}
-}
-
 // A listed address that answers 404 stays the unavailable failure it was;
 // discovery does not turn a dead link into a hunt.
 func TestResolveFeed_ListedAddressThat404sIsUnavailable(t *testing.T) {
 	srv, hits := fakeSite(map[string]route{})
 	defer srv.Close()
-	f, _, _ := testFetcher(0)
+	f, _ := testFetcher(0)
 	_, err := resolveFeed(f, srv.URL+"/dead", "")
 	if err == nil {
 		t.Fatal("a 404 was accepted")

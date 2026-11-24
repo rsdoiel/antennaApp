@@ -177,7 +177,7 @@ func TestItemsMarkdownFrontMatter(t *testing.T) {
 func TestHTMLPageDeclaresItemsMarkdownAlternate(t *testing.T) {
 	_, htdocs := itemsMDSite(t,
 		harvested("https://a.example/one", "One", "d", "2026-11-18 10:00:00", "published", "Feed A"))
-	src, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	src, err := os.ReadFile(filepath.Join(htdocs, "news_items.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +193,7 @@ func TestItemsMarkdownAndHTMLListSameItems(t *testing.T) {
 		harvested("https://a.example/one", "One", "d1", "2026-11-18 10:00:00", "published", "Feed A"),
 		harvested("https://a.example/two", "Two", "d2", "2026-11-17 10:00:00", "published", "Feed A"),
 	)
-	htmlSrc, _ := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	htmlSrc, _ := os.ReadFile(filepath.Join(htdocs, "news_items.html"))
 	mdSrc, err := os.ReadFile(filepath.Join(htdocs, "news_items.md"))
 	if err != nil {
 		t.Fatal(err)
@@ -317,7 +317,7 @@ func TestItemsMarkdownDropsFrontMatterOfSourceMarkdown(t *testing.T) {
 func TestItemsHTMLDropsFrontMatterOfSourceMarkdown(t *testing.T) {
 	_, htdocs := itemsMDSite(t, harvestedSource("https://a.example/one", "One", "d",
 		frontMatterSource, "2026-11-18 10:00:00", "published", "Feed A"))
-	src, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	src, err := os.ReadFile(filepath.Join(htdocs, "news_items.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -354,7 +354,7 @@ func untitledSite(t *testing.T) (html, md string) {
 		harvestedSource("https://a.example/titled", "A real title", "d", "Titled body.", "2026-11-18 10:00:00", "published", "Feed A"),
 		harvestedSource("https://a.example/empty", "", "d", "Empty-title body.", "2026-11-17 10:00:00", "published", "Feed B"),
 		harvestedSource("https://a.example/blank", "   ", "d", "Blank-title body.", "2026-11-16 10:00:00", "published", "Feed C"))
-	h, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	h, err := os.ReadFile(filepath.Join(htdocs, "news_items.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -425,7 +425,7 @@ func descriptionOnlySite(t *testing.T) (html, md string) {
 			"", "2026-11-18 10:00:00", "published", "Feed A"),
 		harvestedSource("https://a.example/plain", "Plain", "Just words & more words.",
 			"", "2026-11-17 10:00:00", "published", "Feed B"))
-	h, err := os.ReadFile(filepath.Join(htdocs, "news.html"))
+	h, err := os.ReadFile(filepath.Join(htdocs, "news_items.html"))
 	if err != nil {
 		t.Fatal(err)
 	}

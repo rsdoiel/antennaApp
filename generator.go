@@ -360,6 +360,10 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 	// them (DR-0013 5). Worked out before anything is rendered.
 	cfg.tocNav = cfg.computeTOCNav()
 	defer func() { cfg.tocNav = nil }()
+	// The old items pages removed over the whole run are reported once.
+	retired := []string{}
+	cfg.retiredItemsPages = &retired
+	defer func() { cfg.retiredItemsPages = nil }()
 	// Everything asked for is generated even when part of it fails; the
 	// command then reports the failures and exits with the class of the first
 	// (DR-0003 item 4), not 0.
@@ -386,6 +390,9 @@ func (app AntennaApp) Generate(out io.Writer, eout io.Writer, cfgName string, ar
 			}
 		}
 		tally.add(colErr)
+	}
+	if len(retired) > 0 {
+		fmt.Fprintln(eout, retiredItemsNote(retired))
 	}
 	// Regenerate all pages tracked in the pages table
 	pagesErr := cfg.GeneratePages(eout)
@@ -723,7 +730,15 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	// figure out the name and path to write the HTML file to.
 	bName := filepath.Base(collection.File)
 	xName := filepath.Ext(bName)
-	htmlName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".html")
+	stem := strings.TrimSuffix(bName, xName)
+	htmlName := filepath.Join(cfg.Htdocs, stem+".html")
+	// An aggregate collection's items page is STEM_items.html, pairing with
+	// STEM_items.md; the author's STEM.md has no HTML page (DR-0034 1, 2).
+	// A page-index collection and the pages collection keep STEM.html.
+	aggregate := collection.Mode != "page-index" && !isPagesCollection(collection)
+	if aggregate {
+		htmlName = filepath.Join(cfg.Htdocs, stem+"_items.html")
+	}
 	rssName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".xml")
 	opmlName := filepath.Join(cfg.Htdocs, strings.TrimSuffix(bName, xName)+".opml")
 
@@ -732,7 +747,11 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 
 	// Write out HTML page — mode: page-index renders a simple link list from
 	// the pages table; the default "aggregate" mode renders feed item cards.
-	if collection.WantsHTML() {
+	// With nothing to show an aggregate collection writes no items page either,
+	// and a stale one is removed (DR-0034 5); this is known only when the
+	// Markdown rendering was made.
+	emptyItems := aggregate && wantItemsMD && mdCount == 0
+	if collection.WantsHTML() && !emptyItems {
 		var out bytes.Buffer
 		if collection.Mode == "page-index" {
 			// Wrap the link list in a full HTML shell using the same header/nav/footer
@@ -775,9 +794,18 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 			return err
 		}
 	} else if err := os.Remove(htmlName); err != nil && !errors.Is(err, os.ErrNotExist) {
-		// A Markdown-only collection (DR-0031 5): the page written before the
-		// switch is removed; it would be served stale.
+		// A Markdown-only or empty collection: a page written before is
+		// removed; it would be served stale (DR-0031 5, DR-0034 5).
 		return err
+	}
+
+	// The items page 0.1.2 wrote at STEM.html is gone now that STEM_items.html
+	// is written (or removed): after the write, so a failed write does not
+	// leave the site with neither (DR-0034 4).
+	if aggregate {
+		if err := cfg.retireOldItemsPage(eout, cfg.Htdocs, stem); err != nil {
+			return err
+		}
 	}
 
 	// The items file sits beside the HTML page. It is generated output, replaced
