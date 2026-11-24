@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS channels (
 	generator TEXT,
 	categories JSON,
 	feed_type TEXT,
-	feed_version TEXT
+	feed_version TEXT,
+	discovered_link TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS items (
@@ -77,12 +78,12 @@ CREATE TABLE IF NOT EXISTS pages (
 link, title, description, feed_link, links,
 updated, published, 
 authors, language, copyright, generator,
-categories, feed_type, feed_version
+categories, feed_type, feed_version, discovered_link
 ) VALUES (
 ?, ?, ?, ?, ?, 
 ?, ?,
 ?, ?, ?, ?,
-?, ?, ?
+?, ?, ?, ?
 );`
 	// Display the channels in the table
 	SQLDisplayChannels = `SELECT 

@@ -96,6 +96,17 @@ preview address to see the site as it will read once published. A static host
 cannot negotiate content, so on the published site a reader depends on the
 declared alternate, the table of contents and the .md links themselves.
 
+# COLLECTING A MARKDOWN SITE
+
+A Markdown site may publish no feed. Put its address in a collection's list of
+links and antenna harvest looks for the feed: in the site's table of
+contents (an outline with type rss and an xmlUrl), in the page's link tags,
+and at common paths. When it finds one it uses the feed alone and remembers
+where it was. A site that has only a table of contents of pages is not
+collected, because that would mean one request for every page it lists; harvest
+reports the link and goes on. antenna harvest respects robots.txt; see
+antenna help harvest.
+
 # WHAT IS NOT DONE
 
 antenna runs no search service, update socket or mirror. Those need a

@@ -13,6 +13,7 @@ require (
 	github.com/rsdoiel/stylefrom v0.0.2
 	github.com/rsdoiel/termlib v0.0.10
 	github.com/stefanfritsch/goldmark-fences v1.0.0
+	github.com/temoto/robotstxt v1.1.2
 	github.com/yuin/goldmark v1.8.7
 	github.com/yuin/goldmark-emoji v1.0.6
 	golang.org/x/crypto v0.59.0

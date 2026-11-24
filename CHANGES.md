@@ -13,6 +13,24 @@
   `STEM_items.md` on or off; the pages collection gets none by default. A
   `.md` link into a `subsites` path becomes `.html` in the HTML (DR-0027).
 
+- **Harvest finds a site's feed** (DR-0030). A link in a collection may be a
+  site address as well as a feed: harvest tries the address, an `rss` outline
+  in the site's `toc.opml`, the page's `<link rel="alternate">`, and up to
+  eight common paths (`feed`, `feed/`, `rss`, `rss.xml`, `feed.xml`,
+  `atom.xml`, `index.xml`, `feeds/posts/default`), remembers the answer in the
+  new `channels.discovered_link` column (added to an existing database on the
+  next harvest, rows kept) and uses it first next time. A Markdown site with
+  only a table of contents of pages and no feed is reported for that link; harvest
+  never fetches the pages a table of contents lists.
+- **Harvest obeys `robots.txt`** (new dependency `github.com/temoto/robotstxt`).
+  Each host's file is read once per run and applies to every request,
+  including the guesses. A forbidden URL is skipped and reported, not failed;
+  a missing file allows the site and one with a mistake in it is read as far as
+  it can be; one that answers 5xx or cannot be reached is asked for twice more,
+  then skips the host for the run and fails the link as unavailable (69); a
+  `Crawl-delay` is honored up to 30 s. Requests to a host are one at a time with a pause (500 ms), set with
+  `harvest: pause:` in `antenna.yaml` (a bad value is exit 78).
+
 ### Changed (Textcasting alignment, DR-0029)
 
 - **An item with no title has no heading.** The HTML page no longer shows a
@@ -30,6 +48,9 @@
 
 ### Fixed
 
+- Harvest follows redirects. `webget` stopped at every one (its redirect
+  handler always refused), so a feed that moved from http to https or from
+  `/feed` to `/feed/` failed with `http error: 301`.
 - `antenna generate` writes the RSS feed and OPML from the readable rows when an
   item row cannot be read, and exits 65 with the counts, as the HTML page and
   the items Markdown already did. Before, the feed was not written at all.

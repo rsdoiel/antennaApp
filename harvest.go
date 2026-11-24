@@ -17,13 +17,11 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -43,6 +41,9 @@ func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, arg
 			args = append(args, col.File)
 		}
 	}
+	// One fetcher for the whole run: each host's robots.txt is read once and
+	// the pause between requests to a host holds across collections.
+	f := cfg.harvestFetcher(eout)
 	// Harvest every collection asked for, then report: a failed collection
 	// does not stop the rest, and does not let the command exit 0 either.
 	tally := &failureTally{}
@@ -51,16 +52,55 @@ func (app AntennaApp) Harvest(out io.Writer, eout io.Writer, cfgName string, arg
 		if err != nil {
 			return err
 		}
-		err = col.Harvest(out, eout, cfg.UserAgent)
+		err = col.HarvestWith(out, eout, f)
 		if err != nil {
 			fmt.Fprintf(eout, "warning %s: %s\n", col.File, err)
 		}
 		tally.add(err)
 	}
+	if f.skipped > 0 {
+		fmt.Fprintf(eout, "%d request(s) left alone because of robots.txt\n", f.skipped)
+	}
 	return tally.err("collections")
 }
 
+/** Harvest fetches every feed the collection lists, with its own fetcher
+ * (one robots.txt read per host, the default pause).
+ *
+ * Parameters:
+ *   out       (io.Writer) — progress
+ *   eout      (io.Writer) — warnings
+ *   userAgent (string)    — the User-Agent, empty for antenna/VERSION HASH
+ *
+ * Returns:
+ *   error — the first failure's class when any feed failed, else nil
+ *
+ * Example:
+ *   err := col.Harvest(os.Stdout, os.Stderr, cfg.UserAgent)
+ */
 func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent string) error {
+	return collection.HarvestWith(out, eout, newFetcher(userAgent, defaultHarvestPause, eout))
+}
+
+/** HarvestWith fetches every feed the collection lists through f. A listed
+ * address may be a feed or a site: discovery finds the feed (DR-0030 1) and
+ * the address it found is stored in the channel's discovered_link, so later
+ * runs go straight to it. A link that robots.txt forbids is skipped, not
+ * failed; a site with no feed is a data error for that link alone.
+ *
+ * Parameters:
+ *   out  (io.Writer) — progress
+ *   eout (io.Writer) — warnings
+ *   f    (*fetcher)  — makes the requests; shared across collections in a run
+ *
+ * Returns:
+ *   error — the first failure's class when any link failed, else nil
+ *
+ * Example:
+ *   err := col.HarvestWith(os.Stdout, os.Stderr, cfg.harvestFetcher(os.Stderr))
+ */
+func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetcher) error {
+	userAgent := f.userAgent
 	// LoadCommonMark accepts Markdown (.md) or ODT/OTT collection files.
 	doc, err := LoadCommonMark(collection.File)
 	if err != nil {
@@ -77,21 +117,35 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
 		return err
 	}
 	defer db.Close()
+	if err := ensureChannelColumns(db); err != nil {
+		return err
+	}
 	// Retrieve is feed for links and save channel and items for feed. One
 	// feed failing does not stop the others; the failures are counted and
 	// returned at the end.
 	tally := &failureTally{}
 	for _, link := range links {
-		// Retrieve feed data
-		feed, err := webget(userAgent, link.URL)
+		// Retrieve feed data: the listed address may be the feed or a site
+		// whose feed discovery finds (DR-0030 1).
+		got, err := resolveFeed(f, link.URL, rememberedFeed(db, link.URL))
 		if err != nil {
+			if isSkip(err) {
+				// Already reported once by the fetcher; not a failure.
+				tally.add(nil)
+				continue
+			}
 			fmt.Fprintf(eout, "warning (%s %s): %s\n", link.Label, link.URL, err)
 			tally.add(fmt.Errorf("%s %s: %w", link.Label, link.URL, err))
 			continue
 		}
+		feed := got.feed
+		discovered := ""
+		if got.address != link.URL {
+			discovered = got.address
+		}
 
 		// Save the Channel data for the feed
-		if err := saveChannel(db, link.URL, link.Label, feed); err != nil {
+		if err := saveChannel(db, link.URL, link.Label, feed, discovered); err != nil {
 			fmt.Fprintf(eout, "failed to save chanel %q, %s\n", link.URL, err)
 			tally.add(fmt.Errorf("saving channel %s: %w", link.URL, err))
 			continue
@@ -132,71 +186,70 @@ func (collection *Collection) Harvest(out io.Writer, eout io.Writer, userAgent s
 	return tally.err("feeds")
 }
 
-func redirectHandler(req *http.Request, via []*http.Request) error {
-	if len(via) >= 5 {
-		urlList := []string{}
-		for _, redirect := range via {
-			urlList = append(urlList, redirect.URL.String())
-		}
-		return unavailablef("stopped after 5 redirectos: %s", strings.Join(urlList, ", "))
-	}
-	fmt.Fprintf(os.Stderr, "redirecting to %s because %s\n", req.URL.String(), http.ErrUseLastResponse)
-	return http.ErrUseLastResponse
-}
-
-// webget retrieves a feed and parses it.
+// webget retrieves the feed at href and parses it. It is the one-request
+// helper: no discovery and no robots.txt (a harvest run uses resolveFeed on
+// a shared fetcher). Redirects are followed.
 // Uses mmcdole's gofeed, see docs at https://pkg.go.dev/github.com/mmcdole/gofeed
 func webget(userAgent string, href string) (*gofeed.Feed, error) {
-	// NOTE: I'm assuming only http, https at this point, later this will
-	// need to be split up so I can handle Gopher, Gemini and sftp.
-	client := &http.Client{
-		CheckRedirect: redirectHandler,
-	}
-	req, err := http.NewRequest("GET", href, nil)
-	if err != nil {
-		return nil, dataErrorf("bad feed URL %q: %w", href, err)
-	}
-	if userAgent == "" {
-		req.Header.Set("User-Agent", fmt.Sprintf("antenna/%s %s", Version, ReleaseHash))
-	} else {
-		req.Header.Set("User-Agent", userAgent)
-	}
-	// Set the accepted content types.
-	req.Header.Set("accept", "application/rss+xml, application/atom+xml, application/feed+json, application/xml, application/json;q=0.9, */*;q=0.8")
-	res, err := client.Do(req)
+	f := newFetcher(userAgent, 0, io.Discard)
+	res, err := f.fetch(href, feedAccept, false)
 	if err != nil {
 		return nil, err
 	}
-	if res.StatusCode != http.StatusOK {
-		return nil, unavailablef("http error: %s", res.Status)
+	if res.status != http.StatusOK {
+		return nil, statusErr(res)
 	}
-	// See if we can clean up some stuff that'll break feed parsing
-	defer res.Body.Close()
-	src, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, unavailablef("reading %s: %w", href, err)
-	}
-	src = bytes.ReplaceAll(src, []byte(``), []byte(``))
-	buf := bytes.NewBuffer(src)
+	return parseFeedBody(res.body, href)
+}
 
-	fp := gofeed.NewParser()
-	feed, err := fp.Parse(buf)
+// ensureChannelColumns adds the columns a collection database made by an
+// earlier release lacks (DR-0030 amendment: discovered_link) and keeps every
+// row.
+func ensureChannelColumns(db *sql.DB) error {
+	rows, err := db.Query(`PRAGMA table_info(channels)`)
 	if err != nil {
-		return nil, dataErrorf("feed error for %q, %w", href, err)
+		return err
 	}
-	if feed.Link == "" || feed.Link == "/" {
-		u, err := url.Parse(href)
-		if err != nil {
-			return nil, dataErrorf("bad feed URL %q: %w", href, err)
+	have := map[string]bool{}
+	for rows.Next() {
+		var (
+			cid     int
+			name    string
+			ctype   string
+			notnull int
+			dflt    sql.NullString
+			pk      int
+		)
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			rows.Close()
+			return err
 		}
-		u.Path = "/"
-		feed.Link = u.String()
+		have[name] = true
 	}
-	return feed, nil
+	rows.Close()
+	if len(have) == 0 {
+		return nil // no channels table
+	}
+	if !have["discovered_link"] {
+		if _, err := db.Exec(`ALTER TABLE channels ADD COLUMN discovered_link TEXT DEFAULT ''`); err != nil {
+			return fmt.Errorf("adding channels.discovered_link: %w", err)
+		}
+	}
+	return nil
+}
+
+// rememberedFeed returns the feed address discovery found for a listed link on
+// an earlier run, or "".
+func rememberedFeed(db *sql.DB, link string) string {
+	var addr sql.NullString
+	if err := db.QueryRow(`SELECT discovered_link FROM channels WHERE link = ?1`, link).Scan(&addr); err != nil {
+		return ""
+	}
+	return addr.String
 }
 
 // saveChannel will write the Channel information to a skimmer channel table.
-func saveChannel(db *sql.DB, link string, feedLabel string, channel *gofeed.Feed) error {
+func saveChannel(db *sql.DB, link string, feedLabel string, channel *gofeed.Feed, discovered string) error {
 	/*
 	   link, title, description, feed_link, links,
 	   updated, published,
@@ -243,7 +296,7 @@ func saveChannel(db *sql.DB, link string, feedLabel string, channel *gofeed.Feed
 		&link, &title, channel.Description, channel.FeedLink, linksStr,
 		channel.Updated, channel.Published,
 		authorsStr, channel.Language, channel.Copyright, channel.Generator,
-		categoriesStr, channel.FeedType, channel.FeedVersion)
+		categoriesStr, channel.FeedType, channel.FeedVersion, discovered)
 	if err != nil {
 		return fmt.Errorf("%w\nstmt: %s", err, stmt)
 	}

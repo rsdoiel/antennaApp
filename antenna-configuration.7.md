@@ -90,6 +90,16 @@ bonbon
   yourself. antenna runs no search or update service; see
   antenna help markdown-web
 
+harvest
+: (optional) settings for the harvest verb. pause is the wait between two
+  requests to one host, a duration such as 500ms or 2s (default 500ms; 0s turns
+  it off). A host's Crawl-delay in robots.txt is honored as well and wins when
+  longer. A value that is not a duration, or is negative, is a configuration
+  error (exit 78).
+
+  harvest:
+    pause: 1s
+
 collections
 : (required) list of collection objects
 

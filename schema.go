@@ -78,6 +78,9 @@ type AppConfig struct {
 	// table of contents points at with include outlines (DR-0015 1).
 	Subsites []Subsite `json:"subsites,omitempty" yaml:"subsites,omitempty"`
 
+	// Harvest holds the optional settings for the harvest verb (DR-0030 8).
+	Harvest *HarvestConfig `json:"harvest,omitempty" yaml:"harvest,omitempty"`
+
 	// Bonbon holds the content of .well-known/bonbon.json; when it has a key
 	// generate writes the file (DR-0015 5).
 	Bonbon map[string]any `json:"bonbon,omitempty" yaml:"bonbon,omitempty"`
@@ -361,6 +364,9 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if err := cfg.validateSequences(); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
+	if err := cfg.validateHarvest(); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if cfg.DescriptionMax != nil && *cfg.DescriptionMax < 0 {

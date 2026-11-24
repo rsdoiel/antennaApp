@@ -193,6 +193,11 @@ func feedServer(t *testing.T) *httptest.Server {
 				`</channel></rss>`))
 			return
 		}
+		if r.URL.Path == "/robots.txt" {
+			// One broken feed on a working host: the host has no robots.txt.
+			http.NotFound(w, r)
+			return
+		}
 		http.Error(w, "broken", http.StatusInternalServerError)
 	}))
 	t.Cleanup(srv.Close)
