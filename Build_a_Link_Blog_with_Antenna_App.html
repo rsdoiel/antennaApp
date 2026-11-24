@@ -47,8 +47,10 @@ antenna css</code></pre>
 <p>A link blog is built around a <em>collection</em> — a Markdown file
 whose body lists the RSS/Atom feeds you want to follow. The collection’s
 name determines the output filenames: <code>links.md</code> produces
-<code>links.html</code> (the aggregated reading page) and
-<code>links.xml</code> (your own RSS feed).</p>
+<code>links_items.html</code> (the aggregated reading page),
+<code>links_items.md</code> (the same items as Markdown) and
+<code>links.xml</code> (your own RSS feed); <code>links.md</code>, your
+list of feeds, has no HTML page.</p>
 <p>Create <code>links.md</code>:</p>
 <div class="sourceCode" id="cb3"><pre
 class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
@@ -78,7 +80,7 @@ moment. Subsequent harvests are incremental.</p>
 <p>Now render the HTML page and RSS feed:</p>
 <pre class="shell"><code>antenna generate
 antenna preview</code></pre>
-<p>Open <code>http://localhost:8000/links.html</code> to see the
+<p>Open <code>http://localhost:8000/links_items.html</code> to see the
 aggregated content. Each item shows the title, publication date,
 excerpt, and a link back to the original source.</p>
 <h2 id="reviewing-what-was-harvested">Reviewing what was harvested</h2>
@@ -143,9 +145,9 @@ and records the post in <code>links.db</code>. Regenerate and
 preview:</p>
 <pre class="shell"><code>antenna generate
 antenna preview</code></pre>
-<p>Your response now appears in <code>links.html</code> alongside the
-harvested items, with the <code>link</code> field providing a connection
-back to the original article.</p>
+<p>Your response now appears in <code>links_items.html</code> alongside
+the harvested items, with the <code>link</code> field providing a
+connection back to the original article.</p>
 <h2 id="listing-your-responses">Listing your responses</h2>
 <p>To see only posts you have written (items with a
 <code>postPath</code>), use:</p>
@@ -183,7 +185,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href=
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="fu">nav</span><span class="kw">: </span><span class="ch">|</span></span>
 <span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  &lt;ul&gt;</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/links.html&quot;&gt;Links&lt;/a&gt;&lt;/li&gt;</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/links_items.html&quot;&gt;Links&lt;/a&gt;&lt;/li&gt;</span>
 <span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/about.html&quot;&gt;About&lt;/a&gt;&lt;/li&gt;</span>
 <span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  &lt;/ul&gt;</span>
 <span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>

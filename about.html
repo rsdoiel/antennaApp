@@ -23,34 +23,28 @@
 </nav>
 <section id="main-content">
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.1.2">antennaApp 0.1.2</h2>
+<h2 id="antennaapp-0.2.0">antennaApp 0.2.0</h2>
 <ul>
-<li><code>antenna harvest</code> finds a site’s feed from the address
-you list (the address itself, an <code>rss</code> outline in its
-<code>toc.opml</code>, its <code>&lt;link rel="alternate"&gt;</code>, or
-a common path such as <code>feed/</code>), remembers it in
-<code>channels.discovered_link</code>, and obeys each host’s
-<code>robots.txt</code> with a polite pause
-(<code>harvest: pause:</code> in <code>antenna.yaml</code>); redirects
-are now followed</li>
-<li><code>html: false</code> on a collection makes it Markdown-only:
-items Markdown, RSS and posts, no HTML; <code>markdownItems</code>
-switches a collection’s <code>_items.md</code> on or off</li>
-<li><code>antenna prune [-w] [-all]</code> removes the pages whose
-source file is gone, with their recorded outputs</li>
-<li>Textcasting alignment: an untitled item has no placeholder heading,
-links and emphasis reach every item, a name-only author is
-<code>&lt;dc:creator&gt;</code>, every <code>&lt;guid&gt;</code> says
-<code>isPermaLink</code>, and a post made by antenna always has a guid
-(its front matter’s, else its link)</li>
-<li>Fixed: front matter in a harvested <code>source:markdown</code> no
-longer shows in the collection page or <code>_items.md</code>;
-<code>generate</code> writes the RSS and OPML from the readable rows
-when one cannot be read</li>
-<li>Removed: ODT and OTT support (such a file is refused with a message
-to save it as Markdown)</li>
-<li>Deprecated: the <code>pages.outputPath</code> column will stop being
-written; use <code>outputs</code></li>
+<li>Breaking: the aggregated items page of a collection is now
+<code>STEM_items.html</code> (it was <code>STEM.html</code>), beside
+<code>STEM_items.md</code>; your own <code>STEM.md</code> has no HTML
+page, and <code>antenna page</code> links to <code>STEM_items.md</code>
+become <code>STEM_items.html</code>. The first <code>generate</code>
+removes the old <code>STEM.html</code> items page, with one note; links
+and bookmarks to it fail. <code>page-index</code> collections and the
+pages collection keep <code>STEM.html</code>. A collection with nothing
+to show writes no items page</li>
+<li>Breaking: <code>antenna harvest</code> no longer reads
+<code>robots.txt</code>: antenna fetches feeds that sites publish for
+subscription, so it skips no feed because of it and ignores
+<code>Crawl-delay</code> (the pause between requests and the User-Agent
+stay). Feeds that <code>robots.txt</code> used to forbid, such as
+<code>news.un.org</code>’s, are now harvested</li>
+<li>Fixed: the sitemap lists every page, post and collection page
+written as HTML: <code>STEM_items.html</code>, a page-index collection’s
+<code>STEM.html</code>, every HTML output of a page; a page with no HTML
+output is no longer listed as the site root</li>
+<li><code>antenna help generate</code> has an EXIT STATUS section</li>
 </ul>
 <h2 id="authors">Authors</h2>
 <ul>

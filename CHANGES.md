@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## v0.2.0 — 2026-11-23
 
 ### Changed: generated file names (DR-0034, amends DR-0033)
 

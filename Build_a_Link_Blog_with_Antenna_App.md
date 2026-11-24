@@ -39,7 +39,7 @@ antenna css
 
 ## Defining your reading list
 
-A link blog is built around a *collection* — a Markdown file whose body lists the RSS/Atom feeds you want to follow. The collection's name determines the output filenames: `links.md` produces `links.html` (the aggregated reading page) and `links.xml` (your own RSS feed).
+A link blog is built around a *collection* — a Markdown file whose body lists the RSS/Atom feeds you want to follow. The collection's name determines the output filenames: `links.md` produces `links_items.html` (the aggregated reading page), `links_items.md` (the same items as Markdown) and `links.xml` (your own RSS feed); `links.md`, your list of feeds, has no HTML page.
 
 Create `links.md`:
 
@@ -84,7 +84,7 @@ antenna generate
 antenna preview
 ~~~
 
-Open `http://localhost:8000/links.html` to see the aggregated content. Each item shows the title, publication date, excerpt, and a link back to the original source.
+Open `http://localhost:8000/links_items.html` to see the aggregated content. Each item shows the title, publication date, excerpt, and a link back to the original source.
 
 ## Reviewing what was harvested
 
@@ -162,7 +162,7 @@ antenna generate
 antenna preview
 ~~~
 
-Your response now appears in `links.html` alongside the harvested items, with the `link` field providing a connection back to the original article.
+Your response now appears in `links_items.html` alongside the harvested items, with the `link` field providing a connection back to the original article.
 
 ## Listing your responses
 
@@ -216,7 +216,7 @@ header: |
 
 nav: |
   <ul>
-    <li><a href="/links.html">Links</a></li>
+    <li><a href="/links_items.html">Links</a></li>
     <li><a href="/about.html">About</a></li>
   </ul>
 

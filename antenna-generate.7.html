@@ -28,22 +28,33 @@
 <p>antenna generate [COLLECTION_NAME]</p>
 <h1 id="description">DESCRIPTION</h1>
 <p>Processes all collections (or only COLLECTION_NAME if provided),
-rendering an HTML page and RSS 2.0 feed for each. Output files are
-written to the htdocs directory configured in antenna.yaml.</p>
+rendering an HTML page and RSS 2.0 feed for each. The HTML page of a
+collection that aggregates items is STEM_items.html, beside its Markdown
+rendering STEM_items.md; your own STEM.md, the list of feeds, has no
+HTML page. A collection in page-index mode and the pages collection keep
+STEM.html. Output files are written to the htdocs directory configured
+in antenna.yaml.</p>
 <p>The HTML structure is controlled by the page generator YAML
 (page.yaml or a per-collection override). Front matter from each item is
 emitted as meta elements in the generated HTML.</p>
 <p>A collection with items to show also gets a Markdown rendering of
-them, STEM_items.md, beside its HTML page (not the pages collection, nor
-one with markdownItems: false; markdownItems: true turns it on for
+them, STEM_items.md, beside STEM_items.html (not the pages collection,
+nor one with markdownItems: false; markdownItems: true turns it on for
 pages), and the page declares it in its head as its Markdown alternate.
-A collection with nothing to show has neither, and a file left by an
-earlier run is removed.</p>
+A collection with nothing to show has neither file, and a file left by
+an earlier run is removed.</p>
+<p>Earlier releases wrote the items page at STEM.html. The first
+generate that writes STEM_items.html removes that old page, when
+antenna’s generator tag is in it and no pages row records it (a page you
+rendered from STEM.md with antenna page is kept), and says so once on
+standard error: links to STEM.html now fail, and the items are at
+STEM_items.html. A STEM.html that is not antenna’s is left alone with a
+warning. Removing the old page is not a failure.</p>
 <p>A collection with html: false in antenna.yaml is Markdown-only:
 generate writes its items Markdown, RSS and feed-list OPML and no HTML,
-neither the collection page nor its posts, and removes a collection page
-left by an earlier run. Post HTML from before the switch is left alone;
-generate says how many files remain. See antenna help configuration.</p>
+neither the items page nor its posts, and removes an items page left by
+an earlier run. Post HTML from before the switch is left alone; generate
+says how many files remain. See antenna help configuration.</p>
 <p>Output is the same every time it is generated from the same data. A
 file is rewritten only when its content changes. The lines that record
 when it was built (the date meta element of an HTML page, dateModified
@@ -81,6 +92,36 @@ always win, and nothing is written into your Markdown.</p>
 <dt>COLLECTION_NAME</dt>
 <dd>
 (optional) process only this collection
+</dd>
+</dl>
+<h1 id="exit-status">EXIT STATUS</h1>
+<dl>
+<dt>0</dt>
+<dd>
+every collection was generated
+</dd>
+<dt>2</dt>
+<dd>
+unknown option or extra argument
+</dd>
+<dt>65</dt>
+<dd>
+an item row could not be read; every file that could be written was
+written and the failure is reported after them
+</dd>
+<dt>66</dt>
+<dd>
+the configuration or a collection file is missing
+</dd>
+<dt>74</dt>
+<dd>
+a file could not be read or written part way, including an old page that
+could not be removed
+</dd>
+<dt>78</dt>
+<dd>
+the configuration is wrong, for example items.html with an unknown value
+or html: false with markdownItems: false
 </dd>
 </dl>
 <h1 id="aliases">ALIASES</h1>

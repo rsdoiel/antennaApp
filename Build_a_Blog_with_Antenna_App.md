@@ -53,7 +53,7 @@ A blog is built from three things:
 - An HTML page listing posts in reverse chronological order
 - An RSS feed of recent posts
 
-These are managed inside an Antenna *collection*. A collection is defined by a Markdown file whose front matter and body describe the collection itself. The collection's name determines the output filenames — `index.md` produces `index.html`, `index.xml`, and `index.opml`.
+These are managed inside an Antenna *collection*. A collection is defined by a Markdown file whose front matter and body describe the collection itself. The collection's name determines the output filenames — `index.md` produces `index_items.html` (the page that lists the posts), `index_items.md`, `index.xml`, and `index.opml`; `index.md` itself has no HTML page.
 
 Create `index.md` with this content:
 
@@ -127,7 +127,7 @@ Now rebuild the collection page and RSS feed:
 antenna generate
 ~~~
 
-Preview the result at `http://localhost:8000`:
+Preview the result at `http://localhost:8000/index_items.html`:
 
 ~~~shell
 antenna preview
@@ -233,7 +233,7 @@ header: |
 
 nav: |
   <ul>
-    <li><a href="/">Home</a></li>
+    <li><a href="/index_items.html">Home</a></li>
     <li><a href="/about.html">About</a></li>
   </ul>
 

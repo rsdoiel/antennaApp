@@ -23,6 +23,63 @@
 </nav>
 <section id="main-content">
 <h1 id="changes">Changes</h1>
+<h2 id="v0.2.0-2026-11-23">v0.2.0 — 2026-11-23</h2>
+<h3 id="changed-generated-file-names-dr-0034-amends-dr-0033">Changed:
+generated file names (DR-0034, amends DR-0033)</h3>
+<p>This is a breaking change to generated file names, so the next
+release is a minor one at least.</p>
+<ul>
+<li><strong>The aggregated items page is
+<code>STEM_items.html</code></strong>, beside <code>STEM_items.md</code>
+(it was <code>STEM.html</code>). The author’s <code>STEM.md</code>, the
+feed list, has no HTML page. A collection in
+<code>mode: page-index</code> and the pages collection keep
+<code>STEM.html</code>; a Markdown-only collection still writes no
+HTML.</li>
+<li><strong>A collection with nothing to show writes no items
+page</strong>, and a stale <code>STEM_items.html</code> is removed (it
+used to write an empty <code>STEM.html</code>).</li>
+<li><strong>The <code>STEM.html</code> an earlier release wrote is
+removed</strong> on the first <code>generate</code>, with one note on
+standard error, when it carries antenna’s generator tag and no pages row
+records it. A page rendered from <code>STEM.md</code> with
+<code>antenna page</code> is kept; a <code>STEM.html</code> that is not
+antenna’s is kept with a warning. Links and bookmarks to
+<code>STEM.html</code> now fail; the RSS and OPML addresses do not
+move.</li>
+<li><strong>The link rewriter</strong> maps <code>STEM_items.md</code>
+to <code>STEM_items.html</code>. A link to <code>STEM.md</code> of an
+aggregate collection is left as Markdown with the warning for a file
+antenna does not render. <code>validate</code> and
+<code>migrate-links</code> follow it.
+<code>antenna help generate</code>, <code>configuration</code>,
+<code>markdown-web</code> and <code>sitemap</code> say so, and
+<code>antenna help generate</code> now has an EXIT STATUS section.</li>
+</ul>
+<h3 id="fixed-the-sitemap">Fixed: the sitemap</h3>
+<ul>
+<li><strong>The sitemap lists every page, post and items page written as
+HTML</strong>: <code>STEM_items.html</code> of each aggregate collection
+and <code>STEM.html</code> of a page-index collection (once generated),
+and every HTML output of a page (a page that writes <code>a.html</code>
+and <code>b.html</code> lists both). A pages row with no HTML output
+(<code>antenna page c.txt c.md</code>) was listed as the site root and
+no longer is.</li>
+</ul>
+<h3 id="changed-dr-0035">Changed (DR-0035)</h3>
+<ul>
+<li><strong>Harvest no longer reads <code>robots.txt</code>.</strong>
+antenna fetches feeds that sites publish for subscription, so it does
+not fetch a host’s <code>robots.txt</code>, skips no feed because of it
+and ignores <code>Crawl-delay</code>. The dependency
+<code>github.com/temoto/robotstxt</code> is removed. The pause between
+requests to one host (500 ms, <code>harvest: pause:</code>) and the
+User-Agent stay. This changes behavior: feeds that a
+<code>robots.txt</code> used to forbid (for example
+<code>news.un.org</code>, whose <code>Disallow: */news/</code> matched
+its own feed addresses) are now harvested. A site that wants antenna
+gone has to block its User-Agent.</li>
+</ul>
 <h2 id="v0.1.2-2026-11-23">v0.1.2 — 2026-11-23</h2>
 <h3 id="added">Added</h3>
 <ul>

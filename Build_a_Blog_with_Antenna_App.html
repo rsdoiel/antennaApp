@@ -59,8 +59,10 @@ accessibility. It also adds the stylesheet reference to
 <p>These are managed inside an Antenna <em>collection</em>. A collection
 is defined by a Markdown file whose front matter and body describe the
 collection itself. The collection’s name determines the output filenames
-— <code>index.md</code> produces <code>index.html</code>,
-<code>index.xml</code>, and <code>index.opml</code>.</p>
+— <code>index.md</code> produces <code>index_items.html</code> (the page
+that lists the posts), <code>index_items.md</code>,
+<code>index.xml</code>, and <code>index.opml</code>;
+<code>index.md</code> itself has no HTML page.</p>
 <p>Create <code>index.md</code> with this content:</p>
 <div class="sourceCode" id="cb4"><pre
 class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
@@ -111,7 +113,8 @@ index can use.</p>
 records the post in <code>index.db</code>.</p>
 <p>Now rebuild the collection page and RSS feed:</p>
 <pre class="shell"><code>antenna generate</code></pre>
-<p>Preview the result at <code>http://localhost:8000</code>:</p>
+<p>Preview the result at
+<code>http://localhost:8000/index_items.html</code>:</p>
 <pre class="shell"><code>antenna preview</code></pre>
 <h2 id="updating-a-post">Updating a post</h2>
 <p>Re-run <code>antenna post</code> on the same file to update it.
@@ -237,7 +240,7 @@ class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb17-1"><a href=
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="fu">nav</span><span class="kw">: </span><span class="ch">|</span></span>
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  &lt;ul&gt;</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/index_items.html&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;</span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    &lt;li&gt;&lt;a href=&quot;/about.html&quot;&gt;About&lt;/a&gt;&lt;/li&gt;</span>
 <span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  &lt;/ul&gt;</span>
 <span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
