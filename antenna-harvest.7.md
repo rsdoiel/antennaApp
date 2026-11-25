@@ -1,6 +1,6 @@
-%antenna(7) user manual | version 0.2.0 d1de725
+%antenna(7) user manual | version 0.2.1 c3213bd
 % R. S. Doiel
-% 2026-11-23
+% 2026-11-25
 
 # NAME
 
@@ -32,6 +32,19 @@ subscription, and the guessed feed addresses are bounded (eight at most, once
 per listed address per run). Requests to one host are made one at a time with a
 pause between them, 500 ms unless the harvest setting in antenna.yaml says
 otherwise, and each carries the User-Agent so a site can see who is asking.
+
+Each attempt to fetch a listed feed is recorded in the collection's database
+(table harvest_log): when, the HTTP status of the answer (none when the address
+did not answer), and the error when it failed. At the end of a collection's
+harvest, a feed that keeps failing gets one warning on standard error: every
+attempt in the last 7 days failed, and there were at least 3 of them. It names
+the status in words, for example "last status 404 Not Found" or "last status
+503 Service Unavailable". Any answer other than a feed counts as a failure,
+429 and 503 included; one good answer inside the window clears the feed. The
+warning does not change the exit status, and nothing is skipped or removed
+automatically. The days, the attempts and how long log rows are kept (90 days)
+are the harvest settings failing_days, failing_attempts and log_days in
+antenna.yaml. See antennaApp DR-0038.
 
 # PARAMETERS
 

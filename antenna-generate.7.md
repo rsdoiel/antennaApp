@@ -1,6 +1,6 @@
-%antenna(7) user manual | version 0.2.0 d1de725
+%antenna(7) user manual | version 0.2.1 c3213bd
 % R. S. Doiel
-% 2026-11-23
+% 2026-11-25
 
 # NAME
 
@@ -41,6 +41,23 @@ its items Markdown, RSS and feed-list OPML and no HTML, neither the items page
 nor its posts, and removes an items page left by an earlier run. Post
 HTML from before the switch is left alone; generate says how many files remain.
 See antenna help configuration.
+
+A feed shows at most max_items_per_feed of its newest items (1000 unless
+antenna.yaml says otherwise), or its own number in feed_limits. The older items
+stay in the database and are only left off the pages; when a feed is cut,
+generate warns once for the collection, for example "2 feeds over their cap:
+Korea Times shows 1000 of 1771, ...". See antennaApp DR-0039 and
+antenna help configuration.
+
+A harvested item's text keeps the links and images as its own site wrote them,
+and many are relative (/images/a.png, /2026/post/). When it is rendered, in the
+HTML page, in STEM_items.md and in the RSS feed, each relative address is made
+absolute against the item's link, so it points at the site the item came from.
+Absolute addresses, mailto:, tel:, data: and #fragment are left as written, and
+so are your own posts. The stored item is not changed. An item with no usable
+link (not an absolute http or https address) has nothing to resolve against: it
+is left as written and generate warns once for the collection with the number of
+items. See antennaApp DR-0037.
 
 Output is the same every time it is generated from the same data. A file is
 rewritten only when its content changes. The lines that record when it was

@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## v0.2.1 — 2026-11-25
 
 ### Added: a cap on the items each feed shows (DR-0039)
 

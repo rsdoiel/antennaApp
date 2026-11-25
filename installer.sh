@@ -1,11 +1,11 @@
 #!/bin/sh
-# generated with CMTools 0.2.0 d1de725
+# generated with CMTools 0.2.1 c3213bd
 
 #
 # Set the package name and version to install
 #
 PACKAGE="antennaApp"
-VERSION="0.2.0"
+VERSION="0.2.1"
 GIT_GROUP="rsdoiel"
 RELEASE="https://github.com/$GIT_GROUP/$PACKAGE/releases/tag/v$VERSION"
 if [ "$PKG_VERSION" != "" ]; then

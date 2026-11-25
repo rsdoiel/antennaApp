@@ -1,6 +1,6 @@
-%antenna(7) user manual | version 0.2.0 d1de725
+%antenna(7) user manual | version 0.2.1 c3213bd
 % R. S. Doiel
-% 2026-11-23
+% 2026-11-25
 
 # NAME
 
@@ -90,14 +90,37 @@ bonbon
   yourself. antenna runs no search or update service; see
   antenna help markdown-web
 
+max_items_per_feed
+: (optional) how many of its newest items one feed may show in a collection's
+  HTML page, items Markdown and RSS feed. Default 1000; 0 means no cap. A whole
+  number of 0 or more, else a configuration error (exit 78). The items stay in
+  the database: the cap only hides the older ones when the pages are made, so
+  raising it or removing it brings them back. Your own posts are never capped.
+
+feed_limits
+: (optional) the same number for single feeds, by the address written in the
+  feed list, for example a busy feed held lower, or 0 for one to show whole.
+  An address no collection lists is ignored.
+
+  max_items_per_feed: 1000
+  feed_limits:
+    https://feed.koreatimes.co.kr/k/allnews.xml: 200
+
 harvest
 : (optional) settings for the harvest verb. pause is the wait between two
   requests to one host, a duration such as 500ms or 2s (default 500ms; 0s turns
   it off). A value that is not a duration, or is negative, is a configuration
-  error (exit 78).
+  error (exit 78). failing_days (default 7) and failing_attempts (default 3)
+  say when harvest warns that a feed keeps failing: every attempt in that many
+  days failed, and there were at least that many. log_days (default 90) is how
+  long the record of attempts is kept. Each is a whole number of 1 or more, else
+  a configuration error (exit 78).
 
   harvest:
     pause: 1s
+    failing_days: 7
+    failing_attempts: 3
+    log_days: 90
 
 collections
 : (required) list of collection objects

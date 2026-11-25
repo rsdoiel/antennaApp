@@ -38,7 +38,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.2.0
+version: 0.2.1
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -50,18 +50,17 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-11-23
+date_released: 2026-11-25
 ---
 
 About this software
 ===================
 
-## antennaApp 0.2.0
+## antennaApp 0.2.1
 
-- Breaking: the aggregated items page of a collection is now `STEM_items.html` (it was `STEM.html`), beside `STEM_items.md`; your own `STEM.md` has no HTML page, and `antenna page` links to `STEM_items.md` become `STEM_items.html`. The first `generate` removes the old `STEM.html` items page, with one note; links and bookmarks to it fail. `page-index` collections and the pages collection keep `STEM.html`. A collection with nothing to show writes no items page
-- Breaking: `antenna harvest` no longer reads `robots.txt`: antenna fetches feeds that sites publish for subscription, so it skips no feed because of it and ignores `Crawl-delay` (the pause between requests and the User-Agent stay). Feeds that `robots.txt` used to forbid, such as `news.un.org`'s, are now harvested
-- Fixed: the sitemap lists every page, post and collection page written as HTML: `STEM_items.html`, a page-index collection's `STEM.html`, every HTML output of a page; a page with no HTML output is no longer listed as the site root
-- `antenna help generate` has an EXIT STATUS section
+- Fixed: relative links and images in a harvested item (`/images/a.png`, `/2026/post/`, `c.html`) are made absolute against the item's link when it is rendered, in `STEM_items.html`, `STEM_items.md` and `STEM.xml`; they used to resolve against the aggregating site and break. The stored item is not changed. An item with no usable link is left as written and `generate` warns once for the collection with the count
+- Added: `harvest` records every attempt to fetch a listed feed (HTTP status, error) in a `harvest_log` table and, at the end of the run, warns about a feed whose attempts all failed over 7 days (at least 3), with the status in words (`last status 404 Not Found`); 429 and 503 count as failures. Settings `failing_days`, `failing_attempts` and `log_days` under `harvest:`. The exit status is unchanged
+- Added: a cap on the items each feed shows, `max_items_per_feed` (default 1000, 0 for none) and `feed_limits` by feed address in `antenna.yaml`. Older items are hidden, not deleted, and your own posts are never capped. `generate` warns when a feed is cut. A feed with more than 1000 items in its window (for example Korea Times on the antenna site) now shows its newest 1000
 
 ## Authors
 
