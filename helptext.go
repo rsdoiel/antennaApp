@@ -888,6 +888,19 @@ per listed address per run). Requests to one host are made one at a time with a
 pause between them, 500 ms unless the harvest setting in antenna.yaml says
 otherwise, and each carries the User-Agent so a site can see who is asking.
 
+Each attempt to fetch a listed feed is recorded in the collection's database
+(table harvest_log): when, the HTTP status of the answer (none when the address
+did not answer), and the error when it failed. At the end of a collection's
+harvest, a feed that keeps failing gets one warning on standard error: every
+attempt in the last 7 days failed, and there were at least 3 of them. It names
+the status in words, for example "last status 404 Not Found" or "last status
+503 Service Unavailable". Any answer other than a feed counts as a failure,
+429 and 503 included; one good answer inside the window clears the feed. The
+warning does not change the exit status, and nothing is skipped or removed
+automatically. The days, the attempts and how long log rows are kept (90 days)
+are the harvest settings failing_days, failing_attempts and log_days in
+antenna.yaml. See antennaApp DR-0038.
+
 # PARAMETERS
 
 COLLECTION_NAME
@@ -2165,10 +2178,17 @@ harvest
 : (optional) settings for the harvest verb. pause is the wait between two
   requests to one host, a duration such as 500ms or 2s (default 500ms; 0s turns
   it off). A value that is not a duration, or is negative, is a configuration
-  error (exit 78).
+  error (exit 78). failing_days (default 7) and failing_attempts (default 3)
+  say when harvest warns that a feed keeps failing: every attempt in that many
+  days failed, and there were at least that many. log_days (default 90) is how
+  long the record of attempts is kept. Each is a whole number of 1 or more, else
+  a configuration error (exit 78).
 
   harvest:
     pause: 1s
+    failing_days: 7
+    failing_attempts: 3
+    log_days: 90
 
 collections
 : (required) list of collection objects

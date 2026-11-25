@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Added: harvest records each feed's status and warns about failing feeds (DR-0038)
+
+- Every attempt to fetch a listed feed is written to a new `harvest_log` table
+  in the collection database (made on the first harvest of an older database;
+  rows kept 90 days).
+- A feed whose attempts all failed over the last 7 days, at least 3 of them,
+  gets a warning at the end of the harvest on standard error, with the HTTP
+  status in words (`last status 404 Not Found`). 429 and 503 count as failures.
+  The exit status is unchanged and nothing is skipped or removed.
+- Settings under `harvest:` in `antenna.yaml`: `failing_days`, `failing_attempts`
+  and `log_days`; a value below 1 is a configuration error (exit 78).
+
 ### Fixed: relative links and images in harvested items (DR-0037)
 
 - A harvested item's relative `href` and `src` (root-relative, page-relative,

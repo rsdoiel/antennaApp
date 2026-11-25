@@ -65,6 +65,9 @@ type fetcher struct {
 	sleep     func(time.Duration)
 
 	last map[string]time.Time
+
+	// policy is what the run records and warns about (DR-0038).
+	policy harvestPolicy
 }
 
 /** newFetcher returns a fetcher for one run.
@@ -89,6 +92,7 @@ func newFetcher(userAgent string, pause time.Duration) *fetcher {
 		now:       time.Now,
 		sleep:     time.Sleep,
 		last:      map[string]time.Time{},
+		policy:    defaultHarvestPolicy,
 	}
 	f.client = &http.Client{
 		Timeout: 60 * time.Second,

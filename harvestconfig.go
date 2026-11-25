@@ -36,6 +36,15 @@ import (
  */
 type HarvestConfig struct {
 	Pause string `json:"pause,omitempty" yaml:"pause,omitempty"`
+
+	// FailingDays, FailingAttempts and LogDays are DR-0038's settings: a feed
+	// is failing when it has FailingAttempts or more attempts in the last
+	// FailingDays days and every one failed; harvest_log rows older than
+	// LogDays days are deleted. Absent means 7, 3 and 90. A value below 1 is a
+	// configuration error.
+	FailingDays     *int `json:"failing_days,omitempty" yaml:"failing_days,omitempty"`
+	FailingAttempts *int `json:"failing_attempts,omitempty" yaml:"failing_attempts,omitempty"`
+	LogDays         *int `json:"log_days,omitempty" yaml:"log_days,omitempty"`
 }
 
 // harvestPause returns the pause between requests to a host: the configured
@@ -54,7 +63,19 @@ func (cfg *AppConfig) harvestPause() time.Duration {
 // validateHarvest checks the harvest mapping; a bad value is a configuration
 // error found when the configuration loads.
 func (cfg *AppConfig) validateHarvest() error {
-	if cfg.Harvest == nil || cfg.Harvest.Pause == "" {
+	if cfg.Harvest == nil {
+		return nil
+	}
+	for name, v := range map[string]*int{
+		"harvest.failing_days":     cfg.Harvest.FailingDays,
+		"harvest.failing_attempts": cfg.Harvest.FailingAttempts,
+		"harvest.log_days":         cfg.Harvest.LogDays,
+	} {
+		if v != nil && *v < 1 {
+			return fmt.Errorf("%s is %d; it must be a whole number of 1 or more", name, *v)
+		}
+	}
+	if cfg.Harvest.Pause == "" {
 		return nil
 	}
 	d, err := time.ParseDuration(cfg.Harvest.Pause)
@@ -67,8 +88,29 @@ func (cfg *AppConfig) validateHarvest() error {
 	return nil
 }
 
+// harvestPolicy returns the failing-feed settings: the configured ones, else
+// the defaults. validateHarvest has already checked them.
+func (cfg *AppConfig) harvestPolicy() harvestPolicy {
+	p := defaultHarvestPolicy
+	if cfg.Harvest == nil {
+		return p
+	}
+	if v := cfg.Harvest.FailingDays; v != nil {
+		p.failingDays = *v
+	}
+	if v := cfg.Harvest.FailingAttempts; v != nil {
+		p.failingAttempts = *v
+	}
+	if v := cfg.Harvest.LogDays; v != nil {
+		p.logDays = *v
+	}
+	return p
+}
+
 // harvestFetcher returns the fetcher for one harvest run, with the
 // configured User-Agent and pause.
 func (cfg *AppConfig) harvestFetcher() *fetcher {
-	return newFetcher(cfg.UserAgent, cfg.harvestPause())
+	f := newFetcher(cfg.UserAgent, cfg.harvestPause())
+	f.policy = cfg.harvestPolicy()
+	return f
 }

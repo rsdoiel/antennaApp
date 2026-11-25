@@ -115,6 +115,9 @@ func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetc
 	if err := ensureChannelColumns(db); err != nil {
 		return err
 	}
+	if err := ensureHarvestLog(db); err != nil {
+		return err
+	}
 	// Retrieve is feed for links and save channel and items for feed. One
 	// feed failing does not stop the others; the failures are counted and
 	// returned at the end.
@@ -123,6 +126,7 @@ func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetc
 		// Retrieve feed data: the listed address may be the feed or a site
 		// whose feed discovery finds (DR-0030 1).
 		got, err := resolveFeed(f, link.URL, rememberedFeed(db, link.URL))
+		logAttempt(db, eout, link.URL, link.Label, err)
 		if err != nil {
 			fmt.Fprintf(eout, "warning (%s %s): %s\n", link.Label, link.URL, err)
 			tally.add(fmt.Errorf("%s %s: %w", link.Label, link.URL, err))
@@ -173,6 +177,7 @@ func (collection *Collection) HarvestWith(out io.Writer, eout io.Writer, f *fetc
 		}
 		fmt.Fprintf(out, "processed %d/%d from %s %s\n", i, tot, link.Label, userAgent)
 	}
+	reportFailingFeeds(db, eout, collection.File, links, f.policy)
 	return tally.err("feeds")
 }
 

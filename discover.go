@@ -19,6 +19,7 @@ package antennaApp
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -88,7 +89,53 @@ func parseFeedBody(body []byte, href string) (*gofeed.Feed, error) {
 
 // statusErr is the failure for a response that is not 200.
 func statusErr(res *fetchResult) error {
-	return unavailablef("http error: %d %s", res.status, http.StatusText(res.status))
+	return &statusError{status: res.status, err: unavailablef("http error: %d %s", res.status, http.StatusText(res.status))}
+}
+
+/** statusError carries the HTTP status of the response a failure came from
+ * (DR-0038 1), so harvest can log it. It keeps the class of the error it wraps.
+ *
+ * Fields:
+ *   status (int) — the HTTP status of the response
+ *   err (error) — the failure
+ */
+type statusError struct {
+	status int
+	err    error
+}
+
+func (e *statusError) Error() string { return e.err.Error() }
+func (e *statusError) Unwrap() error { return e.err }
+
+// withStatus marks err as coming from a response with the given status. An
+// error that already carries a status (a feed page that answered 404) keeps
+// it, since that is the more specific answer.
+func withStatus(status int, err error) error {
+	var se *statusError
+	if err == nil || errors.As(err, &se) {
+		return err
+	}
+	return &statusError{status: status, err: err}
+}
+
+/** statusOf returns the HTTP status a failure came from, or 0 when no response
+ * was read (the address did not answer).
+ *
+ * Parameters:
+ *   err (error) — a failure from resolveFeed
+ *
+ * Returns:
+ *   int — the status, or 0
+ *
+ * Example:
+ *   n := statusOf(err) // 404
+ */
+func statusOf(err error) int {
+	var se *statusError
+	if errors.As(err, &se) {
+		return se.status
+	}
+	return 0
 }
 
 // readFeed requests addr and parses the response as a feed.
@@ -102,7 +149,7 @@ func readFeed(f *fetcher, addr string) (*resolvedFeed, error) {
 	}
 	feed, err := parseFeedBody(res.body, addr)
 	if err != nil {
-		return nil, err
+		return nil, withStatus(res.status, err)
 	}
 	return &resolvedFeed{feed: feed, address: addr}, nil
 }
@@ -305,7 +352,7 @@ func probe(f *fetcher, listed string) (*resolvedFeed, error) {
  *   got, err := resolveFeed(f, "https://example.org/", "")
  *   if err == nil { fmt.Println(got.address, got.feed.Title) }
  */
-func resolveFeed(f *fetcher, listed, remembered string) (*resolvedFeed, error) {
+func resolveFeed(f *fetcher, listed, remembered string) (_ *resolvedFeed, err error) {
 	if remembered != "" && remembered != listed {
 		got, err := readFeed(f, remembered)
 		if err == nil {
@@ -319,6 +366,8 @@ func resolveFeed(f *fetcher, listed, remembered string) (*resolvedFeed, error) {
 	if res.status != http.StatusOK {
 		return nil, statusErr(res)
 	}
+	// From here the address answered: a failure is that answer's (DR-0038 1).
+	defer func() { err = withStatus(res.status, err) }()
 	kind := sniff(res)
 	if kind != kindOPML && kind != kindHTML {
 		if feed, err := parseFeedBody(res.body, listed); err == nil {

@@ -797,6 +797,10 @@ func (s *iSession) guideHarvest(args []string) error {
 Retrieves the latest items from the RSS/Atom feeds listed in your
 collections and stores them in the SQLite3 database. Run this regularly
 to keep your content up to date before generating.
+
+Each fetch is recorded, and a feed that keeps failing (3 failed runs in 7 days
+by default) is named at the end with its HTTP status in words, such as
+404 Not Found. Run 'antenna help harvest' for the settings.
 `, Bold+Yellow, Reset)
 
 	pre := ""
