@@ -19,6 +19,8 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] Review Dave Winer's RSS Chat, https://github.com/scripting/rss.chat, see what features could be encorporated into AntennaApp to support the RSS oriented chat that Dave has talked about. This would be targeted at an eventual v0.3.x release. It can start as an experimental feature in v0.2.x.
+
 - [x] Built 2026-11-25 (antennaApp DR-0038, uncommitted): the status table `harvest_log` and the end-of-harvest warning. Left, for a later record: a command that lists failing feeds, a flag that skips them, and a command that prunes them from the Markdown feed list (dry run by default). Original request: when we harvest, we need a table that keeps track of the feeds' HTTP status response. Then when a feed isn't available for some threshhold over a defined time period a warning at the end of the harvest can be shown for the feeds that fall into that category. There could be an automatic flag to stop trying to havest the failing feed or another command to auto-prune the feed from the related Markdown feed list.
 - [x] A way to remove a page completely: `antenna prune [-w] [-all]` removes the pages whose source is gone, with their recorded outputs; dry run by default (antennaApp DR-0028, built 2026-11-23). `unpage` is unchanged. Left: interactive-mode guide for `prune`.
 
