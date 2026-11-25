@@ -772,6 +772,13 @@ nor its posts, and removes an items page left by an earlier run. Post
 HTML from before the switch is left alone; generate says how many files remain.
 See {app_name} help configuration.
 
+A feed shows at most max_items_per_feed of its newest items (1000 unless
+antenna.yaml says otherwise), or its own number in feed_limits. The older items
+stay in the database and are only left off the pages; when a feed is cut,
+generate warns once for the collection, for example "2 feeds over their cap:
+Korea Times shows 1000 of 1771, ...". See antennaApp DR-0039 and
+{app_name} help configuration.
+
 A harvested item's text keeps the links and images as its own site wrote them,
 and many are relative (/images/a.png, /2026/post/). When it is rendered, in the
 HTML page, in STEM_items.md and in the RSS feed, each relative address is made
@@ -2173,6 +2180,22 @@ bonbon
   you wrote by hand is safe; if you take the setting out, delete the file
   yourself. {app_name} runs no search or update service; see
   {app_name} help markdown-web
+
+max_items_per_feed
+: (optional) how many of its newest items one feed may show in a collection's
+  HTML page, items Markdown and RSS feed. Default 1000; 0 means no cap. A whole
+  number of 0 or more, else a configuration error (exit 78). The items stay in
+  the database: the cap only hides the older ones when the pages are made, so
+  raising it or removing it brings them back. Your own posts are never capped.
+
+feed_limits
+: (optional) the same number for single feeds, by the address written in the
+  feed list, for example a busy feed held lower, or 0 for one to show whole.
+  An address no collection lists is ignored.
+
+  max_items_per_feed: 1000
+  feed_limits:
+    https://feed.koreatimes.co.kr/k/allnews.xml: 200
 
 harvest
 : (optional) settings for the harvest verb. pause is the wait between two

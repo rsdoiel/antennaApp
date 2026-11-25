@@ -189,7 +189,8 @@ func (gen *Generator) WriteRSS(out io.Writer, db *sql.DB, appName string, collec
 			feedLink = fmt.Sprintf("%s/%s", gen.BaseURL, collection.Link)
 		}
 	}
-	return gen.WriteCustomRSS(out, db, SQLDisplayItems, feedLink, appName, collection)
+	stmt, stmtArgs := gen.displayItems()
+	return gen.WriteCustomRSS(out, db, stmt, feedLink, appName, collection, stmtArgs...)
 }
 
 // WriteCustomRSS generates a custom RSS feed given a SQL statement

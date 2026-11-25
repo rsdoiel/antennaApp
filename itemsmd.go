@@ -349,7 +349,8 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
 	if err := gen.Items.validate(); err != nil {
 		return 0, err
 	}
-	rows, err := db.Query(SQLDisplayItems)
+	stmt, stmtArgs := gen.displayItems()
+	rows, err := db.Query(stmt, stmtArgs...)
 	if err != nil {
 		return 0, err
 	}

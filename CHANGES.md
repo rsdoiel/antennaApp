@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added: a cap on the items each feed shows (DR-0039)
+
+- A feed shows at most its newest `max_items_per_feed` items (default 1000, 0 for
+  no cap) in a collection's HTML page, `STEM_items.md` and `STEM.xml`; the
+  top-level `feed_limits` mapping sets a number for a single feed by its address.
+  Items are hidden when the pages are made, not deleted or re-statused. The
+  site's own posts are never capped. A negative or non-whole number is a
+  configuration error (exit 78).
+- `generate` warns once for a collection when feeds were cut, naming each with
+  how many it shows and how many it has.
+
 ### Added: harvest records each feed's status and warns about failing feeds (DR-0038)
 
 - Every attempt to fetch a listed feed is written to a new `harvest_log` table

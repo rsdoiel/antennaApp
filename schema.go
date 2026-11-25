@@ -70,6 +70,14 @@ type AppConfig struct {
 	// check off.
 	DescriptionMax *int `json:"descriptionMax,omitempty" yaml:"descriptionMax,omitempty"`
 
+	// MaxItemsPerFeed is how many of its newest items a feed may show in a
+	// collection's output (DR-0039). Nil means 1000; 0 means no cap.
+	MaxItemsPerFeed *int `json:"max_items_per_feed,omitempty" yaml:"max_items_per_feed,omitempty"`
+
+	// FeedLimits sets that number for single feeds, by the address written in
+	// the feed list. 0 means no cap for that feed.
+	FeedLimits map[string]int `json:"feed_limits,omitempty" yaml:"feed_limits,omitempty"`
+
 	// Sequences names the paths that hold a sequence of pages or posts, so
 	// previous and next are derived for their members (DR-0026).
 	Sequences []Sequence `json:"sequences,omitempty" yaml:"sequences,omitempty"`
@@ -410,6 +418,12 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if err := cfg.validateHarvest(); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
+	if err := validateFeedCapSyntax(src); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
+	if err := cfg.validateFeedCaps(); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if cfg.DescriptionMax != nil && *cfg.DescriptionMax < 0 {

@@ -119,6 +119,9 @@ type Generator struct {
 	// unresolved holds the items whose relative links had no address to be
 	// resolved against (DR-0037 2); generate warns once for the collection.
 	unresolved map[string]struct{}
+
+	// caps is how many items each feed may show (DR-0039).
+	caps feedCaps
 }
 
 // ItemsConfig controls how harvested feed items are rendered into
@@ -228,6 +231,7 @@ func NewGenerator(appName string, BaseURL string) (*Generator, error) {
 	gen.Lang = "en-US"
 	gen.out = os.Stdout
 	gen.eout = os.Stderr
+	gen.caps = feedCaps{def: defaultMaxItemsPerFeed}
 	return gen, nil
 }
 
@@ -653,6 +657,7 @@ func (collection *Collection) Generate(out io.Writer, eout io.Writer, appName st
 		return err
 	}
 	gen.DefaultAuthor = strings.TrimSpace(cfg.Author)
+	gen.caps = cfg.feedCaps()
 	// Warnings go to the stream the caller gave, not always to os.Stderr.
 	if eout != nil {
 		gen.eout = eout
@@ -697,6 +702,7 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 	}
 	defer db.Close()
 	defer gen.reportUnresolved(collection.File)
+	defer gen.reportCutFeeds(db, gen.eout, collection.File)
 
 	// Run the collection filter to determine which items to publish
 	if err := collection.ApplyFilters(db); err != nil {

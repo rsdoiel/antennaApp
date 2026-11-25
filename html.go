@@ -661,8 +661,8 @@ func (gen *Generator) WriteHTML(out io.Writer, db *sql.DB, cfgName string, colle
 	}
 	// main landmark wraps the primary feed content
 	fmt.Fprintln(out, `  <main id="main-content" tabindex="-1">`)
-	stmt := SQLDisplayItems
-	rows, err := db.Query(stmt)
+	stmt, stmtArgs := gen.displayItems()
+	rows, err := db.Query(stmt, stmtArgs...)
 	if err != nil {
 		return err
 	}
