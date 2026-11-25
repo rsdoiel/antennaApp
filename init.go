@@ -34,6 +34,9 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 		if err != nil {
 			return err
 		}
+		if err := validateFeedCapSyntax(src); err != nil {
+			return configErrorf("%s: %w", fName, err)
+		}
 		if err := yaml.Unmarshal(src, &cfg); err != nil {
 			return configErrorf("%s: %w", fName, err)
 		}

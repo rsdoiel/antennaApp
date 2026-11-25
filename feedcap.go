@@ -71,23 +71,34 @@ func (cfg *AppConfig) validateFeedCaps() error {
 	return nil
 }
 
-// validateFeedCapSyntax refuses a cap written as anything but a whole number.
-// The YAML decoder rounds 2.5 into an int without complaint, so the nodes are
-// checked as they were written (DR-0039 4).
+// validateFeedCapSyntax refuses a cap written as anything but a whole number,
+// and says which setting and what shape it wants (DR-0039 4). It reads the
+// YAML as written because the decoder rounds 2.5 into an int without complaint
+// and, for a list where a mapping belongs, only says "cannot unmarshal !!seq
+// into map[string]int" with no setting named. It runs before the settings are
+// decoded.
 func validateFeedCapSyntax(src []byte) error {
 	var raw struct {
-		Max    yaml.Node            `yaml:"max_items_per_feed"`
-		Limits map[string]yaml.Node `yaml:"feed_limits"`
+		Max    yaml.Node `yaml:"max_items_per_feed"`
+		Limits yaml.Node `yaml:"feed_limits"`
 	}
 	if err := yaml.Unmarshal(src, &raw); err != nil {
 		return nil // the real decode reports it
 	}
-	if raw.Max.Kind != 0 && raw.Max.Tag != "!!int" {
-		return fmt.Errorf("max_items_per_feed is %q; it must be a whole number of 0 or more", raw.Max.Value)
+	if raw.Max.Kind != 0 && (raw.Max.Kind != yaml.ScalarNode || raw.Max.Tag != "!!int") {
+		return fmt.Errorf("max_items_per_feed must be one whole number of 0 or more (0 is no cap), for example max_items_per_feed: 1000")
 	}
-	for address, n := range raw.Limits {
-		if n.Tag != "!!int" {
-			return fmt.Errorf("feed_limits for %s is %q; it must be a whole number of 0 or more", address, n.Value)
+	if raw.Limits.Kind == 0 {
+		return nil
+	}
+	if raw.Limits.Kind != yaml.MappingNode {
+		return fmt.Errorf("feed_limits must be a mapping of feed address to number, one ADDRESS: NUMBER line for each feed and not a list, for example:\n" +
+			"  feed_limits:\n    https://example.org/feed.xml: 200")
+	}
+	for i := 0; i+1 < len(raw.Limits.Content); i += 2 {
+		key, val := raw.Limits.Content[i], raw.Limits.Content[i+1]
+		if val.Kind != yaml.ScalarNode || val.Tag != "!!int" {
+			return fmt.Errorf("feed_limits for %s is not a whole number of 0 or more (0 is no cap)", key.Value)
 		}
 	}
 	return nil

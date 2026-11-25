@@ -323,3 +323,36 @@ func TestBadCapSettingsAreConfigurationErrors(t *testing.T) {
 		wantClass(t, bad, err, classConfig)
 	}
 }
+
+// Found on a real site, 2026-11-25: feed_limits written as a YAML list gave
+// "line 7: cannot unmarshal !!seq into map[string]int", which names neither the
+// setting nor what it wants. It must say which setting and what shape.
+func TestFeedLimitsAsAListIsExplained(t *testing.T) {
+	for name, bad := range map[string]string{
+		"list of single-key maps": "feed_limits:\n  - https://example.org/a.xml: 200\n",
+		"list of url and limit":   "feed_limits:\n  - url: https://example.org/a.xml\n    limit: 200\n",
+		"a single number":         "feed_limits: 200\n",
+	} {
+		newWorkspace(t, true)
+		dropInitCap(t)
+		cfg, _ := os.ReadFile("antenna.yaml")
+		os.WriteFile("antenna.yaml", append(cfg, []byte("\n"+bad)...), 0o644)
+		_, _, err := runCapture(t, "generate")
+		wantClass(t, name, err, classConfig)
+		if err != nil && (!strings.Contains(err.Error(), "feed_limits") || !strings.Contains(err.Error(), "address")) {
+			t.Errorf("%s: the message does not name feed_limits and say what it wants:\n%s", name, err)
+		}
+	}
+}
+
+func TestMaxItemsPerFeedAsAListIsExplained(t *testing.T) {
+	newWorkspace(t, true)
+	dropInitCap(t)
+	cfg, _ := os.ReadFile("antenna.yaml")
+	os.WriteFile("antenna.yaml", append(cfg, []byte("\nmax_items_per_feed:\n  - 5\n")...), 0o644)
+	_, _, err := runCapture(t, "generate")
+	wantClass(t, "list", err, classConfig)
+	if err != nil && !strings.Contains(err.Error(), "max_items_per_feed") {
+		t.Errorf("the message does not name max_items_per_feed:\n%s", err)
+	}
+}

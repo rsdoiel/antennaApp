@@ -406,6 +406,9 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 	if err != nil {
 		return err
 	}
+	if err := validateFeedCapSyntax(src); err != nil {
+		return configErrorf("%s: %w", cfgName, err)
+	}
 	if err := yaml.Unmarshal(src, &cfg); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
 	}
@@ -419,9 +422,6 @@ func (cfg *AppConfig) LoadConfig(cfgName string) error {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if err := cfg.validateHarvest(); err != nil {
-		return configErrorf("%s: %w", cfgName, err)
-	}
-	if err := validateFeedCapSyntax(src); err != nil {
 		return configErrorf("%s: %w", cfgName, err)
 	}
 	if err := cfg.validateFeedCaps(); err != nil {
