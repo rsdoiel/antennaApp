@@ -772,6 +772,16 @@ nor its posts, and removes an items page left by an earlier run. Post
 HTML from before the switch is left alone; generate says how many files remain.
 See {app_name} help configuration.
 
+A harvested item's text keeps the links and images as its own site wrote them,
+and many are relative (/images/a.png, /2026/post/). When it is rendered, in the
+HTML page, in STEM_items.md and in the RSS feed, each relative address is made
+absolute against the item's link, so it points at the site the item came from.
+Absolute addresses, mailto:, tel:, data: and #fragment are left as written, and
+so are your own posts. The stored item is not changed. An item with no usable
+link (not an absolute http or https address) has nothing to resolve against: it
+is left as written and generate warns once for the collection with the number of
+items. See antennaApp DR-0037.
+
 Output is the same every time it is generated from the same data. A file is
 rewritten only when its content changes. The lines that record when it was
 built (the date meta element of an HTML page, dateModified in an items file,

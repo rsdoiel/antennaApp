@@ -187,6 +187,10 @@ func (gen *Generator) WriteItem(out io.Writer, link string, title string, descri
 		if err != nil {
 			return false, err
 		}
+		if contentIsBlockHTML {
+			// Relative links are the source site's, not this one's (DR-0037).
+			content = gen.resolveItemRefs(content, link, itemKey(link, title, pubDate, label), false)
+		}
 	}
 
 	// Source attribution line — additive to the existing footer, per the

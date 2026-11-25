@@ -299,6 +299,7 @@ func (gen *Generator) writeItemMarkdown(out io.Writer, link, title, description 
 		if sourceMarkdown != "" {
 			// Harvested Markdown stays Markdown, without raw HTML.
 			if md := strings.TrimSpace(stripRawHTMLFromMarkdown(source)); md != "" {
+				md = gen.resolveItemRefs(md, link, itemKey(link, title, pubDate, label), true)
 				parts = append(parts, md)
 			}
 		} else {

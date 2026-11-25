@@ -98,6 +98,13 @@ func (gen *Generator) writeItemRSS(out io.Writer, own bool, link string, title s
 		}
 		pressTime += ", updated: " + updated
 	}
+	// A harvested item's relative links are the source site's: resolve them
+	// against its link, as the pages do (DR-0037 5). Its own post is left.
+	if !own {
+		key := itemKey(link, title, pubDate, label)
+		description = gen.resolveItemRefs(description, link, key, false)
+		sourceMarkdown = gen.resolveItemRefs(sourceMarkdown, link, key, true)
+	}
 	// Wrap the Item
 	fmt.Fprintf(out, `    <item>
 `)

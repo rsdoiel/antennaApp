@@ -115,6 +115,10 @@ type Generator struct {
 
 	out  io.Writer
 	eout io.Writer
+
+	// unresolved holds the items whose relative links had no address to be
+	// resolved against (DR-0037 2); generate warns once for the collection.
+	unresolved map[string]struct{}
 }
 
 // ItemsConfig controls how harvested feed items are rendered into
@@ -692,6 +696,7 @@ func (gen *Generator) Generate(eout io.Writer, appName string, cfg *AppConfig, c
 		return err
 	}
 	defer db.Close()
+	defer gen.reportUnresolved(collection.File)
 
 	// Run the collection filter to determine which items to publish
 	if err := collection.ApplyFilters(db); err != nil {

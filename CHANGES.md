@@ -1,5 +1,18 @@
 # Changes
 
+## Unreleased
+
+### Fixed: relative links and images in harvested items (DR-0037)
+
+- A harvested item's relative `href` and `src` (root-relative, page-relative,
+  protocol-relative) are made absolute against the item's link when it is
+  rendered: in `STEM_items.html`, `STEM_items.md` and `STEM.xml` (description and
+  `source:markdown`). They used to resolve against the site that aggregates the
+  items and break. Absolute, `mailto:`, `tel:`, `data:` and `#fragment` values
+  and the site's own posts are left. The stored item is not changed.
+- An item with no usable link keeps its body as written, and `generate` warns
+  once for the collection with the count.
+
 ## v0.2.0 — 2026-11-23
 
 ### Changed: generated file names (DR-0034, amends DR-0033)
