@@ -23,6 +23,56 @@
 </nav>
 <section id="main-content">
 <h1 id="changes">Changes</h1>
+<h2 id="v0.2.1-2026-11-25">v0.2.1 — 2026-11-25</h2>
+<h3 id="added-a-cap-on-the-items-each-feed-shows-dr-0039">Added: a cap
+on the items each feed shows (DR-0039)</h3>
+<ul>
+<li>A feed shows at most its newest <code>max_items_per_feed</code>
+items (no cap when the setting is absent or 0; <code>antenna init</code>
+writes 1000 into a new <code>antenna.yaml</code> and leaves an existing
+one alone) in a collection’s HTML page, <code>STEM_items.md</code> and
+<code>STEM.xml</code>; the top-level <code>feed_limits</code> mapping
+sets a number for a single feed by its address. Items are hidden when
+the pages are made, not deleted or re-statused. The site’s own posts are
+never capped. A negative or non-whole number is a configuration error
+(exit 78).</li>
+<li><code>generate</code> warns once for a collection when feeds were
+cut, naming each with how many it shows and how many it has.</li>
+</ul>
+<h3
+id="added-harvest-records-each-feeds-status-and-warns-about-failing-feeds-dr-0038">Added:
+harvest records each feed’s status and warns about failing feeds
+(DR-0038)</h3>
+<ul>
+<li>Every attempt to fetch a listed feed is written to a new
+<code>harvest_log</code> table in the collection database (made on the
+first harvest of an older database; rows kept 90 days).</li>
+<li>A feed whose attempts all failed over the last 7 days, at least 3 of
+them, gets a warning at the end of the harvest on standard error, with
+the HTTP status in words (<code>last status 404 Not Found</code>). 429
+and 503 count as failures. The exit status is unchanged and nothing is
+skipped or removed.</li>
+<li>Settings under <code>harvest:</code> in <code>antenna.yaml</code>:
+<code>failing_days</code>, <code>failing_attempts</code> and
+<code>log_days</code>; a value below 1 is a configuration error (exit
+78).</li>
+</ul>
+<h3
+id="fixed-relative-links-and-images-in-harvested-items-dr-0037">Fixed:
+relative links and images in harvested items (DR-0037)</h3>
+<ul>
+<li>A harvested item’s relative <code>href</code> and <code>src</code>
+(root-relative, page-relative, protocol-relative) are made absolute
+against the item’s link when it is rendered: in
+<code>STEM_items.html</code>, <code>STEM_items.md</code> and
+<code>STEM.xml</code> (description and <code>source:markdown</code>).
+They used to resolve against the site that aggregates the items and
+break. Absolute, <code>mailto:</code>, <code>tel:</code>,
+<code>data:</code> and <code>#fragment</code> values and the site’s own
+posts are left. The stored item is not changed.</li>
+<li>An item with no usable link keeps its body as written, and
+<code>generate</code> warns once for the collection with the count.</li>
+</ul>
 <h2 id="v0.2.0-2026-11-23">v0.2.0 — 2026-11-23</h2>
 <h3 id="changed-generated-file-names-dr-0034-amends-dr-0033">Changed:
 generated file names (DR-0034, amends DR-0033)</h3>

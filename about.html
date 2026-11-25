@@ -23,28 +23,31 @@
 </nav>
 <section id="main-content">
 <h1 id="about-this-software">About this software</h1>
-<h2 id="antennaapp-0.2.0">antennaApp 0.2.0</h2>
+<h2 id="antennaapp-0.2.1">antennaApp 0.2.1</h2>
 <ul>
-<li>Breaking: the aggregated items page of a collection is now
-<code>STEM_items.html</code> (it was <code>STEM.html</code>), beside
-<code>STEM_items.md</code>; your own <code>STEM.md</code> has no HTML
-page, and <code>antenna page</code> links to <code>STEM_items.md</code>
-become <code>STEM_items.html</code>. The first <code>generate</code>
-removes the old <code>STEM.html</code> items page, with one note; links
-and bookmarks to it fail. <code>page-index</code> collections and the
-pages collection keep <code>STEM.html</code>. A collection with nothing
-to show writes no items page</li>
-<li>Breaking: <code>antenna harvest</code> no longer reads
-<code>robots.txt</code>: antenna fetches feeds that sites publish for
-subscription, so it skips no feed because of it and ignores
-<code>Crawl-delay</code> (the pause between requests and the User-Agent
-stay). Feeds that <code>robots.txt</code> used to forbid, such as
-<code>news.un.org</code>’s, are now harvested</li>
-<li>Fixed: the sitemap lists every page, post and collection page
-written as HTML: <code>STEM_items.html</code>, a page-index collection’s
-<code>STEM.html</code>, every HTML output of a page; a page with no HTML
-output is no longer listed as the site root</li>
-<li><code>antenna help generate</code> has an EXIT STATUS section</li>
+<li>Fixed: relative links and images in a harvested item
+(<code>/images/a.png</code>, <code>/2026/post/</code>,
+<code>c.html</code>) are made absolute against the item’s link when it
+is rendered, in <code>STEM_items.html</code>, <code>STEM_items.md</code>
+and <code>STEM.xml</code>; they used to resolve against the aggregating
+site and break. The stored item is not changed. An item with no usable
+link is left as written and <code>generate</code> warns once for the
+collection with the count</li>
+<li>Added: <code>harvest</code> records every attempt to fetch a listed
+feed (HTTP status, error) in a <code>harvest_log</code> table and, at
+the end of the run, warns about a feed whose attempts all failed over 7
+days (at least 3), with the status in words
+(<code>last status 404 Not Found</code>); 429 and 503 count as failures.
+Settings <code>failing_days</code>, <code>failing_attempts</code> and
+<code>log_days</code> under <code>harvest:</code>. The exit status is
+unchanged</li>
+<li>Added: a cap on the items each feed shows,
+<code>max_items_per_feed</code> and <code>feed_limits</code> by feed
+address in <code>antenna.yaml</code>. With no setting there is no cap;
+<code>antenna init</code> writes <code>max_items_per_feed: 1000</code>
+into a new <code>antenna.yaml</code> and leaves an existing one alone.
+Older items are hidden, not deleted, and your own posts are never
+capped. <code>generate</code> warns when a feed is cut</li>
 </ul>
 <h2 id="authors">Authors</h2>
 <ul>

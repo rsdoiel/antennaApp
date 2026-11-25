@@ -32,6 +32,9 @@ exist:</p>
 <p>antenna.yaml main configuration (htdocs path, port, collections list)
 page.yaml page generator (link, meta, nav, header, footer, scripts)</p>
 <p>Also creates a default pages.md collection and pages.db database.</p>
+<p>A new antenna.yaml has max_items_per_feed: 1000, a cap on how many of
+its newest items one feed shows (see antenna help configuration). An
+antenna.yaml that already exists is left as it is and gets no cap.</p>
 <p>After running init, run ‘antenna css’ to generate a starter
 stylesheet and automatically link it in page.yaml.</p>
 <h1 id="examples">EXAMPLES</h1>
