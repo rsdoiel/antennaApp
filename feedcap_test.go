@@ -48,13 +48,36 @@ func capSite(t *testing.T, extraConfig string, sizes map[string]int) string {
 	if _, _, err := runCapture(t, "harvest", "news.md"); err != nil {
 		t.Fatalf("harvest: %s", err)
 	}
-	setCapConfig(t, strings.ReplaceAll(extraConfig, "{{SITE}}", srv.URL))
+	// With no extra settings the file stays as init made it, with its cap of 1000.
+	if extraConfig != "" {
+		setCapConfig(t, strings.ReplaceAll(extraConfig, "{{SITE}}", srv.URL))
+	}
 	return srv.URL
 }
 
-// setCapConfig removes any earlier cap settings and appends extra to antenna.yaml.
+// dropInitCap removes the max_items_per_feed line antenna init wrote.
+func dropInitCap(t *testing.T) {
+	t.Helper()
+	b, err := os.ReadFile("antenna.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var keep []string
+	for _, line := range strings.Split(string(b), "\n") {
+		if !strings.HasPrefix(line, "max_items_per_feed:") {
+			keep = append(keep, line)
+		}
+	}
+	if err := os.WriteFile("antenna.yaml", []byte(strings.Join(keep, "\n")), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// setCapConfig removes any earlier cap settings, including the one init
+// wrote, and appends extra to antenna.yaml.
 func setCapConfig(t *testing.T, extra string) {
 	t.Helper()
+	dropInitCap(t)
 	b, err := os.ReadFile("antenna.yaml")
 	if err != nil {
 		t.Fatal(err)
@@ -180,8 +203,9 @@ func TestGenerateZeroMeansNoCap(t *testing.T) {
 	}
 }
 
-func TestGenerateWithNoSettingCapsAtOneThousand(t *testing.T) {
-	site := capSite(t, "", map[string]int{"a": 1, "b": 1, "c": 1})
+// addBigFeed adds 1005 published items to feed a's channel.
+func addBigFeed(t *testing.T, site string) {
+	t.Helper()
 	db, err := sql.Open("sqlite", "news.db")
 	if err != nil {
 		t.Fatal(err)
@@ -198,13 +222,58 @@ func TestGenerateWithNoSettingCapsAtOneThousand(t *testing.T) {
 	}
 	tx.Commit()
 	db.Close()
+}
+
+func itemHeadings(text string) int {
+	return strings.Count(text, "big item ") + strings.Count(text, "a item ")
+}
+
+// A site made by antenna init has a cap of 1000 (DR-0039 3).
+func TestInitWritesACapOfOneThousand(t *testing.T) {
+	newWorkspace(t, true)
+	if got := readText(t, "antenna.yaml"); !strings.Contains(got, "max_items_per_feed: 1000\n") {
+		t.Errorf("init did not write the cap:\n%s", got)
+	}
+}
+
+// An antenna.yaml that exists is left as it is: running init again adds no cap.
+func TestInitAddsNoCapToAnExistingFile(t *testing.T) {
+	newWorkspace(t, true)
+	dropInitCap(t)
+	if err := runIn(t, "init"); err != nil {
+		t.Fatalf("init: %s", err)
+	}
+	if got := readText(t, "antenna.yaml"); strings.Contains(got, "max_items_per_feed") {
+		t.Errorf("init added a cap to an existing antenna.yaml:\n%s", got)
+	}
+}
+
+func TestGenerateOnANewSiteCapsAtOneThousand(t *testing.T) {
+	site := capSite(t, "", map[string]int{"a": 1, "b": 1, "c": 1})
+	if got := readText(t, "antenna.yaml"); !strings.Contains(got, "max_items_per_feed: 1000") {
+		t.Fatalf("test setup: init wrote no cap:\n%s", got)
+	}
+	addBigFeed(t, site)
 	eout := generateCap(t)
-	got := findOutput(t, "news_items.md")
-	if n := strings.Count(got, "big item ") + strings.Count(got, "a item "); n != 1000 {
+	if n := itemHeadings(findOutput(t, "news_items.md")); n != 1000 {
 		t.Errorf("feed shows %d items, want 1000", n)
 	}
 	if !strings.Contains(eout, "1 feed over its cap: A shows 1000 of 1006") {
 		t.Errorf("warning wrong:\n%s", eout)
+	}
+}
+
+// No setting in antenna.yaml means no cap (DR-0039 3).
+func TestGenerateWithNoSettingHasNoCap(t *testing.T) {
+	site := capSite(t, "", map[string]int{"a": 1, "b": 1, "c": 1})
+	dropInitCap(t)
+	addBigFeed(t, site)
+	eout := generateCap(t)
+	if n := itemHeadings(findOutput(t, "news_items.md")); n != 1006 {
+		t.Errorf("feed shows %d items, want all 1006", n)
+	}
+	if strings.Contains(eout, "over its cap") || strings.Contains(eout, "over their cap") {
+		t.Errorf("warned with no cap set:\n%s", eout)
 	}
 }
 
@@ -247,6 +316,7 @@ func TestBadCapSettingsAreConfigurationErrors(t *testing.T) {
 		"feed_limits:\n  https://example.org/a.xml: -3", "feed_limits:\n  https://example.org/a.xml: lots",
 	} {
 		newWorkspace(t, true)
+		dropInitCap(t)
 		cfg, _ := os.ReadFile("antenna.yaml")
 		os.WriteFile("antenna.yaml", append(cfg, []byte("\n"+bad+"\n")...), 0o644)
 		_, _, err := runCapture(t, "generate")

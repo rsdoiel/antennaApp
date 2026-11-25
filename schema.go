@@ -71,7 +71,8 @@ type AppConfig struct {
 	DescriptionMax *int `json:"descriptionMax,omitempty" yaml:"descriptionMax,omitempty"`
 
 	// MaxItemsPerFeed is how many of its newest items a feed may show in a
-	// collection's output (DR-0039). Nil means 1000; 0 means no cap.
+	// collection's output (DR-0039). Nil and 0 mean no cap; antenna init writes
+	// 1000 into a new file.
 	MaxItemsPerFeed *int `json:"max_items_per_feed,omitempty" yaml:"max_items_per_feed,omitempty"`
 
 	// FeedLimits sets that number for single feeds, by the address written in

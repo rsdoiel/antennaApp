@@ -772,8 +772,8 @@ nor its posts, and removes an items page left by an earlier run. Post
 HTML from before the switch is left alone; generate says how many files remain.
 See {app_name} help configuration.
 
-A feed shows at most max_items_per_feed of its newest items (1000 unless
-antenna.yaml says otherwise), or its own number in feed_limits. The older items
+A feed shows at most max_items_per_feed of its newest items (no cap unless
+antenna.yaml sets one; antenna init writes 1000), or its own number in feed_limits. The older items
 stay in the database and are only left off the pages; when a feed is cut,
 generate warns once for the collection, for example "2 feeds over their cap:
 Korea Times shows 1000 of 1771, ...". See antennaApp DR-0039 and
@@ -980,6 +980,10 @@ Creates the two configuration files {app_name} needs if they do not exist:
   page.yaml     page generator (link, meta, nav, header, footer, scripts)
 
 Also creates a default pages.md collection and pages.db database.
+
+A new antenna.yaml has max_items_per_feed: 1000, a cap on how many of its newest
+items one feed shows (see {app_name} help configuration). An antenna.yaml that
+already exists is left as it is and gets no cap.
 
 After running init, run '{app_name} css' to generate a starter stylesheet
 and automatically link it in page.yaml.
@@ -2183,8 +2187,10 @@ bonbon
 
 max_items_per_feed
 : (optional) how many of its newest items one feed may show in a collection's
-  HTML page, items Markdown and RSS feed. Default 1000; 0 means no cap. A whole
-  number of 0 or more, else a configuration error (exit 78). The items stay in
+  HTML page, items Markdown and RSS feed. With no setting, or 0, there is no cap;
+  antenna init writes 1000 into the antenna.yaml it creates, and leaves a file
+  that exists as it is. A whole number of 0 or more, else a configuration error
+  (exit 78). The items stay in
   the database: the cap only hides the older ones when the pages are made, so
   raising it or removing it brings them back. Your own posts are never capped.
 

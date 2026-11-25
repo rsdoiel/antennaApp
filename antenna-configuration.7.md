@@ -1,4 +1,4 @@
-%antenna(7) user manual | version 0.2.1 c3213bd
+%antenna(7) user manual | version 0.2.1 8278d2c
 % R. S. Doiel
 % 2026-11-25
 
@@ -92,8 +92,10 @@ bonbon
 
 max_items_per_feed
 : (optional) how many of its newest items one feed may show in a collection's
-  HTML page, items Markdown and RSS feed. Default 1000; 0 means no cap. A whole
-  number of 0 or more, else a configuration error (exit 78). The items stay in
+  HTML page, items Markdown and RSS feed. With no setting, or 0, there is no cap;
+  antenna init writes 1000 into the antenna.yaml it creates, and leaves a file
+  that exists as it is. A whole number of 0 or more, else a configuration error
+  (exit 78). The items stay in
   the database: the cap only hides the older ones when the pages are made, so
   raising it or removing it brings them back. Your own posts are never capped.
 

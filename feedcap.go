@@ -14,8 +14,9 @@ import (
 // collection's output, 1000 by default, set per feed in antenna.yaml. The
 // items stay in the database; the cap only hides them when a page is made.
 
-// defaultMaxItemsPerFeed is the cap of a feed with no setting of its own.
-const defaultMaxItemsPerFeed = 1000
+// initMaxItemsPerFeed is the cap antenna init writes into the antenna.yaml it
+// creates. A file with no max_items_per_feed has no cap (DR-0039 3).
+const initMaxItemsPerFeed = 1000
 
 /** feedCaps is how many items each feed may show: a default and the feeds
  * that differ, by address as listed. 0 means no cap.
@@ -37,8 +38,8 @@ func (c feedCaps) forFeed(address string) int {
 	return c.def
 }
 
-/** feedCaps reads the cap settings of antenna.yaml: max_items_per_feed (1000
- * when absent) and feed_limits.
+/** feedCaps reads the cap settings of antenna.yaml: max_items_per_feed (no
+ * cap when absent) and feed_limits.
  *
  * Returns:
  *   feedCaps — the settings, defaults filled in
@@ -48,7 +49,7 @@ func (c feedCaps) forFeed(address string) int {
  *   n := caps.forFeed("https://example.org/feed.xml")
  */
 func (cfg *AppConfig) feedCaps() feedCaps {
-	c := feedCaps{def: defaultMaxItemsPerFeed, limits: cfg.FeedLimits}
+	c := feedCaps{limits: cfg.FeedLimits}
 	if cfg.MaxItemsPerFeed != nil {
 		c.def = *cfg.MaxItemsPerFeed
 	}

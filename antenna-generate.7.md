@@ -1,4 +1,4 @@
-%antenna(7) user manual | version 0.2.1 c3213bd
+%antenna(7) user manual | version 0.2.1 8278d2c
 % R. S. Doiel
 % 2026-11-25
 
@@ -42,8 +42,8 @@ nor its posts, and removes an items page left by an earlier run. Post
 HTML from before the switch is left alone; generate says how many files remain.
 See antenna help configuration.
 
-A feed shows at most max_items_per_feed of its newest items (1000 unless
-antenna.yaml says otherwise), or its own number in feed_limits. The older items
+A feed shows at most max_items_per_feed of its newest items (no cap unless
+antenna.yaml sets one; antenna init writes 1000), or its own number in feed_limits. The older items
 stay in the database and are only left off the pages; when a feed is cut,
 generate warns once for the collection, for example "2 feeds over their cap:
 Korea Times shows 1000 of 1771, ...". See antennaApp DR-0039 and

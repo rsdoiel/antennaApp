@@ -42,6 +42,10 @@ func (app *AntennaApp) Init(cfgName string, args []string) error {
 		cfg.Htdocs = ""
 		cfg.Port = 8000
 		cfg.BaseURL = "http://localhost:8000"
+		// A new site starts with a cap on what one feed shows (DR-0039 3); a
+		// file that exists is never given one.
+		cap := initMaxItemsPerFeed
+		cfg.MaxItemsPerFeed = &cap
 	}
 	if cfg.Port == 0 {
 		cfg.Port = 8000

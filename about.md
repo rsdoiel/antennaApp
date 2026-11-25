@@ -60,7 +60,7 @@ About this software
 
 - Fixed: relative links and images in a harvested item (`/images/a.png`, `/2026/post/`, `c.html`) are made absolute against the item's link when it is rendered, in `STEM_items.html`, `STEM_items.md` and `STEM.xml`; they used to resolve against the aggregating site and break. The stored item is not changed. An item with no usable link is left as written and `generate` warns once for the collection with the count
 - Added: `harvest` records every attempt to fetch a listed feed (HTTP status, error) in a `harvest_log` table and, at the end of the run, warns about a feed whose attempts all failed over 7 days (at least 3), with the status in words (`last status 404 Not Found`); 429 and 503 count as failures. Settings `failing_days`, `failing_attempts` and `log_days` under `harvest:`. The exit status is unchanged
-- Added: a cap on the items each feed shows, `max_items_per_feed` (default 1000, 0 for none) and `feed_limits` by feed address in `antenna.yaml`. Older items are hidden, not deleted, and your own posts are never capped. `generate` warns when a feed is cut. A feed with more than 1000 items in its window (for example Korea Times on the antenna site) now shows its newest 1000
+- Added: a cap on the items each feed shows, `max_items_per_feed` and `feed_limits` by feed address in `antenna.yaml`. With no setting there is no cap; `antenna init` writes `max_items_per_feed: 1000` into a new `antenna.yaml` and leaves an existing one alone. Older items are hidden, not deleted, and your own posts are never capped. `generate` warns when a feed is cut
 
 ## Authors
 

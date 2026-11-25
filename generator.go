@@ -231,7 +231,6 @@ func NewGenerator(appName string, BaseURL string) (*Generator, error) {
 	gen.Lang = "en-US"
 	gen.out = os.Stdout
 	gen.eout = os.Stderr
-	gen.caps = feedCaps{def: defaultMaxItemsPerFeed}
 	return gen, nil
 }
 
