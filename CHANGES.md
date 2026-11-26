@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Changed: harvest fetches through markdownweb's `fetch`
+
+- The HTTP client of harvest is `github.com/rsdoiel/markdownweb/fetch`
+  (markdownweb DR-0002); antenna keeps its pause, its User-Agent, its five
+  redirects and its exit classes, and still does not read `robots.txt`
+  (DR-0035). New: a 429 or 503 with a `Retry-After` of up to two minutes is
+  waited out and tried once more, a longer one is unavailable (69), and a feed or
+  table of contents over 32 MiB is a data error (65).
+- Documented: `userAgent` in `antenna.yaml` sets the User-Agent harvest sends; empty
+  or missing means `antenna/VERSION HASH`. It already worked; it was not in
+  `antenna help configuration`. Tested through `antenna harvest`.
+
 ### Changed: front matter, macros and includes come from `frontmatter` v0.0.1
 
 - `SplitFrontMatter`, the `{{page.NAME}}` expander and the include directives are

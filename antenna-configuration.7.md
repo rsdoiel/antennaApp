@@ -24,6 +24,12 @@ htdocs
 generator
 : (optional, default: page.yaml) default page generator YAML
 
+userAgent
+: (optional, default: antenna/VERSION HASH) the User-Agent harvest sends with
+  every request, so a site can tell who is asking; name yourself and say where
+  to read about you, for example "my-planet/1.0 (+https://example.org/about)".
+  Empty or missing means the default
+
 base_url
 : (optional) the address the site is published at, with no trailing slash.
   The feeds, the sitemap and the table of contents (.well-known/toc.opml) are

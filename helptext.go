@@ -893,7 +893,8 @@ Harvest does not read robots.txt: it fetches feeds that sites publish for
 subscription, and the guessed feed addresses are bounded (eight at most, once
 per listed address per run). Requests to one host are made one at a time with a
 pause between them, 500 ms unless the harvest setting in antenna.yaml says
-otherwise, and each carries the User-Agent so a site can see who is asking.
+otherwise, and each carries the User-Agent so a site can see who is asking:
+antenna/VERSION HASH, or the userAgent setting in antenna.yaml when there is one.
 
 Each attempt to fetch a listed feed is recorded in the collection's database
 (table harvest_log): when, the HTTP status of the answer (none when the address
@@ -2118,6 +2119,12 @@ htdocs
 
 generator
 : (optional, default: page.yaml) default page generator YAML
+
+userAgent
+: (optional, default: antenna/VERSION HASH) the User-Agent harvest sends with
+  every request, so a site can tell who is asking; name yourself and say where
+  to read about you, for example "my-planet/1.0 (+https://example.org/about)".
+  Empty or missing means the default
 
 base_url
 : (optional) the address the site is published at, with no trailing slash.

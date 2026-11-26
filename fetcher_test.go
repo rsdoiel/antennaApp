@@ -64,12 +64,11 @@ func robotsServer(status int, robots string) (*httptest.Server, *hitLog) {
 // testFetcher is a fetcher whose clock is fake: sleep advances it and records
 // the waits, so no test sleeps.
 func testFetcher(pause time.Duration) (*fetcher, *[]time.Duration) {
-	f := newFetcher("antenna-test", pause)
 	clock := time.Date(2026, 11, 23, 12, 0, 0, 0, time.UTC)
 	waits := []time.Duration{}
-	f.now = func() time.Time { return clock }
-	f.sleep = func(d time.Duration) { waits = append(waits, d); clock = clock.Add(d) }
-	return f, &waits
+	now := func() time.Time { return clock }
+	sleep := func(d time.Duration) { waits = append(waits, d); clock = clock.Add(d) }
+	return newFetcherClock("antenna-test", pause, now, sleep), &waits
 }
 
 func TestFetcher_PauseBetweenRequestsToOneHost(t *testing.T) {
@@ -175,5 +174,76 @@ func TestFetcher_IgnoresRobotsTxtEntirely(t *testing.T) {
 		if n := hits.count("/robots.txt"); n != 0 {
 			t.Errorf("%s: robots.txt requested %d time(s), want never", name, n)
 		}
+	}
+}
+
+// markdownweb DR-0002: the fetcher is markdownweb's. A 429 with Retry-After is
+// waited out and tried once more, which antenna's own fetcher never did.
+func TestFetcher_WaitsOutRetryAfter(t *testing.T) {
+	n := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n++
+		if n == 1 {
+			w.Header().Set("Retry-After", "3")
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		w.Write([]byte("ok"))
+	}))
+	defer srv.Close()
+	f, waits := testFetcher(0)
+	res, err := f.get(srv.URL+"/feed", "")
+	if err != nil || res.status != 200 || n != 2 {
+		t.Fatalf("res %+v err %v requests %d", res, err, n)
+	}
+	if len(*waits) != 1 || (*waits)[0] != 3*time.Second {
+		t.Fatalf("waits %v, want [3s]", *waits)
+	}
+}
+
+// A Retry-After far beyond a harvest's patience is unavailable (69), not a
+// long sleep.
+func TestFetcher_LongRetryAfterIsUnavailable(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Retry-After", "86400")
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer srv.Close()
+	f, waits := testFetcher(0)
+	_, err := f.get(srv.URL+"/feed", "")
+	wantClass(t, "long Retry-After", err, classUnavailable)
+	if len(*waits) != 0 {
+		t.Fatalf("slept %v", *waits)
+	}
+}
+
+func TestFetcher_BadURLIsDataClass(t *testing.T) {
+	f, _ := testFetcher(0)
+	for _, u := range []string{"", "ftp://example.org/x", "::bad"} {
+		_, err := f.get(u, "")
+		wantClass(t, "bad URL "+u, err, classData)
+	}
+}
+
+func TestFetcher_UnreachableIsUnavailableClass(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	u := srv.URL
+	srv.Close()
+	f, _ := testFetcher(0)
+	_, err := f.get(u, "")
+	wantClass(t, "closed port", err, classUnavailable)
+}
+
+// The default User-Agent is still antenna's, not markdownweb's.
+func TestFetcher_DefaultUserAgentNamesAntenna(t *testing.T) {
+	var ua string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { ua = r.UserAgent() }))
+	defer srv.Close()
+	f := newFetcher("", 0)
+	if _, err := f.get(srv.URL, ""); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(ua, "antenna/") || f.userAgent != ua {
+		t.Fatalf("User-Agent sent %q, held %q", ua, f.userAgent)
 	}
 }

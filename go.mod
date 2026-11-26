@@ -9,6 +9,8 @@ require (
 	github.com/mangoumbrella/goldmark-figure v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.53
 	github.com/mmcdole/gofeed v1.5.0
+	github.com/rsdoiel/frontmatter v0.0.1
+	github.com/rsdoiel/markdownweb v0.0.3
 	github.com/rsdoiel/opml v0.0.12
 	github.com/rsdoiel/stylefrom v0.0.2
 	github.com/rsdoiel/termlib v0.0.10
@@ -29,8 +31,7 @@ require (
 	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/rsdoiel/frontmatter v0.0.1 // indirect
-	github.com/rsdoiel/markdownweb v0.0.2 // indirect
+	github.com/temoto/robotstxt v1.1.2 // indirect
 	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/term v0.48.0 // indirect
 	golang.org/x/text v0.44.0 // indirect

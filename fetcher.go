@@ -18,11 +18,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package antennaApp
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"time"
+
+	"github.com/rsdoiel/markdownweb/fetch"
 )
 
 const (
@@ -30,8 +31,8 @@ const (
 	// (DR-0030 8). A guess to check on a real site.
 	defaultHarvestPause = 500 * time.Millisecond
 
-	// maxRedirects is how many redirects one request follows.
-	maxRedirects = 5
+	// maxFeedBytes is the largest feed or table of contents a harvest reads.
+	maxFeedBytes = 32 << 20
 )
 
 /** fetchResult is one HTTP response read in full.
@@ -49,22 +50,18 @@ type fetchResult struct {
 	finalURL    string
 }
 
-/** fetcher makes the HTTP requests of one harvest run. It sends the User-Agent,
- * pauses between requests to a host and follows redirects. It does not read
- * robots.txt: antenna fetches feeds sites publish for subscription (DR-0035).
+/** fetcher makes the HTTP requests of one harvest run. It is markdownweb's
+ * fetch.Fetcher (markdownweb DR-0002) with antenna's User-Agent and pause, and
+ * the error classes of workspace DR-0003. It does not read robots.txt: antenna
+ * fetches feeds sites publish for subscription (DR-0035).
  *
  * Example:
  *   f := newFetcher("antenna/0.1.1", defaultHarvestPause)
  *   res, err := f.get("https://example.org/feed", "application/rss+xml")
  */
 type fetcher struct {
-	client    *http.Client
+	f         *fetch.Fetcher
 	userAgent string
-	pause     time.Duration
-	now       func() time.Time
-	sleep     func(time.Duration)
-
-	last map[string]time.Time
 
 	// policy is what the run records and warns about (DR-0038).
 	policy harvestPolicy
@@ -83,37 +80,37 @@ type fetcher struct {
  *   f := newFetcher("", defaultHarvestPause)
  */
 func newFetcher(userAgent string, pause time.Duration) *fetcher {
+	return newFetcherClock(userAgent, pause, nil, nil)
+}
+
+/** newFetcherClock is newFetcher with its clock given, so tests never sleep.
+ *
+ * Parameters:
+ *   userAgent (string)             — as newFetcher
+ *   pause     (time.Duration)      — as newFetcher
+ *   now       (func() time.Time)   — the clock; nil means time.Now
+ *   sleep     (func(time.Duration)) — the wait; nil means time.Sleep
+ *
+ * Returns:
+ *   *fetcher
+ *
+ * Example:
+ *   f := newFetcherClock("", 0, fakeNow, fakeSleep)
+ */
+func newFetcherClock(userAgent string, pause time.Duration, now func() time.Time, sleep func(time.Duration)) *fetcher {
 	if userAgent == "" {
 		userAgent = fmt.Sprintf("antenna/%s %s", Version, ReleaseHash)
 	}
-	f := &fetcher{
+	return &fetcher{
 		userAgent: userAgent,
-		pause:     pause,
-		now:       time.Now,
-		sleep:     time.Sleep,
-		last:      map[string]time.Time{},
 		policy:    defaultHarvestPolicy,
-	}
-	f.client = &http.Client{
-		Timeout: 60 * time.Second,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) >= maxRedirects {
-				return unavailablef("stopped after %d redirects: %s", maxRedirects, req.URL)
-			}
-			f.wait(req.URL.Host)
-			return nil
-		},
-	}
-	return f
-}
-
-// wait sleeps until the pause has passed since the last request to host.
-func (f *fetcher) wait(host string) {
-	delay := f.pause
-	if last, ok := f.last[host]; ok && delay > 0 {
-		if rem := delay - f.now().Sub(last); rem > 0 {
-			f.sleep(rem)
-		}
+		f: fetch.New(fetch.Options{
+			UserAgent: userAgent,
+			Pause:     pause,
+			MaxBody:   maxFeedBytes,
+			Now:       now,
+			Sleep:     sleep,
+		}),
 	}
 }
 
@@ -134,34 +131,27 @@ func (f *fetcher) wait(host string) {
  *   res, err := f.get("https://example.org/feed/", "application/rss+xml")
  */
 func (f *fetcher) get(href, accept string) (*fetchResult, error) {
-	u, err := url.Parse(href)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return nil, dataErrorf("bad URL %q", href)
-	}
-	req, err := http.NewRequest("GET", href, nil)
+	res, err := f.f.Get(context.Background(), href, accept)
 	if err != nil {
-		return nil, dataErrorf("bad URL %q: %w", href, err)
-	}
-	req.Header.Set("User-Agent", f.userAgent)
-	if accept != "" {
-		req.Header.Set("Accept", accept)
-	}
-	f.wait(u.Host)
-	res, err := f.client.Do(req)
-	f.last[u.Host] = f.now()
-	if err != nil {
-		return nil, unavailablef("%s: %w", href, err)
-	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	f.last[u.Host] = f.now()
-	if err != nil {
-		return nil, unavailablef("reading %s: %w", href, err)
+		return nil, classifyFetch(err)
 	}
 	return &fetchResult{
-		status:      res.StatusCode,
-		contentType: res.Header.Get("Content-Type"),
-		body:        body,
-		finalURL:    res.Request.URL.String(),
+		status:      res.Status,
+		contentType: res.ContentType,
+		body:        res.Body,
+		finalURL:    res.FinalURL,
 	}, nil
+}
+
+// classifyFetch gives a markdownweb fetch error its DR-0003 class.
+func classifyFetch(err error) error {
+	switch {
+	case errors.Is(err, fetch.ErrUnavailable):
+		return unavailablef("%w", err)
+	case errors.Is(err, fetch.ErrData):
+		return dataErrorf("%w", err)
+	case errors.Is(err, fetch.ErrForbidden):
+		return negativef("%w", err)
+	}
+	return internalErrorf("%w", err)
 }
