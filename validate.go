@@ -18,11 +18,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package antennaApp
 
 import (
-	"github.com/rsdoiel/frontmatter"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rsdoiel/frontmatter"
+	mdweb "github.com/rsdoiel/markdownweb/page"
 	"io"
 	"io/fs"
 	"os"
@@ -401,7 +402,7 @@ func (v *validator) checkFrontMatter(file string, raw []byte, doc *CommonMark) {
 	}
 	v.checkSuggestions(file, raw, doc)
 	if postPath != "" {
-		if want := markdownPathFor(postPath); want != "" && want != relativeToWorkDir(file) {
+		if want := mdweb.MarkdownPath(postPath); want != "" && want != relativeToWorkDir(file) {
 			v.add("postpath-mismatch", SeverityWarning, file, keyLine(raw, "postPath"),
 				"postPath %q does not match where the file is", postPath)
 		}

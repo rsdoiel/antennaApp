@@ -19,6 +19,7 @@ package antennaApp
 
 import (
 	"fmt"
+	mdweb "github.com/rsdoiel/markdownweb/page"
 	"net/url"
 	"os"
 	"path"
@@ -224,7 +225,7 @@ func listFileMembers(htdocs, listPath string) []string {
 		} else {
 			md = path.Join(path.Dir(listPath), u.Path)
 		}
-		if md == ".." || strings.HasPrefix(md, "../") || seen[md] || markdownPathFor(md) != md || !published(htdocs, md) {
+		if md == ".." || strings.HasPrefix(md, "../") || seen[md] || mdweb.MarkdownPath(md) != md || !published(htdocs, md) {
 			return ast.WalkContinue, nil
 		}
 		seen[md] = true

@@ -17,10 +17,11 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"encoding/json"
-	"gopkg.in/yaml.v3"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	mdweb "github.com/rsdoiel/markdownweb/page"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"path"
@@ -222,7 +223,7 @@ func (cfg *AppConfig) writeMarkdownCopies(fName string, mds []string, eout io.Wr
 	// which knows the whole site, has them.
 	var nb tocNeighbours
 	if len(mds) > 0 && cfg.tocNav != nil {
-		nb = cfg.tocNav[markdownPathFor(mds[0])]
+		nb = cfg.tocNav[mdweb.MarkdownPath(mds[0])]
 	}
 	for _, o := range mds {
 		text := cfg.deriveFrontMatter(expanded, nb, o)
@@ -275,7 +276,6 @@ func (app *AntennaApp) Pages(out io.Writer, cfgName string, args []string) error
 	}
 	return cfg.Pages(out, onlyStale)
 }
-
 
 // Unpage delete a page from the pages table (does not remove files from disk)
 // The deletion will happen for pages with either an inputPath or outputPath matching

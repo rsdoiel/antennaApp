@@ -22,3 +22,5 @@ blog_demo/
 
 # PageFind output is generated, large and changes on every build; never commit it.
 pagefind/
+go.work
+go.work.sum

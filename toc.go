@@ -20,6 +20,8 @@ import (
 	"database/sql"
 	"encoding/xml"
 	"fmt"
+	mdweb "github.com/rsdoiel/markdownweb/page"
+	mdtoc "github.com/rsdoiel/markdownweb/toc"
 	"io"
 	"net/url"
 	"os"
@@ -45,7 +47,7 @@ WHERE postPath IS NOT NULL AND postPath != '' AND pubDate IS NOT NULL AND pubDat
 
 // tocFileName is where a site's table of contents goes, relative to htdocs
 // (antennaApp DR-0010 5, DR-0013 1).
-var tocFileName = filepath.Join(".well-known", "toc.opml")
+var tocFileName = filepath.FromSlash(mdtoc.FileName)
 
 // tocEntry is one page, collection items page or post in the table of contents.
 type tocEntry struct {
@@ -243,20 +245,6 @@ func published(htdocs, md string) bool {
 	return err == nil && !info.IsDir()
 }
 
-// markdownPathFor returns the published Markdown path for an output or post
-// path: x.html and x.htm become x.md, x.md and x.markdown stay, anything else
-// (a post that is not Markdown) has none.
-func markdownPathFor(p string) string {
-	p = strings.TrimPrefix(path.Clean("/"+filepath.ToSlash(p)), "/")
-	switch strings.ToLower(path.Ext(p)) {
-	case ".md", ".markdown":
-		return p
-	case ".html", ".htm":
-		return strings.TrimSuffix(p, path.Ext(p)) + ".md"
-	}
-	return ""
-}
-
 func (cfg *AppConfig) tocPages(htdocs string, warnf func(string, ...any), tally *failureTally) []tocEntry {
 	var out []tocEntry
 	for _, col := range cfg.Collections {
@@ -358,7 +346,7 @@ func (cfg *AppConfig) tocPosts(htdocs string, warnf func(string, ...any), tally 
 					continue
 				}
 				tally.add(nil)
-				md := markdownPathFor(postPath)
+				md := mdweb.MarkdownPath(postPath)
 				when, dated := parseStoredDate(pubDate)
 				switch {
 				case md == "":
@@ -480,7 +468,7 @@ func (cfg *AppConfig) attachNav(doc *CommonMark, from string) {
 	if cfg.tocNav == nil {
 		return
 	}
-	doc.Nav, doc.NavFrom = cfg.tocNav, markdownPathFor(from)
+	doc.Nav, doc.NavFrom = cfg.tocNav, mdweb.MarkdownPath(from)
 }
 
 // relativeMarkdownPath writes the path of the Markdown page to, relative to

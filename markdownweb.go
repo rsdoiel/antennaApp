@@ -17,16 +17,12 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
-	"bytes"
+	mdweb "github.com/rsdoiel/markdownweb/page"
 	"io"
-	"mime"
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 	"strings"
-
-	"golang.org/x/net/html"
 )
 
 // maxHeadRead is how much of an HTML page is read to find the Markdown
@@ -122,7 +118,7 @@ func negotiateMarkdown(fsys http.FileSystem, next http.Handler) http.Handler {
 		}
 		// What is sent for this address depends on Accept.
 		w.Header().Add("Vary", "Accept")
-		if !prefersMarkdown(r.Header.Get("Accept")) {
+		if !mdweb.PrefersMarkdown(r.Header.Get("Accept")) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -195,76 +191,17 @@ func declaredMarkdown(fsys http.FileSystem, htmlPath, host string) string {
 	}
 	defer f.Close()
 	head, _ := io.ReadAll(io.LimitReader(f, maxHeadRead))
-	href := declaredAlternateHref(head)
-	if href == "" {
+	// The shared rule resolves the link against the page's address and refuses
+	// another host, so the page's own address is built from the request's.
+	alt, err := url.Parse(mdweb.DeclaredAlternate((&url.URL{Scheme: "http", Host: host, Path: htmlPath}).String(), head))
+	if err != nil || alt.Path == "" {
 		return ""
 	}
-	ref, err := url.Parse(href)
-	if err != nil || (ref.Scheme != "" && ref.Scheme != "http" && ref.Scheme != "https") || (ref.Host != "" && ref.Host != host) {
-		return ""
-	}
-	base := &url.URL{Path: htmlPath}
-	p := path.Clean("/" + base.ResolveReference(&url.URL{Path: ref.Path}).Path)
+	p := path.Clean("/" + alt.Path)
 	if IsForbiddenDotPath(p) || !isMarkdownFile(fsys, p) {
 		return ""
 	}
 	return p
-}
-
-// declaredAlternateHref finds the href of the first <link rel="alternate"
-// type="text/markdown"> in the head of an HTML page. rel may hold several words
-// and type may carry parameters, both compared without case; an alternate
-// stylesheet is not an alternate page, a link in the body is not a declaration,
-// and application/markdown is not text/markdown.
-func declaredAlternateHref(src []byte) string {
-	z := html.NewTokenizer(bytes.NewReader(src))
-	for {
-		switch z.Next() {
-		case html.ErrorToken:
-			return ""
-		case html.EndTagToken:
-			if name, _ := z.TagName(); string(name) == "head" {
-				return ""
-			}
-		case html.StartTagToken, html.SelfClosingTagToken:
-			name, hasAttr := z.TagName()
-			switch string(name) {
-			case "body":
-				return ""
-			case "link":
-				if !hasAttr {
-					continue
-				}
-				var rel, typ, href string
-				for {
-					key, val, more := z.TagAttr()
-					switch string(key) {
-					case "rel":
-						rel = string(val)
-					case "type":
-						typ = string(val)
-					case "href":
-						href = string(val)
-					}
-					if !more {
-						break
-					}
-				}
-				words := strings.Fields(strings.ToLower(rel))
-				isAlternate, isStyle := false, false
-				for _, w := range words {
-					isAlternate = isAlternate || w == "alternate"
-					isStyle = isStyle || w == "stylesheet"
-				}
-				if !isAlternate || isStyle || strings.TrimSpace(href) == "" {
-					continue
-				}
-				if mt, _, err := mime.ParseMediaType(typ); err == nil && mt == "text/markdown" {
-					return strings.TrimSpace(href)
-				}
-			}
-		}
-	}
 }
 
 // isFile reports whether p names a regular file in the file system.
@@ -297,46 +234,4 @@ func isMarkdownFile(fsys http.FileSystem, p string) bool {
 	}
 	ext := strings.ToLower(path.Ext(p))
 	return (ext == ".md" || ext == ".markdown") && isFile(fsys, p)
-}
-
-/** prefersMarkdown reports whether an Accept header asks for Markdown in
- * preference to HTML: text/markdown is named with a quality above zero, and
- * either no HTML is acceptable (text/html and the two wildcards that would match
- * it, "text/" followed by a star and a lone star type, are all absent or q=0) or
- * Markdown has the higher quality. A tie goes to HTML, and a wildcard never
- * counts as asking for Markdown, so a browser (text/html first, then a wildcard
- * at q=0.8) and a plain wildcard-only Accept get HTML.
- *
- * Parameters:
- *   accept (string) — the Accept request header
- *
- * Returns:
- *   bool — true when Markdown is preferred
- *
- * Example:
- *   prefersMarkdown("text/markdown, text/x-opml") // true (BonBon)
- *   prefersMarkdown("text/html, text/markdown")   // false (a tie)
- */
-func prefersMarkdown(accept string) bool {
-	var qMarkdown, qHTML float64
-	for _, entry := range strings.Split(accept, ",") {
-		parts := strings.Split(entry, ";")
-		mediaType := strings.ToLower(strings.TrimSpace(parts[0]))
-		q := 1.0
-		for _, param := range parts[1:] {
-			k, v, ok := strings.Cut(strings.TrimSpace(param), "=")
-			if ok && strings.EqualFold(strings.TrimSpace(k), "q") {
-				if f, err := strconv.ParseFloat(strings.TrimSpace(v), 64); err == nil {
-					q = f
-				}
-			}
-		}
-		switch mediaType {
-		case "text/markdown":
-			qMarkdown = max(qMarkdown, q)
-		case "text/html", "text/*", "*/*":
-			qHTML = max(qHTML, q)
-		}
-	}
-	return qMarkdown > 0 && (qHTML <= 0 || qMarkdown > qHTML)
 }

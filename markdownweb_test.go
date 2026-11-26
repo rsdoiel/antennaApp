@@ -332,26 +332,6 @@ func TestForbiddenDotPathAllowsOnlyWellKnown(t *testing.T) {
 	}
 }
 
-func TestPrefersMarkdown(t *testing.T) {
-	for accept, want := range map[string]bool{
-		"":                                     false,
-		"*/*":                                  false,
-		acceptBonBon:                           true,
-		acceptBrowser:                          false,
-		"text/markdown":                        true,
-		"text/markdown;q=0":                    false,
-		"text/html, text/markdown":             false, // a tie goes to HTML
-		"text/markdown;q=0.8, text/html;q=0.7": true,
-		"TEXT/MARKDOWN":                        true,
-		"text/markdown; charset=utf-8":         true,
-		"garbage;;;q=,,,":                      false,
-	} {
-		if got := prefersMarkdown(accept); got != want {
-			t.Errorf("prefersMarkdown(%q) = %v, want %v", accept, got, want)
-		}
-	}
-}
-
 // antenna preview builds its handler in previewMux, in both places that start a
 // server. The tests above build handlers themselves; this one goes through the
 // function the servers really use, so the Markdown web cannot be left out of

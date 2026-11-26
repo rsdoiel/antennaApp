@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	mdweb "github.com/rsdoiel/markdownweb/page"
 	"os"
 	"path/filepath"
 	"strings"
@@ -310,14 +311,14 @@ func pageStale(r pageRow, htdocs string) string {
  */
 func (cfg *AppConfig) pageMarkdown(input, recorded, html string) string {
 	if recorded != "" {
-		return markdownPathFor(recorded)
+		return mdweb.MarkdownPath(recorded)
 	}
 	if ext := strings.ToLower(filepath.Ext(input)); ext == ".md" || ext == ".markdown" {
-		if src := markdownPathFor(input); src != "" && published(cfg.htdocsOrDot(), src) {
+		if src := mdweb.MarkdownPath(input); src != "" && published(cfg.htdocsOrDot(), src) {
 			return src
 		}
 	}
-	return markdownPathFor(html)
+	return mdweb.MarkdownPath(html)
 }
 
 // htdocsOrDot is the htdocs directory, or the working directory when none is set.
