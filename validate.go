@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package antennaApp
 
 import (
+	"github.com/rsdoiel/frontmatter"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -338,7 +339,7 @@ func keyLine(raw []byte, key string) int {
 // bodyStartLine returns how many lines of raw come before the Markdown body,
 // that is the front matter block with its two --- lines, or 0 when there is none.
 func bodyStartLine(raw []byte) int {
-	_, at, found, err := frontMatterBlock(raw)
+	_, at, found, err := frontmatter.Block(raw)
 	if err != nil || !found {
 		return 0
 	}

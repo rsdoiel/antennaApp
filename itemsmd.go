@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 package antennaApp
 
 import (
+	"github.com/rsdoiel/frontmatter"
 	"bytes"
 	"database/sql"
 	"encoding/json"
@@ -452,7 +453,7 @@ func (gen *Generator) WriteItemsMarkdown(out io.Writer, db *sql.DB, collection *
  *   stripFrontMatter("---\na: b\n---\nBody\n") // "Body\n"
  */
 func stripFrontMatter(s string) string {
-	_, bodyAt, found, err := frontMatterBlock([]byte(s))
+	_, bodyAt, found, err := frontmatter.Block([]byte(s))
 	if err != nil || !found {
 		return s
 	}

@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package antennaApp
 
 import (
+	"github.com/rsdoiel/frontmatter"
 	"bytes"
 	"fmt"
 	"io"
@@ -187,7 +188,7 @@ func countLinks(links, files int) string {
 // starts: after the closing --- line of the front matter, or 0 when there is
 // none. A \r before the newline is allowed, so CRLF files work.
 func bodyStartOffset(raw []byte) int {
-	_, at, found, err := frontMatterBlock(raw)
+	_, at, found, err := frontmatter.Block(raw)
 	if err != nil || !found {
 		return 0
 	}

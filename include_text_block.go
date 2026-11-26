@@ -16,7 +16,11 @@ You should have received a copy of the GNU Affero General Public License
 */
 package antennaApp
 
-import "os"
+import (
+	"os"
+
+	"github.com/rsdoiel/frontmatter"
+)
 
 /** IncludeTextBlock expands the @include-text-block directives in text, and only
  * those. It is kept for callers of the package; antenna itself uses
@@ -35,10 +39,11 @@ import "os"
  *   out := IncludeTextBlock("Top.\n\n@include-text-block file.txt\n")
  */
 func IncludeTextBlock(text string) string {
-	st := &includeState{eout: os.Stderr, only: "text", seen: map[string]bool{}}
-	out := st.expand(text, nil)
-	if st.err != nil {
-		os.Stderr.WriteString(st.err.Error() + "\n")
+	f := frontmatter.Markdown
+	f.CodeDirective = ""
+	out, _, err := expandIncludesWith(text, os.Stderr, f)
+	if err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
 		return text
 	}
 	return out

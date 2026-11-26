@@ -188,3 +188,20 @@ func TestMacroTitleLinkIsNotNestedInsideALink(t *testing.T) {
 		t.Errorf("nested links:\n%s", got)
 	}
 }
+
+// TestMacrosDottedKeyReachesNestedTable is the F6 adoption check: a dotted key
+// reaches into a nested front matter table (frontmatter v0.0.1 DR-0002).
+func TestMacrosDottedKeyReachesNestedTable(t *testing.T) {
+	var warn bytes.Buffer
+	doc := macroDoc(t, "---\ntitle: T\nsource:\n  title: Elsewhere\n---\nFrom {{page.source.title}}.\n", &warn)
+	got, err := doc.ToUnsafeHTML()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "From Elsewhere.") {
+		t.Errorf("dotted key not expanded:\n%s", got)
+	}
+	if warn.Len() != 0 {
+		t.Errorf("warning: %s", warn.String())
+	}
+}

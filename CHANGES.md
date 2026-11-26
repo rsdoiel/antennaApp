@@ -1,5 +1,17 @@
 # Changes
 
+## Unreleased
+
+### Changed: front matter, macros and includes come from `frontmatter` v0.0.1
+
+- `SplitFrontMatter`, the `{{page.NAME}}` expander and the include directives are
+  now `github.com/rsdoiel/frontmatter` calls; the copies in antenna are gone.
+  Checked on a copy of the blog site: every page (199) renders to the same HTML,
+  Markdown copy, warnings and exit status as before, and `generate` gives the
+  same files, twice.
+- New: a dotted key reaches into a nested table, `{{page.source.title}}`. A
+  leading UTF-8 byte-order mark in a source file is skipped.
+
 ## v0.2.1 — 2026-11-25
 
 ### Added: a cap on the items each feed shows (DR-0039)

@@ -18,6 +18,7 @@ package antennaApp
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -34,6 +35,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/renderer/html"
 	"gopkg.in/yaml.v3"
+	"github.com/rsdoiel/frontmatter"
 )
 
 // CommonMark holds the structure of front matter and the CommonMark
@@ -93,75 +95,31 @@ func ParseMarkdownLinks(markdownText string) ([]Link, error) {
 	return links, nil
 }
 
-/** frontMatterBlock finds the front matter block at the top of a file
- * (DR-0022): the first line is "---" and the block ends at the next line that
- * is "---" or "...". A "\r" before a newline is allowed. Any later "---" line
- * is body. A file whose first line is not "---" has no block.
+/** SplitFrontMatter splits a CommonMark document into FrontMatter and the rest
+ * of the content. It is frontmatter.Split with antenna's exit-code class: an
+ * unclosed block or one that is not a YAML mapping is a data error (DR-0022).
+ * The rest is returned as written, line endings and final newline included.
  *
  * Parameters:
  *   src ([]byte) — the whole file
  *
  * Returns:
- *   string — the text between the two lines, lines joined with "\n"
- *   int — the offset in src where the body starts, after the closing line
- *   bool — true when a block was found
- *   error — a data error when the first line is "---" and there is no closing line
+ *   map[string]interface{} — the front matter; nil when there is none or the block is empty
+ *   string — the body; src itself on an unclosed block, "" on a block that does not parse
+ *   error — a data error wrapping a frontmatter error
  *
  * Example:
- *   block, bodyAt, found, err := frontMatterBlock([]byte("---\ntitle: T\n---\nBody.\n"))
+ *   fm, body, err := SplitFrontMatter([]byte("---\ntitle: T\n---\nBody.\n"))
  */
-func frontMatterBlock(src []byte) (string, int, bool, error) {
-	var lines []string
-	pos, first := 0, true
-	for pos < len(src) {
-		end := len(src)
-		if nl := bytes.IndexByte(src[pos:], '\n'); nl >= 0 {
-			end = pos + nl
-		}
-		line := strings.TrimRight(string(src[pos:end]), "\r")
-		next := end + 1
-		if next > len(src) {
-			next = len(src)
-		}
-		if first {
-			if line != "---" {
-				return "", 0, false, nil
-			}
-			first = false
-		} else if line == "---" || line == "..." {
-			return strings.Join(lines, "\n"), next, true, nil
-		} else {
-			lines = append(lines, line)
-		}
-		pos = next
-	}
-	if first {
-		return "", 0, false, nil
-	}
-	return "", 0, false, dataErrorf("unclosed FrontMatter")
-}
-
-// SplitFrontMatter splits a CommonMark document into FrontMatter and the rest
-// of the content. Front matter is only the block at the top of the file
-// (DR-0022); the rest is returned as written, line endings and final newline
-// included.
 func SplitFrontMatter(src []byte) (map[string]interface{}, string, error) {
-	block, bodyAt, found, err := frontMatterBlock(src)
-	if err != nil {
-		return nil, string(src), err
+	meta, body, err := frontmatter.Split(src)
+	switch {
+	case err == nil:
+		return meta, string(body), nil
+	case errors.Is(err, frontmatter.ErrUnclosed):
+		return nil, string(src), dataErrorf("%w", err)
 	}
-	if !found {
-		return nil, string(src), nil
-	}
-	body := string(src[bodyAt:])
-	if strings.TrimSpace(block) == "" {
-		return nil, body, nil // an empty block
-	}
-	var result map[string]interface{}
-	if err := yaml.Unmarshal([]byte(block), &result); err != nil {
-		return nil, "", dataErrorf("front matter: %w", err)
-	}
-	return result, body, nil
+	return nil, "", dataErrorf("%w", err)
 }
 
 // UseMathJax will set whether or not the MathJax extension is loaded when
@@ -381,7 +339,11 @@ func (doc *CommonMark) ToHTML() (string, error) {
 		goldmark.WithParserOptions(doc.parserOptions()...),
 	)
 	var buf bytes.Buffer
-	if err := md.Convert([]byte(doc.Text), &buf); err != nil {
+	err := md.Convert([]byte(doc.Text), &buf)
+	if doc.Macros != nil {
+		doc.Macros.flush()
+	}
+	if err != nil {
 		return "", err
 	}
 	return buf.String(), nil
@@ -412,7 +374,11 @@ func (doc *CommonMark) ToUnsafeHTML() (string, error) {
 		),
 	)
 	var buf bytes.Buffer
-	if err := md.Convert([]byte(doc.Text), &buf); err != nil {
+	err := md.Convert([]byte(doc.Text), &buf)
+	if doc.Macros != nil {
+		doc.Macros.flush()
+	}
+	if err != nil {
 		return "", err
 	}
 	return buf.String(), nil
