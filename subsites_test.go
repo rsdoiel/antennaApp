@@ -132,8 +132,9 @@ func TestSubsitesAreWrittenAsIncludeOutlinesAfterTheGroups(t *testing.T) {
 			t.Errorf("include %d: %+v, want include %q %q", i, inc, want.text, want.url)
 		}
 	}
-	// the derived previous and next ignore includes: the last post is still last
-	if _, next := neighboursFromNav(t, cfg, "blog/2026/11/19/c.md"); next != "" {
+	// the derived previous and next ignore includes: the newest post's next is
+	// the oldest post (the ends wrap, DR-0040), never an include
+	if _, next := neighboursFromNav(t, cfg, "blog/2026/11/19/c.md"); next != "blog/2025/12/25/old.md" {
 		t.Errorf("an include became the next page: %q", next)
 	}
 }

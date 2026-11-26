@@ -109,16 +109,19 @@ func TestPagesGetNoDerivedPreviousAndNext(t *testing.T) {
 }
 
 // In Posts, previous is the older post and next the newer one; the addresses
-// are relative to the post, across folders.
+// are relative to the post, across folders. The ends wrap (antennaApp DR-0040,
+// which amends DR-0025 3): the oldest post's previous is the newest post and
+// the newest post's next is the oldest, as BonBon and cmarkbrowser do. They had
+// only one arrow each before.
 func TestPostsGetDerivedPreviousAsOlderAndNextAsNewer(t *testing.T) {
 	htdocs := derivedNavSite(t)
 	if err := runIn(t, "generate"); err != nil {
 		t.Fatalf("generate: %s", err)
 	}
 	for file, want := range map[string][2]string{
-		"blog/2026/10/30/a.html": {"", "../../11/02/b.html"},             // oldest: only a newer one
-		"blog/2026/11/02/b.html": {"../../10/30/a.html", "../19/c.html"}, // older and newer, in other folders
-		"blog/2026/11/19/c.html": {"../02/b.html", ""},                   // newest: only an older one
+		"blog/2026/10/30/a.html": {"../../11/19/c.html", "../../11/02/b.html"}, // oldest: previous wraps to the newest
+		"blog/2026/11/02/b.html": {"../../10/30/a.html", "../19/c.html"},       // older and newer, in other folders
+		"blog/2026/11/19/c.html": {"../02/b.html", "../../10/30/a.html"},       // newest: next wraps to the oldest
 	} {
 		prev, next := neighbours(t, filepath.Join(htdocs, file))
 		if prev != want[0] || next != want[1] {
@@ -176,14 +179,15 @@ func TestTheAuthorsMarkdownIsNeverChanged(t *testing.T) {
 }
 
 // A post whose Markdown is not published is not in the outline, so it is
-// skipped: the arrows jump over it, as the outline does.
+// skipped: the arrows jump over it, as the outline does. With b gone the two
+// posts left point at each other (DR-0040: the ends wrap).
 func TestAnUnpublishedPostIsSkipped(t *testing.T) {
 	htdocs := derivedNavSite(t)
 	os.Remove(filepath.Join(htdocs, "blog/2026/11/02/b.md"))
 	if err := runIn(t, "generate"); err != nil {
 		t.Fatal(err)
 	}
-	if prev, next := neighbours(t, filepath.Join(htdocs, "blog/2026/10/30/a.html")); prev != "" || next != "../../11/19/c.html" {
+	if prev, next := neighbours(t, filepath.Join(htdocs, "blog/2026/10/30/a.html")); prev != "../../11/19/c.html" || next != "../../11/19/c.html" {
 		t.Errorf("a: previous %q next %q, want it to skip b", prev, next)
 	}
 	if prev, next := neighbours(t, filepath.Join(htdocs, "blog/2026/11/02/b.html")); prev != "" || next != "" {
@@ -212,11 +216,13 @@ func TestAPageAndPostsDoNotShareNeighbours(t *testing.T) {
 	if err := runIn(t, "generate"); err != nil {
 		t.Fatal(err)
 	}
-	if _, next := neighbours(t, filepath.Join(htdocs, "blog/2026/11/19/c.html")); next != "" {
-		t.Errorf("the newest post must not point at a page: %q", next)
+	// The ends wrap inside the posts (DR-0040), not into a page: BonBon would go
+	// on into the lines above and below the group, antenna deliberately does not.
+	if _, next := neighbours(t, filepath.Join(htdocs, "blog/2026/11/19/c.html")); next != "../../10/30/a.html" {
+		t.Errorf("the newest post's next is the oldest post, not a page: %q", next)
 	}
-	if prev, _ := neighbours(t, filepath.Join(htdocs, "blog/2026/10/30/a.html")); prev != "" {
-		t.Errorf("the oldest post must not point at a page: %q", prev)
+	if prev, _ := neighbours(t, filepath.Join(htdocs, "blog/2026/10/30/a.html")); prev != "../../11/19/c.html" {
+		t.Errorf("the oldest post's previous is the newest post, not a page: %q", prev)
 	}
 }
 
@@ -225,9 +231,9 @@ func TestBuildNavFromTheOutlinesOrder(t *testing.T) {
 	posts := []tocEntry{{md: "new.md"}, {md: "mid.md"}, {md: "old.md"}} // newest first, as in the outline
 	nav := buildTOCNav(posts)
 	want := map[string]tocNeighbours{
-		"new.md": {prev: "mid.md", next: ""},
+		"new.md": {prev: "mid.md", next: "old.md"}, // the ends wrap (DR-0040)
 		"mid.md": {prev: "old.md", next: "new.md"},
-		"old.md": {prev: "", next: "mid.md"},
+		"old.md": {prev: "new.md", next: "mid.md"},
 	}
 	for md, w := range want {
 		if nav[md] != w {
@@ -236,6 +242,17 @@ func TestBuildNavFromTheOutlinesOrder(t *testing.T) {
 	}
 	if len(nav) != len(want) {
 		t.Errorf("nav has %d entries, want %d", len(nav), len(want))
+	}
+}
+
+// DR-0040: one post has no neighbours, two point at each other.
+func TestBuildNavWithOneAndTwoPosts(t *testing.T) {
+	if nav := buildTOCNav([]tocEntry{{md: "only.md"}}); nav["only.md"] != (tocNeighbours{}) {
+		t.Errorf("one post: %+v, want none", nav["only.md"])
+	}
+	nav := buildTOCNav([]tocEntry{{md: "new.md"}, {md: "old.md"}})
+	if nav["new.md"] != (tocNeighbours{prev: "old.md", next: "old.md"}) || nav["old.md"] != (tocNeighbours{prev: "new.md", next: "new.md"}) {
+		t.Errorf("two posts: %+v", nav)
 	}
 }
 

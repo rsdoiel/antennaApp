@@ -1,6 +1,30 @@
 # Changes
 
-## Unreleased
+## v0.2.2 — 2026-11-26
+
+### Changed: markdownweb is v0.0.4
+
+- `github.com/rsdoiel/markdownweb` v0.0.3 to v0.0.4. antenna's own previous and
+  next arrows do not use `toc.Neighbours` and are unchanged by it. What v0.0.4
+  changes for antenna: the table-of-contents `Finder` reads through `fetch`
+  (the program's User-Agent and settings), and `toc.Finder.Pages` flattens an
+  outline as BonBon does (markdownweb DR-0003). `toc.Neighbours` now follows
+  BonBon's rule (markdownweb DR-0004), which is why the posts' arrows change
+  below.
+
+### Fixed: a post's previous and next wrap at the ends, as BonBon's do (antennaApp DR-0040)
+
+- The oldest post's previous is now the newest post, and the newest post's next
+  is the oldest, as in BonBon and cmarkbrowser (v0.0.3), which read the same
+  table of contents and wrap. They had one arrow each before (DR-0025 3). The
+  HTML of the oldest and newest post of every site with two or more posts
+  changes on the next `generate`; one post still has none, and two point at each
+  other.
+- Unchanged: pages and collections get none (DR-0025 2); a declared sequence
+  keeps its ends (DR-0026), which is left open in DR-0040; a document's own
+  `urlPrev` and `urlNext` still win. antenna still wraps inside the posts, where
+  BonBon would go on into the group above or below them.
+- `antenna help generate` (and `antenna-generate.7.md`) say the ends wrap.
 
 ### Changed: harvest fetches through markdownweb's `fetch`
 

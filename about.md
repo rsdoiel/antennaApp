@@ -38,7 +38,7 @@ authors:
 
 
 repository_code: https://github.com/rsdoiel/antennaApp
-version: 0.2.1
+version: 0.2.2
 license_url: https://www.gnu.org/licenses/agpl-3.0.en.html
 
 programming_language:
@@ -50,17 +50,18 @@ keywords:
   - Linkblog
   - website generator
 
-date_released: 2026-11-25
+date_released: 2026-11-26
 ---
 
 About this software
 ===================
 
-## antennaApp 0.2.1
+## antennaApp 0.2.2
 
-- Fixed: relative links and images in a harvested item (`/images/a.png`, `/2026/post/`, `c.html`) are made absolute against the item's link when it is rendered, in `STEM_items.html`, `STEM_items.md` and `STEM.xml`; they used to resolve against the aggregating site and break. The stored item is not changed. An item with no usable link is left as written and `generate` warns once for the collection with the count
-- Added: `harvest` records every attempt to fetch a listed feed (HTTP status, error) in a `harvest_log` table and, at the end of the run, warns about a feed whose attempts all failed over 7 days (at least 3), with the status in words (`last status 404 Not Found`); 429 and 503 count as failures. Settings `failing_days`, `failing_attempts` and `log_days` under `harvest:`. The exit status is unchanged
-- Added: a cap on the items each feed shows, `max_items_per_feed` and `feed_limits` by feed address in `antenna.yaml`. With no setting there is no cap; `antenna init` writes `max_items_per_feed: 1000` into a new `antenna.yaml` and leaves an existing one alone. Older items are hidden, not deleted, and your own posts are never capped. `generate` warns when a feed is cut
+- Fixed: a post's previous and next now follow BonBon's rule at the ends (antennaApp DR-0040): the oldest post's previous is the newest and the newest post's next is the oldest, as in BonBon and cmarkbrowser. The HTML of the oldest and newest post changes on the next generate; one post has none, two point at each other. Pages, collections and declared sequences are unchanged
+- Changed: harvest fetches through markdownweb's fetch package (v0.0.4, markdownweb DR-0002): a 429 or 503 with a Retry-After of up to two minutes is waited out and tried once more, a longer one is unavailable (69), and a feed or table of contents over 32 MiB is a data error (65). antenna keeps its pause, User-Agent, redirects and exit classes, and still does not read robots.txt. userAgent in antenna.yaml is documented
+- Changed: front matter, macros and includes come from github.com/rsdoiel/frontmatter v0.0.1. A dotted key reaches into a nested table ({{page.source.title}}) and a leading UTF-8 byte-order mark in a source file is skipped
+- Needs Go 1.27.4
 
 ## Authors
 
@@ -115,6 +116,8 @@ Features:
 ## Software Requirements
 
 - Go >= 1.27.4
+- github.com/rsdoiel/frontmatter >= 0.0.1
+- github.com/rsdoiel/markdownweb >= 0.0.4
 - github.com/rsdoiel/opml >= 0.0.12
 - github.com/rsdoiel/stylefrom >= 0.0.2
 - github.com/rsdoiel/termlib >= 0.0.10

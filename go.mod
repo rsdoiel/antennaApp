@@ -10,7 +10,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.53
 	github.com/mmcdole/gofeed v1.5.0
 	github.com/rsdoiel/frontmatter v0.0.1
-	github.com/rsdoiel/markdownweb v0.0.3
+	github.com/rsdoiel/markdownweb v0.0.4
 	github.com/rsdoiel/opml v0.0.12
 	github.com/rsdoiel/stylefrom v0.0.2
 	github.com/rsdoiel/termlib v0.0.10

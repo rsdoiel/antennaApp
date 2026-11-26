@@ -408,7 +408,9 @@ type tocNav map[string]tocNeighbours
  * contents lists (antennaApp DR-0025). Posts are listed newest first, so
  * previous is the older post, which is the next line down, and next is the
  * newer one: the convention of Dave Winer's explicit urlPrev and urlNext, and
- * the reverse of the line order. The first and last post have only one. Pages
+ * the reverse of the line order. The ends wrap, as BonBon's do (antennaApp
+ * DR-0040): the oldest post's previous is the newest post and the newest
+ * post's next is the oldest; a single post has none. Pages
  * and collections have none: file-name order is not a sequence. A declared
  * sequence (DR-0026) is applied on top of this by computeTOCNav.
  *
@@ -425,11 +427,9 @@ func buildTOCNav(posts []tocEntry) tocNav {
 	nav := tocNav{}
 	for i, p := range posts {
 		var n tocNeighbours
-		if i+1 < len(posts) {
-			n.prev = posts[i+1].md // older
-		}
-		if i > 0 {
-			n.next = posts[i-1].md // newer
+		if len(posts) > 1 {
+			n.prev = posts[(i+1)%len(posts)].md            // older; the oldest wraps to the newest
+			n.next = posts[(i+len(posts)-1)%len(posts)].md // newer; the newest wraps to the oldest
 		}
 		nav[p.md] = n
 	}

@@ -1,6 +1,6 @@
-%antenna(7) user manual | version 0.2.1 1280a8e
+%antenna(7) user manual | version 0.2.2 afb68a5
 % R. S. Doiel
-% 2026-11-25
+% 2026-11-26
 
 # NAME
 
@@ -53,7 +53,7 @@ validate finds them (link-html) and antenna migrate-links rewrites them to
 - .well-known/bonbon.json, only when the bonbon setting of antenna.yaml has a
   key (see WHAT IS NOT DONE).
 - Previous and next links on posts, taken from that table of contents (the older
-  post and the newer one), and on the pages and posts of a sequence named in the
+  post and the newer one; the oldest and newest wrap to each other), and on the pages and posts of a sequence named in the
   sequences setting of antenna.yaml, unless the document sets urlPrev and
   urlNext itself. A page in no sequence gets none.
 - The same files, byte for byte, when nothing changed: generate rewrites a file

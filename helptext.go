@@ -814,7 +814,8 @@ file and leaves any file you wrote alone. See {app_name} help configuration.
 
 The same outline gives previous and next links to the posts it lists that name
 neither urlPrev nor urlNext in their front matter: the older post as previous
-and the newer as next. The first and last have only one. A page gets none from
+and the newer as next. The ends wrap: the oldest post's previous is the newest and
+the newest post's next is the oldest; one post has none. A page gets none from
 the table of contents, because pages are listed in file-name order, which is not
 a sequence. A page or post in a sequence named in the sequences setting of
 antenna.yaml gets that sequence's previous and next instead, and the generated
@@ -2407,7 +2408,7 @@ validate finds them (link-html) and {app_name} migrate-links rewrites them to
 - .well-known/bonbon.json, only when the bonbon setting of antenna.yaml has a
   key (see WHAT IS NOT DONE).
 - Previous and next links on posts, taken from that table of contents (the older
-  post and the newer one), and on the pages and posts of a sequence named in the
+  post and the newer one; the oldest and newest wrap to each other), and on the pages and posts of a sequence named in the
   sequences setting of antenna.yaml, unless the document sets urlPrev and
   urlNext itself. A page in no sequence gets none.
 - The same files, byte for byte, when nothing changed: generate rewrites a file

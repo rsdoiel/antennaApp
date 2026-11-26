@@ -12,8 +12,8 @@
     }
   ],
   "dateCreated": "2025-08-22",
-  "dateModified": "2026-11-25",
-  "datePublished": "2026-11-25",
+  "dateModified": "2026-11-26",
+  "datePublished": "2026-11-26",
   "description": "**antenna** is a tool for building feed oriented websites using Markdown.\nIf you can edit a Markdown list of links you can generate a static site\nRSS Reader with little effort beyond curating your list of links.\nYou can create simple websites make from the content of Markdown pages.\nYou can create blog by posting the Markdown documents to a collection.\nThe goal of **antenna** is to put you in control of the web content\nyou read or write through using Markdown.\n\n**antenna** automates must of the process of creating a site using Markdown\nfiles. It handles the creation of HTML, RSS, OPML and sitemap.xml for you. This\nlet's you focus on the content written in Markdown.\n\n**antenna** supports a simple theme system defined Markdown files used to\ndescribe page elements, a file to define page metadata and CSS files to define\nthe page's layout and presentation. Each collection defined for your site\nmay have it's own theme.\n\nFeatures:\n\n- Makes it easy to generate a website only using Markdown\n- Makes it trivial to generate a blog, link blog or feed reading site using Markdown\n- supports as multiple feed collections per site\n- provides actions to automate most of your site curation leaving you time to focus on Markdown content\n- HTML, RSS 2.0 XML, OPML and sitemap.xml are generated automatically\n- A preview web server is provided so you can read the curated content on your computer\n- Publishes for Markdown readers such as Dave Winer's BonBon as well as for web browsers: `.md` links, Markdown renderings of collections, a `.well-known/toc.opml` table of contents, and BonBon's front matter\n- `antenna validate` checks a site for mistakes and for what Markdown readers need, and `antenna migrate-links` brings older links up to date\n- pages nice with other static site tools like  [PageFind](https://pagefind.app \"A browser side search engine\") and\n[FlatLake](https://flatlake.app \"A static JSON API driven by front matter in Markdown documents\")",
   "keywords": [
     "RSS",
@@ -28,6 +28,8 @@
   ],
   "softwareRequirements": [
     "Go >= 1.27.4",
+    "github.com/rsdoiel/frontmatter >= 0.0.1",
+    "github.com/rsdoiel/markdownweb >= 0.0.4",
     "github.com/rsdoiel/opml >= 0.0.12",
     "github.com/rsdoiel/stylefrom >= 0.0.2",
     "github.com/rsdoiel/termlib >= 0.0.10",
@@ -38,10 +40,10 @@
     "Pandoc >= 3.9",
     "Bash or PowerShell"
   ],
-  "version": "0.2.1",
+  "version": "0.2.2",
   "developmentStatus": "active",
   "issueTracker": "https://github.com/rsdoiel/antennaApp/issues",
-  "releaseNotes": "- Fixed: relative links and images in a harvested item (`/images/a.png`, `/2026/post/`, `c.html`) are made absolute against the item's link when it is rendered, in `STEM_items.html`, `STEM_items.md` and `STEM.xml`; they used to resolve against the aggregating site and break. The stored item is not changed. An item with no usable link is left as written and `generate` warns once for the collection with the count\n- Added: `harvest` records every attempt to fetch a listed feed (HTTP status, error) in a `harvest_log` table and, at the end of the run, warns about a feed whose attempts all failed over 7 days (at least 3), with the status in words (`last status 404 Not Found`); 429 and 503 count as failures. Settings `failing_days`, `failing_attempts` and `log_days` under `harvest:`. The exit status is unchanged\n- Added: a cap on the items each feed shows, `max_items_per_feed` and `feed_limits` by feed address in `antenna.yaml`. With no setting there is no cap; `antenna init` writes `max_items_per_feed: 1000` into a new `antenna.yaml` and leaves an existing one alone. Older items are hidden, not deleted, and your own posts are never capped. `generate` warns when a feed is cut",
+  "releaseNotes": "- Fixed: a post's previous and next now follow BonBon's rule at the ends (antennaApp DR-0040): the oldest post's previous is the newest and the newest post's next is the oldest, as in BonBon and cmarkbrowser. The HTML of the oldest and newest post changes on the next generate; one post has none, two point at each other. Pages, collections and declared sequences are unchanged\n- Changed: harvest fetches through markdownweb's fetch package (v0.0.4, markdownweb DR-0002): a 429 or 503 with a Retry-After of up to two minutes is waited out and tried once more, a longer one is unavailable (69), and a feed or table of contents over 32 MiB is a data error (65). antenna keeps its pause, User-Agent, redirects and exit classes, and still does not read robots.txt. userAgent in antenna.yaml is documented\n- Changed: front matter, macros and includes come from github.com/rsdoiel/frontmatter v0.0.1. A dotted key reaches into a nested table ({{page.source.title}}) and a leading UTF-8 byte-order mark in a source file is skipped\n- Needs Go 1.27.4",
   "copyrightYear": 2026,
   "copyrightHolder": "R. S. Doiel"
 }

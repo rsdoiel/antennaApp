@@ -1,6 +1,6 @@
-%antenna(7) user manual | version 0.2.1 1280a8e
+%antenna(7) user manual | version 0.2.2 afb68a5
 % R. S. Doiel
-% 2026-11-25
+% 2026-11-26
 
 # NAME
 
@@ -84,7 +84,8 @@ file and leaves any file you wrote alone. See antenna help configuration.
 
 The same outline gives previous and next links to the posts it lists that name
 neither urlPrev nor urlNext in their front matter: the older post as previous
-and the newer as next. The first and last have only one. A page gets none from
+and the newer as next. The ends wrap: the oldest post's previous is the newest and
+the newest post's next is the oldest; one post has none. A page gets none from
 the table of contents, because pages are listed in file-name order, which is not
 a sequence. A page or post in a sequence named in the sequences setting of
 antenna.yaml gets that sequence's previous and next instead, and the generated
