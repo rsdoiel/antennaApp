@@ -80,6 +80,8 @@ type validator struct {
 	color    bool // wrap severity and location in ANSI escapes (DR-0020 5)
 	files    int
 	findings []Finding
+
+	anchorCache map[string]map[string]bool // disk path -> fragments its headings make; nil value = unreadable
 }
 
 // add records a finding.

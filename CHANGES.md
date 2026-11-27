@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+- `antenna validate`: new check `link-fragment` (warning). A link to `#heading`, or to `other.md#heading`, is checked against the headings of that Markdown file, using markdownweb's `slug` package for the fragment rule. markdownweb is pinned at a commit after v0.0.5 until its next release.
+
 ## v0.2.2 — 2026-11-26
 
 ### Changed: markdownweb is v0.0.4

@@ -270,6 +270,7 @@ func (v *validator) checkLink(file, from, dest string, line int, byHTML map[stri
 	if err != nil {
 		return
 	}
+	v.checkFragment(file, dest, u, line)
 	if u.Scheme == "http" || u.Scheme == "https" {
 		if v.cfg != nil && strings.TrimSpace(v.cfg.BaseURL) != "" &&
 			strings.HasPrefix(dest, strings.TrimRight(v.cfg.BaseURL, "/")+"/") && v.isOwnAddress(u, byHTML) {

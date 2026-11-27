@@ -100,6 +100,14 @@ link-unrendered
 link-missing
 : A relative link to a file that does not exist (warning).
 
+link-fragment
+: A link to a heading that the page it names does not have: #heading in the
+same file, or other.md#heading for a Markdown file that exists. The heading's
+fragment is its text in lower case, spaces as -, other punctuation dropped,
+and a repeated heading numbered -1, -2 (the rule GitHub and Markdown readers
+use). An id or name written in raw HTML counts, and so does #top. Links to
+HTML pages and other sites are not checked (warning).
+
 link-absolute-self
 : An absolute link to a page or file of this site, where a relative link works
 for every reader (info).
