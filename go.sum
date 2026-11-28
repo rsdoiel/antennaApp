@@ -44,8 +44,8 @@ github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/rsdoiel/frontmatter v0.0.1 h1:cSAwuuOC1n3OG1W8BzyirqSE7Ee8PM5MlL7bgXrHAco=
 github.com/rsdoiel/frontmatter v0.0.1/go.mod h1:EzaB3V/d6vlxOsAubcX5hH4bTGYuLEPhq72iyu8bhVY=
-github.com/rsdoiel/markdownweb v0.0.6-0.20261127212007-3ec0cd8a5c56 h1:3P2Y/FPbC2jzdBa+tWVLz7SE7LJSf3+la4kO/WJvo44=
-github.com/rsdoiel/markdownweb v0.0.6-0.20261127212007-3ec0cd8a5c56/go.mod h1:Rixlt7PL7h8jXbSLTLxfGSIdnrowY0shxmS5Hg5T+KE=
+github.com/rsdoiel/markdownweb v0.0.6 h1:q7mXRWd1N9gbWHZpNvZTkce1y+yn1fHZ4eqB/9rVWaw=
+github.com/rsdoiel/markdownweb v0.0.6/go.mod h1:Rixlt7PL7h8jXbSLTLxfGSIdnrowY0shxmS5Hg5T+KE=
 github.com/rsdoiel/opml v0.0.12 h1:6B81wQK7PZPUEg3KTuS35v1pgGG6EGLo20a20bd5yxw=
 github.com/rsdoiel/opml v0.0.12/go.mod h1:Fm9urXy7NmIVV/P1AFiZ2wvJIw0fSCZuWoJrBMhhePk=
 github.com/rsdoiel/stylefrom v0.0.2 h1:R98EKfSxrbC489llzwuTAxDGN8eJSHiKRVgqw1wantg=
