@@ -20,6 +20,8 @@ Ideas, not quite a roadmap
 
 ## Up Next
 
+- [ ] Write `/.well-known/cmarkfind.json` when the site publishes a cmarkfind index: a small JSON object, `{"index": "/cmarkfind/manifest.json"}`, a same-origin path (or address) of the index's `manifest.json`, beside `toc.opml` and `bonbon.json`. cmarkfind's `indexer discover` reads it and, when it is absent, tries `/cmarkfind/manifest.json` at the site root, so a site that publishes there needs no file. Nothing goes in `toc.opml` (BonBon's author moved site settings out of the head). Needs an antennaApp record when built; cmarkfind DR-0017 (proposed) has the file's rules. Not before cmarkfind's Phase 7 is built.
+
 - [ ] Review Dave Winer's RSS Chat, https://github.com/scripting/rss.chat, see what features could be encorporated into AntennaApp to support the RSS oriented chat that Dave has talked about. This would be targeted at an eventual v0.3.x release. It can start as an experimental feature in v0.2.x.
 
 - [x] Built 2026-11-25 (antennaApp DR-0038, uncommitted): the status table `harvest_log` and the end-of-harvest warning. Left, for a later record: a command that lists failing feeds, a flag that skips them, and a command that prunes them from the Markdown feed list (dry run by default). Original request: when we harvest, we need a table that keeps track of the feeds' HTTP status response. Then when a feed isn't available for some threshhold over a defined time period a warning at the end of the harvest can be shown for the feeds that fall into that category. There could be an automatic flag to stop trying to havest the failing feed or another command to auto-prune the feed from the related Markdown feed list.
